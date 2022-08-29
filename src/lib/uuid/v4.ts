@@ -1,0 +1,1 @@
+export const uuidV4 = () => '737719f5-d398-4986-a216-8ad12fea956a';
