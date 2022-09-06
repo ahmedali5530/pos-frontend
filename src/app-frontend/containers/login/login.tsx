@@ -88,7 +88,7 @@ const Login = () => {
                       value={props.field.value}
                       type="text"
                       id="username"
-                      className="input"
+                      className="input w-full"
                       autoFocus
                     />
                   )}
@@ -105,7 +105,7 @@ const Login = () => {
                       onChange={props.field.onChange}
                       value={props.field.value}
                       id="password"
-                      className="input"
+                      className="input w-full"
                     />
                   )}
                   name="password"

@@ -1,4 +1,4 @@
-import React, {createRef, FC, useEffect, useMemo, useState} from "react";
+import React, {createRef, FC, useCallback, useEffect, useMemo, useState} from "react";
 import classNames from "classnames";
 import {DateTime} from "luxon";
 import {FixedSizeList} from "react-window";
@@ -8,7 +8,6 @@ import {Tax} from "../../../api/model/tax";
 import {PaymentType} from "../../../api/model/payment.type";
 import {Device} from "../../../api/model/device";
 import {CartItem} from "../../../api/model/cart.item";
-import {useSelector} from "react-redux";
 import { useLoadData } from "../../hooks/use.load.data";
 import {Customer} from "../../../api/model/customer";
 import {ProductVariant} from "../../../api/model/product.variant";
@@ -27,7 +26,7 @@ import {Expenses} from "../../components/sale/expenses";
 import {Items} from "../../components/sale/items";
 import {More} from "../../components/sale/more";
 import {OrderTotals} from "../../components/sale/cart/order.totals";
-import {getAuthorizedUser} from "../../../duck/auth/auth.selector";
+const Mousetrap = require('mousetrap');
 
 export interface HomeProps {
   list: {
@@ -145,11 +144,7 @@ export const getRowTotal = (item: CartItem) => {
 
 const Pos: FC = () => {
 
-  const user = useSelector(getAuthorizedUser);
-
   const [list, setList] = useState<HomeProps['list']>(initialData);
-  const [discountList, setDiscountList] = useState<HomeProps['discountList']>(initialData);
-  const [taxList, setTaxList] = useState<HomeProps['taxList']>(initialData);
   const [paymentTypesList, setPaymentTypesList] = useState<HomeProps['paymentTypesList']>(initialData);
 
   const [state, action] = useLoadData();
@@ -164,6 +159,7 @@ const Pos: FC = () => {
   const [q, setQ] = useState<string>('');
   const [added, setAdded] = useState<CartItem[]>([]);
   const [selected, setSelected] = useState(0);
+  const [selectedVariant, setSelectedVariant] = useState(0);
   const searchField = createRef<HTMLInputElement>();
   const containerRef = createRef<HTMLDivElement>();
   const [latest, setLatest] = useState<Product>();
@@ -174,9 +170,6 @@ const Pos: FC = () => {
   const [discountRateType, setDiscountRateType] = useState<string>();
   const [tax, setTax] = useState<Tax>();
   const [coupon, setCoupon] = useState();
-  const [discountModal, setDiscountModal] = useState(false);
-  const [taxModal, setTaxModal] = useState(false);
-  const [askDiscount, setAskDiscount] = useState(false);
   const [customer, setCustomer] = useState<Customer>();
   const [refundingFrom, setRefundingFrom] = useState<number>();
   const [closeSale, setCloseSale] = useState(false);
@@ -243,9 +236,9 @@ const Pos: FC = () => {
 
       return item.name.toLowerCase().indexOf(q.toLowerCase()) !== -1;
     })
-  }, [list.list, q]);
+  }, [list?.list, q]);
 
-  const addItem = (item: Product, quantity: number, price?: number) => {
+  const addItem = useCallback((item: Product, quantity: number, price?: number) => {
     let newPrice = 0;
     if (item.basePrice) {
       newPrice = item.basePrice;
@@ -261,11 +254,14 @@ const Pos: FC = () => {
 
     setLatest(item);
 
+    console.log(item);
+
     if (item.variants.length > 0) {
       //choose from variants
       setModal(true);
       setModalTitle(`Choose a variant for ${item.name}`);
       setVariants(item.variants);
+      setSelectedVariant(0); // reset variants selector
 
       return false;
     }
@@ -287,7 +283,7 @@ const Pos: FC = () => {
 
     setSelected(items.findIndex(i => i.id === item.id));
     setQuantity(1);
-  };
+  }, [added, items, rate]);
 
   const addItemVariant = (item: Product, variant: ProductVariant, quantity: number) => {
     const oldItems = [...added];
@@ -314,6 +310,7 @@ const Pos: FC = () => {
     setVariants([]);
     setSelected(items.findIndex(i => i.id === item.id));
     setQuantity(1);
+    setSelectedVariant(0);
   };
 
   const onQuantityChange = (item: CartItem, newQuantity: number) => {
@@ -410,6 +407,26 @@ const Pos: FC = () => {
     }
   };
 
+  const moveVariantsCursor = (event: any) => {
+    const itemsLength = variants.length;
+    if (event.key === 'ArrowDown') {
+      let newSelected = selectedVariant + 1;
+      if ((newSelected) === itemsLength) {
+        newSelected = 0;
+        setSelectedVariant(newSelected);
+      }
+      setSelectedVariant(newSelected);
+    } else if (event.key === 'ArrowUp') {
+      let newSelected = selectedVariant - 1;
+      if ((newSelected) === -1) {
+        newSelected = itemsLength - 1;
+      }
+      setSelectedVariant(newSelected);
+    } else if (event.key === 'Enter') {
+      addItemVariant(items[selected], items[selected].variants[selectedVariant], 1);
+    }
+  };
+
   const moveSearchList = (index: number) => {
     if (searchScrollContainer && searchScrollContainer.current) {
       searchScrollContainer.current.scrollToItem(index, 'center');
@@ -438,12 +455,6 @@ const Pos: FC = () => {
     localforage.setItem('customer', customer);
   }, [customer]);
 
-  const scrollCartToBottom = () => {
-    if (containerRef && containerRef.current) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
-    }
-  };
-
   useEffect(() => {
     //set default discount, tax
     setDefaultOptions();
@@ -467,13 +478,25 @@ const Pos: FC = () => {
     localforage.getItem('defaultTax').then((data: any) => setTax(data));
   };
 
+  useEffect(() => {
+    Mousetrap.bind(['up', 'down', 'enter'], function (e: Event) {
+      e.preventDefault();
+      if(modal){
+        //move cursor in variant chooser
+        moveVariantsCursor(e);
+      }else{
+        //move cursor in items
+        moveCursor(e);
+      }
+    });
+  }, [modal, selected, selectedVariant, variants, items]);
+
   return (
     <>
       <div className="grid gap-4 grid-cols-12 h-[calc(100vh_-_290px)] max-h-full">
-        <div className="col-span-4 bg-gray-50 p-3" onClick={(event) => setFocus(event, searchField)}
-             onKeyUp={(event) => moveCursor(event)}>
+        <div className="col-span-4 bg-gray-50 p-3" onClick={(event) => setFocus(event, searchField)}>
           <div className="flex flex-column mb-1">
-            <SpeechSearch />
+            <SpeechSearch setQ={setQ}/>
             <Input
               placeholder="Search items"
               type="search"
@@ -484,7 +507,8 @@ const Pos: FC = () => {
               autoFocus
               ref={searchField}
               selectable
-              className="search-field relative mousetrap"
+              className="search-field relative mousetrap flex-1"
+              value={q}
             />
             <Input placeholder="QTY"
                    className="w-24 mousetrap" value={quantity}
@@ -505,7 +529,7 @@ const Pos: FC = () => {
           />
         </div>
         <div className="col-span-8 bg-gray-50" onClick={(event) => setFocus(event, searchField)}>
-          <div className="overflow-auto block p-3 pt-0" ref={containerRef}>
+          <div className="overflow-auto block p-3 pt-0 h-[630px]" ref={containerRef}>
             <CartContainer
               added={added}
               onQuantityChange={onQuantityChange}
@@ -516,57 +540,10 @@ const Pos: FC = () => {
             />
           </div>
         </div>
-
-        <Modal open={modal} onClose={() => {
-          setModal(false);
-          setVariants([]);
-        }} title={modalTitle}>
-          {variants.length > 0 && (
-            <div className="table w-full">
-              <div className="table-header-group">
-                <div className="table-row">
-                  <div className="table-cell p-2 text-left font-bold">Item</div>
-                  <div className="table-cell p-2 text-left font-bold">Attribute</div>
-                  <div className="table-cell p-2 text-left font-bold">Value</div>
-                  <div className="table-cell p-2 text-right font-bold">Rate</div>
-                </div>
-              </div>
-              <div className="table-row-group">
-                {variants.map((item, index) => (
-                  <div className={
-                    classNames(
-                      'table-row hover:bg-gray-200 cursor-pointer'
-                    )
-                  } onClick={() => addItemVariant(latest!, item, quantity)} key={index}>
-                    <div className="table-cell p-2">
-                      {item.name}
-                      {item.barcode && (
-                        <div className="text-gray-400">{item.barcode}</div>
-                      )}
-                    </div>
-                    <div className="table-cell p-5">{item.attributeName}</div>
-                    <div className="table-cell p-5">{item.attributeValue}</div>
-                    <div className="table-cell p-5 text-right">
-                      {item.price === null ? (
-                        <>{getRealProductPrice(latest!)}</>
-                      ) : (
-                        <>
-                          {item.price}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </Modal>
       </div>
       <div className="bg-gray-100 h-[280px]">
-        <div className="grid gap-4 grid-cols-5 border border-x-0 border-b-0 border-gray-300">
-          <div className="col-span-3 p-3 flex flex-wrap flex-row justify-between">
-            keyboard will appear here
-          </div>
+        <div className="grid gap-4 grid-cols-4 border border-x-0 border-b-0 border-gray-300">
+          <div className="col-span-2 p-3 flex flex-wrap flex-row justify-between"></div>
           <div className="col-span-1 p-3 flex flex-wrap flex-row justify-between">
             <CloseSale
               added={added}
@@ -599,6 +576,8 @@ const Pos: FC = () => {
               setTax={setTax}
               setDiscountAmount={setDiscountAmount}
             />
+
+            <Logout/>
             <div className="w-full"></div>
             <SaleHistory
               setAdded={setAdded}
@@ -610,13 +589,10 @@ const Pos: FC = () => {
               setRefundingFrom={setRefundingFrom}
             />
             <Customers customer={customer} setCustomer={setCustomer}/>
-            <Logout/>
             <Expenses/>
             <Items/>
             <More
               setList={setList}
-              setDiscountList={setDiscountList}
-              setTaxList={setTaxList}
               setPaymentTypesList={setPaymentTypesList}
               setTax={setTax}
               setDiscount={setDiscount}
@@ -640,6 +616,51 @@ const Pos: FC = () => {
           </div>
         </div>
       </div>
+      <Modal open={modal} onClose={() => {
+        setModal(false);
+        setVariants([]);
+      }} title={modalTitle}>
+        {variants.length > 0 && (
+          <div className="table w-full">
+            <div className="table-header-group">
+              <div className="table-row">
+                <div className="table-cell p-2 text-left font-bold">Item</div>
+                <div className="table-cell p-2 text-left font-bold">Attribute</div>
+                <div className="table-cell p-2 text-left font-bold">Value</div>
+                <div className="table-cell p-2 text-right font-bold">Rate</div>
+              </div>
+            </div>
+            <div className="table-row-group">
+              {variants.map((item, index) => (
+                <div className={
+                  classNames(
+                    'table-row hover:bg-gray-200 cursor-pointer',
+                    selectedVariant === index ? 'bg-gray-300' : ''
+                  )
+                } onClick={() => addItemVariant(latest!, item, quantity)} key={index}>
+                  <div className="table-cell p-2">
+                    {item.name}
+                    {item.barcode && (
+                      <div className="text-gray-400">{item.barcode}</div>
+                    )}
+                  </div>
+                  <div className="table-cell p-5">{item.attributeName}</div>
+                  <div className="table-cell p-5">{item.attributeValue}</div>
+                  <div className="table-cell p-5 text-right">
+                    {item.price === null ? (
+                      <>{getRealProductPrice(latest!)}</>
+                    ) : (
+                      <>
+                        {item.price}
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </Modal>
     </>
   )
 };

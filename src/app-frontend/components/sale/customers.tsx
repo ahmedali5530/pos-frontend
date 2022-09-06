@@ -12,6 +12,8 @@ import {CustomerPayments} from "./customer.payments";
 import {CUSTOMER_CREATE, CUSTOMER_LIST} from "../../../api/routing/routes/backend.app";
 import {ConstraintViolation} from "../../../lib/validator/validation.result";
 import {Trans} from "react-i18next";
+import {UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
+import {Loader} from "../../../app-common/components/loader/loader";
 
 
 interface Props {
@@ -78,9 +80,10 @@ export const Customers: FC<Props> = ({
         phone: '',
         cnic: ''
       });
-    } catch (e: any) {
-      if (e.data.violations) {
-        e.data.violations.forEach((item: ConstraintViolation) => {
+    } catch (exception: any) {
+      if (exception instanceof UnprocessableEntityException) {
+        const e = await exception.response.json();
+        e.violations.forEach((item: ConstraintViolation) => {
           setError(item.propertyPath, {
             message: item.message,
             type: 'server'
@@ -90,7 +93,8 @@ export const Customers: FC<Props> = ({
         return false;
       }
 
-      throw e;
+      throw exception;
+
     } finally {
       setCreating(false);
     }
@@ -111,7 +115,7 @@ export const Customers: FC<Props> = ({
           <div className="grid grid-cols-7 gap-4 mb-3">
             <div className="col-span-2">
               <label htmlFor="name">Name</label>
-              <Input {...register('name')} id="name"/>
+              <Input {...register('name')} id="name" className="w-full"/>
               {errors.name && (
                 <div className="text-red-500 text-sm">
                   <Trans>
@@ -122,7 +126,7 @@ export const Customers: FC<Props> = ({
             </div>
             <div className="col-span-2">
               <label htmlFor="phone">Phone</label>
-              <Input {...register('phone')} id="phone"/>
+              <Input {...register('phone')} id="phone" className="w-full"/>
               {errors.phone && (
                 <div className="text-red-500 text-sm">
                   <Trans>
@@ -133,7 +137,7 @@ export const Customers: FC<Props> = ({
             </div>
             <div className="col-span-2">
               <label htmlFor="cnic">CNIC Number</label>
-              <Input {...register('cnic')} id="cnic"/>
+              <Input {...register('cnic')} id="cnic" className="w-full"/>
               {errors.cnic && (
                 <div className="text-red-500 text-sm">
                   <Trans>
@@ -151,7 +155,7 @@ export const Customers: FC<Props> = ({
         </form>
         {isLoading && (
           <div className="flex justify-center items-center">
-            <FontAwesomeIcon icon={faSpinner} spin size="5x"/>
+            <Loader lines={15} lineItems={8}/>
           </div>
         )}
 
@@ -163,7 +167,7 @@ export const Customers: FC<Props> = ({
                  setQ(e.target.value);
                }}
                placeholder="Search Customers"
-               className="mb-3 mt-3 search-field"/>
+               className="mb-3 mt-3 search-field w-full"/>
 
         {!isLoading && (
           <table className="table border border-collapse">

@@ -11,6 +11,8 @@ import {Expense} from "../../../api/model/expense";
 import {EXPENSE_CREATE, EXPENSE_LIST} from "../../../api/routing/routes/backend.app";
 import {ConstraintViolation} from "../../../lib/validator/validation.result";
 import {Trans} from "react-i18next";
+import {UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
+import {Loader} from "../../../app-common/components/loader/loader";
 
 export const Expenses = () => {
   const [modal, setModal] = useState(false);
@@ -25,7 +27,6 @@ export const Expenses = () => {
     }
 
     setFilters(values);
-
     try {
       const url = new URL(EXPENSE_LIST);
       const params = new URLSearchParams({
@@ -75,9 +76,10 @@ export const Expenses = () => {
 
       loadExpenses();
       createReset();
-    } catch (e: any) {
-      if (e.data.violations) {
-        e.data.violations.forEach((item: ConstraintViolation) => {
+    } catch (exception: any) {
+      if (exception instanceof UnprocessableEntityException) {
+        const e = await exception.response.json();
+        e.violations.forEach((item: ConstraintViolation) => {
           createSetError(item.propertyPath, {
             message: item.message,
             type: 'server'
@@ -86,7 +88,8 @@ export const Expenses = () => {
 
         return false;
       }
-      throw e;
+
+      throw exception;
     } finally {
       setCreating(false);
     }
@@ -101,38 +104,14 @@ export const Expenses = () => {
       <Modal open={modal} onClose={() => {
         setModal(false);
       }} title="Expenses">
-
-        <form onSubmit={handleSubmit(loadExpenses)}>
-          <div className="grid grid-cols-5 gap-4 mb-5">
-            <div className="col-span-2">
-              <Input {...register('dateTimeFrom')}
-                     type="datetime-local"
-                     placeholder="Start time"
-              />
-            </div>
-            <div className="col-span-2">
-              <Input {...register('dateTimeTo')}
-                     type="datetime-local"
-                     placeholder="End time"
-              />
-            </div>
-            <div>
-              <Button variant="primary" className="w-full" type="submit"
-                      disabled={isLoading}>{isLoading ? 'Loading...' : (
-                <>
-                  <FontAwesomeIcon icon={faSearch} className="mr-2" /> Search expenses
-                </>
-              )}</Button>
-            </div>
-          </div>
-        </form>
-
         <form onSubmit={createHandleSubmit(createExpense)}>
+          <h3 className="text-lg">Add new expenses</h3>
           <div className="grid grid-cols-7 gap-4 mb-5">
             <div className="col-span-3">
               <Input {...createRegister('description')}
                      type="text"
                      placeholder="Description"
+                     className="w-full"
               />
               {createErrors.description && (
                 <div className="text-red-500 text-sm">
@@ -146,6 +125,7 @@ export const Expenses = () => {
               <Input {...createRegister('amount')}
                      type="number"
                      placeholder="Expense Amount"
+                     className="w-full"
               />
               {createErrors.amount && (
                 <div className="text-red-500 text-sm">
@@ -167,11 +147,38 @@ export const Expenses = () => {
             </div>
           </div>
         </form>
-
+        <hr className="my-5"/>
+        <form onSubmit={handleSubmit(loadExpenses)}>
+          <h3 className="text-lg">Search</h3>
+          <div className="grid grid-cols-5 gap-4 mb-5">
+            <div className="col-span-2">
+              <Input {...register('dateTimeFrom')}
+                     type="datetime-local"
+                     placeholder="Start time"
+                     className="w-full"
+              />
+            </div>
+            <div className="col-span-2">
+              <Input {...register('dateTimeTo')}
+                     type="datetime-local"
+                     placeholder="End time"
+                     className="w-full"
+              />
+            </div>
+            <div>
+              <Button variant="primary" className="w-full" type="submit"
+                      disabled={isLoading}>{isLoading ? 'Loading...' : (
+                <>
+                  <FontAwesomeIcon icon={faSearch} className="mr-2" /> Search expenses
+                </>
+              )}</Button>
+            </div>
+          </div>
+        </form>
 
         {isLoading && (
             <div className="flex justify-center items-center">
-              <FontAwesomeIcon icon={faSpinner} spin size="5x"/>
+              <Loader lines={10}/>
             </div>
         )}
         {!isLoading && (

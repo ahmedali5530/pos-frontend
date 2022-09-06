@@ -1,4 +1,4 @@
-import React, {Ref, useEffect, useState} from "react";
+import React, {Ref, useEffect, useMemo, useState} from "react";
 import {Product} from "../../../api/model/product";
 import {useBlockLayout, useTable} from 'react-table'
 import {FixedSizeList} from 'react-window'
@@ -7,6 +7,8 @@ import classNames from "classnames";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faBarcode, faLayerGroup} from "@fortawesome/free-solid-svg-icons";
 import {getRealProductPrice} from "../../containers/dashboard/pos";
+import localforage from "../../../lib/localforage/localforage";
+import {ProductVariant} from "../../../api/model/product.variant";
 
 interface SearchTableProps {
   searchScrollContainer: Ref<FixedSizeList>;
@@ -21,7 +23,7 @@ interface SearchTableProps {
 
 
 export const SearchTable = (props: SearchTableProps) => {
-  const {searchScrollContainer, items, selected, setSelected, setRate, addItem, quantity, q} = props;
+  const {searchScrollContainer, items, selected, addItem, quantity, q} = props;
 
   const defaultColumn = React.useMemo(
     () => ({
@@ -77,7 +79,9 @@ export const SearchTable = (props: SearchTableProps) => {
               selected === index ? 'bg-gray-300' : ''
             )
           }
-          onClick={() => addItem(item, quantity)}
+          onClick={() => {
+            addItem(item, quantity)
+          }}
         >
           <div className="basis-auto grow-1 shrink-1 p-2">
             {item.variants.length > 0 && (

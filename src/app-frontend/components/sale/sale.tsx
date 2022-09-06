@@ -14,6 +14,8 @@ import {Customer} from "../../../api/model/customer";
 import classNames from "classnames";
 import {KeyboardInput} from "../keyboard.input";
 import localforage from "../../../lib/localforage/localforage";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faCheck, faPlus} from "@fortawesome/free-solid-svg-icons";
 
 const Mousetrap = require('mousetrap');
 
@@ -51,7 +53,7 @@ export const CloseSale: FC<Props> = ({
                                        discountRateType, setDiscountRateType
                                      }) => {
   const [saleModal, setSaleModal] = useState(false);
-  const {register, handleSubmit, watch, reset, setFocus, control, getValues} = useForm();
+  const {register, handleSubmit, watch, reset, control, getValues} = useForm();
   const [isSaleClosing, setSaleClosing] = useState(false);
   const [payment, setPayment] = useState<PaymentType>();
   const [hold, setHold] = useState(false);
@@ -170,7 +172,7 @@ export const CloseSale: FC<Props> = ({
 
   useEffect(() => {
     reset({
-      received: finalTotal
+      received: finalTotal.toFixed(2)
     });
   }, [finalTotal]);
 
@@ -194,19 +196,24 @@ export const CloseSale: FC<Props> = ({
 
   useEffect(() => {
     Mousetrap.bind('ctrl+s', function (e: Event) {
-      console.log('saving sale');
       e.preventDefault();
+      //open sale modal
       if (added.length > 0) {
         setSaleModal(true);
       }
+
+      if(saleModal){
+        //close sale
+        onSaleSubmit(getValues())
+      }
     });
-  }, [added]);
+  }, [added, saleModal]);
 
   return (
     <>
       <Button className="w-24 btn-success" size="lg" disabled={added.length === 0} onClick={() => {
         setSaleModal(true);
-      }}>Pay</Button>
+      }}><FontAwesomeIcon icon={faCheck} className="mr-2" />Pay</Button>
 
       <Modal open={saleModal} onClose={() => {
         setSaleModal(false);
@@ -255,7 +262,7 @@ export const CloseSale: FC<Props> = ({
               </OrderTotals>
             </div>
             <div className="col-span-2">
-              <div className="grid grid-cols-3">
+              <div className="grid grid-cols-3 gap-4">
                 <Button className="btn-secondary" size="lg" active={quickCashOperation === 'exact'}
                         onClick={() => setQuickCashOperation('exact')}>Exact</Button>
                 <Button className="btn-secondary" size="lg" active={quickCashOperation === 'add'}
@@ -269,7 +276,7 @@ export const CloseSale: FC<Props> = ({
                           onClick={() => addQuickCash(item)}>{item}</Button>
                 ))}
                 <Button disabled={!payment?.canHaveChangeDue} className="w-full btn-primary" size="lg" key={finalTotal}
-                        onClick={() => addQuickCash(finalTotal, 'exact')}>{finalTotal}</Button>
+                        onClick={() => addQuickCash(finalTotal, 'exact')}>{finalTotal.toFixed(2)}</Button>
                 <Button disabled={!payment?.canHaveChangeDue} className="w-full btn-danger" size="lg" key={0}
                         onClick={() => addQuickCash(0, 'exact')}>C</Button>
               </div>
@@ -297,27 +304,33 @@ export const CloseSale: FC<Props> = ({
           <div className="grid grid-cols-2 gap-5">
             <div>
               <div className="mb-5">
-                <Controller
-                  name="received"
-                  control={control}
-                  render={(props) => {
-                    return (
-                      <>
-                        <KeyboardInput
-                          onchange={props.field.onChange}
-                          value={props.field.value}
-                          type="number"
-                          readOnly={payment?.canHaveChangeDue !== true}
-                          id="amount"
-                          placeholder="Payment"
-                          triggerWithIcon
-                          innerRef={props.field.ref}
-                        />
-                      </>
-                    )
-                  }}
-                  defaultValue={finalTotal}
-                />
+                <div className="input-group">
+                  <Controller
+                    name="received"
+                    control={control}
+                    render={(props) => {
+                      return (
+                        <>
+                          <KeyboardInput
+                            onchange={props.field.onChange}
+                            value={props.field.value}
+                            type="number"
+                            readOnly={payment?.canHaveChangeDue !== true}
+                            id="amount"
+                            placeholder="Payment"
+                            triggerWithIcon
+                            innerRef={props.field.ref}
+                            className="w-full flex-1 lg"
+                          />
+                        </>
+                      )
+                    }}
+                    defaultValue={finalTotal}
+                  />
+                  <button type="button" className="btn btn-secondary lg w-24">
+                    <FontAwesomeIcon icon={faPlus} />
+                  </button>
+                </div>
               </div>
 
               <div className="mb-5">

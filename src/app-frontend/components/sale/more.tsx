@@ -11,11 +11,11 @@ import {useLoadData} from "../../hooks/use.load.data";
 import localforage from "../../../lib/localforage/localforage";
 import {useSelector} from "react-redux";
 import {getAuthorizedUser} from "../../../duck/auth/auth.selector";
+import {Switch} from "../../../app-common/components/input/switch";
+import {Tab, TabContent, TabControl, TabNav} from "../../../app-common/components/tabs/tabs";
 
 interface Props{
   setList: (list: HomeProps['list']) => void;
-  setDiscountList: (list: HomeProps['discountList']) => void;
-  setTaxList: (list: HomeProps['taxList']) => void;
   setPaymentTypesList: (list: HomeProps['paymentTypesList']) => void;
   setTax: (data?: Tax) => void;
   setDiscount: (data?: Discount) => void;
@@ -27,15 +27,13 @@ export interface ReactSelectOptionProps{
 }
 
 export const More: FC<Props> = ({
-  setList, setDiscountList, setTaxList, setPaymentTypesList, setTax, setDiscount
+  setList, setPaymentTypesList, setTax, setDiscount
 }) => {
   const [modal, setModal] = useState(false);
   const [state, action] = useLoadData();
 
   useEffect(() => {
     setList(state.list);
-    setDiscountList(state.discountList);
-    setTaxList(state.taxList);
     setPaymentTypesList(state.paymentTypesList);
   }, [state.list, state.discountList, state.taxList, state.paymentTypesList]);
 
@@ -62,6 +60,9 @@ export const More: FC<Props> = ({
   const [defaultDiscount, setDefaultDiscount] = useState<ReactSelectOptionProps>();
   const [defaultPaymentType, setDefaultPaymentType] = useState<ReactSelectOptionProps>();
   const [defaultDevice, setDefaultDevice] = useState<ReactSelectOptionProps>();
+
+  const [displayVariants, setDisplayVariants] = useState(false);
+  const [displayShortcuts, setDisplayShortcuts] = useState(false);
 
 
   useEffect(() => {
@@ -105,6 +106,22 @@ export const More: FC<Props> = ({
           });
         }
       });
+
+      localforage.getItem('displayVariants').then((data: any) => {
+        if(data){
+          setDisplayVariants(data);
+        }else{
+          setDisplayVariants(false);
+        }
+      });
+      localforage.getItem('displayShortcuts').then((data: any) => {
+        if(data){
+          setDisplayShortcuts(data);
+        }else{
+          setDisplayShortcuts(false);
+        }
+      });
+
     }
   }, [modal]);
 
@@ -119,104 +136,133 @@ export const More: FC<Props> = ({
       <Modal open={modal} onClose={() => {
         setModal(false);
       }} title="Settings">
-        <div className="border flex justify-center items-center mb-5 border-purple-500 text-purple-500 w-full font-bold p-5">
-          Logged in as {user?.displayName}
-        </div>
-        <div className="w-full"/>
+        <TabControl
+          defaultTab="general"
+          render={({isTabActive, setActiveTab, activeTab}) => (
+            <>
+              <TabNav>
+                <Tab isActive={isTabActive('general')} onClick={() => setActiveTab('general')}>General</Tab>
+                <Tab isActive={isTabActive('profile')} onClick={() => setActiveTab('profile')}>Profile</Tab>
+                <Tab isActive={isTabActive('defaults')} onClick={() => setActiveTab('defaults')}>Defaults</Tab>
+              </TabNav>
+              <TabContent isActive={isTabActive('general')}>
+                <div className="inline-flex flex-col gap-5 justify-start">
+                  <Button variant="success" onClick={() => {
+                    clearCache();
+                  }} className="mr-3 flex-grow-0" size="lg" disabled={isLoading}>
+                    {isLoading ? 'Clearing...' : 'Refresh Cache'}
+                  </Button>
 
-        <Button variant="success" onClick={() => {
-          clearCache();
-        }} className="mr-3 mb-3" size="lg" disabled={isLoading}>
-          {isLoading ? 'Clearing...' : 'Refresh Cache'}
-        </Button>
-        <hr className="my-5"/>
-        <div className="grid grid-cols-4 gap-5">
-          <div>
-            <h3 className="text-xl">Set Default tax</h3>
-            <Select
-              options={state.taxList.list.map(item => {
-                return {
-                  label: item.name + ' ' + item.rate,
-                  value: JSON.stringify(item)
-                };
-              })}
-              isClearable
-              onChange={(value: any) => {
-                if(value) {
-                  localforage.setItem('defaultTax', JSON.parse(value.value));
-                  setTax(JSON.parse(value.value));
-                }else{
-                  localforage.removeItem('defaultTax');
-                  setTax(undefined);
-                }
-              }}
-              value={defaultTax}
-            />
-          </div>
-          <div>
-            <h3 className="text-xl">Set Default discount</h3>
-            <Select
-              options={state.discountList.list.map(item => {
-                return {
-                  label: item.name,
-                  value: JSON.stringify(item)
-                };
-              })}
-              isClearable
-              onChange={(value: any) => {
-                if(value) {
-                  localforage.setItem('defaultDiscount', JSON.parse(value.value));
-                  setDiscount(JSON.parse(value.value));
-                }else{
-                  localforage.removeItem('defaultDiscount');
-                  setDiscount(undefined);
-                }
-
-              }}
-              value={defaultDiscount}
-            />
-          </div>
-          <div>
-            <h3 className="text-xl">Set Default payment type</h3>
-            <Select
-              options={state.paymentTypesList.list.map(item => {
-                return {
-                  label: item.name,
-                  value: JSON.stringify(item)
-                };
-              })}
-              isClearable
-              onChange={(value: any) => {
-                if(value) {
-                  localforage.setItem('defaultPaymentType', JSON.parse(value.value));
-                }else{
-                  localforage.removeItem('defaultPaymentType');
-                }
-              }}
-              value={defaultPaymentType}
-            />
-          </div>
-          <div>
-            <h3 className="text-xl">Set Default Printer</h3>
-            <Select
-              options={state.deviceList.list.map(item => {
-                return {
-                  label: item.name,
-                  value: JSON.stringify(item)
-                };
-              })}
-              isClearable
-              onChange={(value: any) => {
-                if(value) {
-                  localforage.setItem('defaultDevice', JSON.parse(value.value));
-                }else{
-                  localforage.removeItem('defaultDevice');
-                }
-              }}
-              value={defaultDevice}
-            />
-          </div>
-        </div>
+                  <Switch checked={displayShortcuts} onChange={(value) => {
+                    localforage.setItem('displayShortcuts', value.target.checked);
+                    setDisplayShortcuts(value.target.checked);
+                  }}>Display shortcuts</Switch>
+                  <Switch checked={displayVariants} onChange={(value) => {
+                    localforage.setItem('displayVariants', value.target.checked);
+                    setDisplayVariants(value.target.checked);
+                  }}>Display variants in search</Switch>
+                </div>
+              </TabContent>
+              <TabContent isActive={isTabActive('profile')}>
+                <div className="border flex justify-center items-center mb-5 border-purple-500 text-purple-500 w-full font-bold p-5">
+                  Logged in as {user?.displayName}
+                </div>
+              </TabContent>
+              <TabContent isActive={isTabActive('defaults')}>
+                <div className="grid grid-cols-4 gap-5">
+                  <div>
+                    <h3 className="text-xl">Set Default tax</h3>
+                    <Select
+                      options={state.taxList.list.map(item => {
+                        return {
+                          label: item.name + ' ' + item.rate,
+                          value: JSON.stringify(item)
+                        };
+                      })}
+                      isClearable
+                      onChange={(value: any) => {
+                        if(value) {
+                          localforage.setItem('defaultTax', JSON.parse(value.value));
+                          setTax(JSON.parse(value.value));
+                        }else{
+                          localforage.removeItem('defaultTax');
+                          setTax(undefined);
+                          setDefaultTax(undefined);
+                        }
+                      }}
+                      value={defaultTax}
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-xl">Set Default discount</h3>
+                    <Select
+                      options={state.discountList.list.map(item => {
+                        return {
+                          label: item.name,
+                          value: JSON.stringify(item)
+                        };
+                      })}
+                      isClearable
+                      onChange={(value: any) => {
+                        if(value) {
+                          localforage.setItem('defaultDiscount', JSON.parse(value.value));
+                          setDiscount(JSON.parse(value.value));
+                        }else{
+                          localforage.removeItem('defaultDiscount');
+                          setDiscount(undefined);
+                          setDefaultDiscount(undefined);
+                        }
+                      }}
+                      value={defaultDiscount}
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-xl">Set Default payment type</h3>
+                    <Select
+                      options={state.paymentTypesList.list.map(item => {
+                        return {
+                          label: item.name,
+                          value: JSON.stringify(item)
+                        };
+                      })}
+                      isClearable
+                      onChange={(value: any) => {
+                        if(value) {
+                          localforage.setItem('defaultPaymentType', JSON.parse(value.value));
+                        }else{
+                          localforage.removeItem('defaultPaymentType');
+                          setDefaultPaymentType(undefined);
+                        }
+                      }}
+                      value={defaultPaymentType}
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-xl">Set Default Printer</h3>
+                    <Select
+                      options={state.deviceList.list.map(item => {
+                        return {
+                          label: item.name,
+                          value: JSON.stringify(item)
+                        };
+                      })}
+                      isClearable
+                      onChange={(value: any) => {
+                        if(value) {
+                          localforage.setItem('defaultDevice', JSON.parse(value.value));
+                        }else{
+                          localforage.removeItem('defaultDevice');
+                          setDefaultDevice(undefined);
+                        }
+                      }}
+                      value={defaultDevice}
+                    />
+                  </div>
+                </div>
+              </TabContent>
+            </>
+          )}
+        />
       </Modal>
     </>
   );

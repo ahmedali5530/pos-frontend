@@ -84,7 +84,7 @@ export const OrderTotals :FC<OrderTotalsProps> = ({
             </span>
           )}
         </th>
-        <td className="border border-gray-300 p-2 text-right">{discountTotal}</td>
+        <td className="border border-gray-300 p-2 text-right">{discountTotal.toFixed(2)}</td>
       </tr>
       {/*<tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left">Coupons</th>
@@ -93,7 +93,7 @@ export const OrderTotals :FC<OrderTotalsProps> = ({
       <tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left text-4xl font-bold text-emerald-500">Total</th>
         <td
-          className="border border-gray-300 p-2 text-right text-4xl font-bold text-emerald-500">{finalTotal}</td>
+          className="border border-gray-300 p-2 text-right text-4xl font-bold text-emerald-500">{finalTotal.toFixed(2)}</td>
       </tr>
       {children}
       </tbody>

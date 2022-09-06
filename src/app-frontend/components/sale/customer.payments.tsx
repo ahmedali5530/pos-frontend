@@ -6,7 +6,7 @@ import {Modal} from "../modal";
 import {Customer} from "../../../api/model/customer";
 import {DateTime} from "luxon";
 import {Input} from "../input";
-import {useForm} from "react-hook-form";
+import {Controller, useForm} from "react-hook-form";
 import {fetchJson} from "../../../api/request/request";
 import classNames from "classnames";
 import * as _ from 'lodash';
@@ -15,6 +15,8 @@ import {ViewOrder} from "./view.order";
 import {CUSTOMER_PAYMENT_CREATE} from "../../../api/routing/routes/backend.app";
 import {ConstraintViolation} from "../../../lib/validator/validation.result";
 import {Trans} from "react-i18next";
+import {ReactSelect} from "../../../app-common/components/input/custom.react.select";
+import {UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
 
 interface Props extends PropsWithChildren{
   customer: Customer;
@@ -25,7 +27,7 @@ export const CustomerPayments: FC<Props> = ({
                                               customer: customerProp, onCreate, children
                                             }) => {
   const [modal, setModal] = useState(false);
-  const {register, handleSubmit, setError, formState: {errors}, reset} = useForm();
+  const {register, handleSubmit, setError, formState: {errors}, reset, control} = useForm();
   const [creating, setCreating] = useState(false);
 
   const [customer, setCustomer] = useState<Customer>(customerProp);
@@ -37,8 +39,11 @@ export const CustomerPayments: FC<Props> = ({
   const createPayment = async (values: any) => {
     setCreating(true);
     try {
-      let url = '';
-      url = CUSTOMER_PAYMENT_CREATE.replace(':id', customer.id);
+      const url = CUSTOMER_PAYMENT_CREATE.replace(':id', customer.id);
+
+      if(values.orderId){
+        values.orderId = values.orderId.value;
+      }
 
       const response = await fetchJson(url, {
         method: 'POST',
@@ -57,9 +62,10 @@ export const CustomerPayments: FC<Props> = ({
       if (onCreate) {
         onCreate!();
       }
-    } catch (e: any) {
-      if (e.data.violations) {
-        e.data.violations.forEach((item: ConstraintViolation) => {
+    } catch (exception: any) {
+      if (exception instanceof UnprocessableEntityException) {
+        const e = await exception.response.json();
+        e.violations.forEach((item: ConstraintViolation) => {
           setError(item.propertyPath, {
             message: item.message,
             type: 'server'
@@ -69,7 +75,7 @@ export const CustomerPayments: FC<Props> = ({
         return false;
       }
 
-      throw e;
+      throw exception;
     } finally {
       setCreating(false);
     }
@@ -110,9 +116,9 @@ export const CustomerPayments: FC<Props> = ({
         <form onSubmit={handleSubmit(createPayment)} className="mb-5">
           <input type="hidden" {...register('id')}/>
           <div className="grid grid-cols-5 gap-4 mb-3">
-            <div className="col-span-2">
+            <div className="col-span-1">
               <label htmlFor="amount">Amount</label>
-              <Input {...register('amount')} id="amount"/>
+              <Input {...register('amount')} id="amount" className="w-full"/>
               {errors.amount && (
                 <div className="text-red-500 text-sm">
                   <Trans>
@@ -123,7 +129,7 @@ export const CustomerPayments: FC<Props> = ({
             </div>
             <div className="col-span-2">
               <label htmlFor="description">Description</label>
-              <Input {...register('description')} id="description"/>
+              <Input {...register('description')} id="description" className="w-full"/>
               {errors.description && (
                 <div className="text-red-500 text-sm">
                   <Trans>
@@ -132,10 +138,37 @@ export const CustomerPayments: FC<Props> = ({
                 </div>
               )}
             </div>
+            <div className="col-span-1">
+              <label htmlFor="description">Order#</label>
+              <Controller
+                control={control}
+                name="orderId"
+                render={(props) => (
+                  <ReactSelect
+                    options={customer.orders.map(item => {
+                      return {
+                        label: `${item.orderId} (${DateTime.fromISO(item.createdAt).toFormat('ff')})`,
+                        value: item.id
+                      };
+                    })}
+                    isClearable
+                    onChange={props.field.onChange}
+                    value={props.field.value}
+                  />
+                )}
+              />
+              {errors.orderId && (
+                <div className="text-red-500 text-sm">
+                  <Trans>
+                    {errors.orderId.message}
+                  </Trans>
+                </div>
+              )}
+            </div>
             <div>
               <label className="block">&nbsp;</label>
               <Button variant="primary" type="submit" className="w-full"
-                      disabled={creating}>{creating ? 'Creating...' : 'Create Payment'}</Button>
+                      disabled={creating}>{creating ? 'Receiving...' : 'Receive Payment'}</Button>
             </div>
           </div>
         </form>
@@ -174,17 +207,28 @@ export const CustomerPayments: FC<Props> = ({
             <tr key={index} className="hover:bg-gray-100">
               <td>{DateTime.fromISO(item.createdAt).toRelative()}</td>
               <td>
-                {item.amount}
-                {item.orderId && item.payments.reduce((prev: number, item: OrderPayment) => prev + item.total, 0)}
+                {item.amount && item.amount}
+                {item.orderId && (
+                  <>
+                    {item.payments.map((p: OrderPayment) => p.type.name)} Sale {item.payments.reduce((prev: number, item: OrderPayment) => prev + item.total, 0)}
+                  </>
+                )}
               </td>
               <td>
-                {item.description}
+                {item.description && (
+                  <>Receiving: {item.description}</>
+                )}
                 {item.orderId && 'Sale'}
               </td>
               <td>
                 {item.orderId && (
                   <ViewOrder order={item}>
                     <FontAwesomeIcon icon={faEye} className="mr-2"/> {item.orderId}
+                  </ViewOrder>
+                )}
+                {item.order && (
+                  <ViewOrder order={item.order}>
+                    <FontAwesomeIcon icon={faEye} className="mr-2"/> {item.order.orderId}
                   </ViewOrder>
                 )}
               </td>

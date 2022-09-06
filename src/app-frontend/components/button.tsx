@@ -13,8 +13,9 @@ export const Button = (props: ButtonProps) => {
       {...props}
       className={
         classNames(
-          'btn', props.variant && 'btn-' + props.variant,
-          props.active ? 'border-4' : 'border-2',
+          'btn border-2', props.variant && 'btn-' + props.variant,
+          props.active ? 'active' : '',
+          props.size && props.size,
           props.className && props.className
         )
       }

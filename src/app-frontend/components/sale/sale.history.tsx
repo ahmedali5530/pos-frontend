@@ -34,6 +34,7 @@ import {ViewOrder} from "./view.order";
 import {CustomerPayments} from "./customer.payments";
 import {ResponsivePie as Pie} from "@nivo/pie";
 import {ResponsiveBar as Bar} from "@nivo/bar";
+import {Loader} from "../../../app-common/components/loader/loader";
 
 interface Props {
   setAdded: (item: CartItem[]) => void;
@@ -57,9 +58,9 @@ export const SaleHistory: FC<Props> = ({
   const [payments, setPayments] = useState<{ [key: string]: number }>({});
 
   const loadSales = async (values?: any) => {
-    if (!values) {
+    // if (!values) {
       setLoading(true);
-    }
+    // }
 
     loadExpenses(values);
 
@@ -107,7 +108,7 @@ export const SaleHistory: FC<Props> = ({
 
       throw e;
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
@@ -327,7 +328,6 @@ export const SaleHistory: FC<Props> = ({
         return order?.tax?.amount + prev;
       }
 
-      console.log(prev, 'prev')
       return prev;
     }, 0);
   }, [list]);
@@ -367,6 +367,36 @@ export const SaleHistory: FC<Props> = ({
     return expenses.reduce((prev, item) => prev + item.amount, 0);
   }, [expenses]);
 
+  const customerChartData = useMemo(() => {
+    const customers: {[name: string]: number} = {};
+    list.forEach(order => {
+      if(order?.customer) {
+        if(!customers[order?.customer?.name]){
+          customers[order?.customer?.name] = 0;
+        }
+
+        customers[order?.customer?.name] += order.payments.reduce((p, payment) => p + payment.total, 0);
+      }else{
+        const cash = 'Cash';
+        if(!customers[cash]){
+          customers[cash] = 0;
+        }
+
+        customers[cash] += order.payments.reduce((p, payment) => p + payment.total, 0);
+      }
+    });
+
+    const data: {id: string, value: number}[] = [];
+    Object.keys(customers).forEach(c => {
+      data.push({
+        id: c,
+        value: customers[c]
+      });
+    });
+
+    return data;
+  }, [list]);
+
   const {register, handleSubmit} = useForm();
 
   const [areChartsOpen, setChartsOpen] = useState(false);
@@ -386,7 +416,7 @@ export const SaleHistory: FC<Props> = ({
             <div className="col-span-3">
               <Input type="search"
                      placeholder="Search in Order#, Status, Customer"
-                     className="search-field"
+                     className="search-field w-full"
                      {...register('q')}
                      onChange={(e) => {
                        setQ(e.target.value);
@@ -398,6 +428,7 @@ export const SaleHistory: FC<Props> = ({
                      type="datetime-local"
                      placeholder="Start time"
                      defaultValue={DateTime.now().startOf('day').toISO()}
+                     className=" w-full"
               />
             </div>
             <div>
@@ -405,6 +436,7 @@ export const SaleHistory: FC<Props> = ({
                      type="datetime-local"
                      placeholder="End time"
                      defaultValue={DateTime.now().endOf('day').toISO()}
+                     className=" w-full"
               />
             </div>
             <div>
@@ -419,12 +451,12 @@ export const SaleHistory: FC<Props> = ({
           </div>
         </form>
 
-
         {isLoading && (
           <div className="flex justify-center items-center">
-            <FontAwesomeIcon icon={faSpinner} spin size="5x"/>
+            <Loader lines={15} lineItems={9}/>
           </div>
         )}
+
         {!isLoading && (
           <>
             <h3 className="mb-3 text-lg cursor-pointer" onClick={() => setChartsOpen(!areChartsOpen)}>
@@ -448,6 +480,10 @@ export const SaleHistory: FC<Props> = ({
                         enableArcLabels={false}
                         enableArcLinkLabels={false}
                         colors={{scheme: 'purpleRed_green'}}
+                        margin={{
+                          top: 20,
+                          bottom: 20
+                        }}
                       />
                     )}
                   </div>
@@ -458,16 +494,17 @@ export const SaleHistory: FC<Props> = ({
                   <div className="h-[300px]">
                     <Bar
                       data={[
-                        {id: 'Sale', value: totalAmount},
-                        {id: 'Cost', value: totalCost},
-                        {id: 'Discount', value: discountTotal},
-                        {id: 'Tax', values: taxTotal},
-                        {id: 'Expense', value: totalExpenses}
+                        {id: 'Sale', value: totalAmount.toFixed(2)},
+                        {id: 'Cost', value: totalCost.toFixed(2)},
+                        {id: 'Discount', value: discountTotal.toFixed(2)},
+                        {id: 'Tax', value: taxTotal.toFixed(2)},
+                        {id: 'Expense', value: totalExpenses.toFixed(2)}
                       ]}
                       // keys={['value']}
                       margin={{
                         bottom: 50,
-                        left: 50
+                        left: 50,
+                        top: 20
                       }}
                       valueScale={{type: 'linear'}}
                       tooltip={({indexValue, value}) => {
@@ -481,6 +518,28 @@ export const SaleHistory: FC<Props> = ({
                   </div>
                 </div>
 
+                <div>
+                  <h4 className="text-lg">Customers</h4>
+                  <div className="h-[300px]">
+                    <Bar
+                      data={customerChartData}
+                      // keys={['value']}
+                      margin={{
+                        bottom: 50,
+                        left: 50,
+                        top: 20
+                      }}
+                      valueScale={{type: 'linear'}}
+                      tooltip={({indexValue, value}) => {
+                        return (
+                          <span className="bg-white rounded p-1 text-sm shadow">
+                            {indexValue}: {value}
+                          </span>
+                        )
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             )}
             <div className="grid grid-cols-5 gap-4 mb-5">

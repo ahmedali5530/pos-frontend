@@ -58,9 +58,9 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
         <span className="inline-block w-[64px]">
           <Input
             value={item.quantity}
-            className="text-center"
+            className="text-center w-full"
             onChange={(event) => onQuantityChange(item, +event.currentTarget.value)}
-            selectable
+            selectable={true}
           />
         </span>
         {/*<Button type="button" variant="secondary" onClick={() => onQuantityChange(item, item.quantity + 1)}>
@@ -71,20 +71,20 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
       <div className="table-cell p-2 text-center">
         <Input
           value={item.discount}
-          className="text-center"
+          className="text-center w-full"
           onChange={(event) => {
             onDiscountChange(item, +event.currentTarget.value)
           }}
-          selectable
+          selectable={true}
         />
       </div>
       <div className="table-cell p-2 text-right">
       <span className="">
         <Input
           value={item.price}
-          className="text-center"
+          className="text-center w-full"
           onChange={(event) => onPriceChange(item, +event.currentTarget.value)}
-          selectable
+          selectable={true}
         />
       </span>
       </div>

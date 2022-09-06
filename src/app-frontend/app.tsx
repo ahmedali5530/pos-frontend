@@ -100,8 +100,6 @@ export const RequireAuth = ({children }: { children: JSX.Element }) => {
   let location = useLocation();
   const userLoggedIn = useSelector(isUserLoggedIn);
 
-  console.log(userLoggedIn);
-
   if (!userLoggedIn) {
     return <Navigate
       to={LOGIN}

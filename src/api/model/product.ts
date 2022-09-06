@@ -2,7 +2,7 @@ import {Category} from "./category";
 import {ProductVariant} from "./product.variant";
 import {ProductPrice} from "./product.price";
 
-export interface Product {
+export type Product = {
   id: number;
   name: string;
   sku?: string;

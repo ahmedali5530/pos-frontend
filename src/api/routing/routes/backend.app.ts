@@ -39,9 +39,26 @@ export const CUSTOMER_PAYMENT_CREATE = scopeUrl('/admin/customer/payment/:id');
 
 export const CATEGORY_LIST = scopeUrl('/admin/category/list');
 export const CATEGORY_CREATE = scopeUrl('/admin/category/create');
+export const CATEGORY_GET = scopeUrl('/admin/category/:id');
+export const CATEGORY_DELETE = scopeUrl('/admin/category/:id');
 
 export const DEVICE_LIST = scopeUrl('/admin/device/list');
 export const DEVICE_CREATE = scopeUrl('/admin/device/create');
 
 export const EXPENSE_LIST = scopeUrl('/admin/expense/list');
 export const EXPENSE_CREATE = scopeUrl('/admin/expense/create');
+
+export const SUPPLIER_LIST = scopeUrl('/admin/supplier/list');
+export const SUPPLIER_CREATE = scopeUrl('/admin/supplier/create');
+export const SUPPLIER_EDIT = scopeUrl('/admin/supplier/:id');
+export const SUPPLIER_DELETE = scopeUrl('/admin/supplier/:id');
+
+export const BRAND_LIST = scopeUrl('/admin/brand/list');
+export const BRAND_CREATE = scopeUrl('/admin/brand/create');
+export const BRAND_EDIT = scopeUrl('/admin/brand/:id');
+export const BRAND_DELETE = scopeUrl('/admin/brand/:id');
+
+export const PURCHASE_LIST = scopeUrl('/admin/purchase/list');
+export const PURCHASE_CREATE = scopeUrl('/admin/purchase/create');
+export const PURCHASE_EDIT = scopeUrl('/admin/purchase/:id');
+export const PURCHASE_DELETE = scopeUrl('/admin/purchase/:id');

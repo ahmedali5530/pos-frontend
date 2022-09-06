@@ -132,31 +132,64 @@ a{
 }
 
 .btn{
-  @apply font-sans inline-flex justify-center items-center leading-5 rounded-lg px-3 py-2 align-middle h-[40px] active:shadow-none bg-white;
+  @apply font-sans inline-flex justify-center items-center leading-5 rounded-lg px-3 py-2 align-middle h-[40px] active:shadow-none bg-white border-2;
   &.lg{
     @apply min-h-[48px];
   }
   &.sm{
     @apply h-[30px] text-sm px-1 py-1;
   }
+  &:disabled{
+    @apply cursor-not-allowed;
+  }
   &.btn-primary{
-    @apply border-purple-500 disabled:bg-purple-300 border-purple-500 text-purple-500 focus:outline-none focus:ring focus:ring-purple-200 focus:border-purple-500 active:bg-purple-500 active:text-white hover:bg-purple-50;
+    @apply border-purple-500 border-purple-500 text-purple-500 focus:outline-none focus:ring focus:ring-purple-200 focus:border-purple-500 active:bg-purple-500 active:text-white hover:bg-purple-100;
+    &:disabled{
+      @apply bg-purple-100;
+    }
+    &.active{
+      @apply bg-purple-500 text-white;
+    }
   }
   &.btn-danger{
-    @apply border-rose-500 disabled:bg-rose-300 border-rose-500 text-rose-500 focus:outline-none focus:ring focus:ring-rose-200 focus:border-rose-500 active:bg-rose-500 active:text-white hover:bg-rose-50;
+    @apply border-rose-500 border-rose-500 text-rose-500 focus:outline-none focus:ring focus:ring-rose-200 focus:border-rose-500 active:bg-rose-500 active:text-white hover:bg-rose-50;
+    &:disabled{
+      @apply bg-rose-100;
+    }
+    &.active{
+      @apply bg-rose-500 text-white;
+    }
   }
   &.btn-secondary{
-    @apply border-gray-500 disabled:bg-gray-300 border-gray-500 text-gray-500 focus:outline-none focus:ring focus:ring-gray-200 focus:border-gray-500 active:bg-gray-500 active:text-white hover:bg-gray-50;
+    @apply border-gray-500 border-gray-500 text-gray-500 focus:outline-none focus:ring focus:ring-gray-200 focus:border-gray-500 active:bg-gray-500 active:text-white hover:bg-gray-50;
+    &:disabled{
+      @apply bg-gray-100;
+    }
+    &.active{
+      @apply bg-gray-500 text-white;
+    }
   }
   &.btn-warning{
     @apply border-amber-500 disabled:bg-amber-200 border-amber-500 text-amber-500 focus:outline-none focus:ring focus:ring-amber-200 focus:border-amber-500 active:bg-amber-500 active:text-white hover:bg-amber-50;
+    &:disabled{
+      @apply bg-amber-100;
+    }
+    &.active{
+      @apply bg-amber-500 text-white;
+    }
   }
   &.btn-success{
-    @apply border-emerald-500 disabled:bg-emerald-300 border-emerald-500 text-emerald-500 focus:outline-none focus:ring focus:ring-emerald-200 focus:border-emerald-500 active:bg-emerald-500 active:text-white hover:bg-emerald-50;
+    @apply border-emerald-500 border-emerald-500 text-emerald-500 focus:outline-none focus:ring focus:ring-emerald-200 focus:border-emerald-500 active:bg-emerald-500 active:text-white hover:bg-emerald-50;
+    &:disabled{
+      @apply bg-emerald-100;
+    }
+    &.active{
+      @apply bg-emerald-500 text-white;
+    }
   }
 }
 .form-control, .input{
-  @apply font-sans block text-sm leading-5 w-full py-2 px-3 border-2 border-purple-500 text-gray-500 rounded-lg focus:outline-none focus:ring focus:ring-purple-200 focus:border-purple-500 disabled:bg-purple-100 read-only:bg-purple-100 focus:shadow-none;
+  @apply font-sans block text-sm leading-5 py-2 px-3 border-2 border-purple-500 text-gray-500 rounded-lg focus:outline-none focus:ring focus:ring-purple-200 focus:border-purple-500 disabled:bg-purple-100 read-only:bg-purple-100 focus:shadow-none;
   &.lg{
     @apply min-h-[48px];
   }
@@ -402,5 +435,42 @@ a{
   }
 }
 .input-group{
-  @apply flex flex-1;
+  @apply flex;
+  *{
+    border-radius: 0;
+  }
+  :nth-child(1){
+    @apply rounded-bl-lg rounded-tl-lg;
+  }
+  :last-child{
+    @apply rounded-br-lg rounded-tr-lg;
+  }
+}
+.checkbox{
+  @apply inline-flex items-center;
+  label{
+    @apply font-bold cursor-pointer;
+  }
+  input[type="checkbox"]{
+    @apply border-2 border-neutral-300 rounded-full inline-flex relative justify-start items-center align-middle;
+    @apply cursor-pointer;
+    @apply appearance-none;
+    width: 60px;
+    height: 40px;
+    transition: ease-in-out all 150ms;
+
+    &::before{
+      content: '';
+      @apply bg-neutral-300 rounded-full inline-block ml-1 mr-0;
+      height: 28px;
+      width: 28px;
+
+    }
+    &:checked::before{
+      @apply bg-purple-500 mr-1 ml-0;
+    }
+    &:checked{
+      @apply border-purple-500 justify-end;
+    }
+  }
 }

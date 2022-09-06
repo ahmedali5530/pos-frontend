@@ -99,7 +99,7 @@ export const ApplyDiscount: FC<Props> = ({
                 <div className="col-span-2">
                   <select
                     {...register('rateType')}
-                    className="form-control lg"
+                    className="form-control lg w-full"
                     value={discountRateType}
                     onChange={(value) => setDiscountRateType(value.target.value)}
                   >
@@ -125,6 +125,7 @@ export const ApplyDiscount: FC<Props> = ({
                           onChange={props.field.onChange}
                           inputSize="lg"
                           selectable
+                          className="input w-full"
                         />
                         {errors.discountAmount && (
                           <span className="text-red-500 text-sm">

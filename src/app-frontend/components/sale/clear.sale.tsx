@@ -4,6 +4,8 @@ import {CartItem} from "../../../api/model/cart.item";
 import {Discount} from "../../../api/model/discount";
 import {Tax} from "../../../api/model/tax";
 import localforage from "../../../lib/localforage/localforage";
+import {faCheck, faTimes} from "@fortawesome/free-solid-svg-icons";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
 
 interface Props{
@@ -20,6 +22,7 @@ export const ClearSale: FC<Props> = ({
 
   const cancel = () => {
     setAdded([]);
+    //delete from localforage
 
     localforage.getItem('defaultDiscount').then((data: any) => {
       if(data) {
@@ -46,6 +49,6 @@ export const ClearSale: FC<Props> = ({
             disabled={added.length === 0}
             onClick={cancel}
             type="button"
-    >Cancel</Button>
+    ><FontAwesomeIcon icon={faTimes} className="mr-2" />Cancel</Button>
   );
 };
