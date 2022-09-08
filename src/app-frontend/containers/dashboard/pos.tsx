@@ -23,7 +23,7 @@ import {SaleHistory} from "../../components/sale/sale.history";
 import {Customers} from "../../components/sale/customers";
 import {Logout} from "../../components/logout";
 import {Expenses} from "../../components/sale/expenses";
-import {Items} from "../../components/sale/items";
+import {ItemsTabs} from "../../components/sale/items.tabs";
 import {More} from "../../components/sale/more";
 import {OrderTotals} from "../../components/sale/cart/order.totals";
 const Mousetrap = require('mousetrap');
@@ -226,10 +226,6 @@ const Pos: FC = () => {
 
   const items = useMemo(() => {
     return list?.list?.filter(item => {
-      if (item.shortCode && item.shortCode.toLowerCase().startsWith(q.toLowerCase())) {
-        return true;
-      }
-
       if (item.barcode && item.barcode.toLowerCase().startsWith(q.toLowerCase())) {
         return true;
       }
@@ -238,7 +234,7 @@ const Pos: FC = () => {
     })
   }, [list?.list, q]);
 
-  const addItem = useCallback((item: Product, quantity: number, price?: number) => {
+  const addItem = (item: Product, quantity: number, price?: number) => {
     let newPrice = 0;
     if (item.basePrice) {
       newPrice = item.basePrice;
@@ -283,7 +279,7 @@ const Pos: FC = () => {
 
     setSelected(items.findIndex(i => i.id === item.id));
     setQuantity(1);
-  }, [added, items, rate]);
+  };
 
   const addItemVariant = (item: Product, variant: ProductVariant, quantity: number) => {
     const oldItems = [...added];
@@ -489,7 +485,7 @@ const Pos: FC = () => {
         moveCursor(e);
       }
     });
-  }, [modal, selected, selectedVariant, variants, items]);
+  }, [modal, selected, selectedVariant, variants, items, added]);
 
   return (
     <>
@@ -590,7 +586,7 @@ const Pos: FC = () => {
             />
             <Customers customer={customer} setCustomer={setCustomer}/>
             <Expenses/>
-            <Items/>
+            <ItemsTabs/>
             <More
               setList={setList}
               setPaymentTypesList={setPaymentTypesList}

@@ -21,14 +21,22 @@ export function ReactSelect<Option,
         },
       })}
       styles={{
-        control: (base) => ({
+        control: (base, props) => ({
           ...base,
           minHeight: 40,
           borderColor: primaryColor,
           borderWidth: 2,
-          ":hover": {
+          ':hover': {
             borderColor: primaryColor
-          }
+          },
+          '--tw-shadow': '0 0 #0000',
+          '--tw-shadow-colored': '0 0 #0000',
+          '--tw-ring-offset-shadow': 'var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color)',
+          '--tw-ring-shadow': 'var(--tw-ring-inset) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color)',
+          outline: '2px solid transparent',
+          outlineOffset: '2px',
+          '--tw-ring-color': 'rgb(233 213 255 / 1)',
+          boxShadow: props.isFocused ? 'var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)' : 'none'
         })
       }}
     />

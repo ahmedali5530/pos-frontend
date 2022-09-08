@@ -104,18 +104,6 @@ export const SearchTable = (props: SearchTableProps) => {
                 />
               </div>
             )}
-            {item.shortCode && (
-              <div className="text-gray-400 inline-block ml-3">
-                [
-                <Highlighter
-                  highlightClassName="YourHighlightClass"
-                  searchWords={[q]}
-                  autoEscape={true}
-                  textToHighlight={item.shortCode}
-                />
-                ]
-              </div>
-            )}
           </div>
           <div className="basis-auto grow shrink p-2 text-right">
             {getRealProductPrice(item)}

@@ -141,7 +141,7 @@ export const Brands = () => {
       <p className="mb-3">Showing latest 10 items</p>
       {isLoading && (
         <div className="flex justify-center items-center">
-          <Loader lines={10}/>
+          <Loader lines={1} lineItems={2}/>
         </div>
       )}
       {!isLoading && (

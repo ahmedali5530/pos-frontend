@@ -55,8 +55,8 @@ export const Tab = (props: TabProps) => {
   return (
     <button {...props} className={
       classNames(
-        'rounded-full p-3 min-w-[120px] text-purple-700 active:border-purple-500 active:border-2',
-        props.isActive ? 'border-purple-500 border-2' : 'bg-purple-50 hover:bg-purple-100'
+        'rounded-full inline-flex justify-center items-center h-[40px] min-w-[120px] text-purple-700 active:border-purple-500 active:border-2',
+        props.isActive ? 'border-purple-500 border-2' : 'bg-purple-100 hover:bg-purple-200'
       )
     }>{props.children}</button>
   );

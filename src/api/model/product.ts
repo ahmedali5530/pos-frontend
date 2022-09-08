@@ -1,6 +1,8 @@
 import {Category} from "./category";
 import {ProductVariant} from "./product.variant";
 import {ProductPrice} from "./product.price";
+import {Brand} from "./brand";
+import {Supplier} from "./supplier";
 
 export type Product = {
   id: number;
@@ -11,12 +13,14 @@ export type Product = {
   isAvailable?: boolean;
   quantity?: number;
   basePrice: number;
-  category: Category;
+  categories: Category[];
   variants: ProductVariant[];
   prices: ProductPrice[];
   isActive: boolean;
   uuid?: string;
-  shortCode?: string;
-  uom?: string;
+  purchaseUnit?: string;
+  saleUnit?: string;
   cost?: number;
+  brands: Brand[];
+  suppliers: Supplier[];
 }

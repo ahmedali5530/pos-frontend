@@ -13,17 +13,13 @@ import {useSelector} from "react-redux";
 import {getAuthorizedUser} from "../../../duck/auth/auth.selector";
 import {Switch} from "../../../app-common/components/input/switch";
 import {Tab, TabContent, TabControl, TabNav} from "../../../app-common/components/tabs/tabs";
+import {ReactSelectOptionProps} from "../../../api/model/common";
 
 interface Props{
   setList: (list: HomeProps['list']) => void;
   setPaymentTypesList: (list: HomeProps['paymentTypesList']) => void;
   setTax: (data?: Tax) => void;
   setDiscount: (data?: Discount) => void;
-}
-
-export interface ReactSelectOptionProps{
-  value: string;
-  label: string;
 }
 
 export const More: FC<Props> = ({

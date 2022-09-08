@@ -131,6 +131,10 @@ export const Categories = () => {
                 type="button"
                 onClick={() => {
                   setOperation('create');
+                  reset({
+                    name: null,
+                    id: null
+                  });
                 }}
               >Cancel</Button>
             )}
@@ -149,7 +153,7 @@ export const Categories = () => {
       <p className="mb-3">Showing latest 10 items</p>
       {isLoading && (
         <div className="flex justify-center items-center">
-          <Loader lines={10}/>
+          <Loader lines={1} lineItems={4}/>
         </div>
       )}
       {!isLoading && (
