@@ -12,10 +12,12 @@ import {Tax} from "../../../api/model/tax";
 import {PaymentType} from "../../../api/model/payment.type";
 import {Customer} from "../../../api/model/customer";
 import classNames from "classnames";
-import {KeyboardInput} from "../keyboard.input";
 import localforage from "../../../lib/localforage/localforage";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCheck, faPlus} from "@fortawesome/free-solid-svg-icons";
+import {faCheck, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
+import {OrderPayment} from "../../../api/model/order.payment";
+import {Input} from "../input";
+import {useAlert} from "react-alert";
 
 const Mousetrap = require('mousetrap');
 
@@ -56,9 +58,12 @@ export const CloseSale: FC<Props> = ({
   const {register, handleSubmit, watch, reset, control, getValues} = useForm();
   const [isSaleClosing, setSaleClosing] = useState(false);
   const [payment, setPayment] = useState<PaymentType>();
+  const [payments, setPayments] = useState<OrderPayment[]>([]);
   const [hold, setHold] = useState(false);
   const [quickCashOperation, setQuickCashOperation] = useState<'add' | 'subtract' | 'exact'>('exact');
   const [quickCashItems, setQuickCashItems] = useState<number[]>([5000, 1000, 500, 100, 50, 20, 10, 5, 2, 1]);
+
+  const alert = useAlert();
 
   useEffect(() => {
     if (closeSale !== undefined) {
@@ -134,6 +139,7 @@ export const CloseSale: FC<Props> = ({
       });
 
       resetFields();
+      setPayments([]);
 
     } catch (e) {
       throw e;
@@ -142,18 +148,10 @@ export const CloseSale: FC<Props> = ({
     }
   };
 
-  const received = watch('received');
   const changeDue = useMemo(() => {
-    if (received === undefined) {
-      return 0;
-    }
-
-    if (received === '') {
-      return -finalTotal;
-    }
-
-    return parseFloat(received) - finalTotal
-  }, [received, finalTotal]);
+    //get a total of payments
+    return payments.reduce((prev, current) => Number(prev) + Number(current.received), 0) - finalTotal;
+  }, [payments, finalTotal]);
 
   useEffect(() => {
     if (payment === undefined) {
@@ -170,6 +168,10 @@ export const CloseSale: FC<Props> = ({
     }
   }, [paymentTypesList, payment, saleModal]);
 
+  const received = useMemo(() => {
+    return payments.reduce((prev, current) => Number(prev) + Number(current.received), 0)
+  }, [payments]);
+
   useEffect(() => {
     reset({
       received: finalTotal.toFixed(2)
@@ -180,19 +182,25 @@ export const CloseSale: FC<Props> = ({
     let method = cashOperation || quickCashOperation;
 
     if (method === 'exact') {
-      reset({
-        received: item
-      });
+      // reset({
+      //   received: 0
+      // });
+
+      addSplitPayment(item, payment);
     } else if (method === 'add') {
-      reset({
-        received: item + parseFloat(watch('received'))
-      });
+      // reset({
+      //   received: finalTotal - item
+      // });
+
+      addSplitPayment(item, payment);
     } else if (method === 'subtract') {
-      reset({
-        received: watch('received') - item
-      });
+      // reset({
+      //   received: finalTotal + item
+      // });
+
+      addSplitPayment(-item, payment);
     }
-  }, [quickCashOperation, watch('received'), reset]);
+  }, [quickCashOperation, reset, finalTotal, payments]);
 
   useEffect(() => {
     Mousetrap.bind('ctrl+s', function (e: Event) {
@@ -208,6 +216,51 @@ export const CloseSale: FC<Props> = ({
       }
     });
   }, [added, saleModal]);
+
+  const addSplitPayment = (amount: number, payment?: PaymentType) => {
+    if(amount === 0){
+      alert.error('Amount cannot be zero');
+
+      return false;
+    }
+
+    if(!payment?.canHaveChangeDue && (amount + received) > finalTotal ){
+      alert.error(`Please add exact amount for ${payment?.name}`);
+
+      return false;
+    }
+
+    const prevPayments = [...payments];
+    prevPayments.push({
+      total: finalTotal,
+      received: amount,
+      due: amount - finalTotal,
+      type: payment
+    });
+
+    setPayments(prevPayments);
+
+    reset({
+      received: finalTotal - prevPayments.reduce((prev, current) => Number(prev) + Number(current.received), 0)
+    });
+  };
+
+  const removeSplitPayment = (item: number) => {
+
+    const prevPayments = [...payments];
+
+    prevPayments.splice(item, 1);
+
+    setPayments(prevPayments);
+
+    reset({
+      received: finalTotal - prevPayments.reduce((prev, current) => Number(prev) + Number(current.received), 0)
+    });
+  };
+
+  const getQuickCashCounter = (amount: number) => {
+    return payments.filter(item => Number(item.received) === amount).length;
+  };
 
   return (
     <>
@@ -272,13 +325,16 @@ export const CloseSale: FC<Props> = ({
               </div>
               <div className="grid grid-cols-4 gap-4 mt-4">
                 {quickCashItems.map(item => (
-                  <Button disabled={!payment?.canHaveChangeDue} className="w-full btn-warning" size="lg" key={item}
-                          onClick={() => addQuickCash(item)}>{item}</Button>
+                  <Button disabled={!payment?.canHaveChangeDue} className="w-full btn-warning relative" size="lg" key={item}
+                          onClick={() => addQuickCash(item)}>
+                    {item}
+                    {getQuickCashCounter(item) > 0 && (
+                      <span className="quick-cash-badge">{getQuickCashCounter(item)}</span>
+                    )}
+                  </Button>
                 ))}
                 <Button disabled={!payment?.canHaveChangeDue} className="w-full btn-primary" size="lg" key={finalTotal}
                         onClick={() => addQuickCash(finalTotal, 'exact')}>{finalTotal.toFixed(2)}</Button>
-                <Button disabled={!payment?.canHaveChangeDue} className="w-full btn-danger" size="lg" key={0}
-                        onClick={() => addQuickCash(0, 'exact')}>C</Button>
               </div>
             </div>
           </div>
@@ -311,23 +367,22 @@ export const CloseSale: FC<Props> = ({
                     render={(props) => {
                       return (
                         <>
-                          <KeyboardInput
-                            onchange={props.field.onChange}
+                          <Input
+                            onChange={props.field.onChange}
                             value={props.field.value}
                             type="number"
                             readOnly={payment?.canHaveChangeDue !== true}
                             id="amount"
                             placeholder="Payment"
-                            triggerWithIcon
-                            innerRef={props.field.ref}
-                            className="w-full flex-1 lg"
+                            className="w-full flex-1 lg input"
+                            selectable={true}
                           />
                         </>
                       )
                     }}
                     defaultValue={finalTotal}
                   />
-                  <button type="button" className="btn btn-secondary lg w-24">
+                  <button type="button" className="btn btn-secondary lg w-24" onClick={() => addSplitPayment(watch('received'), payment)}>
                     <FontAwesomeIcon icon={faPlus} />
                   </button>
                 </div>
@@ -353,8 +408,18 @@ export const CloseSale: FC<Props> = ({
                 {isSaleClosing ? 'Holding...' : 'Hold'}
               </Button>
             </div>
-            <div>
-              split payments
+            <div className="grid grid-cols-2 gap-y-3">
+              {payments.map((item, index) => (
+                <div className="grid grid-cols-4 gap-3" key={index}>
+                  <div>{item?.type?.name}</div>
+                  <div>{item.received}</div>
+                  <div>
+                    <button className="btn btn-danger" type="button" onClick={() => removeSplitPayment(index)}>
+                      <FontAwesomeIcon icon={faTrash} />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 

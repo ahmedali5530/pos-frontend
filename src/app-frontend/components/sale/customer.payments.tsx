@@ -210,7 +210,7 @@ export const CustomerPayments: FC<Props> = ({
                 {item.amount && item.amount}
                 {item.orderId && (
                   <>
-                    {item.payments.map((p: OrderPayment) => p.type.name)} Sale {item.payments.reduce((prev: number, item: OrderPayment) => prev + item.total, 0)}
+                    {item.payments.map((p: OrderPayment) => p?.type?.name)} Sale {item.payments.reduce((prev: number, item: OrderPayment) => prev + item.total, 0)}
                   </>
                 )}
               </td>

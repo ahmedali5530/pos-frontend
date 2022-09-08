@@ -224,22 +224,30 @@ a{
 @keyframes zoomOut {
   0%{
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0px) scale(1);
+  }
+  30%{
+    transform: translateY(-5px) scale(1.05);
+    opacity: 1;
   }
   100%{
     opacity: 0;
-    transform: scale(0.7);
+    transform: translateY(0px) scale(0.7);
   }
 }
 
 @keyframes zoomIn {
   0%{
     opacity: 0;
-    transform: scale(0.7);
+    transform: translateY(0px) scale(0.7);
+  }
+  30%{
+    opacity: 1;
+    transform: translateY(5px) scale(1.05);
   }
   100%{
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0px) scale(1);
   }
 }
 
@@ -473,4 +481,20 @@ a{
       @apply border-purple-500 justify-end;
     }
   }
+}
+#__react-alert__ > div{
+  z-index: 1000;
+}
+.quick-cash-badge{
+  @apply rounded-full absolute left-0 bg-rose-500 text-white;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  left: -5px;
+  top: -5px;
+  font-size: 12px;
+  font-weight: bold;
 }
