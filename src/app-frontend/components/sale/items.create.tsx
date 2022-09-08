@@ -144,7 +144,21 @@ export const CreateItem = ({
 
   useEffect(() => {
     if(row) {
-      reset(row);
+      reset({
+        ...row,
+        suppliers: row.suppliers.map(item => ({
+          label: item.name,
+          value: item.id
+        })),
+        brands: row.brands.map(item => ({
+          label: item.name,
+          value: item.id
+        })),
+        categories: row.categories.map(item => ({
+          label: item.name,
+          value: item.id
+        })),
+      });
     }
   }, [row, reset]);
 
@@ -313,6 +327,15 @@ export const CreateItem = ({
             control={control}
           />
         </div>
+
+        <div className="col-span-4">
+          <h4 className="text-lg">Variants</h4>
+        </div>
+        <div className="col-span-4">TODO: add variants</div>
+        <div className="col-span-4">
+          <h4 className="text-lg">Conditional prices</h4>
+        </div>
+        <div className="col-span-4">TODO: add conditional prices</div>
       </div>
 
       <Button variant="primary" type="submit"
