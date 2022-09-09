@@ -37,6 +37,8 @@ export const ItemsTabs = () => {
                 <Tab isActive={isTabActive('suppliers')} onClick={() => setActiveTab('suppliers')}>Suppliers</Tab>
                 <Tab isActive={isTabActive('brands')} onClick={() => setActiveTab('brands')}>Brands</Tab>
                 <Tab isActive={isTabActive('purchase')} onClick={() => setActiveTab('purchase')}>Purchase</Tab>
+                <Tab isActive={isTabActive('transfer')} onClick={() => setActiveTab('transfer')}>Transfer Inventory</Tab>
+                <Tab isActive={isTabActive('close_inventory')} onClick={() => setActiveTab('close_inventory')}>Close inventory</Tab>
               </TabNav>
               <TabContent isActive={isTabActive('list')}>
                 <Items setActiveTab={setActiveTab} setOperation={setOperation} setRow={setRow}/>
@@ -60,6 +62,8 @@ export const ItemsTabs = () => {
                 <Brands/>
               </TabContent>
               <TabContent isActive={isTabActive('purchase')}>purchases</TabContent>
+              <TabContent isActive={isTabActive('transfer')}>transfer inventory</TabContent>
+              <TabContent isActive={isTabActive('close_inventory')}>close inventory</TabContent>
             </>
           )}
         />

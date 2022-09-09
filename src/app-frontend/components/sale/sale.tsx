@@ -116,12 +116,7 @@ export const CloseSale: FC<Props> = ({
         items: added,
         discount: discount,
         tax: tax,
-        payments: [{
-          total: finalTotal,
-          received: values.received,
-          due: values.received - finalTotal,
-          type: payment
-        }],
+        payments: payments,
         customerId: customer?.id,
         discountAmount: discountTotal,
         discountRateType: discountRateType,
@@ -154,6 +149,7 @@ export const CloseSale: FC<Props> = ({
   }, [payments, finalTotal]);
 
   useEffect(() => {
+    console.log(payment);
     if (payment === undefined) {
       //check for default payment
       localforage.getItem('defaultPaymentType').then((data: any) => {
@@ -167,6 +163,16 @@ export const CloseSale: FC<Props> = ({
       });
     }
   }, [paymentTypesList, payment, saleModal]);
+
+  useEffect(() => {
+    if(payments.length === 0 && saleModal){
+      localforage.getItem('defaultPaymentType').then((data: any) => {
+        if (data !== null) {
+          addSplitPayment(finalTotal, data);
+        }
+      });
+    }
+  }, [saleModal]);
 
   const received = useMemo(() => {
     return payments.reduce((prev, current) => Number(prev) + Number(current.received), 0)

@@ -8,11 +8,12 @@ import {
   useReactTable
 } from "@tanstack/react-table";
 import React, {FC, ReactNode, useEffect, useMemo, useState} from "react";
-import {useLoadList} from "../../../api/hooks/use.load.list";
 import classNames from "classnames";
 import {useTranslation} from "react-i18next";
-import {useAlert} from "react-alert";
 import _ from "lodash";
+import {Loader} from "../loader/loader";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import { faRefresh } from "@fortawesome/free-solid-svg-icons";
 
 interface ButtonProps {
   title: ReactNode;
@@ -28,21 +29,21 @@ interface ButtonProps {
 }
 
 interface TableComponentProps {
-  url: string;
   columns: any;
   params?: any;
   sort?: any;
   buttons?: ButtonProps[];
   selectionButtons?: ButtonProps[];
+  loaderLineItems?: number;
+  useLoadList: any;
 }
 
 export const TableComponent: FC<TableComponentProps> = ({
-  url, columns, params, sort, buttons, selectionButtons
+   columns, params, sort, buttons, selectionButtons, loaderLineItems, useLoadList
 }) => {
   const {t} = useTranslation();
-  const alert = useAlert();
 
-  const [state, action] = useLoadList(url);
+  const [state, action] = useLoadList;
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
@@ -131,25 +132,12 @@ export const TableComponent: FC<TableComponentProps> = ({
 
   return (
     <>
-      <div className="tw-relative table-responsive">
-        {(state.isLoading || isLoading) && (
-          <div className="
-          tw-absolute tw-top-0 tw-left-0 tw-bottom-0 tw-right-0
-          tw-h-[100%] tw-flex tw-items-center tw-justify-center tw-z-10
-          tw-bg-white/80 tw-font-bold tw-uppercase
-          ">
-            <div className="tw-bg-white tw-p-3 tw-rounded tw-shadow-xl tw-border tw-border-solid tw-border-gray-200">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">{t('Loading')}...</span>
-              </div>
-            </div>
-          </div>
-        )}
-        <div className="row tw-my-5 g-0">
-          <div className="col">
-            <div className="btn-group">
-              <button className="btn btn-outline-primary" onClick={() => loadList()}>
-                <i className="bi bi-arrow-clockwise"></i>
+      <div className="table-responsive">
+        <div className="grid my-5 grid-cols-12 g-0">
+          <div className="col-span-9">
+            <div className="flex">
+              <button className="btn btn-secondary" onClick={() => loadList()}>
+                <FontAwesomeIcon icon={faRefresh} />
               </button>
               {Object.keys(rowSelection).length > 0 ? (
                 <>
@@ -167,108 +155,100 @@ export const TableComponent: FC<TableComponentProps> = ({
             </div>
           </div>
 
-          <div className="col-3">
+          <div className="col-span-3">
             <DebouncedInput
               value={globalFilter ?? ''}
               onChange={value => setGlobalFilter(String(value))}
-              className="form-control"
+              className="input w-full"
               placeholder={t('Search in all columns') + '...'}
               type="search"
             />
           </div>
         </div>
-        <table className="table table-hover">
-          <thead>
-          {table.getHeaderGroups().map(headerGroup => (
-            <tr key={Math.random() + headerGroup.id} id={Math.random() + headerGroup.id}>
-              {headerGroup.headers.map(header => (
-                <th key={header.id}>
-                  <div
-                    {...{
-                      className: header.column.getCanSort()
-                        ? 'cursor-pointer select-none'
-                        : '',
-                      onClick: header.column.getToggleSortingHandler(),
-                    }}
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                    {{
-                      asc: ' ▲',
-                      desc: ' ▼',
-                    }[header.column.getIsSorted() as string] ?? null}
-                  </div>
-                </th>
-              ))}
-            </tr>
-          ))}
-          </thead>
-          <tbody>
-          {table.getRowModel().rows.map(row => (
-            <tr key={row.id}>
-              {row.getVisibleCells().map(cell => (
-                <td key={Math.random() + cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-          </tbody>
-        </table>
+
+        {(state.isLoading || isLoading) ? (
+          <div className="flex justify-center items-center">
+            <Loader lines={pageSize} lineItems={loaderLineItems || 5}/>
+          </div>
+        ) : (
+          <table className="table table-hover table-fixed">
+            <thead>
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={Math.random() + headerGroup.id} id={Math.random() + headerGroup.id}>
+                {headerGroup.headers.map(header => (
+                  <th key={header.id}>
+                    <div
+                      {...{
+                        className: header.column.getCanSort()
+                          ? 'cursor-pointer select-none'
+                          : '',
+                        onClick: header.column.getToggleSortingHandler(),
+                      }}
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                      {{
+                        asc: ' ▲',
+                        desc: ' ▼',
+                      }[header.column.getIsSorted() as string] ?? null}
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            ))}
+            </thead>
+            <tbody>
+            {table.getRowModel().rows.map(row => (
+              <tr key={row.id}>
+                {row.getVisibleCells().map(cell => (
+                  <td key={Math.random() + cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+            </tbody>
+          </table>
+        )}
+
       </div>
-      <div className="d-flex align-items-center gap-2 mt-3 tw-flex-wrap">
+      <div className="flex items-center gap-2 mt-3 flex-wrap">
         <nav>
-          <ul className="pagination mb-0">
-            <li className={
-              classNames(
-                "page-item",
-                !table.getCanPreviousPage() && 'disabled'
-              )
-            }>
+          <ul className="inline-block mb-0">
+            <li>
               <button
-                className="page-link"
+                className="btn btn-primary"
                 onClick={() => table.setPageIndex(0)}
+                disabled={!table.getCanPreviousPage()}
               >
                 {'<<'}
               </button>
             </li>
-            <li className={
-              classNames(
-                "page-item",
-                !table.getCanPreviousPage() && 'disabled'
-              )
-            }>
+            <li>
               <button
-                className="page-link"
+                className="btn btn-primary"
                 onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
               >
                 {'<'}
               </button>
             </li>
-            <li className={
-              classNames(
-                "page-item",
-                !table.getCanNextPage() && 'disabled'
-              )
-            }>
+            <li>
               <button
-                className="page-link"
+                className="btn btn-primary"
                 onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
               >
                 {'>'}
               </button>
             </li>
-            <li className={
-              classNames(
-                "page-item",
-                !table.getCanNextPage() && 'disabled'
-              )
-            }>
+            <li>
               <button
-                className="page-link"
+                className="btn btn-primary"
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                disabled={!table.getCanNextPage()}
               >
                 {'>>'}
               </button>
@@ -276,7 +256,7 @@ export const TableComponent: FC<TableComponentProps> = ({
           </ul>
         </nav>
         &bull;
-        <span className="d-flex align-items-center gap-1">
+        <span className="flex items-center gap-1">
           <div>{t('Page')}</div>
           <strong>
             {table.getState().pagination.pageIndex + 1} {t('of')}{' '}{table.getPageCount()}
@@ -284,7 +264,7 @@ export const TableComponent: FC<TableComponentProps> = ({
         </span>
         &bull;{' '}
         {t('Go to page')}
-        <span className="d-flex align-items-center gap-2">
+        <span className="flex items-center gap-2">
           <select
             value={table.getState().pagination.pageIndex + 1}
             onChange={e => {
@@ -300,7 +280,7 @@ export const TableComponent: FC<TableComponentProps> = ({
           </select>
         </span>
         &bull;
-        <span className="d-flex align-items-center gap-2">
+        <span className="flex items-center gap-2">
           <select
             value={table.getState().pagination.pageSize}
             onChange={e => {

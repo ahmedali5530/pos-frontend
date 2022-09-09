@@ -22,9 +22,7 @@ export const Expenses = () => {
 
   const {register, handleSubmit, reset} = useForm();
   const loadExpenses = async (values?: any) => {
-    if (!values) {
-      setLoading(true);
-    }
+    setLoading(true);
 
     setFilters(values);
     try {
@@ -69,7 +67,7 @@ export const Expenses = () => {
   const createExpense = async (values: any) => {
     setCreating(true);
     try {
-      const json = await fetchJson(EXPENSE_CREATE, {
+      await fetchJson(EXPENSE_CREATE, {
         method: 'POST',
         body: JSON.stringify(values)
       });
@@ -138,9 +136,9 @@ export const Expenses = () => {
             <div>
               <Button variant="primary" className="w-full" type="submit"
                       disabled={creating}>
-                {creating ? 'Creating...' : (
+                {creating ? 'Adding...' : (
                   <>
-                    <FontAwesomeIcon icon={faPlus} className="mr-2" /> Create Expense
+                    <FontAwesomeIcon icon={faPlus} className="mr-2" /> Add Expense
                   </>
                 )}
               </Button>
@@ -177,9 +175,9 @@ export const Expenses = () => {
         </form>
 
         {isLoading && (
-            <div className="flex justify-center items-center">
-              <Loader lines={10}/>
-            </div>
+          <div className="flex justify-center items-center">
+            <Loader lines={5} lineItems={3}/>
+          </div>
         )}
         {!isLoading && (
           <>

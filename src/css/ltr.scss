@@ -116,6 +116,22 @@ a{
   vertical-align: middle;
   border-bottom: 1px solid #ccc;
 }
+.table-hover{
+  tbody{
+    tr{
+      @apply hover:bg-gray-100;
+    }
+  }
+}
+.table-fixed{
+  thead{
+    th{
+      position: sticky;
+      top: 0;
+      background: white;
+    }
+  }
+}
 
 .bg-white-50{
   background: rgba(255,255,255,0.5);

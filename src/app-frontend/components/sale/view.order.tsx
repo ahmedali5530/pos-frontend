@@ -19,7 +19,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
       <Modal open={modal} onClose={() => {
         setModal(false);
       }} title={`Order# ${order.orderId}`}>
-        <div className="grid grid-cols-4 gap-4 mb-5">
+        <div className="grid grid-cols-5 gap-3 mb-5">
           <div className="border border-purple-500 p-5 font-bold text-purple-500 rounded">
             Items total
             <span className="float-right">+{order.items.reduce((prev, item) => prev + (item.quantity * item.price), 0)}</span>
@@ -38,10 +38,22 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
               ={order.payments.reduce((prev, payment) => {return payment.total + prev}, 0)}
             </span>
           </div>
+          <div className="border border-emerald-500 p-5 font-bold text-emerald-500 rounded">
+            Payments
+            <ul className="font-normal">
+              {order.payments.map(item => (
+                <li>{item.type?.name}: <span className="float-right">{item.received}</span></li>
+              ))}
+            </ul>
+          </div>
         </div>
 
-        <h4 className="text-lg">Notes</h4>
-        <p className="mb-5">{order.notes}</p>
+        {order.notes && (
+          <>
+            <h4 className="text-lg">Notes</h4>
+            <p className="mb-5">{order.notes}</p>
+          </>
+        )}
 
         <table className="table border border-collapse">
           <thead>

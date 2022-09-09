@@ -1,11 +1,43 @@
 import {useEffect, useState} from "react";
-import {DEVICE_LIST, DISCOUNT_LIST, PAYMENT_TYPE_LIST, PRODUCT_LIST, TAX_LIST} from "../../api/routing/routes/backend.app";
-import {HomeProps, initialData} from "../containers/dashboard/pos";
+import {DEVICE_LIST, DISCOUNT_LIST, PAYMENT_TYPE_LIST, PRODUCT_LIST, TAX_LIST} from "../routing/routes/backend.app";
 import localforage from '../../lib/localforage/localforage';
-import {jsonRequest} from "../../api/request/request";
+import {jsonRequest} from "../request/request";
+import {Product} from "../model/product";
+import {Discount} from "../model/discount";
+import {Tax} from "../model/tax";
+import {PaymentType} from "../model/payment.type";
+import {Device} from "../model/device";
 
 interface ReturnAction{
   load: () => void;
+}
+
+export interface HomeProps {
+  list: {
+    list: Product[];
+    count: number;
+    total: number;
+  },
+  discountList: {
+    list: Discount[];
+    count: number;
+    total: number;
+  },
+  taxList: {
+    list: Tax[];
+    count: number;
+    total: number;
+  },
+  paymentTypesList: {
+    list: PaymentType[];
+    count: number;
+    total: number;
+  },
+  deviceList: {
+    list: Device[];
+    count: number;
+    total: number;
+  }
 }
 
 interface ReturnState{
@@ -15,6 +47,12 @@ interface ReturnState{
   paymentTypesList: HomeProps['paymentTypesList'];
   deviceList: HomeProps['deviceList']
 }
+
+export const initialData = {
+  list: [],
+  count: 0,
+  total: 0
+};
 
 export const useLoadData = (): [ReturnState, ReturnAction] => {
   const [list, setList] = useState<HomeProps['list']>(initialData);

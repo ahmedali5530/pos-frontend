@@ -1,14 +1,11 @@
-import React, {createRef, FC, useCallback, useEffect, useMemo, useState} from "react";
+import React, {createRef, FC, useEffect, useMemo, useState} from "react";
 import classNames from "classnames";
 import {DateTime} from "luxon";
 import {FixedSizeList} from "react-window";
 import {Product} from "../../../api/model/product";
 import {Discount, DiscountRate, DiscountScope} from "../../../api/model/discount";
 import {Tax} from "../../../api/model/tax";
-import {PaymentType} from "../../../api/model/payment.type";
-import {Device} from "../../../api/model/device";
 import {CartItem} from "../../../api/model/cart.item";
-import { useLoadData } from "../../hooks/use.load.data";
 import {Customer} from "../../../api/model/customer";
 import {ProductVariant} from "../../../api/model/product.variant";
 import localforage from "../../../lib/localforage/localforage";
@@ -26,41 +23,11 @@ import {Expenses} from "../../components/sale/expenses";
 import {ItemsTabs} from "../../components/sale/items.tabs";
 import {More} from "../../components/sale/more";
 import {OrderTotals} from "../../components/sale/cart/order.totals";
+import {HomeProps, initialData, useLoadData} from "../../../api/hooks/use.load.data";
 const Mousetrap = require('mousetrap');
 
-export interface HomeProps {
-  list: {
-    list: Product[];
-    count: number;
-    total: number;
-  },
-  discountList: {
-    list: Discount[];
-    count: number;
-    total: number;
-  },
-  taxList: {
-    list: Tax[];
-    count: number;
-    total: number;
-  },
-  paymentTypesList: {
-    list: PaymentType[];
-    count: number;
-    total: number;
-  },
-  deviceList: {
-    list: Device[];
-    count: number;
-    total: number;
-  }
-}
 
-export const initialData = {
-  list: [],
-  count: 0,
-  total: 0
-};
+
 
 export const getRealProductPrice = (item: Product) => {
   let price = 0;

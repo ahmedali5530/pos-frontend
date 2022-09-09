@@ -335,7 +335,7 @@ export const SaleHistory: FC<Props> = ({
   const totalAmount = useMemo(() => {
     return list.reduce((prev, order) => {
       if (order.status !== 'Deleted') {
-        return prev + order.payments.reduce((p, payment) => p + payment.total, 0)
+        return prev + order.payments.reduce((p, payment) => p + payment.received, 0)
       }
 
       return prev;
@@ -686,7 +686,7 @@ export const SaleHistory: FC<Props> = ({
                   </td>
                   <td>
                     ={order.payments.reduce((prev, payment) => {
-                    return payment.total + prev
+                    return payment.received + prev
                   }, 0)}
                   </td>
                 </tr>

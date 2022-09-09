@@ -6,8 +6,8 @@ import {Input} from "../input";
 import {Modal} from "../modal";
 import {Controller, useForm} from "react-hook-form";
 import localforage from "localforage";
-import {HomeProps} from "../../containers/dashboard/pos";
 import {Trans} from "react-i18next";
+import {HomeProps} from "../../../api/hooks/use.load.data";
 
 
 interface Props {

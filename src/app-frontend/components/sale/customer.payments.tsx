@@ -207,7 +207,11 @@ export const CustomerPayments: FC<Props> = ({
             <tr key={index} className="hover:bg-gray-100">
               <td>{DateTime.fromISO(item.createdAt).toRelative()}</td>
               <td>
-                {item.amount && item.amount}
+                {item.amount && (
+                  <>
+                    Payment {item.amount}
+                  </>
+                )}
                 {item.orderId && (
                   <>
                     {item.payments.map((p: OrderPayment) => p?.type?.name)} Sale {item.payments.reduce((prev: number, item: OrderPayment) => prev + item.total, 0)}

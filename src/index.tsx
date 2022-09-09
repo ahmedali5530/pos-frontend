@@ -17,7 +17,7 @@ const store = StoreFactory.createStore();
 
 const options = {
   timeout: 3000,
-  position: positions.TOP_RIGHT,
+  position: positions.TOP_CENTER,
   containerStyle: {
     top: '50px',
     paddingRight: '20px'

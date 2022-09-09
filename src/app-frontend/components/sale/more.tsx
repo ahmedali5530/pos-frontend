@@ -3,17 +3,16 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCog} from "@fortawesome/free-solid-svg-icons";
 import {Button} from "../button";
 import {Modal} from "../modal";
-import Select from "react-select";
 import {Tax} from "../../../api/model/tax";
 import {Discount} from "../../../api/model/discount";
-import {HomeProps} from "../../containers/dashboard/pos";
-import {useLoadData} from "../../hooks/use.load.data";
 import localforage from "../../../lib/localforage/localforage";
 import {useSelector} from "react-redux";
 import {getAuthorizedUser} from "../../../duck/auth/auth.selector";
 import {Switch} from "../../../app-common/components/input/switch";
 import {Tab, TabContent, TabControl, TabNav} from "../../../app-common/components/tabs/tabs";
 import {ReactSelectOptionProps} from "../../../api/model/common";
+import {ReactSelect} from "../../../app-common/components/input/custom.react.select";
+import {HomeProps, useLoadData} from "../../../api/hooks/use.load.data";
 
 interface Props{
   setList: (list: HomeProps['list']) => void;
@@ -152,11 +151,7 @@ export const More: FC<Props> = ({
                   <Switch checked={displayShortcuts} onChange={(value) => {
                     localforage.setItem('displayShortcuts', value.target.checked);
                     setDisplayShortcuts(value.target.checked);
-                  }}>Display shortcuts</Switch>
-                  <Switch checked={displayVariants} onChange={(value) => {
-                    localforage.setItem('displayVariants', value.target.checked);
-                    setDisplayVariants(value.target.checked);
-                  }}>Display variants in search</Switch>
+                  }}>Enable shortcuts?</Switch>
                 </div>
               </TabContent>
               <TabContent isActive={isTabActive('profile')}>
@@ -168,7 +163,7 @@ export const More: FC<Props> = ({
                 <div className="grid grid-cols-4 gap-5">
                   <div>
                     <h3 className="text-xl">Set Default tax</h3>
-                    <Select
+                    <ReactSelect
                       options={state.taxList.list.map(item => {
                         return {
                           label: item.name + ' ' + item.rate,
@@ -191,7 +186,7 @@ export const More: FC<Props> = ({
                   </div>
                   <div>
                     <h3 className="text-xl">Set Default discount</h3>
-                    <Select
+                    <ReactSelect
                       options={state.discountList.list.map(item => {
                         return {
                           label: item.name,
@@ -214,7 +209,7 @@ export const More: FC<Props> = ({
                   </div>
                   <div>
                     <h3 className="text-xl">Set Default payment type</h3>
-                    <Select
+                    <ReactSelect
                       options={state.paymentTypesList.list.map(item => {
                         return {
                           label: item.name,
@@ -235,7 +230,7 @@ export const More: FC<Props> = ({
                   </div>
                   <div>
                     <h3 className="text-xl">Set Default Printer</h3>
-                    <Select
+                    <ReactSelect
                       options={state.deviceList.list.map(item => {
                         return {
                           label: item.name,

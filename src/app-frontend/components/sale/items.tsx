@@ -8,6 +8,11 @@ import React, {useEffect, useState} from "react";
 import {Product} from "../../../api/model/product";
 import {jsonRequest} from "../../../api/request/request";
 import {PRODUCT_LIST} from "../../../api/routing/routes/backend.app";
+import {TableComponent} from "../../../app-common/components/table/table";
+import {useLoadList} from "../../../api/hooks/use.load.list";
+import { useTranslation } from "react-i18next";
+import {useAlert} from "react-alert";
+import {createColumnHelper} from "@tanstack/react-table";
 
 interface ItemsProps {
   setActiveTab: (tab: string) => void;
@@ -18,118 +23,64 @@ interface ItemsProps {
 export const Items = ({
   setActiveTab, setOperation, setRow
 }: ItemsProps) => {
-  const [list, setList] = useState<Product[]>([]);
-  const [isLoading, setLoading] = useState(false);
+  const useLoadHook = useLoadList<Product>(PRODUCT_LIST);
 
+  const {t} = useTranslation();
 
-  const loadItems = async (q?: string) => {
-    setLoading(true);
+  const columnHelper = createColumnHelper<Product>();
 
-    try {
-      const queryParams = new URLSearchParams({
-        limit: '10',
-        orderBy: 'id',
-        orderMode: 'DESC'
-      });
+  const columns = [
+    columnHelper.accessor('name', {
+      header: () => t('Name'),
+    }),
+    columnHelper.accessor('barcode', {
+      header: () => t('Barcode'),
+    }),
+    columnHelper.accessor('basePrice', {
+      header: () => t('Sale Price'),
+    }),
+    columnHelper.accessor('cost', {
+      header: () => t('Purchase Price'),
+    }),
+    columnHelper.accessor('categories', {
+      header: () => t('Categories'),
+      cell: info => info.getValue().map(item => item.name).join(', ')
+    }),
+    columnHelper.accessor('suppliers', {
+      header: () => t('Suppliers'),
+      cell: info => info.getValue().map(item => item.name).join(', ')
+    }),
+    columnHelper.accessor('brands', {
+      header: () => t('Brands'),
+      cell: info => info.getValue().map(item => item.name).join(', ')
+    }),
+    columnHelper.accessor('id', {
+      header: () => t('Actions'),
+      cell: (info) => {
 
-      if (q) {
-        queryParams.append('q', q);
+        console.log(info)
+        return (
+          <>
+            <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
+              // setRow(info);
+              setOperation('update');
+              setActiveTab('form');
+            }} tabIndex={-1}>
+              <FontAwesomeIcon icon={faPencilAlt}/>
+            </Button>
+            <span className="mx-2 text-gray-300">|</span>
+            <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
+              <FontAwesomeIcon icon={faTrash}/>
+            </Button>
+          </>
+        )
       }
-
-      const response = await jsonRequest(PRODUCT_LIST + '?' + queryParams.toString());
-      const json = await response.json();
-
-      setList(json.list);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-  useEffect(() => {
-    loadItems();
-  }, []);
-
-
-  const [q, setQ] = useState('');
+    })
+  ];
 
   return (
     <>
-      <Input name="q"
-             type="search"
-             onChange={(e) => {
-               loadItems(e.target.value);
-               setQ(e.target.value);
-             }}
-             placeholder="Search"
-             className="mb-3 mt-3 search-field w-full"/>
-      <p className="mb-3">Showing latest 10 items</p>
-      {isLoading && (
-        <div className="flex justify-center items-center">
-          <Loader lines={10}/>
-        </div>
-      )}
-      {!isLoading && (
-        <table className="table border border-collapse">
-          <thead>
-          <tr>
-            <th>Name</th>
-            <th>Barcode</th>
-            <th>Sale Price</th>
-            <th>Purchase Price</th>
-            <th>Action</th>
-          </tr>
-          </thead>
-          <tbody>
-          {list.map((row, index) => {
-            return (
-              <tr key={index} className="hover:bg-gray-100">
-                <td>
-                  <Highlighter
-                    highlightClassName="YourHighlightClass"
-                    searchWords={[q]}
-                    autoEscape={true}
-                    textToHighlight={row.name}
-                  />
-                </td>
-                <td>
-                  {row.barcode && (
-                    <Highlighter
-                      highlightClassName="YourHighlightClass"
-                      searchWords={[q]}
-                      autoEscape={true}
-                      textToHighlight={row.barcode}
-                    />
-                  )}
-                </td>
-                <td>
-                  <Highlighter
-                    highlightClassName="YourHighlightClass"
-                    searchWords={[q]}
-                    autoEscape={true}
-                    textToHighlight={row.basePrice.toString()}
-                  />
-                </td>
-                <td>{row.cost}</td>
-                <td>
-                  <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
-                    setRow(row);
-                    setOperation('update');
-                    setActiveTab('form');
-                  }} tabIndex={-1}>
-                    <FontAwesomeIcon icon={faPencilAlt}/>
-                  </Button>
-                  <span className="mx-2 text-gray-300">|</span>
-                  <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
-                    <FontAwesomeIcon icon={faTrash}/>
-                  </Button>
-                </td>
-              </tr>
-            )
-          })}
-          </tbody>
-        </table>
-      )}
+      <TableComponent  columns={columns} useLoadList={useLoadHook} />
     </>
   );
 };

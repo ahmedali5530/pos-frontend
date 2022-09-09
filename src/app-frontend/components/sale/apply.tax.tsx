@@ -3,7 +3,7 @@ import {Modal} from "../modal";
 import React, {FC, PropsWithChildren, useEffect, useState} from "react";
 import localforage from "localforage";
 import {Tax} from "../../../api/model/tax";
-import {HomeProps} from "../../containers/dashboard/pos";
+import {HomeProps} from "../../../api/hooks/use.load.data";
 
 interface TaxProps extends PropsWithChildren{
   setTax: (tax?: Tax) => void;

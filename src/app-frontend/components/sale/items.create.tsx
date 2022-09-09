@@ -288,6 +288,13 @@ export const CreateItem = ({
             )}
             control={control}
           />
+          {errors.categories && (
+            <div className="text-red-500 text-sm">
+              <Trans>
+                {errors.categories.message}
+              </Trans>
+            </div>
+          )}
         </div>
 
         <div>
@@ -307,6 +314,13 @@ export const CreateItem = ({
             )}
             control={control}
           />
+          {errors.suppliers && (
+            <div className="text-red-500 text-sm">
+              <Trans>
+                {errors.suppliers.message}
+              </Trans>
+            </div>
+          )}
         </div>
 
         <div>
@@ -326,6 +340,13 @@ export const CreateItem = ({
             )}
             control={control}
           />
+          {errors.brands && (
+            <div className="text-red-500 text-sm">
+              <Trans>
+                {errors.brands.message}
+              </Trans>
+            </div>
+          )}
         </div>
 
         <div className="col-span-4">
