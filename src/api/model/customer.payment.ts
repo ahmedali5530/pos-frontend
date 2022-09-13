@@ -4,6 +4,6 @@ export interface CustomerPayment {
   id: string;
   amount: number;
   description: string;
-  order?: Order;
+  order?: Omit<Order, "customer"|"payments">;
   createdAt: string;
 }

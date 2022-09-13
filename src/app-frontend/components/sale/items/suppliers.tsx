@@ -1,41 +1,62 @@
-import {Input} from "../input";
-import {Trans} from "react-i18next";
+import {Input} from "../../input";
+import {Trans, useTranslation} from "react-i18next";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPencilAlt, faTrash} from "@fortawesome/free-solid-svg-icons";
-import {Button} from "../button";
-import React, {useEffect, useState} from "react";
-import {Loader} from "../../../app-common/components/loader/loader";
-import Highlighter from "react-highlight-words";
-import {fetchJson, jsonRequest} from "../../../api/request/request";
-import {SUPPLIER_CREATE, SUPPLIER_EDIT, SUPPLIER_LIST} from "../../../api/routing/routes/backend.app";
+import {Button} from "../../button";
+import React, {useState} from "react";
+import {fetchJson} from "../../../../api/request/request";
+import {SUPPLIER_CREATE, SUPPLIER_EDIT, SUPPLIER_LIST} from "../../../../api/routing/routes/backend.app";
 import {useForm} from "react-hook-form";
-import {UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
-import {ConstraintViolation} from "../../../lib/validator/validation.result";
-import {Supplier} from "../../../api/model/supplier";
+import {UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
+import {ConstraintViolation} from "../../../../lib/validator/validation.result";
+import {Supplier} from "../../../../api/model/supplier";
+import {TableComponent} from "../../../../app-common/components/table/table";
+import {useLoadList} from "../../../../api/hooks/use.load.list";
+import {Category} from "../../../../api/model/category";
+import {createColumnHelper} from "@tanstack/react-table";
 
 export const Suppliers = () => {
-  const [q, setQ] = useState('');
-  const [list, setList] = useState<Supplier[]>([]);
-  const [isLoading, setLoading] = useState(false);
   const [operation, setOperation] = useState('create');
 
-  const loadSuppliers = async (q?: string) => {
-    setLoading(true);
-    try {
-      const response = await jsonRequest(SUPPLIER_LIST);
-      const json = await response.json();
+  const useLoadHook = useLoadList<Category>(SUPPLIER_LIST);
+  const [state, action] = useLoadHook;
 
-      setList(json.list);
-    } catch (e) {
+  const {t} = useTranslation();
 
-    } finally {
-      setLoading(false);
-    }
-  };
+  const columnHelper = createColumnHelper<Supplier>();
 
-  useEffect(() => {
-    loadSuppliers();
-  }, []);
+  const columns = [
+    columnHelper.accessor('name', {
+      header: () => t('Name'),
+    }),
+    columnHelper.accessor('phone', {
+      header: () => t('Phone'),
+    }),
+    columnHelper.accessor('email', {
+      header: () => t('Email'),
+    }),
+    columnHelper.accessor('id', {
+      header: () => t('Actions'),
+      enableSorting: false,
+      cell: (info) => {
+        return (
+          <>
+            <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
+              reset(info.row.original);
+              setOperation('update');
+            }} tabIndex={-1}>
+              <FontAwesomeIcon icon={faPencilAlt}/>
+            </Button>
+            <span className="mx-2 text-gray-300">|</span>
+            <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
+              <FontAwesomeIcon icon={faTrash}/>
+            </Button>
+          </>
+        )
+      }
+    })
+  ];
+
 
   const {register, handleSubmit, setError, formState: {errors}, reset} = useForm();
   const [creating, setCreating] = useState(false);
@@ -50,20 +71,14 @@ export const Suppliers = () => {
         url = SUPPLIER_CREATE;
       }
 
-      const response = await fetchJson(url, {
+      await fetchJson(url, {
         method: 'POST',
         body: JSON.stringify({
           ...values,
         })
       });
 
-      if (values.id) {
-        await loadSuppliers();
-      } else {
-        setList(prev => {
-          return [response.supplier, ...prev];
-        });
-      }
+      await action.loadList();
 
       reset({
         name: '',
@@ -158,62 +173,10 @@ export const Suppliers = () => {
         </div>
       </form>
 
-      <Input name="q"
-             type="search"
-             onChange={(e) => {
-               loadSuppliers(e.target.value);
-               setQ(e.target.value);
-             }}
-             placeholder="Search"
-             className="mb-3 mt-3 search-field w-full"/>
-      <p className="mb-3">Showing latest 10 items</p>
-      {isLoading && (
-        <div className="flex justify-center items-center">
-          <Loader lines={1} lineItems={4}/>
-        </div>
-      )}
-      {!isLoading && (
-        <table className="table border border-collapse">
-          <thead>
-          <tr>
-            <th>Name</th>
-            <th>Phone</th>
-            <th>Email</th>
-            <th>Action</th>
-          </tr>
-          </thead>
-          <tbody>
-          {list.map((row, index) => {
-            return (
-              <tr key={index} className="hover:bg-gray-100">
-                <td>
-                  <Highlighter
-                    highlightClassName="YourHighlightClass"
-                    searchWords={[q]}
-                    autoEscape={true}
-                    textToHighlight={row.name}
-                  />
-                </td>
-                <td>{row.phone}</td>
-                <td>{row.email}</td>
-                <td>
-                  <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
-                    reset(row);
-                    setOperation('update');
-                  }} tabIndex={-1}>
-                    <FontAwesomeIcon icon={faPencilAlt}/>
-                  </Button>
-                  <span className="mx-2 text-gray-300">|</span>
-                  <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
-                    <FontAwesomeIcon icon={faTrash}/>
-                  </Button>
-                </td>
-              </tr>
-            )
-          })}
-          </tbody>
-        </table>
-      )}
+      <TableComponent
+        columns={columns}
+        useLoadList={useLoadHook}
+      />
     </>
   );
 };

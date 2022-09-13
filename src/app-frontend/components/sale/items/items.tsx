@@ -1,18 +1,15 @@
-import {Input} from "../input";
-import {Loader} from "../../../app-common/components/loader/loader";
-import Highlighter from "react-highlight-words";
-import {Button} from "../button";
+import {Button} from "../../button";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPencilAlt, faTrash} from "@fortawesome/free-solid-svg-icons";
-import React, {useEffect, useState} from "react";
-import {Product} from "../../../api/model/product";
-import {jsonRequest} from "../../../api/request/request";
-import {PRODUCT_LIST} from "../../../api/routing/routes/backend.app";
-import {TableComponent} from "../../../app-common/components/table/table";
-import {useLoadList} from "../../../api/hooks/use.load.list";
+import React from "react";
+import {Product} from "../../../../api/model/product";
+import {PRODUCT_LIST} from "../../../../api/routing/routes/backend.app";
+import {TableComponent} from "../../../../app-common/components/table/table";
+import {useLoadList} from "../../../../api/hooks/use.load.list";
 import { useTranslation } from "react-i18next";
-import {useAlert} from "react-alert";
 import {createColumnHelper} from "@tanstack/react-table";
+import {ImportItems} from "./import.items";
+import {ExportItems} from "./export.items";
 
 interface ItemsProps {
   setActiveTab: (tab: string) => void;
@@ -56,13 +53,12 @@ export const Items = ({
     }),
     columnHelper.accessor('id', {
       header: () => t('Actions'),
+      enableSorting: false,
       cell: (info) => {
-
-        console.log(info)
         return (
           <>
             <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
-              // setRow(info);
+              setRow(info.row.original);
               setOperation('update');
               setActiveTab('form');
             }} tabIndex={-1}>
@@ -80,7 +76,19 @@ export const Items = ({
 
   return (
     <>
-      <TableComponent  columns={columns} useLoadList={useLoadHook} />
+      <TableComponent
+        columns={columns}
+        useLoadList={useLoadHook}
+        buttons={[
+          {
+            html: <ImportItems/>,
+            handler: () => {}
+          },{
+            html: <ExportItems/>,
+            handler: () => {}
+          }
+        ]}
+      />
     </>
   );
 };

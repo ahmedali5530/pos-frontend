@@ -1,9 +1,9 @@
 import React from "react";
-import {Button} from "../button";
+import {Button} from "../../button";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faDownload} from "@fortawesome/free-solid-svg-icons";
-import {PRODUCT_DOWNLOAD} from "../../../api/routing/routes/backend.app";
-import {QueryString} from "../../../lib/location/query.string";
+import {PRODUCT_DOWNLOAD} from "../../../../api/routing/routes/backend.app";
+import {QueryString} from "../../../../lib/location/query.string";
 import Cookies from "js-cookie";
 
 export const ExportItems = () => {
@@ -18,7 +18,9 @@ export const ExportItems = () => {
 
   return (
     <>
-      <Button type="button" variant="success" onClick={onClick} size="lg"><FontAwesomeIcon icon={faDownload} className="mr-2" /> Export items</Button>
+      <Button type="button" variant="success" onClick={onClick}>
+        <FontAwesomeIcon icon={faDownload} className="mr-2" /> Export items
+      </Button>
     </>
   );
 };

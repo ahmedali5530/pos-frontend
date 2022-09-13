@@ -149,7 +149,6 @@ export const CloseSale: FC<Props> = ({
   }, [payments, finalTotal]);
 
   useEffect(() => {
-    console.log(payment);
     if (payment === undefined) {
       //check for default payment
       localforage.getItem('defaultPaymentType').then((data: any) => {

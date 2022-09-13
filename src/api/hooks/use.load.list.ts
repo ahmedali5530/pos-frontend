@@ -8,6 +8,7 @@ export interface LoadListState<T> {
   error?: string;
   total: number;
   count: number;
+  response: any;
 }
 
 export interface LoadListActions {
@@ -20,6 +21,7 @@ export const useLoadList = <L>(url: string): [LoadListState<L>, LoadListActions]
   const [list, setList] = useState<L[]>([]);
   const [total, setTotal] = useState(0);
   const [count, setCount] = useState(0);
+  const [response, setResponse] = useState<any>();
 
   const loadList = async (params?: any) => {
     setIsLoading(true);
@@ -35,6 +37,7 @@ export const useLoadList = <L>(url: string): [LoadListState<L>, LoadListActions]
       setList(json.list);
       setCount(json.count);
       setTotal(json.total);
+      setResponse(json);
 
     }catch (exception){
       if(exception instanceof HttpException){
@@ -52,5 +55,5 @@ export const useLoadList = <L>(url: string): [LoadListState<L>, LoadListActions]
     }
   };
 
-  return [{ isLoading, list, error: foundError, total, count }, { loadList }];
+  return [{ isLoading, list, error: foundError, total, count, response }, { loadList }];
 };

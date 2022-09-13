@@ -14,5 +14,5 @@ export interface Customer {
   outstanding?: number;
   cnic?: string;
   payments: CustomerPayment[];
-  orders: Order[];
+  orders: Omit<Order, "customer">[];
 }

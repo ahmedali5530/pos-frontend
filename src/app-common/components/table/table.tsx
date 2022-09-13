@@ -7,8 +7,7 @@ import {
   SortingState,
   useReactTable
 } from "@tanstack/react-table";
-import React, {FC, ReactNode, useEffect, useMemo, useState} from "react";
-import classNames from "classnames";
+import React, {FC, ReactNode, useCallback, useEffect, useMemo, useState} from "react";
 import {useTranslation} from "react-i18next";
 import _ from "lodash";
 import {Loader} from "../loader/loader";
@@ -16,7 +15,8 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import { faRefresh } from "@fortawesome/free-solid-svg-icons";
 
 interface ButtonProps {
-  title: ReactNode;
+  title?: ReactNode;
+  html?: ReactNode;
   className?: string;
   handler: (
     payload: any,
@@ -36,10 +36,13 @@ interface TableComponentProps {
   selectionButtons?: ButtonProps[];
   loaderLineItems?: number;
   useLoadList: any;
+  setFilters?: (filters?: any) => void;
+  globalSearch?: boolean;
 }
 
 export const TableComponent: FC<TableComponentProps> = ({
-   columns, params, sort, buttons, selectionButtons, loaderLineItems, useLoadList
+  columns, params, sort, buttons, selectionButtons, loaderLineItems, useLoadList, setFilters,
+  globalSearch
 }) => {
   const {t} = useTranslation();
 
@@ -60,7 +63,7 @@ export const TableComponent: FC<TableComponentProps> = ({
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState('');
 
-  const loadList = async () => {
+  const loadList = useCallback(async () => {
     const newParams = {
       ...params,
       limit: pageSize,
@@ -76,8 +79,12 @@ export const TableComponent: FC<TableComponentProps> = ({
       newParams.q = globalFilter;
     }
 
+    if(setFilters){
+      setFilters(newParams);
+    }
+
     action.loadList(newParams);
-  };
+  }, [params, pageSize, pageIndex, sorting, globalFilter]);
 
   useEffect(() => {
     loadList();
@@ -125,6 +132,10 @@ export const TableComponent: FC<TableComponentProps> = ({
   };
 
   const renderButton = (button: ButtonProps) => {
+    if(button.html){
+      return button.html;
+    }
+
     return (
       <button disabled={isLoading} className={button.className} onClick={() => onClick(button)}>{button.title}</button>
     );
@@ -135,7 +146,7 @@ export const TableComponent: FC<TableComponentProps> = ({
       <div className="table-responsive">
         <div className="grid my-5 grid-cols-12 g-0">
           <div className="col-span-9">
-            <div className="flex">
+            <div className="input-group">
               <button className="btn btn-secondary" onClick={() => loadList()}>
                 <FontAwesomeIcon icon={faRefresh} />
               </button>
@@ -155,15 +166,17 @@ export const TableComponent: FC<TableComponentProps> = ({
             </div>
           </div>
 
-          <div className="col-span-3">
-            <DebouncedInput
-              value={globalFilter ?? ''}
-              onChange={value => setGlobalFilter(String(value))}
-              className="input w-full"
-              placeholder={t('Search in all columns') + '...'}
-              type="search"
-            />
-          </div>
+          {globalSearch && (
+            <div className="col-span-3">
+              <DebouncedInput
+                value={globalFilter ?? ''}
+                onChange={value => setGlobalFilter(String(value))}
+                className="input w-full"
+                placeholder={t('Search in all columns') + '...'}
+                type="search"
+              />
+            </div>
+          )}
         </div>
 
         {(state.isLoading || isLoading) ? (
@@ -171,7 +184,7 @@ export const TableComponent: FC<TableComponentProps> = ({
             <Loader lines={pageSize} lineItems={loaderLineItems || 5}/>
           </div>
         ) : (
-          <table className="table table-hover table-fixed">
+          <table className="table table-hover">
             <thead>
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={Math.random() + headerGroup.id} id={Math.random() + headerGroup.id}>
@@ -215,45 +228,35 @@ export const TableComponent: FC<TableComponentProps> = ({
 
       </div>
       <div className="flex items-center gap-2 mt-3 flex-wrap">
-        <nav>
-          <ul className="inline-block mb-0">
-            <li>
-              <button
-                className="btn btn-primary"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
-              >
-                {'<<'}
-              </button>
-            </li>
-            <li>
-              <button
-                className="btn btn-primary"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                {'<'}
-              </button>
-            </li>
-            <li>
-              <button
-                className="btn btn-primary"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                {'>'}
-              </button>
-            </li>
-            <li>
-              <button
-                className="btn btn-primary"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
-              >
-                {'>>'}
-              </button>
-            </li>
-          </ul>
+        <nav className="input-group">
+          <button
+            className="btn btn-primary"
+            onClick={() => table.setPageIndex(0)}
+            disabled={!table.getCanPreviousPage()}
+          >
+            {'<<'}
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            {'<'}
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            {'>'}
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+            disabled={!table.getCanNextPage()}
+          >
+            {'>>'}
+          </button>
         </nav>
         &bull;
         <span className="flex items-center gap-1">
@@ -270,7 +273,7 @@ export const TableComponent: FC<TableComponentProps> = ({
             onChange={e => {
               table.setPageIndex(Number(e.target.value) - 1)
             }}
-            className="w-auto"
+            className="w-auto form-control"
           >
           {_.range(0, table.getPageCount()).map(pageSize => (
             <option key={pageSize} value={pageSize + 1}>
@@ -286,7 +289,7 @@ export const TableComponent: FC<TableComponentProps> = ({
             onChange={e => {
               table.setPageSize(Number(e.target.value))
             }}
-            className="w-auto"
+            className="w-auto form-control"
           >
           {[10, 20, 25, 50, 100, 500].map(pageSize => (
             <option key={pageSize} value={pageSize}>
@@ -301,7 +304,7 @@ export const TableComponent: FC<TableComponentProps> = ({
 };
 
 // A debounced input react component
-function DebouncedInput({
+export const DebouncedInput = ({
                           value: initialValue,
                           onChange,
                           debounce = 500,
@@ -310,7 +313,7 @@ function DebouncedInput({
   value: string | number
   onChange: (value: string | number) => void
   debounce?: number
-} & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'>) {
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'>) => {
   const [value, setValue] = React.useState(initialValue)
 
   React.useEffect(() => {

@@ -1,9 +1,9 @@
 import React, {useState} from "react";
 import {faUpload} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {Button} from "../button";
-import {request} from "../../../api/request/request";
-import {PRODUCT_UPLOAD} from "../../../api/routing/routes/backend.app";
+import {Button} from "../../button";
+import {request} from "../../../../api/request/request";
+import {PRODUCT_UPLOAD} from "../../../../api/routing/routes/backend.app";
 
 export const ImportItems = () => {
   const [loading, setLoading] = useState(false);
@@ -31,7 +31,7 @@ export const ImportItems = () => {
   };
   return (
     <>
-      <Button variant="success" type={"button"} size="lg" disabled={loading}>
+      <Button variant="success" type={"button"} disabled={loading}>
         <label
           htmlFor="file"
         ><FontAwesomeIcon icon={faUpload} className="mr-2"/> {loading ? 'Uploading...' : 'Upload Items'}

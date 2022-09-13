@@ -1,19 +1,21 @@
-import React, {FC, useEffect, useState} from "react";
+import React, {FC, useState} from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faSpinner, faTrash, faUsers} from "@fortawesome/free-solid-svg-icons";
+import {faTrash, faUsers} from "@fortawesome/free-solid-svg-icons";
 import {Button} from "../button";
 import {Modal} from "../modal";
 import {Customer} from "../../../api/model/customer";
-import {fetchJson, jsonRequest} from "../../../api/request/request";
+import {fetchJson} from "../../../api/request/request";
 import {useForm} from "react-hook-form";
 import {Input} from "../input";
 import {faSquare, faSquareCheck} from "@fortawesome/free-regular-svg-icons";
 import {CustomerPayments} from "./customer.payments";
 import {CUSTOMER_CREATE, CUSTOMER_LIST} from "../../../api/routing/routes/backend.app";
 import {ConstraintViolation} from "../../../lib/validator/validation.result";
-import {Trans} from "react-i18next";
+import {Trans, useTranslation} from "react-i18next";
 import {UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
-import {Loader} from "../../../app-common/components/loader/loader";
+import {useLoadList} from "../../../api/hooks/use.load.list";
+import {createColumnHelper} from "@tanstack/react-table";
+import {TableComponent} from "../../../app-common/components/table/table";
 
 
 interface Props {
@@ -22,39 +24,82 @@ interface Props {
 }
 
 export const Customers: FC<Props> = ({
-  customer, setCustomer
-}) => {
+                                       customer, setCustomer
+                                     }) => {
   const [modal, setModal] = useState(false);
-  const [list, setList] = useState<Customer[]>([]);
-  const [isLoading, setLoading] = useState(false);
+  const [operation, setOperation] = useState('create');
 
-  const loadCustomers = async (q?: string) => {
-    if(!q) {
-      setLoading(true);
-    }
+  const useLoadHook = useLoadList<Customer>(CUSTOMER_LIST);
+  const [state, action] = useLoadHook;
 
-    try {
-      const queryParams = new URLSearchParams();
+  const {t} = useTranslation();
 
-      if(q){
-        queryParams.append('q', q);
+  const columnHelper = createColumnHelper<Customer>();
+
+  const columns = [
+    columnHelper.accessor('name', {
+      header: () => t('Name'),
+      enableSorting: false,
+    }),
+    columnHelper.accessor('phone', {
+      header: () => t('Phone'),
+      enableSorting: false,
+    }),
+    columnHelper.accessor('cnic', {
+      header: () => t('CNIC Number'),
+      enableSorting: false,
+    }),
+    columnHelper.accessor('sale', {
+      header: () => t('Credit Sale'),
+      enableSorting: false,
+    }),
+    columnHelper.accessor('paid', {
+      header: () => t('Payments'),
+      enableSorting: false,
+    }),
+    columnHelper.accessor('outstanding', {
+      header: () => t('Balance'),
+      enableSorting: false,
+    }),
+    columnHelper.accessor('id', {
+      header: () => t('Select'),
+      cell: info => (
+        <>
+          {customer?.id === info.getValue() ? (
+            <Button variant="success" onClick={() => setCustomer(undefined)} className="w-[40px]"
+                    type="button">
+              <FontAwesomeIcon icon={faSquareCheck} size="lg"/>
+            </Button>
+          ) : (
+            <Button
+              onClick={() => setCustomer(info.row.original)}
+              disabled={customer?.id === info.getValue()}
+              className="w-[40px]"
+            >
+              <FontAwesomeIcon icon={faSquare} size="lg"/>
+            </Button>
+          )}
+        </>
+      ),
+      enableSorting: false,
+    }),
+    columnHelper.accessor('id', {
+      header: () => t('Actions'),
+      enableSorting: false,
+      cell: (info) => {
+        return (
+          <>
+            <CustomerPayments customer={info.row.original} onCreate={() => action.loadList(params)}/>
+            <span className="mx-2 text-gray-300">|</span>
+            <Button variant="danger" type="button">
+              <FontAwesomeIcon icon={faTrash}/>
+            </Button>
+          </>
+        )
       }
-
-      const response = await jsonRequest(CUSTOMER_LIST + '?' + queryParams.toString());
-      const json = await response.json();
-
-      setList(json.list);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (modal) {
-      loadCustomers();
-    }
-    reset({});
-  }, [modal]);
+    })
+  ];
+  const [params, setParams] = useState<{ [key: string]: any }>();
 
   const {register, handleSubmit, setError, formState: {errors}, reset} = useForm();
   const [creating, setCreating] = useState(false);
@@ -71,9 +116,7 @@ export const Customers: FC<Props> = ({
 
       setCustomer(response.customer);
 
-      setList(prev => {
-        return [ response.customer, ...prev];
-      });
+      action.loadList();
 
       reset({
         name: '',
@@ -100,7 +143,12 @@ export const Customers: FC<Props> = ({
     }
   };
 
-  const [q, setQ] = useState<string>();
+  const mergeFilters = (filters: any) => {
+    setParams(prev => {
+      return {...prev, ...filters};
+    });
+  };
+
 
   return (
     <>
@@ -148,79 +196,18 @@ export const Customers: FC<Props> = ({
             </div>
             <div className="col-start-auto">
               <label className="block">&nbsp;</label>
-              <Button variant="primary" type="submit" className="w-full" disabled={creating}>{creating ? 'Creating...' : 'Create new'}</Button>
+              <Button variant="primary" type="submit" className="w-full"
+                      disabled={creating}>{creating ? 'Creating...' : 'Create new'}</Button>
             </div>
           </div>
 
         </form>
-        {isLoading && (
-          <div className="flex justify-center items-center">
-            <Loader lines={15} lineItems={8}/>
-          </div>
-        )}
 
-        <hr/>
-        <Input name="q"
-               type="search"
-               onChange={(e) => {
-                 loadCustomers(e.target.value);
-                 setQ(e.target.value);
-               }}
-               placeholder="Search Customers"
-               className="mb-3 mt-3 search-field w-full"/>
-
-        {!isLoading && (
-          <table className="table border border-collapse">
-            <thead>
-            <tr>
-              <th>Name</th>
-              <th>Phone</th>
-              <th>CNIC Number</th>
-              <th>Prev. Sale</th>
-              <th>Paid</th>
-              <th>Outstanding</th>
-              <th>Attach</th>
-              <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            {list.map((row, index) => {
-              return (
-                <tr key={index} className="hover:bg-gray-100">
-                  <td>{row.name}</td>
-                  <td>{row.phone}</td>
-                  <td>{row.cnic}</td>
-                  <td>{row.sale}</td>
-                  <td>{row.paid}</td>
-                  <td>{row.outstanding}</td>
-                  <td>
-                    {customer?.id === row.id ? (
-                      <Button variant="success" onClick={() => setCustomer(undefined)} className="w-[40px]" type="button">
-                        <FontAwesomeIcon icon={faSquareCheck} size="lg" />
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={() => setCustomer(row)}
-                        disabled={customer?.id === row.id}
-                        className="w-[40px]"
-                      >
-                        <FontAwesomeIcon icon={faSquare} size="lg"/>
-                      </Button>
-                    )}
-                  </td>
-                  <td>
-                    <CustomerPayments customer={row} onCreate={() => loadCustomers(q)} key={index}/>
-                    <span className="mx-2 text-gray-300">|</span>
-                    <Button variant="danger" type="button">
-                      <FontAwesomeIcon icon={faTrash}/>
-                    </Button>
-                  </td>
-                </tr>
-              )
-            })}
-            </tbody>
-          </table>
-        )}
+        <TableComponent
+          columns={columns}
+          useLoadList={useLoadHook}
+          setFilters={mergeFilters}
+        />
       </Modal>
     </>
   );

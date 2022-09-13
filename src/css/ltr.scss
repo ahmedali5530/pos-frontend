@@ -147,8 +147,13 @@ a{
   z-index: -1;
 }
 
+.input-addon{
+  @apply font-sans inline-flex justify-center items-center leading-5 rounded-lg px-3 py-2 align-middle h-[40px]
+  bg-white border-2 border-purple-500 w-[40px] text-purple-500;
+}
 .btn{
-  @apply font-sans inline-flex justify-center items-center leading-5 rounded-lg px-3 py-2 align-middle h-[40px] active:shadow-none bg-white border-2;
+  @apply font-sans inline-flex justify-center items-center leading-5 rounded-lg px-3 py-2 align-middle h-[40px]
+  active:shadow-none bg-white border-2;
   &.lg{
     @apply min-h-[48px];
   }
@@ -159,7 +164,8 @@ a{
     @apply cursor-not-allowed;
   }
   &.btn-primary{
-    @apply border-purple-500 border-purple-500 text-purple-500 focus:outline-none focus:ring focus:ring-purple-200 focus:border-purple-500 active:bg-purple-500 active:text-white hover:bg-purple-100;
+    @apply border-purple-500 text-purple-500 focus:outline-none focus:ring focus:ring-purple-200
+    focus:border-purple-500 active:bg-purple-500 active:text-white hover:bg-purple-100;
     &:disabled{
       @apply bg-purple-100;
     }
@@ -168,7 +174,8 @@ a{
     }
   }
   &.btn-danger{
-    @apply border-rose-500 border-rose-500 text-rose-500 focus:outline-none focus:ring focus:ring-rose-200 focus:border-rose-500 active:bg-rose-500 active:text-white hover:bg-rose-50;
+    @apply border-rose-500 text-rose-500 focus:outline-none focus:ring focus:ring-rose-200 focus:border-rose-500
+    active:bg-rose-500 active:text-white hover:bg-rose-50;
     &:disabled{
       @apply bg-rose-100;
     }
@@ -177,7 +184,8 @@ a{
     }
   }
   &.btn-secondary{
-    @apply border-gray-500 border-gray-500 text-gray-500 focus:outline-none focus:ring focus:ring-gray-200 focus:border-gray-500 active:bg-gray-500 active:text-white hover:bg-gray-50;
+    @apply border-gray-500 text-gray-500 focus:outline-none focus:ring focus:ring-gray-200 focus:border-gray-500
+    active:bg-gray-500 active:text-white hover:bg-gray-50;
     &:disabled{
       @apply bg-gray-100;
     }
@@ -186,7 +194,8 @@ a{
     }
   }
   &.btn-warning{
-    @apply border-amber-500 disabled:bg-amber-200 border-amber-500 text-amber-500 focus:outline-none focus:ring focus:ring-amber-200 focus:border-amber-500 active:bg-amber-500 active:text-white hover:bg-amber-50;
+    @apply disabled:bg-amber-200 border-amber-500 text-amber-500 focus:outline-none focus:ring focus:ring-amber-200
+    focus:border-amber-500 active:bg-amber-500 active:text-white hover:bg-amber-50;
     &:disabled{
       @apply bg-amber-100;
     }
@@ -195,7 +204,8 @@ a{
     }
   }
   &.btn-success{
-    @apply border-emerald-500 border-emerald-500 text-emerald-500 focus:outline-none focus:ring focus:ring-emerald-200 focus:border-emerald-500 active:bg-emerald-500 active:text-white hover:bg-emerald-50;
+    @apply border-emerald-500 text-emerald-500 focus:outline-none focus:ring focus:ring-emerald-200
+    focus:border-emerald-500 active:bg-emerald-500 active:text-white hover:bg-emerald-50;
     &:disabled{
       @apply bg-emerald-100;
     }
@@ -205,9 +215,34 @@ a{
   }
 }
 .form-control, .input{
-  @apply font-sans block text-sm leading-5 py-2 px-3 border-2 border-purple-500 text-gray-500 rounded-lg focus:outline-none focus:ring focus:ring-purple-200 focus:border-purple-500 disabled:bg-purple-100 read-only:bg-purple-100 focus:shadow-none;
+  @apply font-sans block text-sm leading-5 py-2 px-3 border-2 focus:outline-none focus:ring rounded-lg text-gray-500
+  border-purple-500 focus:ring-purple-200 focus:border-purple-500 disabled:bg-purple-100 read-only:bg-purple-100 focus:shadow-none;
   &.lg{
     @apply min-h-[48px];
+  }
+  &.with-feedback{
+    background-repeat: no-repeat;
+    background-size: 20px;
+    background-position: right 12px center;
+  }
+  &.warning{
+    @apply border-amber-500 focus:ring-amber-200 focus:border-amber-500 disabled:bg-amber-100 read-only:bg-amber-100;
+
+    &.with-feedback {
+      background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(245,158,11)" viewBox="0 0 512 512"><path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24V296c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224c0-17.7-14.3-32-32-32s-32 14.3-32 32s14.3 32 32 32s32-14.3 32-32z"/></svg>');
+    }
+  }
+  &.error{
+    @apply border-rose-500 focus:ring-rose-200 focus:border-rose-500 disabled:bg-rose-100 read-only:bg-rose-100;
+    &.with-feedback {
+      background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(244,63,94)" viewBox="0 0 512 512"><path d="M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0S0 114.6 0 256S114.6 512 256 512zm0-384c13.3 0 24 10.7 24 24V264c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24zm32 224c0 17.7-14.3 32-32 32s-32-14.3-32-32s14.3-32 32-32s32 14.3 32 32z"/></svg>');
+    }
+  }
+  &.success{
+    @apply border-emerald-500 focus:ring-emerald-200 focus:border-emerald-500 disabled:bg-emerald-100 read-only:bg-emerald-100;
+    &.with-feedback {
+      background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(16,185,129)" viewBox="0 0 512 512"><path d="M470.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L192 338.7 425.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>');
+    }
   }
 }
 
@@ -460,7 +495,7 @@ a{
 }
 .input-group{
   @apply flex;
-  *{
+  > *{
     border-radius: 0;
   }
   :nth-child(1){
@@ -468,6 +503,10 @@ a{
   }
   :last-child{
     @apply rounded-br-lg rounded-tr-lg;
+  }
+  //remove border-right except last element
+  > :not(:last-child){
+    border-right: none;
   }
 }
 .checkbox{

@@ -1,15 +1,15 @@
-import {Button} from "../button";
+import {Button} from "../../button";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faList} from "@fortawesome/free-solid-svg-icons";
-import {Modal} from "../modal";
+import {Modal} from "../../modal";
 import React, {useState} from "react";
-import {Tab, TabContent, TabControl, TabNav} from "../../../app-common/components/tabs/tabs";
+import {Tab, TabContent, TabControl, TabNav} from "../../../../app-common/components/tabs/tabs";
 import {Categories} from "./categories";
 import {Suppliers} from "./suppliers";
 import {Brands} from "./brands";
 import {Items} from "./items";
 import {CreateItem} from "./items.create";
-import {Product} from "../../../api/model/product";
+import {Product} from "../../../../api/model/product";
 
 export const ItemsTabs = () => {
   const [modal, setModal] = useState(false);

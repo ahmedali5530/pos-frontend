@@ -20,6 +20,13 @@ export interface Order {
   payments: OrderPayment[];
   createdAt: string;
   status: string;
-  returnedFrom?: Order;
+  returnedFrom?: Pick<Order, "id"|"orderId"|"createdAt">;
   notes?: string;
+}
+
+export enum OrderStatus{
+  COMPLETED = 'Completed',
+  ON_HOLD = 'On Hold',
+  DELETED = 'Deleted',
+  DISPATCHED = 'Dispatched'
 }

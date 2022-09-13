@@ -20,10 +20,16 @@ import {SaleHistory} from "../../components/sale/sale.history";
 import {Customers} from "../../components/sale/customers";
 import {Logout} from "../../components/logout";
 import {Expenses} from "../../components/sale/expenses";
-import {ItemsTabs} from "../../components/sale/items.tabs";
+import {ItemsTabs} from "../../components/sale/items/items.tabs";
 import {More} from "../../components/sale/more";
 import {OrderTotals} from "../../components/sale/cart/order.totals";
 import {HomeProps, initialData, useLoadData} from "../../../api/hooks/use.load.data";
+import {SaleBrands} from "../../components/sale/sale.brands";
+import {Brand} from "../../../api/model/brand";
+import {Category} from "../../../api/model/category";
+import {SaleCategories} from "../../components/sale/sale.categories";
+import {Supplier} from "../../../api/model/supplier";
+import {SaleSuppliers} from "../../components/sale/sale.suppliers";
 const Mousetrap = require('mousetrap');
 
 
@@ -190,16 +196,56 @@ const Pos: FC = () => {
   const [modal, setModal] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
   const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [brands, setBrands] = useState< {[key: string]: Brand} >({});
+  const [categories, setCategories] = useState<{[key: string]: Category}>({});
+  const [suppliers, setSuppliers] = useState<{[key: string]: Supplier}>({});
 
   const items = useMemo(() => {
-    return list?.list?.filter(item => {
+    let filtered = list?.list;
+
+    const brandIds = Object.keys(brands);
+    if(brandIds.length > 0){
+      filtered = filtered.filter(item => {
+        const brandsFilter = item.brands.filter(b => {
+          return brandIds.includes(b.id.toString())
+        });
+
+        return brandsFilter.length > 0;
+      });
+    }
+
+    const categoryIds = Object.keys(categories);
+    if(categoryIds.length > 0){
+      filtered = filtered.filter(item => {
+        const categoriesFilter = item.categories.filter(c => {
+          return categoryIds.includes(c.id.toString())
+        });
+
+        return categoriesFilter.length > 0;
+      });
+    }
+
+    const supplierIds = Object.keys(suppliers);
+    if(supplierIds.length > 0){
+      filtered = filtered.filter(item => {
+        const suppliersFilter = item.suppliers.filter(c => {
+          return supplierIds.includes(c.id.toString())
+        });
+
+        return suppliersFilter.length > 0;
+      });
+    }
+
+    filtered = filtered?.filter(item => {
       if (item.barcode && item.barcode.toLowerCase().startsWith(q.toLowerCase())) {
         return true;
       }
 
       return item.name.toLowerCase().indexOf(q.toLowerCase()) !== -1;
-    })
-  }, [list?.list, q]);
+    });
+
+    return filtered;
+  }, [list?.list, q, brands, categories, suppliers]);
 
   const addItem = (item: Product, quantity: number, price?: number) => {
     let newPrice = 0;
@@ -456,9 +502,14 @@ const Pos: FC = () => {
 
   return (
     <>
-      <div className="grid gap-4 grid-cols-12 h-[calc(100vh_-_290px)] max-h-full">
+      <div className="grid gap-4 grid-cols-12 h-[calc(100vh_-_240px)] max-h-full">
         <div className="col-span-4 bg-gray-50 p-3" onClick={(event) => setFocus(event, searchField)}>
-          <div className="flex flex-column mb-1">
+          <div className="grid grid-cols-3 gap-3 mb-3">
+            <SaleBrands brands={brands} setBrands={setBrands} />
+            <SaleCategories categories={categories} setCategories={setCategories} />
+            <SaleSuppliers suppliers={suppliers} setSuppliers={setSuppliers} />
+          </div>
+          <div className="mb-1 input-group">
             <SpeechSearch setQ={setQ}/>
             <Input
               placeholder="Search items"

@@ -1,4 +1,4 @@
-import React, {FC, useEffect, useMemo, useState} from "react";
+import React, {FC, useCallback, useEffect, useMemo, useState} from "react";
 import {Button} from "../button";
 import {Modal} from "../modal";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -10,16 +10,22 @@ import {
   faClockRotateLeft,
   faEye,
   faPause,
-  faPlay,
+  faPlay, faRefresh,
   faSearch,
-  faSpinner,
   faTrash,
   faTrashRestoreAlt,
   faTruck
 } from "@fortawesome/free-solid-svg-icons";
 import {fetchJson} from "../../../api/request/request";
-import {EXPENSE_LIST, ORDER_DISPATCH, ORDER_GET, ORDER_LIST, ORDER_REFUND, ORDER_RESTORE} from "../../../api/routing/routes/backend.app";
-import {Order} from "../../../api/model/order";
+import {
+  EXPENSE_LIST,
+  ORDER_DISPATCH,
+  ORDER_GET,
+  ORDER_LIST,
+  ORDER_REFUND,
+  ORDER_RESTORE
+} from "../../../api/routing/routes/backend.app";
+import {Order, OrderStatus} from "../../../api/model/order";
 import {DateTime} from "luxon";
 import classNames from "classnames";
 import {CartItem} from "../../../api/model/cart.item";
@@ -35,6 +41,18 @@ import {CustomerPayments} from "./customer.payments";
 import {ResponsivePie as Pie} from "@nivo/pie";
 import {ResponsiveBar as Bar} from "@nivo/bar";
 import {Loader} from "../../../app-common/components/loader/loader";
+import {useLoadList} from "../../../api/hooks/use.load.list";
+import {useTranslation} from "react-i18next";
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel, getFilteredRowModel, getSortedRowModel,
+  PaginationState,
+  SortingState,
+  useReactTable
+} from "@tanstack/react-table";
+import {DebouncedInput, TableComponent} from "../../../app-common/components/table/table";
+import _ from "lodash";
 
 interface Props {
   setAdded: (item: CartItem[]) => void;
@@ -47,47 +65,158 @@ interface Props {
 }
 
 export const SaleHistory: FC<Props> = ({
-                                         setAdded, setDiscountAmount, setDiscount, setCustomer, setTax, customer, setRefundingFrom
+                                         setAdded,
+                                         setDiscountAmount,
+                                         setDiscount,
+                                         setCustomer,
+                                         setTax,
+                                         customer,
+                                         setRefundingFrom
                                        }) => {
   const [modal, setModal] = useState(false);
-  const [isLoading, setLoading] = useState(false);
   const [list, setList] = useState<Order[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [q, setQ] = useState<string>();
-  const [filters, setFilters] = useState<any>();
   const [payments, setPayments] = useState<{ [key: string]: number }>({});
 
-  const loadSales = async (values?: any) => {
-    // if (!values) {
-      setLoading(true);
-    // }
+  const useLoadHook = useLoadList<Order>(ORDER_LIST);
+  const [state, action] = useLoadHook;
 
-    loadExpenses(values);
+  const {t} = useTranslation();
 
-    setFilters(values);
+  const columnHelper = createColumnHelper<Order>();
 
-    try {
-      const url = new URL(ORDER_LIST);
-      const params = new URLSearchParams({
-        dateTimeFrom: DateTime.now().startOf('day').toISO(),
-        dateTimeTo: DateTime.now().endOf('day').toISO(),
-        ...values,
-        orderBy: 'id',
-        orderMode: 'DESC',
-      });
+  const columns = [
+    columnHelper.accessor('orderId', {
+      header: () => t('Order#'),
+      cell: info => (
+        <ViewOrder order={info.row.original}>
+          <FontAwesomeIcon icon={faEye} className="mr-2"/> {info.getValue()}
+        </ViewOrder>
+      ),
+      sortDescFirst: true
+    }),
+    columnHelper.accessor('createdAt', {
+      header: () => t('Time'),
+      cell: info => DateTime.fromISO(info.getValue()).toRelative({base: DateTime.now()})
+    }),
+    columnHelper.accessor('customer', {
+      header: () => t('Customer'),
+      cell: info => (
+        <>
+          {!!info.getValue() ? (
+            <span
+              className="text-purple-500 cursor-pointer"
+              title="View this customer"
+            >
+              <CustomerPayments customer={info.getValue()!}>
+                <FontAwesomeIcon icon={faEye} className="mr-2"/>
+                {info.getValue()?.name}
+              </CustomerPayments>
+              {customer?.id === info.getValue()?.id && (
+                <span className="ml-3">
+                  <FontAwesomeIcon icon={faCheck}/>
+                </span>
+              )}
+            </span>
+          ) : 'Cash Sale'}
+        </>
+      )
+    }),
+    columnHelper.accessor('tax', {
+      header: () => t('Tax'),
+      cell: info => '+'+(info.getValue()?.amount || '0')
+    }),
+    columnHelper.accessor('discount', {
+      header: () => t('Discount'),
+      cell: info => '-'+(info.getValue()?.amount || '0')
+    }),
+    columnHelper.accessor('items', {
+      header: () => t('Rate'),
+      cell: info => '+' + info.getValue().reduce((prev, item) => {
+        return (item.price * item.quantity) + prev
+      }, 0)
+    }),
+    columnHelper.accessor('items', {
+      header: () => t('Cost'),
+      cell: info => info.getValue().reduce((prev, item) => {
+        return ((item.product?.cost || 0) * item.quantity) + prev
+      }, 0)
+    }),
+    columnHelper.accessor('payments', {
+      header: () => t('Total'),
+      cell: info => '=' + info.getValue().reduce((prev, payment) => {
+        return payment.received + prev
+      }, 0)
+    }),
+    columnHelper.accessor('status', {
+      header: () => t('Total'),
+      cell: info => (
+        <>
+          <span className={
+            classNames(
+              getOrderStatusClasses(info.getValue()),
+              'rounded-2xl p-1 px-2 border font-bold text-sm'
+            )
+          }>
+            <FontAwesomeIcon icon={getOrderStatusIcon(info.getValue())} className="mr-1"/> {orderStatus(info.row.original)}
+          </span>
+          {orderStatus(info.row.original) === OrderStatus.DISPATCHED && (
+            <Button variant="danger" className="ml-3 w-[40px]" onClick={() => deleteOrder(info.row.original)}
+                    disabled={deleting} title="Delete">
+              <FontAwesomeIcon icon={faTrash}/>
+            </Button>
+          )}
+          {orderStatus(info.row.original) === OrderStatus.COMPLETED && (
+            <>
+              {!info.row.original.returnedFrom && (
+                <>
+                  <Button variant="danger" className="ml-3 w-[40px]" onClick={() => refundOrder(info.row.original)}
+                          disabled={refunding} title="Refund">
+                    <FontAwesomeIcon icon={faBackward}/>
+                  </Button>
+                  <Button variant="success" className="ml-3 w-[40px]" onClick={() => dispatchOrder(info.row.original)}
+                          disabled={dispatching} title="Dispatch">
+                    <FontAwesomeIcon icon={faTruck}/>
+                  </Button>
+                </>
+              )}
+              <Button variant="danger" className="ml-3 w-[40px]" onClick={() => deleteOrder(info.row.original)}
+                      disabled={deleting} title="Delete">
+                <FontAwesomeIcon icon={faTrash}/>
+              </Button>
+            </>
+          )}
+          {orderStatus(info.row.original) === OrderStatus.ON_HOLD && (
+            <>
+              <Button variant="success" className="ml-3 w-[40px]" onClick={() => unsuspendOrder(info.row.original)}
+                      disabled={unsuspending} title="Unsuspend">
+                <FontAwesomeIcon icon={faPlay}/>
+              </Button>
+              <Button variant="danger" className="ml-3 w-[40px]" onClick={() => deleteOrder(info.row.original)}
+                      disabled={deleting} title="Delete">
+                <FontAwesomeIcon icon={faTrash}/>
+              </Button>
+            </>
+          )}
+          {orderStatus(info.row.original) === OrderStatus.DELETED && (
+            <>
+              <Button variant="success" className="ml-3 w-[40px]" onClick={() => restoreOrder(info.row.original)}
+                      disabled={restoring} title="Restore">
+                <FontAwesomeIcon icon={faTrashRestoreAlt}/>
+              </Button>
+            </>
+          )}
+        </>
+      )
+    }),
+  ];
 
-      url.search = params.toString();
-      const json = await fetchJson(url.toString());
+  const [params, setParams] = useState<{[key: string]: any}>();
 
-      setList(json.list);
-      setPayments(json.payments);
-    } catch (e) {
-
-      throw e;
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    setPayments(state.response?.payments);
+    setList(state.list);
+  }, [state]);
 
   const loadExpenses = async (values?: any) => {
     try {
@@ -113,10 +242,9 @@ export const SaleHistory: FC<Props> = ({
   };
 
   useEffect(() => {
-    if (modal) {
-      loadSales();
-    }
-  }, [modal]);
+    loadExpenses(params);
+    // action.loadList(params);
+  }, [params]);
 
   const orderStatus = (order: Order) => {
     return order.status;
@@ -223,7 +351,7 @@ export const SaleHistory: FC<Props> = ({
     if (!window.confirm('Refund order?')) return false;
     setRefunding(true);
     try {
-      const response = await fetchJson(ORDER_REFUND.replace(':id', order.id), {
+      await fetchJson(ORDER_REFUND.replace(':id', order.id), {
         method: 'POST'
       });
 
@@ -258,11 +386,11 @@ export const SaleHistory: FC<Props> = ({
     if (!window.confirm('Dispatch order?')) return false;
     setDispatching(true);
     try {
-      const response = await fetchJson(ORDER_DISPATCH.replace(':id', order.id), {
+      await fetchJson(ORDER_DISPATCH.replace(':id', order.id), {
         method: 'POST'
       });
 
-      loadSales(filters);
+      loadList();
 
     } catch (e) {
       throw e;
@@ -280,7 +408,7 @@ export const SaleHistory: FC<Props> = ({
         method: 'DELETE'
       });
 
-      loadSales(filters);
+      loadList();
     } catch (e) {
       throw e;
     } finally {
@@ -296,21 +424,13 @@ export const SaleHistory: FC<Props> = ({
       await fetchJson(ORDER_RESTORE.replace(':id', order.id), {
         method: 'POST'
       });
-
-      loadSales(filters);
+      loadList();
     } catch (e) {
       throw e;
     } finally {
       setRestoring(false);
     }
   };
-
-  const total = useMemo(() => {
-    return list.reduce((prev, order) =>
-      prev + order.payments.reduce((paymentPrev, payment) =>
-      paymentPrev + payment.total,
-      0), 0);
-  }, [list]);
 
   const discountTotal = useMemo(() => {
     return list.reduce((prev, order) => {
@@ -357,28 +477,22 @@ export const SaleHistory: FC<Props> = ({
     }, 0);
   }, [list]);
 
-  const totalRate = useMemo(() => {
-    return list.reduce((prev, order) => {
-      return prev + order.items.reduce((p, item) => p + (item.price * item.quantity), 0)
-    }, 0);
-  }, [list]);
-
   const totalExpenses = useMemo(() => {
     return expenses.reduce((prev, item) => prev + item.amount, 0);
   }, [expenses]);
 
   const customerChartData = useMemo(() => {
-    const customers: {[name: string]: number} = {};
+    const customers: { [name: string]: number } = {};
     list.forEach(order => {
-      if(order?.customer) {
-        if(!customers[order?.customer?.name]){
+      if (order?.customer) {
+        if (!customers[order?.customer?.name]) {
           customers[order?.customer?.name] = 0;
         }
 
         customers[order?.customer?.name] += order.payments.reduce((p, payment) => p + payment.total, 0);
-      }else{
+      } else {
         const cash = 'Cash';
-        if(!customers[cash]){
+        if (!customers[cash]) {
           customers[cash] = 0;
         }
 
@@ -386,7 +500,7 @@ export const SaleHistory: FC<Props> = ({
       }
     });
 
-    const data: {id: string, value: number}[] = [];
+    const data: { id: string, value: number }[] = [];
     Object.keys(customers).forEach(c => {
       data.push({
         id: c,
@@ -401,6 +515,86 @@ export const SaleHistory: FC<Props> = ({
 
   const [areChartsOpen, setChartsOpen] = useState(false);
 
+  //FIXME: isolate table component and move in separate file
+
+  const mergeFilters = (filters: any) => {
+    setParams(prev => {
+      return {...prev, ...filters};
+    });
+  };
+
+  const [sorting, setSorting] = React.useState<SortingState>([{
+    id: 'id',
+    desc: true,
+  }]);
+
+  const [{pageIndex, pageSize}, setPagination] =
+    React.useState<PaginationState>({
+      pageIndex: 0,
+      pageSize: 10,
+    });
+  const [rowSelection, setRowSelection] = React.useState({});
+  const [globalFilter, setGlobalFilter] = React.useState('');
+
+  const loadList = async () => {
+    const newParams: {
+      limit?: number,
+      offset?: number,
+      orderBy?: string,
+      orderMode?: string,
+      [key: string]: any
+    } = {
+      ...params,
+      limit: pageSize,
+      offset: pageIndex * pageSize,
+    };
+
+    if (sorting.length > 0) {
+      newParams.orderBy = sorting[0].id;
+      newParams.orderMode = sorting[0].desc ? 'desc' : 'asc';
+    }
+
+    if (globalFilter) {
+      newParams.q = globalFilter;
+    }
+
+    await action.loadList(newParams);
+  };
+
+  useEffect(() => {
+    loadList();
+  }, [pageSize, pageIndex, sorting, globalFilter, params]);
+
+  const pagination = React.useMemo(
+    () => ({
+      pageIndex,
+      pageSize,
+    }),
+    [pageIndex, pageSize]
+  );
+
+  const table = useReactTable({
+    data: state.list,
+    pageCount: Math.ceil(state.total / pageSize),
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    state: {
+      sorting,
+      pagination,
+      rowSelection,
+      globalFilter
+    },
+    onGlobalFilterChange: setGlobalFilter,
+    onRowSelectionChange: setRowSelection,
+    onPaginationChange: setPagination,
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    manualPagination: true,
+    enableMultiSort: false,
+    manualSorting: true,
+    manualFiltering: true
+  });
 
   return (
     <>
@@ -411,16 +605,13 @@ export const SaleHistory: FC<Props> = ({
       <Modal open={modal} onClose={() => {
         setModal(false);
       }} title="Sale history">
-        <form onSubmit={handleSubmit(loadSales)}>
+        <form onSubmit={handleSubmit(mergeFilters)}>
           <div className="grid grid-cols-6 gap-4 mb-5">
             <div className="col-span-3">
               <Input type="search"
                      placeholder="Search in Order#, Status, Customer"
                      className="search-field w-full"
                      {...register('q')}
-                     onChange={(e) => {
-                       setQ(e.target.value);
-                     }}
               />
             </div>
             <div>
@@ -440,8 +631,8 @@ export const SaleHistory: FC<Props> = ({
               />
             </div>
             <div>
-              <Button variant="primary" className="w-full" type="submit" disabled={isLoading}>
-                {isLoading ? 'Loading...' : (
+              <Button variant="primary" className="w-full" type="submit" disabled={state.isLoading}>
+                {state.isLoading ? 'Loading...' : (
                   <>
                     <FontAwesomeIcon icon={faSearch} className="mr-2"/> Search sale
                   </>
@@ -451,13 +642,7 @@ export const SaleHistory: FC<Props> = ({
           </div>
         </form>
 
-        {isLoading && (
-          <div className="flex justify-center items-center">
-            <Loader lines={15} lineItems={9}/>
-          </div>
-        )}
-
-        {!isLoading && (
+        {!state.isLoading && (
           <>
             <h3 className="mb-3 text-lg cursor-pointer" onClick={() => setChartsOpen(!areChartsOpen)}>
               Charts {areChartsOpen ? <FontAwesomeIcon icon={faChevronDown}/> :
@@ -514,7 +699,7 @@ export const SaleHistory: FC<Props> = ({
                           </span>
                         )
                       }}
-                     />
+                    />
                   </div>
                 </div>
 
@@ -571,141 +756,129 @@ export const SaleHistory: FC<Props> = ({
               </div>
             </div>
 
-            <table className="table border border-collapse">
-              <thead>
-              <tr>
-                <th>Order#</th>
-                <th>Time</th>
-                <th>Status</th>
-                <th>Customer</th>
-                <th>Tax</th>
-                <th>Discount</th>
-                <th>Rate</th>
-                <th>Cost</th>
-                <th>Total</th>
-              </tr>
-              </thead>
-              <tbody>
-              {list.map((order, index) => (
-                <tr key={index} className="hover:bg-gray-100">
-                  <td>
-                    <ViewOrder order={order}>
-                      <FontAwesomeIcon icon={faEye} className="mr-2"/> {order.orderId}
-                    </ViewOrder>
-                  </td>
-                  <td
-                    title={order.createdAt}>{DateTime.fromISO(order.createdAt).toRelative({base: DateTime.now()})}</td>
-                  <td>
-                    <span className={
-                      classNames(
-                        getOrderStatusClasses(order.status),
-                        'rounded-2xl p-1 px-2 border font-bold text-sm'
-                      )
-                    }>
-                      <FontAwesomeIcon icon={getOrderStatusIcon(order.status)} className="mr-1"/> {orderStatus(order)}
-                    </span>
-                    {orderStatus(order) === 'Dispatched' && (
-                      <Button variant="danger" className="ml-3 w-[40px]" onClick={() => deleteOrder(order)}
-                              disabled={deleting} title="Delete">
-                        <FontAwesomeIcon icon={faTrash}/>
-                      </Button>
-                    )}
-                    {orderStatus(order) === 'Completed' && (
-                      <>
-                        {!order.returnedFrom && (
-                          <>
-                            <Button variant="danger" className="ml-3 w-[40px]" onClick={() => refundOrder(order)}
-                                    disabled={refunding} title="Refund">
-                              <FontAwesomeIcon icon={faBackward}/>
-                            </Button>
-                            <Button variant="success" className="ml-3 w-[40px]" onClick={() => dispatchOrder(order)}
-                                    disabled={dispatching} title="Dispatch">
-                              <FontAwesomeIcon icon={faTruck}/>
-                            </Button>
-                          </>
-                        )}
-                        <Button variant="danger" className="ml-3 w-[40px]" onClick={() => deleteOrder(order)}
-                                disabled={deleting} title="Delete">
-                          <FontAwesomeIcon icon={faTrash}/>
-                        </Button>
-                      </>
-                    )}
-                    {orderStatus(order) === 'On Hold' && (
-                      <>
-                        <Button variant="success" className="ml-3 w-[40px]" onClick={() => unsuspendOrder(order)}
-                                disabled={unsuspending} title="Unsuspend">
-                          <FontAwesomeIcon icon={faPlay}/>
-                        </Button>
-                        <Button variant="danger" className="ml-3 w-[40px]" onClick={() => deleteOrder(order)}
-                                disabled={deleting} title="Delete">
-                          <FontAwesomeIcon icon={faTrash}/>
-                        </Button>
-                      </>
-                    )}
-                    {orderStatus(order) === 'Deleted' && (
-                      <>
-                        <Button variant="success" className="ml-3 w-[40px]" onClick={() => restoreOrder(order)}
-                                disabled={restoring} title="Restore">
-                          <FontAwesomeIcon icon={faTrashRestoreAlt}/>
-                        </Button>
-                      </>
-                    )}
-                  </td>
-                  <td>
-                    {order.customer ? (
-                      <span
-                        className="text-purple-500 cursor-pointer"
-                        title="View this customer"
-                      >
-                        <CustomerPayments customer={order.customer}>
-                          <FontAwesomeIcon icon={faEye} className="mr-2"/>
-                          {order.customer.name}
-                        </CustomerPayments>
-                        {customer?.id === order.customer.id && (
-                          <span className="ml-3">
-                            <FontAwesomeIcon icon={faCheck}/>
-                          </span>
-                        )}
-                      </span>
-                    ) : 'Cash Sale'}
-                  </td>
-                  <td>+{order.tax ? order.tax.amount : '0'}</td>
-                  <td>-{order.discount ? order.discount.amount : '0'}</td>
-                  <td>
-                    +{order.items.reduce((prev, item) => {
-                    return (item.price * item.quantity) + prev
-                  }, 0)}
-                  </td>
-                  <td>
-                    {order.items.reduce((prev, item) => {
-                      if (item.product.cost) {
-                        return (item?.product?.cost * item.quantity) + prev
-                      }
-                      return prev;
-                    }, 0)}
-                  </td>
-                  <td>
-                    ={order.payments.reduce((prev, payment) => {
-                    return payment.received + prev
-                  }, 0)}
-                  </td>
-                </tr>
-              ))}
-              </tbody>
-              <tfoot>
-              <tr className="border border-t-4">
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th>+{taxTotal.toFixed(2)}</th>
-                <th>-{discountTotal.toFixed(2)}</th>
-                <th>+{totalRate.toFixed(2)}</th>
-                <th>{totalCost.toFixed(2)}</th>
-                <th>={total.toFixed(2)}</th>
-              </tr>
-              </tfoot>
-            </table>
+            <>
+              <div className="table-responsive">
+                {(state.isLoading) ? (
+                  <div className="flex justify-center items-center">
+                    <Loader lines={pageSize} lineItems={8 || 5}/>
+                  </div>
+                ) : (
+                  <table className="table table-hover">
+                    <thead>
+                    {table.getHeaderGroups().map(headerGroup => (
+                      <tr key={Math.random() + headerGroup.id} id={Math.random() + headerGroup.id}>
+                        {headerGroup.headers.map(header => (
+                          <th key={header.id}>
+                            <div
+                              {...{
+                                className: header.column.getCanSort()
+                                  ? 'cursor-pointer select-none'
+                                  : '',
+                                onClick: header.column.getToggleSortingHandler(),
+                              }}
+                            >
+                              {flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                              {{
+                                asc: ' ▲',
+                                desc: ' ▼',
+                              }[header.column.getIsSorted() as string] ?? null}
+                            </div>
+                          </th>
+                        ))}
+                      </tr>
+                    ))}
+                    </thead>
+                    <tbody>
+                    {table.getRowModel().rows.map(row => (
+                      <tr key={row.id}>
+                        {row.getVisibleCells().map(cell => (
+                          <td key={Math.random() + cell.id}>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                    </tbody>
+                  </table>
+                )}
+
+              </div>
+              <div className="flex items-center gap-2 mt-3 flex-wrap">
+                <nav className="input-group">
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => table.setPageIndex(0)}
+                    disabled={!table.getCanPreviousPage()}
+                  >
+                    {'<<'}
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                  >
+                    {'<'}
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                  >
+                    {'>'}
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                    disabled={!table.getCanNextPage()}
+                  >
+                    {'>>'}
+                  </button>
+                </nav>
+                &bull;
+                <span className="flex items-center gap-1">
+          <div>{t('Page')}</div>
+          <strong>
+            {table.getState().pagination.pageIndex + 1} {t('of')}{' '}{table.getPageCount()}
+          </strong>
+        </span>
+                &bull;{' '}
+                {t('Go to page')}
+                <span className="flex items-center gap-2">
+          <select
+            value={table.getState().pagination.pageIndex + 1}
+            onChange={e => {
+              table.setPageIndex(Number(e.target.value) - 1)
+            }}
+            className="w-auto form-control"
+          >
+          {_.range(0, table.getPageCount()).map(pageSize => (
+            <option key={pageSize} value={pageSize + 1}>
+              {pageSize + 1}
+            </option>
+          ))}
+          </select>
+        </span>
+                &bull;
+                <span className="flex items-center gap-2">
+          <select
+            value={table.getState().pagination.pageSize}
+            onChange={e => {
+              table.setPageSize(Number(e.target.value))
+            }}
+            className="w-auto form-control"
+          >
+          {[10, 20, 25, 50, 100, 500].map(pageSize => (
+            <option key={pageSize} value={pageSize}>
+              {t('Show')} {pageSize}
+            </option>
+          ))}
+          </select> &bull; {t('Total records')} <strong>{state.total}</strong>
+        </span>
+              </div>
+            </>
           </>
         )}
       </Modal>

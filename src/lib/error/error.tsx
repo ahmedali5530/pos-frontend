@@ -15,5 +15,5 @@ export const getErrors = (errorElemnt: any) => {
 };
 
 export const getErrorClass = (errorElement: any) => {
-  return hasErrors(errorElement) ? 'is-invalid' : '';
+  return hasErrors(errorElement) ? 'with-feedback error' : '';
 };

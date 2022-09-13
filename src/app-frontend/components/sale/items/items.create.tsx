@@ -6,23 +6,24 @@ import {
   PRODUCT_CREATE,
   PRODUCT_GET,
   SUPPLIER_LIST
-} from "../../../api/routing/routes/backend.app";
-import {fetchJson, jsonRequest} from "../../../api/request/request";
-import {UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
-import {ConstraintViolation} from "../../../lib/validator/validation.result";
-import {Input} from "../input";
+} from "../../../../api/routing/routes/backend.app";
+import {fetchJson, jsonRequest} from "../../../../api/request/request";
+import {UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
+import {ConstraintViolation} from "../../../../lib/validator/validation.result";
+import {Input} from "../../input";
 import {Trans} from "react-i18next";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faRefresh} from "@fortawesome/free-solid-svg-icons";
-import {Button} from "../button";
-import {ImportItems} from "./import.items";
-import {ExportItems} from "./export.items";
-import {Category} from "../../../api/model/category";
-import {Product} from "../../../api/model/product";
-import {ReactSelect} from "../../../app-common/components/input/custom.react.select";
-import {ReactSelectOptionProps} from "../../../api/model/common";
-import {Supplier} from "../../../api/model/supplier";
-import {Brand} from "../../../api/model/brand";
+import {Button} from "../../button";
+import {Category} from "../../../../api/model/category";
+import {Product} from "../../../../api/model/product";
+import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
+import {ReactSelectOptionProps} from "../../../../api/model/common";
+import {Supplier} from "../../../../api/model/supplier";
+import {Brand} from "../../../../api/model/brand";
+import {withCurrency} from "../../../../lib/currency/currency";
+import classNames from "classnames";
+import {getErrorClass} from "../../../../lib/error/error";
 
 interface ItemsCreateProps{
   setActiveTab: (tab: string) => void;
@@ -193,7 +194,12 @@ export const CreateItem = ({
       <div className="grid grid-cols-4 gap-4 mb-3">
         <div>
           <label htmlFor="name">Name</label>
-          <Input {...register('name')} id="name" className="w-full"/>
+          <Input {...register('name')} id="name"
+                 className={classNames(
+                   "w-full",
+                   getErrorClass(errors.name)
+                 )}
+          />
           {errors.name && (
             <div className="text-red-500 text-sm">
               <Trans>
@@ -204,14 +210,19 @@ export const CreateItem = ({
         </div>
         <div>
           <label htmlFor="barcode">Barcode</label>
-          <div className="relative">
-            <Input {...register('barcode')} id="barcode" className="pr-[36px] w-full"/>
+          <div className="input-group">
+            <Input {...register('barcode')} id="barcode"
+                   className={classNames(
+                     "w-full",
+                     getErrorClass(errors.barcode)
+                   )}
+            />
             <button onClick={() => {
               reset({
                 ...getValues(),
                 barcode: Math.floor(Math.random() * 10000000000) + 1
               });
-            }} className="absolute top-0 right-0 btn btn-primary" type="button"
+            }} className="btn btn-primary" type="button"
                     tabIndex={-1}>
               <FontAwesomeIcon icon={faRefresh}/>
             </button>
@@ -227,7 +238,15 @@ export const CreateItem = ({
         <div className="col-span-4"></div>
         <div>
           <label htmlFor="basePrice">Sale price</label>
-          <Input {...register('basePrice')} id="basePrice" className="w-full"/>
+          <div className="input-group">
+            <span className="input-addon">
+              {withCurrency('')}
+            </span>
+            <Input {...register('basePrice')} id="basePrice" className={classNames(
+              "w-full",
+              getErrorClass(errors.name)
+            )}/>
+          </div>
           {errors.basePrice && (
             <div className="text-red-500 text-sm">
               <Trans>
@@ -238,7 +257,10 @@ export const CreateItem = ({
         </div>
         <div>
           <label htmlFor="basePrice">Sale unit</label>
-          <Input {...register('saleUnit')} id="saleUnit" className="w-full"/>
+          <Input {...register('saleUnit')} id="saleUnit" className={classNames(
+            "w-full",
+            getErrorClass(errors.name)
+          )}/>
           {errors.saleUnit && (
             <div className="text-red-500 text-sm">
               <Trans>
@@ -250,7 +272,15 @@ export const CreateItem = ({
         <div className="col-span-4"></div>
         <div>
           <label htmlFor="cost">Purchase price</label>
-          <Input {...register('cost')} id="cost" className="w-full"/>
+          <div className="input-group">
+            <span className="input-addon">
+              {withCurrency('')}
+            </span>
+            <Input {...register('cost')} id="cost" className={classNames(
+              "w-full",
+              getErrorClass(errors.name)
+            )}/>
+          </div>
           {errors.cost && (
             <div className="text-red-500 text-sm">
               <Trans>
@@ -261,7 +291,10 @@ export const CreateItem = ({
         </div>
         <div>
           <label htmlFor="purchaseUnit">Purchase unit</label>
-          <Input {...register('purchaseUnit')} id="purchaseUnit" className="w-full"/>
+          <Input {...register('purchaseUnit')} id="purchaseUnit" className={classNames(
+            "w-full",
+            getErrorClass(errors.name)
+          )}/>
           {errors.purchaseUnit && (
             <div className="text-red-500 text-sm">
               <Trans>
@@ -374,10 +407,6 @@ export const CreateItem = ({
           }}
         >Cancel</Button>
       )}
-      <div className="inline-flex justify-end float-right">
-        <span className="ml-3"><ImportItems/></span>
-        <span className="ml-3"><ExportItems/></span>
-      </div>
     </form>
   );
 };
