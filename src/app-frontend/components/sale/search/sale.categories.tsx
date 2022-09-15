@@ -1,11 +1,11 @@
-import {Button} from "../button";
-import {Modal} from "../modal";
+import {Button} from "../../button";
+import {Modal} from "../../modal";
 import React, {FC, PropsWithChildren, useEffect, useState} from "react";
-import {HomeProps} from "../../../api/hooks/use.load.data";
+import {HomeProps} from "../../../../api/hooks/use.load.data";
 import localforage from "localforage";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCheckCircle} from "@fortawesome/free-solid-svg-icons";
-import {Category} from "../../../api/model/category";
+import {Category} from "../../../../api/model/category";
 
 interface SaleCategoriesProps extends PropsWithChildren{
   categories:  {[key: string]: Category} ;

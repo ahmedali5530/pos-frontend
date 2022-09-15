@@ -1,6 +1,6 @@
-import React, {FC, useCallback, useEffect, useMemo, useState} from "react";
-import {Button} from "../button";
-import {Modal} from "../modal";
+import React, {FC, useEffect, useMemo, useState} from "react";
+import {Button} from "../../button";
+import {Modal} from "../../modal";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {
   faBackward,
@@ -10,13 +10,13 @@ import {
   faClockRotateLeft,
   faEye,
   faPause,
-  faPlay, faRefresh,
+  faPlay,
   faSearch,
   faTrash,
   faTrashRestoreAlt,
   faTruck
 } from "@fortawesome/free-solid-svg-icons";
-import {fetchJson} from "../../../api/request/request";
+import {fetchJson} from "../../../../api/request/request";
 import {
   EXPENSE_LIST,
   ORDER_DISPATCH,
@@ -24,34 +24,35 @@ import {
   ORDER_LIST,
   ORDER_REFUND,
   ORDER_RESTORE
-} from "../../../api/routing/routes/backend.app";
-import {Order, OrderStatus} from "../../../api/model/order";
+} from "../../../../api/routing/routes/backend.app";
+import {Order, OrderStatus} from "../../../../api/model/order";
 import {DateTime} from "luxon";
 import classNames from "classnames";
-import {CartItem} from "../../../api/model/cart.item";
-import {Discount} from "../../../api/model/discount";
-import {Tax} from "../../../api/model/tax";
-import {Customer} from "../../../api/model/customer";
-import {Input} from "../input";
+import {CartItem} from "../../../../api/model/cart.item";
+import {Discount} from "../../../../api/model/discount";
+import {Tax} from "../../../../api/model/tax";
+import {Customer} from "../../../../api/model/customer";
+import {Input} from "../../input";
 import {IconProp} from "@fortawesome/fontawesome-svg-core";
 import {useForm} from "react-hook-form";
-import {Expense} from "../../../api/model/expense";
+import {Expense} from "../../../../api/model/expense";
 import {ViewOrder} from "./view.order";
-import {CustomerPayments} from "./customer.payments";
+import {CustomerPayments} from "../customer.payments";
 import {ResponsivePie as Pie} from "@nivo/pie";
 import {ResponsiveBar as Bar} from "@nivo/bar";
-import {Loader} from "../../../app-common/components/loader/loader";
-import {useLoadList} from "../../../api/hooks/use.load.list";
+import {Loader} from "../../../../app-common/components/loader/loader";
+import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {useTranslation} from "react-i18next";
 import {
   createColumnHelper,
   flexRender,
-  getCoreRowModel, getFilteredRowModel, getSortedRowModel,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
   PaginationState,
   SortingState,
   useReactTable
 } from "@tanstack/react-table";
-import {DebouncedInput, TableComponent} from "../../../app-common/components/table/table";
 import _ from "lodash";
 
 interface Props {
@@ -124,11 +125,11 @@ export const SaleHistory: FC<Props> = ({
     }),
     columnHelper.accessor('tax', {
       header: () => t('Tax'),
-      cell: info => '+'+(info.getValue()?.amount || '0')
+      cell: info => '+' + (info.getValue()?.amount || '0')
     }),
     columnHelper.accessor('discount', {
       header: () => t('Discount'),
-      cell: info => '-'+(info.getValue()?.amount || '0')
+      cell: info => '-' + (info.getValue()?.amount || '0')
     }),
     columnHelper.accessor('items', {
       header: () => t('Rate'),
@@ -149,7 +150,7 @@ export const SaleHistory: FC<Props> = ({
       }, 0)
     }),
     columnHelper.accessor('status', {
-      header: () => t('Total'),
+      header: () => t('Status'),
       cell: info => (
         <>
           <span className={
@@ -158,7 +159,8 @@ export const SaleHistory: FC<Props> = ({
               'rounded-2xl p-1 px-2 border font-bold text-sm'
             )
           }>
-            <FontAwesomeIcon icon={getOrderStatusIcon(info.getValue())} className="mr-1"/> {orderStatus(info.row.original)}
+            <FontAwesomeIcon icon={getOrderStatusIcon(info.getValue())}
+                             className="mr-1"/> {orderStatus(info.row.original)}
           </span>
           {orderStatus(info.row.original) === OrderStatus.DISPATCHED && (
             <Button variant="danger" className="ml-3 w-[40px]" onClick={() => deleteOrder(info.row.original)}
@@ -174,10 +176,10 @@ export const SaleHistory: FC<Props> = ({
                           disabled={refunding} title="Refund">
                     <FontAwesomeIcon icon={faBackward}/>
                   </Button>
-                  <Button variant="success" className="ml-3 w-[40px]" onClick={() => dispatchOrder(info.row.original)}
+                  {/*<Button variant="success" className="ml-3 w-[40px]" onClick={() => dispatchOrder(info.row.original)}
                           disabled={dispatching} title="Dispatch">
                     <FontAwesomeIcon icon={faTruck}/>
-                  </Button>
+                  </Button>*/}
                 </>
               )}
               <Button variant="danger" className="ml-3 w-[40px]" onClick={() => deleteOrder(info.row.original)}
@@ -211,7 +213,7 @@ export const SaleHistory: FC<Props> = ({
     }),
   ];
 
-  const [params, setParams] = useState<{[key: string]: any}>();
+  const [params, setParams] = useState<{ [key: string]: any }>();
 
   useEffect(() => {
     setPayments(state.response?.payments);
@@ -258,11 +260,11 @@ export const SaleHistory: FC<Props> = ({
         break;
 
       case('Completed'):
-        classes = 'border-green-500 text-green-500';
+        classes = 'border-emerald-500 text-emerald-500';
         break;
 
       case('Dispatched'):
-        classes = 'border-green-500 text-green-500';
+        classes = 'border-emerald-500 text-emerald-500';
         break;
 
       case('Returned'):
@@ -563,7 +565,7 @@ export const SaleHistory: FC<Props> = ({
 
   useEffect(() => {
     loadList();
-  }, [pageSize, pageIndex, sorting, globalFilter, params]);
+  }, [pageSize, pageIndex, sorting, globalFilter, params, modal]);
 
   const pagination = React.useMemo(
     () => ({
@@ -748,7 +750,7 @@ export const SaleHistory: FC<Props> = ({
                 classNames(
                   'border',
                   'p-5 font-bold rounded',
-                  totalAmount - totalCost - totalExpenses <= 0 ? 'text-red-500 border-red-500' : 'text-green-500 border-green-500'
+                  totalAmount - totalCost - totalExpenses <= 0 ? 'text-red-500 border-red-500' : 'text-emerald-500 border-emerald-500'
                 )
               }>
                 {totalAmount - totalCost - totalExpenses <= 0 ? 'Loss' : 'Profit'}

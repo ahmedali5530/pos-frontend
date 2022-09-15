@@ -9,31 +9,29 @@ import {CartItem} from "../../../api/model/cart.item";
 import {Customer} from "../../../api/model/customer";
 import {ProductVariant} from "../../../api/model/product.variant";
 import localforage from "../../../lib/localforage/localforage";
-import SpeechSearch from "../../components/sale/speech.search";
+import SpeechSearch from "../../components/sale/search/speech.search";
 import {Input} from "../../components/input";
-import {SearchTable} from "../../components/sale/search.table";
+import {SearchTable} from "../../components/sale/search/search.table";
 import {CartContainer} from "../../components/sale/cart/cart.container";
 import {Modal} from "../../components/modal";
-import {CloseSale} from "../../components/sale/sale";
-import {ClearSale} from "../../components/sale/clear.sale";
-import {SaleHistory} from "../../components/sale/sale.history";
+import {CloseSale} from "../../components/sale/sale/sale";
+import {ClearSale} from "../../components/sale/sale/clear.sale";
+import {SaleHistory} from "../../components/sale/sale/sale.history";
 import {Customers} from "../../components/sale/customers";
 import {Logout} from "../../components/logout";
 import {Expenses} from "../../components/sale/expenses";
 import {ItemsTabs} from "../../components/sale/items/items.tabs";
-import {More} from "../../components/sale/more";
+import {More} from "../../components/sale/settings/more";
 import {OrderTotals} from "../../components/sale/cart/order.totals";
 import {HomeProps, initialData, useLoadData} from "../../../api/hooks/use.load.data";
-import {SaleBrands} from "../../components/sale/sale.brands";
+import {SaleBrands} from "../../components/sale/search/sale.brands";
 import {Brand} from "../../../api/model/brand";
 import {Category} from "../../../api/model/category";
-import {SaleCategories} from "../../components/sale/sale.categories";
+import {SaleCategories} from "../../components/sale/search/sale.categories";
 import {Supplier} from "../../../api/model/supplier";
-import {SaleSuppliers} from "../../components/sale/sale.suppliers";
+import {SaleSuppliers} from "../../components/sale/search/sale.suppliers";
+
 const Mousetrap = require('mousetrap');
-
-
-
 
 export const getRealProductPrice = (item: Product) => {
   let price = 0;
@@ -196,15 +194,15 @@ const Pos: FC = () => {
   const [modal, setModal] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
   const [variants, setVariants] = useState<ProductVariant[]>([]);
-  const [brands, setBrands] = useState< {[key: string]: Brand} >({});
-  const [categories, setCategories] = useState<{[key: string]: Category}>({});
-  const [suppliers, setSuppliers] = useState<{[key: string]: Supplier}>({});
+  const [brands, setBrands] = useState<{ [key: string]: Brand }>({});
+  const [categories, setCategories] = useState<{ [key: string]: Category }>({});
+  const [suppliers, setSuppliers] = useState<{ [key: string]: Supplier }>({});
 
   const items = useMemo(() => {
     let filtered = list?.list;
 
     const brandIds = Object.keys(brands);
-    if(brandIds.length > 0){
+    if (brandIds.length > 0) {
       filtered = filtered.filter(item => {
         const brandsFilter = item.brands.filter(b => {
           return brandIds.includes(b.id.toString())
@@ -215,7 +213,7 @@ const Pos: FC = () => {
     }
 
     const categoryIds = Object.keys(categories);
-    if(categoryIds.length > 0){
+    if (categoryIds.length > 0) {
       filtered = filtered.filter(item => {
         const categoriesFilter = item.categories.filter(c => {
           return categoryIds.includes(c.id.toString())
@@ -226,7 +224,7 @@ const Pos: FC = () => {
     }
 
     const supplierIds = Object.keys(suppliers);
-    if(supplierIds.length > 0){
+    if (supplierIds.length > 0) {
       filtered = filtered.filter(item => {
         const suppliersFilter = item.suppliers.filter(c => {
           return supplierIds.includes(c.id.toString())
@@ -263,8 +261,6 @@ const Pos: FC = () => {
 
     setLatest(item);
 
-    console.log(item);
-
     if (item.variants.length > 0) {
       //choose from variants
       setModal(true);
@@ -289,6 +285,7 @@ const Pos: FC = () => {
     }
 
     setAdded(oldItems);
+    setQ('');
 
     setSelected(items.findIndex(i => i.id === item.id));
     setQuantity(1);
@@ -320,6 +317,8 @@ const Pos: FC = () => {
     setSelected(items.findIndex(i => i.id === item.id));
     setQuantity(1);
     setSelectedVariant(0);
+
+    setQ('');
   };
 
   const onQuantityChange = (item: CartItem, newQuantity: number) => {
@@ -490,27 +489,30 @@ const Pos: FC = () => {
   useEffect(() => {
     Mousetrap.bind(['up', 'down', 'enter'], function (e: Event) {
       e.preventDefault();
-      if(modal){
+      if (modal) {
         //move cursor in variant chooser
         moveVariantsCursor(e);
-      }else{
-        //move cursor in items
-        moveCursor(e);
+      } else {
+        //skip if some other modal is open
+        if(!document.body.classList.contains('ReactModal__Body--open')) {
+          //move cursor in items
+          moveCursor(e);
+        }
       }
     });
-  }, [modal, selected, selectedVariant, variants, items, added]);
+  }, [modal, selected, selectedVariant, variants, items, added, quantity]);
 
   return (
     <>
       <div className="grid gap-4 grid-cols-12 h-[calc(100vh_-_240px)] max-h-full">
         <div className="col-span-4 bg-gray-50 p-3" onClick={(event) => setFocus(event, searchField)}>
           <div className="grid grid-cols-3 gap-3 mb-3">
-            <SaleBrands brands={brands} setBrands={setBrands} />
-            <SaleCategories categories={categories} setCategories={setCategories} />
-            <SaleSuppliers suppliers={suppliers} setSuppliers={setSuppliers} />
+            <SaleBrands brands={brands} setBrands={setBrands}/>
+            <SaleCategories categories={categories} setCategories={setCategories}/>
+            <SaleSuppliers suppliers={suppliers} setSuppliers={setSuppliers}/>
           </div>
           <div className="mb-1 input-group">
-            <SpeechSearch setQ={setQ}/>
+            <SpeechSearch setQ={setQ} setQuantity={setQuantity}/>
             <Input
               placeholder="Search items"
               type="search"
@@ -555,44 +557,10 @@ const Pos: FC = () => {
           </div>
         </div>
       </div>
-      <div className="bg-gray-100 h-[280px]">
+      <div className="bg-gray-100 h-[240px]">
         <div className="grid gap-4 grid-cols-4 border border-x-0 border-b-0 border-gray-300">
-          <div className="col-span-2 p-3 flex flex-wrap flex-row justify-between"></div>
+          <div className="col-span-1 p-3 flex flex-wrap flex-row justify-between"></div>
           <div className="col-span-1 p-3 flex flex-wrap flex-row justify-between">
-            <CloseSale
-              added={added}
-              setAdded={setAdded}
-              finalTotal={finalTotal}
-              paymentTypesList={paymentTypesList.list}
-              setDiscount={setDiscount}
-              setTax={setTax}
-              setDiscountAmount={setDiscountAmount}
-              subTotal={subTotal}
-              taxTotal={taxTotal}
-              couponTotal={couponTotal}
-              discountTotal={discountTotal}
-              discount={discount}
-              tax={tax}
-              customer={customer}
-              setCustomer={setCustomer}
-              discountAmount={discountAmount}
-              refundingFrom={refundingFrom}
-              setRefundingFrom={setRefundingFrom}
-              setCloseSale={setCloseSale}
-              closeSale={closeSale}
-              setDiscountRateType={setDiscountRateType}
-              discountRateType={discountRateType}
-            />
-            <ClearSale
-              added={added}
-              setAdded={setAdded}
-              setDiscount={setDiscount}
-              setTax={setTax}
-              setDiscountAmount={setDiscountAmount}
-            />
-
-            <Logout/>
-            <div className="w-full"></div>
             <SaleHistory
               setAdded={setAdded}
               setDiscount={setDiscount}
@@ -611,6 +579,44 @@ const Pos: FC = () => {
               setTax={setTax}
               setDiscount={setDiscount}
             />
+            <Logout/>
+          </div>
+          <div className="col-span-1 p-3 flex flex-wrap gap-5">
+            <div className="flex-1">
+              <CloseSale
+                added={added}
+                setAdded={setAdded}
+                finalTotal={finalTotal}
+                paymentTypesList={paymentTypesList.list}
+                setDiscount={setDiscount}
+                setTax={setTax}
+                setDiscountAmount={setDiscountAmount}
+                subTotal={subTotal}
+                taxTotal={taxTotal}
+                couponTotal={couponTotal}
+                discountTotal={discountTotal}
+                discount={discount}
+                tax={tax}
+                customer={customer}
+                setCustomer={setCustomer}
+                discountAmount={discountAmount}
+                refundingFrom={refundingFrom}
+                setRefundingFrom={setRefundingFrom}
+                setCloseSale={setCloseSale}
+                closeSale={closeSale}
+                setDiscountRateType={setDiscountRateType}
+                discountRateType={discountRateType}
+              />
+            </div>
+            <div className="flex-1">
+              <ClearSale
+                added={added}
+                setAdded={setAdded}
+                setDiscount={setDiscount}
+                setTax={setTax}
+                setDiscountAmount={setDiscountAmount}
+              />
+            </div>
           </div>
           <div className="col-span-1 p-3">
             <OrderTotals

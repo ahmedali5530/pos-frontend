@@ -1,18 +1,20 @@
 import React, {FC, useEffect, useState} from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCog} from "@fortawesome/free-solid-svg-icons";
-import {Button} from "../button";
-import {Modal} from "../modal";
-import {Tax} from "../../../api/model/tax";
-import {Discount} from "../../../api/model/discount";
-import localforage from "../../../lib/localforage/localforage";
+import {Button} from "../../button";
+import {Modal} from "../../modal";
+import {Tax} from "../../../../api/model/tax";
+import {Discount} from "../../../../api/model/discount";
+import localforage from "../../../../lib/localforage/localforage";
 import {useSelector} from "react-redux";
-import {getAuthorizedUser} from "../../../duck/auth/auth.selector";
-import {Switch} from "../../../app-common/components/input/switch";
-import {Tab, TabContent, TabControl, TabNav} from "../../../app-common/components/tabs/tabs";
-import {ReactSelectOptionProps} from "../../../api/model/common";
-import {ReactSelect} from "../../../app-common/components/input/custom.react.select";
-import {HomeProps, useLoadData} from "../../../api/hooks/use.load.data";
+import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
+import {Switch} from "../../../../app-common/components/input/switch";
+import {Tab, TabContent, TabControl, TabNav} from "../../../../app-common/components/tabs/tabs";
+import {ReactSelectOptionProps} from "../../../../api/model/common";
+import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
+import {HomeProps, useLoadData} from "../../../../api/hooks/use.load.data";
+import {Stores} from "./stores";
+import { Users } from "./users";
 
 interface Props{
   setList: (list: HomeProps['list']) => void;
@@ -138,7 +140,12 @@ export const More: FC<Props> = ({
               <TabNav>
                 <Tab isActive={isTabActive('general')} onClick={() => setActiveTab('general')}>General</Tab>
                 <Tab isActive={isTabActive('profile')} onClick={() => setActiveTab('profile')}>Profile</Tab>
-                <Tab isActive={isTabActive('defaults')} onClick={() => setActiveTab('defaults')}>Defaults</Tab>
+                <Tab isActive={isTabActive('users')} onClick={() => setActiveTab('users')}>Users</Tab>
+                <Tab isActive={isTabActive('defaults')} onClick={() => setActiveTab('defaults')}>Default options</Tab>
+                <Tab isActive={isTabActive('payments')} onClick={() => setActiveTab('payments')}>Payment types</Tab>
+                <Tab isActive={isTabActive('discounts')} onClick={() => setActiveTab('discounts')}>Discounts</Tab>
+                <Tab isActive={isTabActive('taxes')} onClick={() => setActiveTab('taxes')}>Taxes</Tab>
+                <Tab isActive={isTabActive('stores')} onClick={() => setActiveTab('stores')}>Stores</Tab>
               </TabNav>
               <TabContent isActive={isTabActive('general')}>
                 <div className="inline-flex flex-col gap-5 justify-start">
@@ -250,6 +257,15 @@ export const More: FC<Props> = ({
                     />
                   </div>
                 </div>
+              </TabContent>
+              <TabContent isActive={isTabActive('payments')}>Payment types</TabContent>
+              <TabContent isActive={isTabActive('discounts')}>discount types</TabContent>
+              <TabContent isActive={isTabActive('taxes')}>tax types</TabContent>
+              <TabContent isActive={isTabActive('stores')}>
+                <Stores />
+              </TabContent>
+              <TabContent isActive={isTabActive('users')}>
+                <Users />
               </TabContent>
             </>
           )}

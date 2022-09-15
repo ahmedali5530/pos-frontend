@@ -1,10 +1,10 @@
 import React, {FC} from "react";
-import {Button} from "../button";
-import {CartItem} from "../../../api/model/cart.item";
-import {Discount} from "../../../api/model/discount";
-import {Tax} from "../../../api/model/tax";
-import localforage from "../../../lib/localforage/localforage";
-import {faCheck, faTimes} from "@fortawesome/free-solid-svg-icons";
+import {Button} from "../../button";
+import {CartItem} from "../../../../api/model/cart.item";
+import {Discount} from "../../../../api/model/discount";
+import {Tax} from "../../../../api/model/tax";
+import localforage from "../../../../lib/localforage/localforage";
+import {faTimes} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
 
@@ -43,7 +43,7 @@ export const ClearSale: FC<Props> = ({
     });
   };
   return (
-    <Button className="w-24"
+    <Button className="w-full"
             size="lg"
             variant="danger"
             disabled={added.length === 0}

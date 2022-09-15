@@ -1,23 +1,25 @@
-import {Button} from "../button";
+import {Button} from "../../button";
 import React, {FC, useCallback, useEffect, useMemo, useState} from "react";
-import {OrderTotals} from "./cart/order.totals";
-import {Textarea} from "../textare";
-import {Modal} from "../modal";
-import {CartItem} from "../../../api/model/cart.item";
+import {OrderTotals} from "../cart/order.totals";
+import {Textarea} from "../../textarea";
+import {Modal} from "../../modal";
+import {CartItem} from "../../../../api/model/cart.item";
 import {Controller, useForm} from "react-hook-form";
-import {jsonRequest} from "../../../api/request/request";
-import {ORDER_CREATE} from "../../../api/routing/routes/backend.app";
-import {Discount} from "../../../api/model/discount";
-import {Tax} from "../../../api/model/tax";
-import {PaymentType} from "../../../api/model/payment.type";
-import {Customer} from "../../../api/model/customer";
+import {jsonRequest} from "../../../../api/request/request";
+import {ORDER_CREATE} from "../../../../api/routing/routes/backend.app";
+import {Discount} from "../../../../api/model/discount";
+import {Tax} from "../../../../api/model/tax";
+import {PaymentType} from "../../../../api/model/payment.type";
+import {Customer} from "../../../../api/model/customer";
 import classNames from "classnames";
-import localforage from "../../../lib/localforage/localforage";
+import localforage from "../../../../lib/localforage/localforage";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCheck, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
-import {OrderPayment} from "../../../api/model/order.payment";
-import {Input} from "../input";
+import {OrderPayment} from "../../../../api/model/order.payment";
+import {Input} from "../../input";
 import {useAlert} from "react-alert";
+import {UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
+import {ValidationResult} from "../../../../lib/validator/validation.result";
 
 const Mousetrap = require('mousetrap');
 
@@ -137,6 +139,23 @@ export const CloseSale: FC<Props> = ({
       setPayments([]);
 
     } catch (e) {
+      if(e instanceof UnprocessableEntityException){
+        const res: ValidationResult = await e.response.json();
+
+        const message = res.errorMessage;
+        const messages = res.violations.map(validation => {
+          return `${validation.message}`
+        });
+
+        if(message){
+          alert.error(message);
+        }
+
+        if(messages.length > 0){
+          alert.error(messages.join(', '));
+        }
+      }
+
       throw e;
     } finally {
       setSaleClosing(false);
@@ -174,7 +193,7 @@ export const CloseSale: FC<Props> = ({
   }, [saleModal]);
 
   const received = useMemo(() => {
-    return payments.reduce((prev, current) => Number(prev) + Number(current.received), 0)
+    return Number(payments.reduce((prev, current) => Number(prev) + Number(current.received), 0))
   }, [payments]);
 
   useEffect(() => {
@@ -205,7 +224,7 @@ export const CloseSale: FC<Props> = ({
 
       addSplitPayment(-item, payment);
     }
-  }, [quickCashOperation, reset, finalTotal, payments]);
+  }, [quickCashOperation, reset, finalTotal, payments, payment]);
 
   useEffect(() => {
     Mousetrap.bind('ctrl+s', function (e: Event) {
@@ -220,7 +239,7 @@ export const CloseSale: FC<Props> = ({
         onSaleSubmit(getValues())
       }
     });
-  }, [added, saleModal]);
+  }, [added, saleModal, payments]);
 
   const addSplitPayment = (amount: number, payment?: PaymentType) => {
     if(amount === 0){
@@ -228,6 +247,8 @@ export const CloseSale: FC<Props> = ({
 
       return false;
     }
+
+    console.log(amount, received, finalTotal);
 
     if(!payment?.canHaveChangeDue && (amount + received) > finalTotal ){
       alert.error(`Please add exact amount for ${payment?.name}`);
@@ -269,9 +290,9 @@ export const CloseSale: FC<Props> = ({
 
   return (
     <>
-      <Button className="w-24 btn-success" size="lg" disabled={added.length === 0} onClick={() => {
+      <Button className="w-full btn-success" size="lg" disabled={added.length === 0} onClick={() => {
         setSaleModal(true);
-      }}><FontAwesomeIcon icon={faCheck} className="mr-2" />Pay</Button>
+      }}><FontAwesomeIcon icon={faCheck} className="mr-2" />Close</Button>
 
       <Modal open={saleModal} onClose={() => {
         setSaleModal(false);
@@ -330,7 +351,7 @@ export const CloseSale: FC<Props> = ({
               </div>
               <div className="grid grid-cols-4 gap-4 mt-4">
                 {quickCashItems.map(item => (
-                  <Button disabled={!payment?.canHaveChangeDue} className="w-full btn-warning relative" size="lg" key={item}
+                  <Button className="w-full btn-warning relative" size="lg" key={item}
                           onClick={() => addQuickCash(item)}>
                     {item}
                     {getQuickCashCounter(item) > 0 && (
@@ -338,7 +359,7 @@ export const CloseSale: FC<Props> = ({
                     )}
                   </Button>
                 ))}
-                <Button disabled={!payment?.canHaveChangeDue} className="w-full btn-primary" size="lg" key={finalTotal}
+                <Button className="w-full btn-primary" size="lg" key={finalTotal}
                         onClick={() => addQuickCash(finalTotal, 'exact')}>{finalTotal.toFixed(2)}</Button>
               </div>
             </div>
@@ -376,7 +397,6 @@ export const CloseSale: FC<Props> = ({
                             onChange={props.field.onChange}
                             value={props.field.value}
                             type="number"
-                            readOnly={payment?.canHaveChangeDue !== true}
                             id="amount"
                             placeholder="Payment"
                             className="w-full flex-1 lg input"
@@ -387,7 +407,7 @@ export const CloseSale: FC<Props> = ({
                     }}
                     defaultValue={finalTotal}
                   />
-                  <button type="button" className="btn btn-secondary lg w-24" onClick={() => addSplitPayment(watch('received'), payment)}>
+                  <button type="button" className="btn btn-secondary lg w-24" onClick={() => addSplitPayment(Number(watch('received')), payment)}>
                     <FontAwesomeIcon icon={faPlus} />
                   </button>
                 </div>

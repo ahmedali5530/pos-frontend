@@ -1,10 +1,10 @@
 import Layout from "../layout/layout";
 import {Controller, useForm} from "react-hook-form";
-import {Link} from "react-router-dom";
+import {Link, useParams} from "react-router-dom";
 import {LOGIN} from "../../routes/frontend.routes";
 import React, {useState} from "react";
 import {jsonRequest} from "../../../api/request/request";
-import {FORGOT_PASSWORD} from "../../../api/routing/routes/backend.app";
+import {RESET_PASSWORD} from "../../../api/routing/routes/backend.app";
 import {
   HttpException,
   UnauthorizedException,
@@ -13,8 +13,11 @@ import {
 import {Trans} from "react-i18next";
 import {ValidationResult} from "../../../lib/validator/validation.result";
 import classNames from "classnames";
+import {getErrorClass, getErrors} from "../../../lib/error/error";
 
-export const ForgotPassword = () => {
+export const ResetPassword = () => {
+  const params = useParams();
+
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
   const [successMessage, setSuccessMessage] = useState<string>();
   const [isLoading, setLoading] = useState(false);
@@ -27,11 +30,15 @@ export const ForgotPassword = () => {
     setSuccessMessage(undefined);
     const requestOptions = {
       method: 'POST',
-      body: JSON.stringify({username: values.username, password: values.password, role: 'ROLE_USER'})
+      body: JSON.stringify({
+        password: values.password,
+        role: 'ROLE_USER',
+        resetToken: params['*']
+      })
     };
 
     try {
-      const res = await jsonRequest(FORGOT_PASSWORD, requestOptions);
+      const res = await jsonRequest(RESET_PASSWORD, requestOptions);
       const json = await res.json();
 
       setSuccessMessage(json.message);
@@ -82,20 +89,20 @@ export const ForgotPassword = () => {
             )}
             <form onSubmit={handleSubmit(submitForm)} className="flex flex-col gap-5">
               <div>
-                <label htmlFor="username" className="form-label">{('Username')}</label>
+                <label htmlFor="password" className="form-label">{('New Password')}</label>
                 <Controller
-                  name="username"
+                  name="password"
                   render={(props) => (
                     <input
                       onChange={props.field.onChange}
                       value={props.field.value}
-                      type="text"
-                      id="username"
+                      type="password"
+                      id="password"
                       autoFocus
                       className={
                         classNames(
                           'input w-full',
-                          errors.username ? 'is-invalid' : ''
+                          getErrorClass(errors.password)
                         )
                       }
                     />
@@ -103,11 +110,7 @@ export const ForgotPassword = () => {
                   control={control}
                   defaultValue=""
                 />
-                {errors.username && (
-                  <div className="invalid-feedback">
-                    <Trans>{errors.username.message}</Trans>
-                  </div>
-                )}
+                {getErrors(errors.password)}
               </div>
               <div className="flex flex-row justify-between">
                 <button type="submit" disabled={isLoading}

@@ -4,7 +4,7 @@ import {Button} from "../../button";
 import {Input} from "../../input";
 import {Product} from "../../../../api/model/product";
 import {CartItem as CartItemModel} from "../../../../api/model/cart.item";
-import {faTrash} from "@fortawesome/free-solid-svg-icons";
+import {faMinus, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {getRowTotal} from "../../../containers/dashboard/pos";
 
@@ -39,7 +39,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
               <>
                 {item.variant?.attributeName} <span className={
                 classNames(
-                  'mr-3 ml-2 text-sm px-3'
+                  'ml-2 text-sm px-3'
                 )
               }>{item.variant?.attributeValue}</span>
               </>
@@ -48,25 +48,24 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
         )}
       </div>
       <div className="table-cell p-2 text-center">
-        {/*<Button type="button" variant={item.quantity === 1 ? 'danger' : 'secondary'} onClick={() => onQuantityChange(item, item.quantity - 1)}>
-          {item.quantity === 1 ? (
-            <FontAwesomeIcon icon={faTrash}/>
-          ) : (
-            <FontAwesomeIcon icon={faMinus}/>
-          )}
-        </Button>*/}
-        <span className="inline-block w-[64px]">
+        <div className="input-group">
+          <Button type="button" variant={item.quantity === 1 ? 'danger' : 'secondary'} onClick={() => onQuantityChange(item, item.quantity - 1)}>
+            {item.quantity === 1 ? (
+              <FontAwesomeIcon icon={faTrash}/>
+            ) : (
+              <FontAwesomeIcon icon={faMinus}/>
+            )}
+          </Button>
           <Input
             value={item.quantity}
-            className="text-center w-full"
+            className="text-center w-[64px]"
             onChange={(event) => onQuantityChange(item, +event.currentTarget.value)}
             selectable={true}
           />
-        </span>
-        {/*<Button type="button" variant="secondary" onClick={() => onQuantityChange(item, item.quantity + 1)}>
-          <FontAwesomeIcon icon={faPlus}/>
-        </Button>*/}
-
+          <Button type="button" variant="secondary" onClick={() => onQuantityChange(item, item.quantity + 1)}>
+            <FontAwesomeIcon icon={faPlus}/>
+          </Button>
+        </div>
       </div>
       <div className="table-cell p-2 text-center">
         <Input
@@ -79,14 +78,12 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
         />
       </div>
       <div className="table-cell p-2 text-right">
-      <span className="">
         <Input
           value={item.price}
           className="text-center w-full"
           onChange={(event) => onPriceChange(item, +event.currentTarget.value)}
           selectable={true}
         />
-      </span>
       </div>
       <div className="table-cell p-2 text-right">{getRowTotal(item)}</div>
       <div className="table-cell p-2 text-center">

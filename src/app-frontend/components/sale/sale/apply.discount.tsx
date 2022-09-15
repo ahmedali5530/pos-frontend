@@ -1,13 +1,13 @@
 import React, {FC, useEffect, useState} from "react";
-import {Button} from "../button";
-import {CartItem} from "../../../api/model/cart.item";
-import {Discount, DiscountScope} from "../../../api/model/discount";
-import {Input} from "../input";
-import {Modal} from "../modal";
+import {Button} from "../../button";
+import {CartItem} from "../../../../api/model/cart.item";
+import {Discount, DiscountScope} from "../../../../api/model/discount";
+import {Input} from "../../input";
+import {Modal} from "../../modal";
 import {Controller, useForm} from "react-hook-form";
 import localforage from "localforage";
 import {Trans} from "react-i18next";
-import {HomeProps} from "../../../api/hooks/use.load.data";
+import {HomeProps} from "../../../../api/hooks/use.load.data";
 
 
 interface Props {

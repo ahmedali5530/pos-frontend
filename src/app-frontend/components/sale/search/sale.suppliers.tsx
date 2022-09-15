@@ -1,11 +1,11 @@
-import {Button} from "../button";
-import {Modal} from "../modal";
+import {Button} from "../../button";
+import {Modal} from "../../modal";
 import React, {FC, PropsWithChildren, useEffect, useState} from "react";
-import {HomeProps} from "../../../api/hooks/use.load.data";
+import {HomeProps} from "../../../../api/hooks/use.load.data";
 import localforage from "localforage";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCheckCircle} from "@fortawesome/free-solid-svg-icons";
-import {Supplier} from "../../../api/model/supplier";
+import {Supplier} from "../../../../api/model/supplier";
 
 interface SaleSuppliersProps extends PropsWithChildren{
   suppliers:  {[key: string]: Supplier} ;

@@ -1,9 +1,9 @@
-import {Button} from "../button";
-import {Modal} from "../modal";
+import {Button} from "../../button";
+import {Modal} from "../../modal";
 import React, {FC, PropsWithChildren, useEffect, useState} from "react";
-import localforage from "localforage";
-import {Tax} from "../../../api/model/tax";
-import {HomeProps} from "../../../api/hooks/use.load.data";
+import localforage from "../../../../lib/localforage/localforage";
+import {Tax} from "../../../../api/model/tax";
+import {HomeProps} from "../../../../api/hooks/use.load.data";
 
 interface TaxProps extends PropsWithChildren{
   setTax: (tax?: Tax) => void;

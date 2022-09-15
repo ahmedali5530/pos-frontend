@@ -108,6 +108,9 @@ a{
 
 .table{
   width: 100%;
+  .table-cell{
+    vertical-align: middle;
+  }
 }
 .table th, .table td {
   border-collapse: collapse;
@@ -457,10 +460,18 @@ a{
   background-color: rgba(255, 255, 255, 0.6);
 }
 .alert{
-  @apply p-3 border-4;
+  @apply p-3 border-8 border-t-0 border-b-0 border-r-0 rounded-lg mb-3;
   &.alert-danger{
-    @apply border-rose-500 bg-rose-100 text-rose-500 border-t-0 border-b-0 border-r-0;
-
+    @apply border-rose-500 bg-rose-100 text-rose-500;
+  }
+  &.alert-success{
+    @apply border-emerald-500 bg-emerald-100 text-emerald-500;
+  }
+  &.alert-warning{
+    @apply border-amber-500 bg-amber-100 text-amber-500;
+  }
+  &.alert-primary{
+    @apply border-purple-500 bg-purple-100 text-purple-500;
   }
 }
 

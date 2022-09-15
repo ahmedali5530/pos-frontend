@@ -166,7 +166,7 @@ export const TableComponent: FC<TableComponentProps> = ({
             </div>
           </div>
 
-          {globalSearch && (
+          {(globalSearch === undefined || globalSearch) && (
             <div className="col-span-3">
               <DebouncedInput
                 value={globalFilter ?? ''}

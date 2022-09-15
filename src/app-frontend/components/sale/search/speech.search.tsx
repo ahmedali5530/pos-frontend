@@ -2,15 +2,16 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {
   faMicrophone,
 } from "@fortawesome/free-solid-svg-icons";
-import {Button} from "../button";
+import {Button} from "../../button";
 import React, {useEffect} from "react";
 import SpeechRecognition , { useSpeechRecognition } from 'react-speech-recognition';
 
 interface Props{
   setQ: (term: string) => void;
+  setQuantity: (q: number) => void;
 }
 
-const SpeechSearch = ({setQ}: Props) => {
+const SpeechSearch = ({setQ, setQuantity}: Props) => {
   const {
     listening,
     browserSupportsSpeechRecognition,
@@ -29,7 +30,20 @@ const SpeechSearch = ({setQ}: Props) => {
   }, [isMicrophoneAvailable, browserSupportsSpeechRecognition]);
 
   useEffect(() => {
-    setQ(finalTranscript);
+    const numbersRegex = /\d+/;
+
+    const quantity = finalTranscript.match(numbersRegex);
+
+    if(quantity !== null){
+      setQuantity(Number(quantity));
+    }
+
+    const stringsRegex = /[A-Za-z]+/;
+    const str = finalTranscript.match(stringsRegex);
+
+    if(str !== null){
+      setQ(String(str));
+    }
   }, [finalTranscript]);
 
   if(!browserSupportsSpeechRecognition){

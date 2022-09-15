@@ -6,7 +6,7 @@ export const getErrors = (errorElemnt: any) => {
   return (
     <>
       {errorElemnt && (
-        <div className="invalid-feedback d-block">
+        <div className="text-rose-500 text-sm">
           {errorElemnt.message}
         </div>
       )}

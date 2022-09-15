@@ -2,7 +2,7 @@ import Login from './containers/login/login';
 import {BrowserRouter as Router, Route, useLocation} from "react-router-dom";
 import {
   FORGOT_PASSWORD,
-  LOGIN, POS,
+  LOGIN, POS, RESET_PASSWORD,
 } from "./routes/frontend.routes";
 import {connect, useSelector} from "react-redux";
 import {RootState} from "../duck/_root/root.state";
@@ -17,6 +17,7 @@ import {Navigate, Routes} from 'react-router';
 import {Error404} from "../app-common/components/error/404";
 import {ForgotPassword} from "./containers/forgot/forgot";
 import Pos from "./containers/dashboard/pos";
+import {ResetPassword} from "./containers/forgot/reset";
 
 export interface AppProps {
   bootstrap: () => void;
@@ -68,6 +69,12 @@ const AppComponent: FunctionComponent<AppProps> = (props) => {
         <Route path={FORGOT_PASSWORD} element={
           <>
             {isLoggedIn ? <Navigate to={POS}/> : <ForgotPassword/>}
+          </>
+        }/>
+
+        <Route path={RESET_PASSWORD} element={
+          <>
+            {isLoggedIn ? <Navigate to={POS}/> : <ResetPassword/>}
           </>
         }/>
 

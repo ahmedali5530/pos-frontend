@@ -3,9 +3,9 @@ import {Tax} from "../../../../api/model/tax";
 import {Discount} from "../../../../api/model/discount";
 import {Customers} from "../customers";
 import {Customer} from "../../../../api/model/customer";
-import {ApplyDiscount} from "../apply.discount";
+import {ApplyDiscount} from "../sale/apply.discount";
 import {CartItem} from "../../../../api/model/cart.item";
-import {ApplyTax} from "../apply.tax";
+import {ApplyTax} from "../sale/apply.tax";
 
 interface OrderTotalsProps extends PropsWithChildren{
   subTotal: number;
@@ -38,17 +38,6 @@ export const OrderTotals :FC<OrderTotalsProps> = ({
   return (
     <table className="border border-collapse w-full">
       <tbody>
-      {inSale && setCustomer && (
-        <tr className="hover:bg-gray-100">
-          <th className="border border-gray-300 p-2 text-left">
-            <span className="float-right">
-              <Customers setCustomer={setCustomer} customer={customer} />
-            </span>
-            Customer
-          </th>
-          <td className="border border-gray-300 p-2 text-right">{customer?.name}</td>
-        </tr>
-      )}
       <tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left">Sub total</th>
         <td className="border border-gray-300 p-2 text-right" style={{width: '35%'}}>{subTotal}</td>
@@ -86,6 +75,17 @@ export const OrderTotals :FC<OrderTotalsProps> = ({
         </th>
         <td className="border border-gray-300 p-2 text-right">{discountTotal.toFixed(2)}</td>
       </tr>
+      {inSale && setCustomer && (
+        <tr className="hover:bg-gray-100">
+          <th className="border border-gray-300 p-2 text-left">
+            <span className="float-right">
+              <Customers setCustomer={setCustomer} customer={customer} />
+            </span>
+            Customer
+          </th>
+          <td className="border border-gray-300 p-2 text-right">{customer?.name}</td>
+        </tr>
+      )}
       {/*<tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left">Coupons</th>
         <td className="border border-gray-300 p-2 text-right">{couponTotal}</td>

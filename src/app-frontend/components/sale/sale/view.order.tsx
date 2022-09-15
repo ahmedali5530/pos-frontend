@@ -1,7 +1,7 @@
 import React, {FunctionComponent, PropsWithChildren, useState} from "react";
-import {Order} from "../../../api/model/order";
-import {Button} from "../button";
-import {Modal} from "../modal";
+import {Order} from "../../../../api/model/order";
+import {Button} from "../../button";
+import {Modal} from "../../modal";
 
 interface ViewOrderProps extends PropsWithChildren{
   order: Order;
@@ -20,15 +20,15 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
         setModal(false);
       }} title={`Order# ${order.orderId}`}>
         <div className="grid grid-cols-5 gap-3 mb-5">
-          <div className="border border-purple-500 p-5 font-bold text-purple-500 rounded">
+          <div className="border border-gray-500 p-5 font-bold text-gray-500 rounded">
             Items total
             <span className="float-right">+{order.items.reduce((prev, item) => prev + (item.quantity * item.price), 0)}</span>
           </div>
-          <div className="border border-purple-500 p-5 font-bold text-purple-500 rounded">
+          <div className="border border-gray-500 p-5 font-bold text-gray-500 rounded">
             Tax
             <span className="float-right">+{order.tax ? order.tax.amount : '0'}</span>
           </div>
-          <div className="border border-purple-500 p-5 font-bold text-purple-500 rounded">
+          <div className="border border-gray-500 p-5 font-bold text-gray-500 rounded">
             Discount
             <span className="float-right">-{order.discount ? order.discount.amount : '0'}</span>
           </div>
@@ -39,7 +39,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
             </span>
           </div>
           <div className="border border-emerald-500 p-5 font-bold text-emerald-500 rounded">
-            Payments
+            Payments breakdown
             <ul className="font-normal">
               {order.payments.map(item => (
                 <li>{item.type?.name}: <span className="float-right">{item.received}</span></li>

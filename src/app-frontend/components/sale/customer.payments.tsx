@@ -11,12 +11,13 @@ import {fetchJson} from "../../../api/request/request";
 import classNames from "classnames";
 import * as _ from 'lodash';
 import {OrderPayment} from "../../../api/model/order.payment";
-import {ViewOrder} from "./view.order";
+import {ViewOrder} from "./sale/view.order";
 import {CUSTOMER_PAYMENT_CREATE} from "../../../api/routing/routes/backend.app";
 import {ConstraintViolation} from "../../../lib/validator/validation.result";
 import {Trans} from "react-i18next";
 import {ReactSelect} from "../../../app-common/components/input/custom.react.select";
 import {UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
+import {withCurrency} from "../../../lib/currency/currency";
 
 interface Props extends PropsWithChildren{
   customer: Customer;
@@ -176,11 +177,11 @@ export const CustomerPayments: FC<Props> = ({
         <div className="grid grid-cols-3 gap-4 mb-5">
           <div className="border border-purple-500 p-5 font-bold text-purple-500 rounded">
             Total Sale
-            <span className="float-right">{customer.sale}</span>
+            <span className="float-right">{withCurrency(customer.sale)}</span>
           </div>
           <div className="border border-green-500 p-5 font-bold text-green-500 rounded">
             Total Payments
-            <span className="float-right">{customer.paid}</span>
+            <span className="float-right">{withCurrency(customer.paid)}</span>
           </div>
           <div className={
             classNames(
@@ -189,7 +190,7 @@ export const CustomerPayments: FC<Props> = ({
             )
           }>
             Outstanding
-            <span className="float-right">{diff}</span>
+            <span className="float-right">{withCurrency(diff)}</span>
           </div>
         </div>
 
@@ -209,12 +210,16 @@ export const CustomerPayments: FC<Props> = ({
               <td>
                 {item.amount && (
                   <>
-                    Payment {item.amount}
+                    Payment {withCurrency(item.amount)}
                   </>
                 )}
                 {item.orderId && (
                   <>
-                    {item.payments.map((p: OrderPayment) => p?.type?.name)} Sale {item.payments.reduce((prev: number, item: OrderPayment) => prev + item.received, 0)}
+                    {item.payments.map((p: OrderPayment) => (
+                      <div>
+                        {p?.type?.name} Sale: {withCurrency(p.received)}
+                      </div>
+                    ))}
                   </>
                 )}
               </td>

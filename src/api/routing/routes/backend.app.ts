@@ -7,6 +7,7 @@ export const LOGOUT = scopeUrl('/auth/logout');
 export const AUTH_INFO = scopeUrl('/auth/info');
 export const REGISTER = scopeUrl('/auth/register');
 export const FORGOT_PASSWORD = scopeUrl('/auth/forgot-password');
+export const RESET_PASSWORD = scopeUrl('/auth/reset-password');
 export const UPDATE_LOCALE = scopeUrl('/locale');
 
 export const AUTH_LOGOUT = scopeUrl('/auth/logout');
@@ -51,14 +52,21 @@ export const EXPENSE_CREATE = scopeUrl('/admin/expense/create');
 export const SUPPLIER_LIST = scopeUrl('/admin/supplier/list');
 export const SUPPLIER_CREATE = scopeUrl('/admin/supplier/create');
 export const SUPPLIER_EDIT = scopeUrl('/admin/supplier/:id');
-export const SUPPLIER_DELETE = scopeUrl('/admin/supplier/:id');
 
 export const BRAND_LIST = scopeUrl('/admin/brand/list');
 export const BRAND_CREATE = scopeUrl('/admin/brand/create');
 export const BRAND_EDIT = scopeUrl('/admin/brand/:id');
-export const BRAND_DELETE = scopeUrl('/admin/brand/:id');
 
 export const PURCHASE_LIST = scopeUrl('/admin/purchase/list');
 export const PURCHASE_CREATE = scopeUrl('/admin/purchase/create');
 export const PURCHASE_EDIT = scopeUrl('/admin/purchase/:id');
 export const PURCHASE_DELETE = scopeUrl('/admin/purchase/:id');
+
+export const STORE_LIST = scopeUrl('/admin/store/list');
+export const STORE_CREATE = scopeUrl('/admin/store/create');
+export const STORE_EDIT = scopeUrl('/admin/store/:id');
+
+export const USER_LIST = scopeUrl('/admin/user/list');
+export const USER_CREATE = scopeUrl('/admin/user/create');
+export const USER_EDIT = scopeUrl('/admin/user/:id');
+export const USER_DELETE = scopeUrl('/admin/user/:id');

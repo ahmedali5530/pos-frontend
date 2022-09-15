@@ -1,14 +1,12 @@
-import React, {Ref, useEffect, useMemo, useState} from "react";
-import {Product} from "../../../api/model/product";
+import React, {Ref, useEffect, useState} from "react";
+import {Product} from "../../../../api/model/product";
 import {useBlockLayout, useTable} from 'react-table'
 import {FixedSizeList} from 'react-window'
 import Highlighter from "react-highlight-words";
 import classNames from "classnames";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faBarcode, faLayerGroup} from "@fortawesome/free-solid-svg-icons";
-import {getRealProductPrice} from "../../containers/dashboard/pos";
-import localforage from "../../../lib/localforage/localforage";
-import {ProductVariant} from "../../../api/model/product.variant";
+import {getRealProductPrice} from "../../../containers/dashboard/pos";
 
 interface SearchTableProps {
   searchScrollContainer: Ref<FixedSizeList>;
