@@ -1,13 +1,13 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useLoadList} from "../../../../api/hooks/use.load.list";
-import {USER_LIST, USER_CREATE, USER_EDIT,} from "../../../../api/routing/routes/backend.app";
+import {USER_LIST, USER_CREATE, USER_EDIT, STORE_LIST,} from "../../../../api/routing/routes/backend.app";
 import {Trans, useTranslation} from "react-i18next";
 import {createColumnHelper} from "@tanstack/react-table";
 import {Button} from "../../button";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPencilAlt, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {Controller, useForm} from "react-hook-form";
-import {fetchJson} from "../../../../api/request/request";
+import {fetchJson, jsonRequest} from "../../../../api/request/request";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
 import {Input} from "../../input";
@@ -16,6 +16,7 @@ import {useAlert} from "react-alert";
 import {User} from "../../../../api/model/user";
 import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
+import { Store } from "../../../../api/model/store";
 
 export const Users = () => {
   const [operation, setOperation] = useState('create');
@@ -41,6 +42,10 @@ export const Users = () => {
       header: () => t('Roles'),
       cell: info => info.getValue().join(', ')
     }),
+    columnHelper.accessor('stores', {
+      header: () => t('Stores'),
+      cell: info => info.getValue().map(item => item.name).join(', ')
+    }),
     columnHelper.accessor('id', {
       header: () => t('Actions'),
       enableSorting: false,
@@ -54,7 +59,13 @@ export const Users = () => {
                   return {
                     label: item,
                     value: item
-                  };
+                  }
+                }),
+                stores: info.row.original.stores.map(item => {
+                  return {
+                    label: item.name,
+                    value: item.id
+                  }
                 })
               });
               setOperation('update');
@@ -88,6 +99,9 @@ export const Users = () => {
 
       if(values.roles){
         values.roles = values.roles.map((item: ReactSelectOptionProps) => item.value);
+      }
+      if(values.stores){
+        values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value);
       }
 
       await fetchJson(url, {
@@ -131,6 +145,16 @@ export const Users = () => {
     }
   };
 
+  const [stores, setStores] = useState<Store[]>([]);
+  const loadStores = async () => {
+    try{
+      const res = await fetchJson(STORE_LIST);
+      setStores(res.list);
+    }catch (e){
+      throw e;
+    }
+  };
+
   const resetForm = () => {
     reset({
       displayName: null,
@@ -138,10 +162,14 @@ export const Users = () => {
       username: null,
       password: null,
       roles: null,
-      id: null
+      id: null,
+      stores: null
     });
   };
 
+  useEffect(() => {
+    loadStores();
+  }, []);
 
   return (
     <>
@@ -218,6 +246,33 @@ export const Users = () => {
               <div className="text-red-500 text-sm">
                 <Trans>
                   {errors.roles.message}
+                </Trans>
+              </div>
+            )}
+          </div>
+          <div>
+            <label htmlFor="stores">Stores</label>
+            <Controller
+              name="stores"
+              control={control}
+              render={(props) => (
+                <ReactSelect
+                  onChange={props.field.onChange}
+                  value={props.field.value}
+                  options={stores.map(item => {
+                    return {
+                      label: item.name,
+                      value: item.id
+                    }
+                  })}
+                  isMulti
+                />
+              )}
+            />
+            {errors.stores && (
+              <div className="text-red-500 text-sm">
+                <Trans>
+                  {errors.stores.message}
                 </Trans>
               </div>
             )}

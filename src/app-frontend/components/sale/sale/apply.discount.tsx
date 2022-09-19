@@ -8,6 +8,7 @@ import {Controller, useForm} from "react-hook-form";
 import localforage from "localforage";
 import {Trans} from "react-i18next";
 import {HomeProps} from "../../../../api/hooks/use.load.data";
+import {Shortcut} from "../../../../app-common/components/input/shortcut";
 
 
 interface Props {
@@ -61,7 +62,10 @@ export const ApplyDiscount: FC<Props> = ({
                 setModal(true);
               }}
               type="button"
-      >Discounts</Button>
+      >
+        Discounts
+        <Shortcut shortcut="ctrl+d" handler={() => setModal(true)} />
+      </Button>
 
       <Modal open={modal} onClose={() => {
         setModal(false);

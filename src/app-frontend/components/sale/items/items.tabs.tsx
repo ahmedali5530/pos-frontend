@@ -10,6 +10,7 @@ import {Brands} from "./brands";
 import {Items} from "./items";
 import {CreateItem} from "./items.create";
 import {Product} from "../../../../api/model/product";
+import {Shortcut} from "../../../../app-common/components/input/shortcut";
 
 export const ItemsTabs = () => {
   const [modal, setModal] = useState(false);
@@ -20,11 +21,14 @@ export const ItemsTabs = () => {
     <>
       <Button variant="primary" size="lg" onClick={() => {
         setModal(true);
-      }} title="Items"><FontAwesomeIcon icon={faList} className="mr-3"/> Items</Button>
+      }} title="Items">
+        <FontAwesomeIcon icon={faList} className="mr-3"/> Items
+        <Shortcut shortcut="ctrl+i" handler={() => setModal(true)} />
+      </Button>
 
       <Modal shouldCloseOnEsc={false} open={modal} onClose={() => {
         setModal(false);
-      }} title="Items">
+      }} title="Items" full={true}>
         <TabControl
           defaultTab="list"
           render={({isTabActive, setActiveTab, activeTab}) => (

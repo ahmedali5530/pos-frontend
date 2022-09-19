@@ -7,9 +7,12 @@ import {PRODUCT_LIST} from "../../../../api/routing/routes/backend.app";
 import {TableComponent} from "../../../../app-common/components/table/table";
 import {useLoadList} from "../../../../api/hooks/use.load.list";
 import { useTranslation } from "react-i18next";
-import {createColumnHelper} from "@tanstack/react-table";
+import { createColumnHelper} from "@tanstack/react-table";
 import {ImportItems} from "./import.items";
 import {ExportItems} from "./export.items";
+import Cookies from "js-cookie";
+import {useSelector} from "react-redux";
+import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
 
 interface ItemsProps {
   setActiveTab: (tab: string) => void;
@@ -22,11 +25,13 @@ export const Items = ({
 }: ItemsProps) => {
   const useLoadHook = useLoadList<Product>(PRODUCT_LIST);
 
+  const user = useSelector(getAuthorizedUser);
+
   const {t} = useTranslation();
 
   const columnHelper = createColumnHelper<Product>();
 
-  const columns = [
+  const columns: any[] = [
     columnHelper.accessor('name', {
       header: () => t('Name'),
     }),
@@ -50,35 +55,46 @@ export const Items = ({
     columnHelper.accessor('brands', {
       header: () => t('Brands'),
       cell: info => info.getValue().map(item => item.name).join(', ')
-    }),
-    columnHelper.accessor('id', {
-      header: () => t('Actions'),
-      enableSorting: false,
-      cell: (info) => {
-        return (
-          <>
-            <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
-              setRow(info.row.original);
-              setOperation('update');
-              setActiveTab('form');
-            }} tabIndex={-1}>
-              <FontAwesomeIcon icon={faPencilAlt}/>
-            </Button>
-            <span className="mx-2 text-gray-300">|</span>
-            <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
-              <FontAwesomeIcon icon={faTrash}/>
-            </Button>
-          </>
-        )
-      }
     })
   ];
+
+  if(user?.roles.includes('ROLE_ADMIN')) {
+    columns.push(columnHelper.accessor('stores', {
+      header: () => t('Stores'),
+      cell: info => info.getValue().map(item => item.name).join(', ')
+    }));
+  }
+
+  columns.push(columnHelper.accessor('id', {
+    header: () => t('Actions'),
+    enableSorting: false,
+    cell: (info) => {
+      return (
+        <>
+          <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
+            setRow(info.row.original);
+            setOperation('update');
+            setActiveTab('form');
+          }} tabIndex={-1}>
+            <FontAwesomeIcon icon={faPencilAlt}/>
+          </Button>
+          <span className="mx-2 text-gray-300">|</span>
+          <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
+            <FontAwesomeIcon icon={faTrash}/>
+          </Button>
+        </>
+      )
+    }
+  }));
 
   return (
     <>
       <TableComponent
         columns={columns}
         useLoadList={useLoadHook}
+        params={{
+          store: JSON.parse(Cookies.get('store') as string).id
+        }}
         buttons={[
           {
             html: <ImportItems/>,

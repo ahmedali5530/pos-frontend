@@ -19,7 +19,6 @@ import {
 import {fetchJson} from "../../../../api/request/request";
 import {
   EXPENSE_LIST,
-  ORDER_DISPATCH,
   ORDER_GET,
   ORDER_LIST,
   ORDER_REFUND,
@@ -34,7 +33,7 @@ import {Tax} from "../../../../api/model/tax";
 import {Customer} from "../../../../api/model/customer";
 import {Input} from "../../input";
 import {IconProp} from "@fortawesome/fontawesome-svg-core";
-import {useForm} from "react-hook-form";
+import {useForm, Controller} from "react-hook-form";
 import {Expense} from "../../../../api/model/expense";
 import {ViewOrder} from "./view.order";
 import {CustomerPayments} from "../customer.payments";
@@ -54,6 +53,8 @@ import {
   useReactTable
 } from "@tanstack/react-table";
 import _ from "lodash";
+import Cookies from "js-cookie";
+import {Shortcut} from "../../../../app-common/components/input/shortcut";
 
 interface Props {
   setAdded: (item: CartItem[]) => void;
@@ -93,8 +94,7 @@ export const SaleHistory: FC<Props> = ({
         <ViewOrder order={info.row.original}>
           <FontAwesomeIcon icon={faEye} className="mr-2"/> {info.getValue()}
         </ViewOrder>
-      ),
-      sortDescFirst: true
+      )
     }),
     columnHelper.accessor('createdAt', {
       header: () => t('Time'),
@@ -224,11 +224,10 @@ export const SaleHistory: FC<Props> = ({
     try {
       const url = new URL(EXPENSE_LIST);
       const params = new URLSearchParams({
-        dateTimeFrom: DateTime.now().startOf('day').toISO(),
-        dateTimeTo: DateTime.now().endOf('day').toISO(),
         ...values,
         orderBy: 'id',
         orderMode: 'DESC',
+        store: Cookies.get('store') ? JSON.parse(Cookies.get('store') as string).id : null
       });
 
       url.search = params.toString();
@@ -238,14 +237,11 @@ export const SaleHistory: FC<Props> = ({
     } catch (e) {
 
       throw e;
-    } finally {
-      // setLoading(false);
     }
   };
 
   useEffect(() => {
     loadExpenses(params);
-    // action.loadList(params);
   }, [params]);
 
   const orderStatus = (order: Order) => {
@@ -383,23 +379,24 @@ export const SaleHistory: FC<Props> = ({
     }
   };
 
-  const [dispatching, setDispatching] = useState(false);
-  const dispatchOrder = async (order: Order) => {
-    if (!window.confirm('Dispatch order?')) return false;
-    setDispatching(true);
-    try {
-      await fetchJson(ORDER_DISPATCH.replace(':id', order.id), {
-        method: 'POST'
-      });
-
-      loadList();
-
-    } catch (e) {
-      throw e;
-    } finally {
-      setDispatching(false);
-    }
-  };
+  // TODO: disable for now and add in a separate module
+  // const [dispatching, setDispatching] = useState(false);
+  // const dispatchOrder = async (order: Order) => {
+  //   if (!window.confirm('Dispatch order?')) return false;
+  //   setDispatching(true);
+  //   try {
+  //     await fetchJson(ORDER_DISPATCH.replace(':id', order.id), {
+  //       method: 'POST'
+  //     });
+  //
+  //     loadList();
+  //
+  //   } catch (e) {
+  //     throw e;
+  //   } finally {
+  //     setDispatching(false);
+  //   }
+  // };
 
   const [deleting, setDeleting] = useState(false);
   const deleteOrder = async (order: Order) => {
@@ -513,7 +510,14 @@ export const SaleHistory: FC<Props> = ({
     return data;
   }, [list]);
 
-  const {register, handleSubmit} = useForm();
+  const {register, handleSubmit, reset, control} = useForm();
+
+  useEffect(() => {
+    reset({
+      dateTimeFrom: DateTime.now().startOf('day').toFormat("yyyy-MM-dd'T'HH:mm:ss"),
+      dateTimeTo: DateTime.now().endOf('day').toFormat("yyyy-MM-dd'T'HH:mm:ss")
+    });
+  }, [modal, reset]);
 
   const [areChartsOpen, setChartsOpen] = useState(false);
 
@@ -549,6 +553,7 @@ export const SaleHistory: FC<Props> = ({
       ...params,
       limit: pageSize,
       offset: pageIndex * pageSize,
+      store: Cookies.get('store') ? JSON.parse(Cookies.get('store') as string).id : null
     };
 
     if (sorting.length > 0) {
@@ -565,6 +570,7 @@ export const SaleHistory: FC<Props> = ({
 
   useEffect(() => {
     loadList();
+    loadExpenses();
   }, [pageSize, pageIndex, sorting, globalFilter, params, modal]);
 
   const pagination = React.useMemo(
@@ -602,7 +608,10 @@ export const SaleHistory: FC<Props> = ({
     <>
       <Button variant="primary" className="w-24" size="lg" onClick={() => {
         setModal(true);
-      }} title="Sale history"><FontAwesomeIcon icon={faClockRotateLeft}/></Button>
+      }} title="Sale history">
+        <FontAwesomeIcon icon={faClockRotateLeft}/>
+        <Shortcut shortcut="ctrl+h" handler={() => setModal(true)} />
+      </Button>
 
       <Modal open={modal} onClose={() => {
         setModal(false);
@@ -617,24 +626,36 @@ export const SaleHistory: FC<Props> = ({
               />
             </div>
             <div>
-              <Input {...register('dateTimeFrom')}
-                     type="datetime-local"
-                     placeholder="Start time"
-                     defaultValue={DateTime.now().startOf('day').toISO()}
-                     className=" w-full"
+              <Controller
+                name="dateTimeFrom"
+                render={(props) => (
+                  <Input
+                    {...props.field}
+                    type="datetime-local"
+                    placeholder="Start time"
+                    className=" w-full"
+                  />
+                )}
+                control={control}
               />
             </div>
             <div>
-              <Input {...register('dateTimeTo')}
-                     type="datetime-local"
-                     placeholder="End time"
-                     defaultValue={DateTime.now().endOf('day').toISO()}
-                     className=" w-full"
+              <Controller
+                name="dateTimeTo"
+                render={(props) => (
+                  <Input
+                    {...props.field}
+                    type="datetime-local"
+                    placeholder="End time"
+                    className=" w-full"
+                  />
+                )}
+                control={control}
               />
             </div>
             <div>
               <Button variant="primary" className="w-full" type="submit" disabled={state.isLoading}>
-                {state.isLoading ? 'Loading...' : (
+                {state.isLoading ? 'Searching...' : (
                   <>
                     <FontAwesomeIcon icon={faSearch} className="mr-2"/> Search sale
                   </>
@@ -757,132 +778,132 @@ export const SaleHistory: FC<Props> = ({
                 <span className="float-right">{(totalAmount - totalCost - totalExpenses).toFixed(2)}</span>
               </div>
             </div>
-
-            <>
-              <div className="table-responsive">
-                {(state.isLoading) ? (
-                  <div className="flex justify-center items-center">
-                    <Loader lines={pageSize} lineItems={8 || 5}/>
-                  </div>
-                ) : (
-                  <table className="table table-hover">
-                    <thead>
-                    {table.getHeaderGroups().map(headerGroup => (
-                      <tr key={Math.random() + headerGroup.id} id={Math.random() + headerGroup.id}>
-                        {headerGroup.headers.map(header => (
-                          <th key={header.id}>
-                            <div
-                              {...{
-                                className: header.column.getCanSort()
-                                  ? 'cursor-pointer select-none'
-                                  : '',
-                                onClick: header.column.getToggleSortingHandler(),
-                              }}
-                            >
-                              {flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                              {{
-                                asc: ' ▲',
-                                desc: ' ▼',
-                              }[header.column.getIsSorted() as string] ?? null}
-                            </div>
-                          </th>
-                        ))}
-                      </tr>
-                    ))}
-                    </thead>
-                    <tbody>
-                    {table.getRowModel().rows.map(row => (
-                      <tr key={row.id}>
-                        {row.getVisibleCells().map(cell => (
-                          <td key={Math.random() + cell.id}>
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                    </tbody>
-                  </table>
-                )}
-
-              </div>
-              <div className="flex items-center gap-2 mt-3 flex-wrap">
-                <nav className="input-group">
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => table.setPageIndex(0)}
-                    disabled={!table.getCanPreviousPage()}
-                  >
-                    {'<<'}
-                  </button>
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => table.previousPage()}
-                    disabled={!table.getCanPreviousPage()}
-                  >
-                    {'<'}
-                  </button>
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => table.nextPage()}
-                    disabled={!table.getCanNextPage()}
-                  >
-                    {'>'}
-                  </button>
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                    disabled={!table.getCanNextPage()}
-                  >
-                    {'>>'}
-                  </button>
-                </nav>
-                &bull;
-                <span className="flex items-center gap-1">
-          <div>{t('Page')}</div>
-          <strong>
-            {table.getState().pagination.pageIndex + 1} {t('of')}{' '}{table.getPageCount()}
-          </strong>
-        </span>
-                &bull;{' '}
-                {t('Go to page')}
-                <span className="flex items-center gap-2">
-          <select
-            value={table.getState().pagination.pageIndex + 1}
-            onChange={e => {
-              table.setPageIndex(Number(e.target.value) - 1)
-            }}
-            className="w-auto form-control"
-          >
-          {_.range(0, table.getPageCount()).map(pageSize => (
-            <option key={pageSize} value={pageSize + 1}>
-              {pageSize + 1}
-            </option>
-          ))}
-          </select>
-        </span>
-                &bull;
-                <span className="flex items-center gap-2">
-          <select
-            value={table.getState().pagination.pageSize}
-            onChange={e => {
-              table.setPageSize(Number(e.target.value))
-            }}
-            className="w-auto form-control"
-          >
-          {[10, 20, 25, 50, 100, 500].map(pageSize => (
-            <option key={pageSize} value={pageSize}>
-              {t('Show')} {pageSize}
-            </option>
-          ))}
-          </select> &bull; {t('Total records')} <strong>{state.total}</strong>
-        </span>
-              </div>
-            </>
           </>
         )}
+        <>
+          <div className="table-responsive">
+            {(state.isLoading) ? (
+              <div className="flex justify-center items-center">
+                <Loader lines={pageSize} lineItems={8 || 5}/>
+              </div>
+            ) : (
+              <>
+                <table className="table table-hover">
+                  <thead>
+                  {table.getHeaderGroups().map(headerGroup => (
+                    <tr key={Math.random() + headerGroup.id} id={Math.random() + headerGroup.id}>
+                      {headerGroup.headers.map(header => (
+                        <th key={header.id}>
+                          <div
+                            {...{
+                              className: header.column.getCanSort()
+                                ? 'cursor-pointer select-none'
+                                : '',
+                              onClick: header.column.getToggleSortingHandler(),
+                            }}
+                          >
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                            {{
+                              asc: ' ▲',
+                              desc: ' ▼',
+                            }[header.column.getIsSorted() as string] ?? null}
+                          </div>
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                  </thead>
+                  <tbody>
+                  {table.getRowModel().rows.map(row => (
+                    <tr key={row.id}>
+                      {row.getVisibleCells().map(cell => (
+                        <td key={Math.random() + cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                  </tbody>
+                </table>
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                  <nav className="input-group">
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => table.setPageIndex(0)}
+                      disabled={!table.getCanPreviousPage()}
+                    >
+                      {'<<'}
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => table.previousPage()}
+                      disabled={!table.getCanPreviousPage()}
+                    >
+                      {'<'}
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => table.nextPage()}
+                      disabled={!table.getCanNextPage()}
+                    >
+                      {'>'}
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                      disabled={!table.getCanNextPage()}
+                    >
+                      {'>>'}
+                    </button>
+                  </nav>
+                  &bull;
+                  <span className="flex items-center gap-1">
+              <div>{t('Page')}</div>
+              <strong>
+                {table.getState().pagination.pageIndex + 1} {t('of')}{' '}{table.getPageCount()}
+              </strong>
+            </span>
+                  &bull;{' '}
+                  {t('Go to page')}
+                  <span className="flex items-center gap-2">
+              <select
+                value={table.getState().pagination.pageIndex + 1}
+                onChange={e => {
+                  table.setPageIndex(Number(e.target.value) - 1)
+                }}
+                className="w-auto form-control"
+              >
+              {_.range(0, table.getPageCount()).map(pageSize => (
+                <option key={pageSize} value={pageSize + 1}>
+                  {pageSize + 1}
+                </option>
+              ))}
+              </select>
+            </span>
+                  &bull;
+                  <span className="flex items-center gap-2">
+              <select
+                value={table.getState().pagination.pageSize}
+                onChange={e => {
+                  table.setPageSize(Number(e.target.value))
+                }}
+                className="w-auto form-control"
+              >
+              {[10, 20, 25, 50, 100, 500].map(pageSize => (
+                <option key={pageSize} value={pageSize}>
+                  {t('Show')} {pageSize}
+                </option>
+              ))}
+              </select> &bull; {t('Total records')} <strong>{state.total}</strong>
+            </span>
+                </div>
+              </>
+            )}
+          </div>
+        </>
       </Modal>
     </>
   );

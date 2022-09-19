@@ -6,6 +6,7 @@ import {Tax} from "../../../../api/model/tax";
 import localforage from "../../../../lib/localforage/localforage";
 import {faTimes} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {Shortcut} from "../../../../app-common/components/input/shortcut";
 
 
 interface Props{
@@ -49,6 +50,9 @@ export const ClearSale: FC<Props> = ({
             disabled={added.length === 0}
             onClick={cancel}
             type="button"
-    ><FontAwesomeIcon icon={faTimes} className="mr-2" />Cancel</Button>
+    >
+      <FontAwesomeIcon icon={faTimes} className="mr-2" />Cancel
+      <Shortcut shortcut="ctrl+x" handler={cancel} />
+    </Button>
   );
 };

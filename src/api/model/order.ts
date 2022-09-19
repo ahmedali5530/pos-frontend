@@ -4,6 +4,7 @@ import {Customer} from "./customer";
 import {OrderItem} from "./order.item";
 import {OrderDiscount} from "./order.discount";
 import {OrderTax} from "./order.tax";
+import {Store} from "./store";
 
 export interface Order {
   id: string;
@@ -22,6 +23,7 @@ export interface Order {
   status: string;
   returnedFrom?: Pick<Order, "id"|"orderId"|"createdAt">;
   notes?: string;
+  store: Store;
 }
 
 export enum OrderStatus{

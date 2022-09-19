@@ -160,7 +160,7 @@ a{
 }
 .btn{
   @apply font-sans inline-flex justify-center items-center leading-5 rounded-lg px-3 py-2 align-middle h-[40px]
-  active:shadow-none bg-white border-2;
+  active:shadow-none bg-white border-2 font-medium;
   &.lg{
     @apply min-h-[48px];
   }
@@ -268,8 +268,18 @@ a{
   overflow: auto;
 }
 .ReactModal__Content{
-  @apply relative bg-white w-[80%] m-auto shadow-2xl rounded-lg shadow-gray-600;
+  @apply relative bg-white w-[80%] m-auto rounded-lg shadow-2xl shadow-black/20 border border-gray-200;
   transition: linear all 150ms;
+
+  &.full{
+    width: 100vw;
+    height: 100vh;
+    @apply rounded-none border-none shadow-none overflow-hidden;
+
+    .modal-container{
+      height: calc(100vh - 75px);
+    }
+  }
 }
 .ReactModal__Content--after-open{
   animation: ease-in-out zoomIn 150ms;

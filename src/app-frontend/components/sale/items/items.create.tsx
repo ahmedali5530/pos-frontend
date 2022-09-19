@@ -4,7 +4,7 @@ import {
   BRAND_LIST,
   CATEGORY_LIST,
   PRODUCT_CREATE,
-  PRODUCT_GET,
+  PRODUCT_GET, STORE_LIST,
   SUPPLIER_LIST
 } from "../../../../api/routing/routes/backend.app";
 import {fetchJson, jsonRequest} from "../../../../api/request/request";
@@ -24,6 +24,7 @@ import {Brand} from "../../../../api/model/brand";
 import {withCurrency} from "../../../../lib/currency/currency";
 import classNames from "classnames";
 import {getErrorClass} from "../../../../lib/error/error";
+import {Store} from "../../../../api/model/store";
 
 interface ItemsCreateProps{
   setActiveTab: (tab: string) => void;
@@ -57,6 +58,9 @@ export const CreateItem = ({
       }
       if(values.brands){
         values.brands = values.brands.map((item: ReactSelectOptionProps) => item.value);
+      }
+      if(values.stores){
+        values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value);
       }
 
       await fetchJson(url, {
@@ -137,10 +141,21 @@ export const CreateItem = ({
     }
   };
 
+  const [stores, setStores] = useState<Store[]>([]);
+  const loadStores = async () => {
+    try{
+      const res = await fetchJson(STORE_LIST);
+      setStores(res.list);
+    }catch (e){
+      throw e;
+    }
+  };
+
   useEffect(() => {
     loadCategories();
     loadSuppliers();
     loadBrands();
+    loadStores();
   }, []);
 
   useEffect(() => {
@@ -184,7 +199,8 @@ export const CreateItem = ({
       uuid: null,
       variants: null,
       suppliers: null,
-      brands: null
+      brands: null,
+      stores: null
     });
   };
 
@@ -377,6 +393,35 @@ export const CreateItem = ({
             <div className="text-red-500 text-sm">
               <Trans>
                 {errors.brands.message}
+              </Trans>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="stores">Stores</label>
+          <Controller
+            name="stores"
+            control={control}
+            render={(props) => (
+              <ReactSelect
+                onChange={props.field.onChange}
+                value={props.field.value}
+                options={stores.map(item => {
+                  return {
+                    label: item.name,
+                    value: item.id
+                  }
+                })}
+                isMulti
+              />
+            )}
+          />
+
+          {errors.stores && (
+            <div className="text-red-500 text-sm">
+              <Trans>
+                {errors.stores.message}
               </Trans>
             </div>
           )}

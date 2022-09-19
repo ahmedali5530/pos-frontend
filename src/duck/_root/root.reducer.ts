@@ -3,9 +3,13 @@ import { appReducer } from '../app/app.reducer';
 import { RootState } from './root.state';
 import { authReducer } from '../auth/auth.reducer';
 import { entityReducer } from '../entity/entity.reducer';
+import {storeReducer} from "../store/store.reducer";
+import {shortcutReducer} from "../shortcuts/shortcut.reducer";
 
 export const rootReducer = combineReducers<RootState>({
   auth: authReducer,
   app: appReducer,
-  entity: entityReducer
+  entity: entityReducer,
+  store: storeReducer,
+  shortcut: shortcutReducer
 });

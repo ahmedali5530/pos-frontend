@@ -12,8 +12,9 @@ import {UnprocessableEntityException} from "../../../../lib/http/exception/http.
 import {ConstraintViolation} from "../../../../lib/validator/validation.result";
 import {TableComponent} from "../../../../app-common/components/table/table";
 import {useLoadList} from "../../../../api/hooks/use.load.list";
-import {Product} from "../../../../api/model/product";
 import {createColumnHelper} from "@tanstack/react-table";
+import {useSelector} from "react-redux";
+import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
 
 export const Categories = () => {
   const [operation, setOperation] = useState('create');
@@ -21,35 +22,45 @@ export const Categories = () => {
   const useLoadHook = useLoadList<Category>(CATEGORY_LIST);
   const [state, action] = useLoadHook;
 
+  const user = useSelector(getAuthorizedUser);
+
   const {t} = useTranslation();
 
-  const columnHelper = createColumnHelper<Product>();
+  const columnHelper = createColumnHelper<Category>();
 
-  const columns = [
+  const columns: any[] = [
     columnHelper.accessor('name', {
       header: () => t('Name'),
-    }),
-    columnHelper.accessor('id', {
-      header: () => t('Actions'),
-      enableSorting: false,
-      cell: (info) => {
-        return (
-          <>
-            <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
-              reset(info.row.original);
-              setOperation('update');
-            }} tabIndex={-1}>
-              <FontAwesomeIcon icon={faPencilAlt}/>
-            </Button>
-            <span className="mx-2 text-gray-300">|</span>
-            <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
-              <FontAwesomeIcon icon={faTrash}/>
-            </Button>
-          </>
-        )
-      }
     })
   ];
+
+  if(user?.roles.includes('ROLE_ADMIN')) {
+    columns.push(columnHelper.accessor('stores', {
+      header: () => t('Stores'),
+      cell: info => info.getValue().map(item => item.name).join(', ')
+    }));
+  }
+
+  columns.push(columnHelper.accessor('id', {
+    header: () => t('Actions'),
+    enableSorting: false,
+    cell: (info) => {
+      return (
+        <>
+          <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
+            reset(info.row.original);
+            setOperation('update');
+          }} tabIndex={-1}>
+            <FontAwesomeIcon icon={faPencilAlt}/>
+          </Button>
+          <span className="mx-2 text-gray-300">|</span>
+          <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
+            <FontAwesomeIcon icon={faTrash}/>
+          </Button>
+        </>
+      )
+    }
+  }));
 
   const {register, handleSubmit, setError, formState: {errors}, reset} = useForm();
   const [creating, setCreating] = useState(false);

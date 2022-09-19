@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import {useLoadList} from "../../../../api/hooks/use.load.list";
-import {STORE_LIST, STORE_CREATE, STORE_EDIT,} from "../../../../api/routing/routes/backend.app";
+import {DISCOUNT_CREATE, DISCOUNT_GET, DISCOUNT_LIST,} from "../../../../api/routing/routes/backend.app";
 import {Trans, useTranslation} from "react-i18next";
 import {createColumnHelper} from "@tanstack/react-table";
 import {Button} from "../../button";
@@ -12,25 +12,31 @@ import {HttpException, UnprocessableEntityException} from "../../../../lib/http/
 import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
 import {Input} from "../../input";
 import {TableComponent} from "../../../../app-common/components/table/table";
-import {Store} from "../../../../api/model/store";
 import {useAlert} from "react-alert";
+import {Discount} from "../../../../api/model/discount";
 
-export const Stores = () => {
+export const DiscountTypes = () => {
   const [operation, setOperation] = useState('create');
 
-  const useLoadHook = useLoadList<Store>(STORE_LIST);
+  const useLoadHook = useLoadList<Discount>(DISCOUNT_LIST);
   const [state, action] = useLoadHook;
 
   const {t} = useTranslation();
 
-  const columnHelper = createColumnHelper<Store>();
+  const columnHelper = createColumnHelper<Discount>();
 
   const columns = [
     columnHelper.accessor('name', {
       header: () => t('Name'),
     }),
-    columnHelper.accessor('location', {
-      header: () => t('Location'),
+    columnHelper.accessor('rate', {
+      header: () => t('Rate'),
+    }),
+    columnHelper.accessor('rateType', {
+      header: () => t('Rate Type'),
+    }),
+    columnHelper.accessor('scope', {
+      header: () => t('Discount type'),
     }),
     columnHelper.accessor('id', {
       header: () => t('Actions'),
@@ -59,14 +65,14 @@ export const Stores = () => {
   const [creating, setCreating] = useState(false);
   const alert = useAlert();
 
-  const createStore = async (values: any) => {
+  const createDiscount = async (values: any) => {
     setCreating(true);
     try {
       let url = '';
       if (values.id) {
-        url = STORE_EDIT.replace(':id', values.id);
+        url = DISCOUNT_GET.replace(':id', values.id);
       } else {
-        url = STORE_CREATE;
+        url = DISCOUNT_CREATE;
       }
 
       await fetchJson(url, {
@@ -82,8 +88,8 @@ export const Stores = () => {
       setOperation('create');
 
     } catch (exception: any) {
-      if(exception instanceof HttpException){
-        if(exception.message){
+      if (exception instanceof HttpException) {
+        if (exception.message) {
           alert.error(exception.message);
         }
       }
@@ -97,7 +103,7 @@ export const Stores = () => {
           });
         });
 
-        if(e.errorMessage){
+        if (e.errorMessage) {
           alert.error(e.errorMessage);
         }
 
@@ -112,16 +118,18 @@ export const Stores = () => {
 
   const resetForm = () => {
     reset({
-      name: null,
-      location: null,
-      id: null
+      id: null,
+      rate: null,
+      rateType: null,
+      scope: null,
+      name: null
     });
   };
 
   return (
     <>
-      <h3 className="text-xl">Create Store</h3>
-      <form onSubmit={handleSubmit(createStore)} className="mb-5">
+      <h3 className="text-xl">Create Payment Type</h3>
+      <form onSubmit={handleSubmit(createDiscount)} className="mb-5">
         <input type="hidden" {...register('id')}/>
         <div className="grid grid-cols-5 gap-4 mb-3">
           <div>

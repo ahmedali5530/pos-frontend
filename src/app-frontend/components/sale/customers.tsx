@@ -16,6 +16,7 @@ import {UnprocessableEntityException} from "../../../lib/http/exception/http.exc
 import {useLoadList} from "../../../api/hooks/use.load.list";
 import {createColumnHelper} from "@tanstack/react-table";
 import {TableComponent} from "../../../app-common/components/table/table";
+import { Shortcut } from "../../../app-common/components/input/shortcut";
 
 
 interface Props {
@@ -154,7 +155,10 @@ export const Customers: FC<Props> = ({
     <>
       <Button variant="primary" type="button" className="w-24" size="lg" onClick={() => {
         setModal(true);
-      }} title="Customers"><FontAwesomeIcon icon={faUsers}/></Button>
+      }} title="Customers">
+        <FontAwesomeIcon icon={faUsers}/>
+        <Shortcut shortcut="ctrl+c" handler={() => setModal(true)}/>
+      </Button>
 
       <Modal shouldCloseOnEsc={false} open={modal} onClose={() => {
         setModal(false);

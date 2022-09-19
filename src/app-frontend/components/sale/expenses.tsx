@@ -13,6 +13,8 @@ import {ConstraintViolation} from "../../../lib/validator/validation.result";
 import {Trans} from "react-i18next";
 import {UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
 import {Loader} from "../../../app-common/components/loader/loader";
+import Cookies from "js-cookie";
+import {Shortcut} from "../../../app-common/components/input/shortcut";
 
 export const Expenses = () => {
   const [modal, setModal] = useState(false);
@@ -33,6 +35,7 @@ export const Expenses = () => {
         ...values,
         orderBy: 'id',
         orderMode: 'DESC',
+        store: Cookies.get('store') ? JSON.parse(Cookies.get('store') as string).id : null
       });
 
       url.search = params.toString();
@@ -53,13 +56,11 @@ export const Expenses = () => {
         dateTimeFrom: DateTime.now().startOf('day').toSQL(),
         dateTimeTo: DateTime.now().endOf('day').toSQL()
       });
+
+      createReset();
     }
     reset();
   }, [modal]);
-
-  const total = useMemo(() => {
-    return list.reduce((prev, expense) => prev + Number(expense.amount), 0);
-  }, [list]);
 
 
   const {register: createRegister, handleSubmit: createHandleSubmit, reset: createReset, formState: {errors: createErrors}, setError: createSetError} = useForm();
@@ -69,7 +70,11 @@ export const Expenses = () => {
     try {
       await fetchJson(EXPENSE_CREATE, {
         method: 'POST',
-        body: JSON.stringify(values)
+        body: JSON.stringify({
+          ...values,
+          dateTime: DateTime.now().toISO(),
+          store: Cookies.get('store') ? JSON.parse(Cookies.get('store') as string).id : null
+        })
       });
 
       loadExpenses();
@@ -97,7 +102,10 @@ export const Expenses = () => {
     <>
       <Button variant="danger" size="lg" onClick={() => {
         setModal(true);
-      }} title="Expenses" type="button">Expenses</Button>
+      }} title="Expenses" type="button">
+        Expenses
+        <Shortcut shortcut="ctrl+e" handler={() => setModal(true)} />
+      </Button>
 
       <Modal open={modal} onClose={() => {
         setModal(false);

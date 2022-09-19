@@ -6,7 +6,7 @@ import {Modal} from "../../modal";
 import {Tax} from "../../../../api/model/tax";
 import {Discount} from "../../../../api/model/discount";
 import localforage from "../../../../lib/localforage/localforage";
-import {useSelector} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
 import {Switch} from "../../../../app-common/components/input/switch";
 import {Tab, TabContent, TabControl, TabNav} from "../../../../app-common/components/tabs/tabs";
@@ -15,6 +15,10 @@ import {ReactSelect} from "../../../../app-common/components/input/custom.react.
 import {HomeProps, useLoadData} from "../../../../api/hooks/use.load.data";
 import {Stores} from "./stores";
 import { Users } from "./users";
+import {PaymentTypes} from "./payment.types";
+import {DiscountTypes} from "./discount.types";
+import {TaxTypes} from "./tax.types";
+import {shortcutAction} from "../../../../duck/shortcuts/shortcut.action";
 
 interface Props{
   setList: (list: HomeProps['list']) => void;
@@ -28,6 +32,8 @@ export const More: FC<Props> = ({
 }) => {
   const [modal, setModal] = useState(false);
   const [state, action] = useLoadData();
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
     setList(state.list);
@@ -63,64 +69,63 @@ export const More: FC<Props> = ({
 
 
   useEffect(() => {
-    if(modal){
-      localforage.getItem('defaultTax').then((data: any) => {
-        if(data) {
-          setDefaultTax({
-            label: data?.name + ' ' + data?.rate,
-            value: JSON.stringify(data)
-          });
+    localforage.getItem('defaultTax').then((data: any) => {
+      if(data) {
+        setDefaultTax({
+          label: data?.name + ' ' + data?.rate,
+          value: JSON.stringify(data)
+        });
 
-          setTax(data);
-        }
-      });
+        setTax(data);
+      }
+    });
 
-      localforage.getItem('defaultDiscount').then((data: any) => {
-        if(data) {
-          setDefaultDiscount({
-            label: data?.name,
-            value: JSON.stringify(data)
-          });
+    localforage.getItem('defaultDiscount').then((data: any) => {
+      if(data) {
+        setDefaultDiscount({
+          label: data?.name,
+          value: JSON.stringify(data)
+        });
 
-          setDiscount(data);
-        }
-      });
+        setDiscount(data);
+      }
+    });
 
-      localforage.getItem('defaultPaymentType').then((data: any) => {
-        if(data) {
-          setDefaultPaymentType({
-            label: data?.name,
-            value: JSON.stringify(data)
-          });
-        }
-      });
+    localforage.getItem('defaultPaymentType').then((data: any) => {
+      if(data) {
+        setDefaultPaymentType({
+          label: data?.name,
+          value: JSON.stringify(data)
+        });
+      }
+    });
 
-      localforage.getItem('defaultDevice').then((data: any) => {
-        if(data) {
-          setDefaultDevice({
-            label: data?.name,
-            value: JSON.stringify(data)
-          });
-        }
-      });
+    localforage.getItem('defaultDevice').then((data: any) => {
+      if(data) {
+        setDefaultDevice({
+          label: data?.name,
+          value: JSON.stringify(data)
+        });
+      }
+    });
 
-      localforage.getItem('displayVariants').then((data: any) => {
-        if(data){
-          setDisplayVariants(data);
-        }else{
-          setDisplayVariants(false);
-        }
-      });
-      localforage.getItem('displayShortcuts').then((data: any) => {
-        if(data){
-          setDisplayShortcuts(data);
-        }else{
-          setDisplayShortcuts(false);
-        }
-      });
-
-    }
-  }, [modal]);
+    localforage.getItem('displayVariants').then((data: any) => {
+      if(data){
+        setDisplayVariants(data);
+      }else{
+        setDisplayVariants(false);
+      }
+    });
+    localforage.getItem('displayShortcuts').then((data: any) => {
+      if(data){
+        setDisplayShortcuts(data);
+        dispatch(shortcutAction(data));
+      }else{
+        setDisplayShortcuts(false);
+        dispatch(shortcutAction(false));
+      }
+    });
+  }, []);
 
   const user = useSelector(getAuthorizedUser);
 
@@ -158,6 +163,7 @@ export const More: FC<Props> = ({
                   <Switch checked={displayShortcuts} onChange={(value) => {
                     localforage.setItem('displayShortcuts', value.target.checked);
                     setDisplayShortcuts(value.target.checked);
+                    dispatch(shortcutAction(value.target.checked));
                   }}>Enable shortcuts?</Switch>
                 </div>
               </TabContent>
@@ -258,9 +264,15 @@ export const More: FC<Props> = ({
                   </div>
                 </div>
               </TabContent>
-              <TabContent isActive={isTabActive('payments')}>Payment types</TabContent>
-              <TabContent isActive={isTabActive('discounts')}>discount types</TabContent>
-              <TabContent isActive={isTabActive('taxes')}>tax types</TabContent>
+              <TabContent isActive={isTabActive('payments')}>
+                <PaymentTypes />
+              </TabContent>
+              <TabContent isActive={isTabActive('discounts')}>
+                <DiscountTypes />
+              </TabContent>
+              <TabContent isActive={isTabActive('taxes')}>
+                <TaxTypes />
+              </TabContent>
               <TabContent isActive={isTabActive('stores')}>
                 <Stores />
               </TabContent>

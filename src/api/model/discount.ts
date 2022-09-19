@@ -1,9 +1,12 @@
+import {Store} from "./store";
+
 export interface Discount {
   id: number;
   name: string;
   rate?: number;
   rateType?: string;
   scope?: string;
+  stores: Store[];
 }
 
 export enum DiscountRate {

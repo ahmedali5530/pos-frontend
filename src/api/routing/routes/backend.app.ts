@@ -5,7 +5,6 @@ const scopeUrl = (path: string) => url(path);
 export const LOGIN = scopeUrl('/auth/login_check');
 export const LOGOUT = scopeUrl('/auth/logout');
 export const AUTH_INFO = scopeUrl('/auth/info');
-export const REGISTER = scopeUrl('/auth/register');
 export const FORGOT_PASSWORD = scopeUrl('/auth/forgot-password');
 export const RESET_PASSWORD = scopeUrl('/auth/reset-password');
 export const UPDATE_LOCALE = scopeUrl('/locale');
@@ -27,12 +26,15 @@ export const ORDER_REFUND = scopeUrl('/admin/order/refund/:id');
 
 export const DISCOUNT_LIST = scopeUrl('/admin/discount/list');
 export const DISCOUNT_CREATE = scopeUrl('/admin/discount/create');
+export const DISCOUNT_GET = scopeUrl('/admin/discount/:id');
 
 export const TAX_LIST = scopeUrl('/admin/tax/list');
 export const TAX_CREATE = scopeUrl('/admin/tax/create');
+export const TAX_GET = scopeUrl('/admin/tax/:id');
 
 export const PAYMENT_TYPE_LIST = scopeUrl('/admin/payment-types/list');
 export const PAYMENT_TYPE_CREATE = scopeUrl('/admin/payment-types/create');
+export const PAYMENT_TYPE_GET = scopeUrl('/admin/payment-types/:id');
 
 export const CUSTOMER_LIST = scopeUrl('/admin/customer/list');
 export const CUSTOMER_CREATE = scopeUrl('/admin/customer/create');
@@ -41,7 +43,6 @@ export const CUSTOMER_PAYMENT_CREATE = scopeUrl('/admin/customer/payment/:id');
 export const CATEGORY_LIST = scopeUrl('/admin/category/list');
 export const CATEGORY_CREATE = scopeUrl('/admin/category/create');
 export const CATEGORY_GET = scopeUrl('/admin/category/:id');
-export const CATEGORY_DELETE = scopeUrl('/admin/category/:id');
 
 export const DEVICE_LIST = scopeUrl('/admin/device/list');
 export const DEVICE_CREATE = scopeUrl('/admin/device/create');
@@ -69,4 +70,3 @@ export const STORE_EDIT = scopeUrl('/admin/store/:id');
 export const USER_LIST = scopeUrl('/admin/user/list');
 export const USER_CREATE = scopeUrl('/admin/user/create');
 export const USER_EDIT = scopeUrl('/admin/user/:id');
-export const USER_DELETE = scopeUrl('/admin/user/:id');

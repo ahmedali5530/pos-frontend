@@ -4,6 +4,7 @@ import React, {FC, PropsWithChildren, useEffect, useState} from "react";
 import localforage from "../../../../lib/localforage/localforage";
 import {Tax} from "../../../../api/model/tax";
 import {HomeProps} from "../../../../api/hooks/use.load.data";
+import {Shortcut} from "../../../../app-common/components/input/shortcut";
 
 interface TaxProps extends PropsWithChildren{
   setTax: (tax?: Tax) => void;
@@ -33,7 +34,10 @@ export const ApplyTax: FC<TaxProps> = ({setTax, tax, children}) => {
           setModal(true);
         }}
         type="button"
-      >{children || 'Taxes'}</Button>
+      >
+        {children || 'Taxes'}
+        <Shortcut shortcut="ctrl+q" handler={() => setModal(true)} />
+      </Button>
       <Modal open={modal} onClose={() => {
         setModal(false);
       }} title="Apply Tax">

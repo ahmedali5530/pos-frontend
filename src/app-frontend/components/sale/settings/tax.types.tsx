@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import {useLoadList} from "../../../../api/hooks/use.load.list";
-import {STORE_LIST, STORE_CREATE, STORE_EDIT,} from "../../../../api/routing/routes/backend.app";
+import {TAX_LIST, TAX_CREATE, TAX_GET,} from "../../../../api/routing/routes/backend.app";
 import {Trans, useTranslation} from "react-i18next";
 import {createColumnHelper} from "@tanstack/react-table";
 import {Button} from "../../button";
@@ -12,25 +12,25 @@ import {HttpException, UnprocessableEntityException} from "../../../../lib/http/
 import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
 import {Input} from "../../input";
 import {TableComponent} from "../../../../app-common/components/table/table";
-import {Store} from "../../../../api/model/store";
 import {useAlert} from "react-alert";
+import {Tax} from "../../../../api/model/tax";
 
-export const Stores = () => {
+export const TaxTypes = () => {
   const [operation, setOperation] = useState('create');
 
-  const useLoadHook = useLoadList<Store>(STORE_LIST);
+  const useLoadHook = useLoadList<Tax>(TAX_LIST);
   const [state, action] = useLoadHook;
 
   const {t} = useTranslation();
 
-  const columnHelper = createColumnHelper<Store>();
+  const columnHelper = createColumnHelper<Tax>();
 
   const columns = [
     columnHelper.accessor('name', {
       header: () => t('Name'),
     }),
-    columnHelper.accessor('location', {
-      header: () => t('Location'),
+    columnHelper.accessor('rate', {
+      header: () => t('Rate'),
     }),
     columnHelper.accessor('id', {
       header: () => t('Actions'),
@@ -59,14 +59,14 @@ export const Stores = () => {
   const [creating, setCreating] = useState(false);
   const alert = useAlert();
 
-  const createStore = async (values: any) => {
+  const createTax = async (values: any) => {
     setCreating(true);
     try {
       let url = '';
       if (values.id) {
-        url = STORE_EDIT.replace(':id', values.id);
+        url = TAX_GET.replace(':id', values.id);
       } else {
-        url = STORE_CREATE;
+        url = TAX_CREATE;
       }
 
       await fetchJson(url, {
@@ -112,16 +112,16 @@ export const Stores = () => {
 
   const resetForm = () => {
     reset({
+      id: null,
       name: null,
-      location: null,
-      id: null
+      rate: null
     });
   };
 
   return (
     <>
-      <h3 className="text-xl">Create Store</h3>
-      <form onSubmit={handleSubmit(createStore)} className="mb-5">
+      <h3 className="text-xl">Create Payment Type</h3>
+      <form onSubmit={handleSubmit(createTax)} className="mb-5">
         <input type="hidden" {...register('id')}/>
         <div className="grid grid-cols-5 gap-4 mb-3">
           <div>

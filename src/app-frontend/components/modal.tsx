@@ -10,6 +10,8 @@ interface ModalProps extends PropsWithChildren{
   title?: string;
   shouldCloseOnOverlayClick?: boolean;
   shouldCloseOnEsc?: boolean;
+  hideCloseButton?: boolean;
+  full?: boolean;
 }
 
 export const Modal: FunctionComponent<ModalProps> = (props) => {
@@ -41,24 +43,33 @@ export const Modal: FunctionComponent<ModalProps> = (props) => {
         className={
           classNames(
             "justify-center",
-            closeClass
+            closeClass,
+            props.full && 'full'
           )
         }
         shouldCloseOnOverlayClick={props.shouldCloseOnOverlayClick}
-        style={{overlay: {backgroundColor: 'rgba(0,0,0,0.5)'}}}
+        style={{
+          overlay: {
+            backgroundColor: 'rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(15px)'
+          }
+        }}
       >
         <div>
-          <button
-            onClick={close}
-            className="bg-gray-100 absolute top-2 right-2 hover:bg-gray-200 active:bg-gray-300 w-12 h-12 rounded inline-flex justify-center items-center"
-            type="button"
-          >
-            <FontAwesomeIcon icon={faTimes} size="lg"/>
-          </button>
+          {!props.hideCloseButton && (
+            <button
+              onClick={close}
+              className="bg-gray-100 absolute top-2 right-2 hover:bg-gray-200 active:bg-gray-300 w-12 h-12 rounded inline-flex justify-center items-center"
+              type="button"
+            >
+              <FontAwesomeIcon icon={faTimes} size="lg"/>
+            </button>
+          )}
+
           <div className="p-5">
             <h3 className="text-2xl">{props?.title}</h3>
           </div>
-          <div className="p-5 pt-0 pb-12">
+          <div className="p-5 pt-0 pb-12 overflow-y-auto modal-container">
             {props.children}
           </div>
         </div>

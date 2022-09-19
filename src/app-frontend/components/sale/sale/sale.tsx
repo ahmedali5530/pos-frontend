@@ -20,8 +20,8 @@ import {Input} from "../../input";
 import {useAlert} from "react-alert";
 import {UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ValidationResult} from "../../../../lib/validator/validation.result";
-
-const Mousetrap = require('mousetrap');
+import Cookies from "js-cookie";
+import {Shortcut} from "../../../../app-common/components/input/shortcut";
 
 interface Props {
   added: CartItem[];
@@ -123,7 +123,9 @@ export const CloseSale: FC<Props> = ({
         discountAmount: discountTotal,
         discountRateType: discountRateType,
         refundingFrom: refundingFrom,
-        notes: values.notes
+        notes: values.notes,
+        store: Cookies.get('store') ? JSON.parse(Cookies.get('store') as string).id : null,
+        total: finalTotal
       };
 
       if (hold) {
@@ -206,40 +208,28 @@ export const CloseSale: FC<Props> = ({
     let method = cashOperation || quickCashOperation;
 
     if (method === 'exact') {
-      // reset({
-      //   received: 0
-      // });
-
       addSplitPayment(item, payment);
     } else if (method === 'add') {
-      // reset({
-      //   received: finalTotal - item
-      // });
-
       addSplitPayment(item, payment);
     } else if (method === 'subtract') {
-      // reset({
-      //   received: finalTotal + item
-      // });
-
       addSplitPayment(-item, payment);
     }
   }, [quickCashOperation, reset, finalTotal, payments, payment]);
 
-  useEffect(() => {
-    Mousetrap.bind('ctrl+s', function (e: Event) {
-      e.preventDefault();
-      //open sale modal
-      if (added.length > 0) {
-        setSaleModal(true);
-      }
+  const shortcutHandler = useCallback((e: Event) => {
+    //open sale modal
+    if (added.length > 0) {
+      setSaleModal(true);
+    }
 
-      if(saleModal){
-        //close sale
-        onSaleSubmit(getValues())
-      }
-    });
-  }, [added, saleModal, payments]);
+    if(saleModal){
+      //close sale
+      onSaleSubmit(getValues());
+    }
+  }, [
+    added, saleModal, payments, hold, tax, customer, discount,
+    finalTotal, discountTotal, discountRateType, refundingFrom, getValues
+  ]);
 
   const addSplitPayment = (amount: number, payment?: PaymentType) => {
     if(amount === 0){
@@ -247,8 +237,6 @@ export const CloseSale: FC<Props> = ({
 
       return false;
     }
-
-    console.log(amount, received, finalTotal);
 
     if(!payment?.canHaveChangeDue && (amount + received) > finalTotal ){
       alert.error(`Please add exact amount for ${payment?.name}`);
@@ -292,7 +280,10 @@ export const CloseSale: FC<Props> = ({
     <>
       <Button className="w-full btn-success" size="lg" disabled={added.length === 0} onClick={() => {
         setSaleModal(true);
-      }}><FontAwesomeIcon icon={faCheck} className="mr-2" />Close</Button>
+      }}>
+        <FontAwesomeIcon icon={faCheck} className="mr-2" /> Close
+        <Shortcut shortcut="ctrl+s" handler={shortcutHandler}/>
+      </Button>
 
       <Modal open={saleModal} onClose={() => {
         setSaleModal(false);
@@ -399,7 +390,7 @@ export const CloseSale: FC<Props> = ({
                             type="number"
                             id="amount"
                             placeholder="Payment"
-                            className="w-full flex-1 lg input"
+                            className="w-full flex-1 lg input mousetrap"
                             selectable={true}
                           />
                         </>
@@ -409,6 +400,7 @@ export const CloseSale: FC<Props> = ({
                   />
                   <button type="button" className="btn btn-secondary lg w-24" onClick={() => addSplitPayment(Number(watch('received')), payment)}>
                     <FontAwesomeIcon icon={faPlus} />
+                    <Shortcut shortcut="ctrl+enter" handler={() => addSplitPayment(Number(watch('received')), payment)}/>
                   </button>
                 </div>
               </div>
@@ -421,6 +413,7 @@ export const CloseSale: FC<Props> = ({
               <Button className="btn-success mr-12 w-48" type="submit" disabled={changeDue < 0 || isSaleClosing}
                       size="lg">
                 {isSaleClosing ? 'Completing...' : 'Complete'}
+                <Shortcut shortcut="ctrl+s" handler={shortcutHandler}/>
               </Button>
 
               <Button
@@ -435,7 +428,7 @@ export const CloseSale: FC<Props> = ({
             </div>
             <div className="grid grid-cols-2 gap-y-3">
               {payments.map((item, index) => (
-                <div className="grid grid-cols-4 gap-3" key={index}>
+                <div className="grid grid-cols-3 gap-3" key={index}>
                   <div>{item?.type?.name}</div>
                   <div>{item.received}</div>
                   <div>

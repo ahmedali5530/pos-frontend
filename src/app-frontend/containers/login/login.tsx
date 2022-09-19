@@ -11,6 +11,14 @@ import {HttpException, UnauthorizedException} from "../../../lib/http/exception/
 import {useNavigate} from "react-router";
 import {FORGOT_PASSWORD, POS} from "../../routes/frontend.routes";
 import {Link} from "react-router-dom";
+import classNames from "classnames";
+import {Modal} from "../../components/modal";
+import {getRealProductPrice} from "../dashboard/pos";
+import {Store} from "../../../api/model/store";
+import {Button} from "../../components/button";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faCheckCircle} from "@fortawesome/free-solid-svg-icons";
+import {User} from "../../../api/model/user";
 
 
 const Login = () => {
@@ -21,6 +29,9 @@ const Login = () => {
   const dispatch = useDispatch();
   const {handleSubmit, control} = useForm();
   const navigate = useNavigate();
+
+  const [modal, setModal] = useState(false);
+  const [user, setUser] = useState<User>();
 
   const submitForm = async (values: any) => {
     setLoading(true);
@@ -45,8 +56,19 @@ const Login = () => {
       const info = await jsonRequest(AUTH_INFO + '?role=ROLE_USER');
       const infoJson = await info.json();
 
-      navigate(POS);
-      dispatch(userAuthenticated(infoJson.user));
+      if(infoJson.user.stores.length === 1) {
+        //save store in cookie
+        Cookies.set('store', JSON.stringify(infoJson.user.stores[0]), {
+          secure: true
+        });
+
+        navigate(POS);
+        dispatch(userAuthenticated(infoJson.user));
+      }else{
+        //ask for the default store
+        setModal(true);
+        setUser(infoJson.user);
+      }
     } catch (err: any) {
       if (err instanceof HttpException) {
         setErrorMessage(err.message);
@@ -62,6 +84,15 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
+  }
+
+  const setStore = (store: Store) => {
+    Cookies.set('store', JSON.stringify(store), {
+      secure: true
+    });
+
+    navigate(POS);
+    dispatch(userAuthenticated(user));
   }
 
   const {t} = useTranslation();
@@ -123,6 +154,22 @@ const Login = () => {
           </div>
         </div>
       </div>
+
+      <Modal open={modal} onClose={() => {
+        setModal(false);
+      }} title="Choose a default store" shouldCloseOnEsc={false} shouldCloseOnOverlayClick={false} hideCloseButton={true}>
+        <div className="flex justify-center items-center gap-5">
+          {user?.stores.map((store, index) => (
+            <Button variant="primary"
+                    key={index}
+                    onClick={() => setStore(store)}
+                    className="mr-3 mb-3 h-[100px_!important] min-w-[150px] relative"
+            >
+              {store.name}
+            </Button>
+          ))}
+        </div>
+      </Modal>
     </Layout>
   );
 };

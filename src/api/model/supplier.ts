@@ -1,3 +1,5 @@
+import {Store} from "./store";
+
 export interface Supplier{
   id: string;
   name: string;
@@ -6,4 +8,5 @@ export interface Supplier{
   fax?: string;
   whatsApp?: string;
   address?: string;
+  stores: Store[];
 }
