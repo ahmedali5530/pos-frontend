@@ -104,6 +104,7 @@ export const Items = ({
             handler: () => {}
           }
         ]}
+        loaderLineItems={9}
       />
     </>
   );

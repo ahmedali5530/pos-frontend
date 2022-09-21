@@ -150,7 +150,7 @@ export const SearchTable = (props: SearchTableProps) => {
           <FixedSizeList
             height={windowHeight}
             itemCount={rows.length}
-            itemSize={80}
+            itemSize={60}
             width={'100%'}
             ref={searchScrollContainer}
           >

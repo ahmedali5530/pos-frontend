@@ -137,7 +137,7 @@ export const More: FC<Props> = ({
 
       <Modal open={modal} onClose={() => {
         setModal(false);
-      }} title="Settings">
+      }} title="Settings" full>
         <TabControl
           defaultTab="general"
           render={({isTabActive, setActiveTab, activeTab}) => (

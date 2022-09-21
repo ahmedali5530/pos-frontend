@@ -615,7 +615,7 @@ export const SaleHistory: FC<Props> = ({
 
       <Modal open={modal} onClose={() => {
         setModal(false);
-      }} title="Sale history">
+      }} title="Sale history" full>
         <form onSubmit={handleSubmit(mergeFilters)}>
           <div className="grid grid-cols-6 gap-4 mb-5">
             <div className="col-span-3">

@@ -1,6 +1,11 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useLoadList} from "../../../../api/hooks/use.load.list";
-import {PAYMENT_TYPE_LIST, PAYMENT_TYPE_CREATE, PAYMENT_TYPE_GET,} from "../../../../api/routing/routes/backend.app";
+import {
+  PAYMENT_TYPE_LIST,
+  PAYMENT_TYPE_CREATE,
+  PAYMENT_TYPE_GET,
+  STORE_LIST,
+} from "../../../../api/routing/routes/backend.app";
 import {Trans, useTranslation} from "react-i18next";
 import {createColumnHelper} from "@tanstack/react-table";
 import {Button} from "../../button";
@@ -14,21 +19,26 @@ import {Input} from "../../input";
 import {TableComponent} from "../../../../app-common/components/table/table";
 import {useAlert} from "react-alert";
 import {PaymentType} from "../../../../api/model/payment.type";
-import localforage from "../../../../lib/localforage/localforage";
 import {Switch} from "../../../../app-common/components/input/switch";
 import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
+import { Store } from "../../../../api/model/store";
+import {useSelector} from "react-redux";
+import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
+import {ReactSelectOptionProps} from "../../../../api/model/common";
+import Cookies from "js-cookie";
 
 export const PaymentTypes = () => {
   const [operation, setOperation] = useState('create');
 
   const useLoadHook = useLoadList<PaymentType>(PAYMENT_TYPE_LIST);
   const [state, action] = useLoadHook;
+  const user = useSelector(getAuthorizedUser);
 
   const {t} = useTranslation();
 
   const columnHelper = createColumnHelper<PaymentType>();
 
-  const columns = [
+  const columns: any = [
     columnHelper.accessor('name', {
       header: () => t('Name'),
     }),
@@ -38,34 +48,43 @@ export const PaymentTypes = () => {
     columnHelper.accessor('canHaveChangeDue', {
       header: () => t('Can accept amount greater then total?'),
       cell: info => info.getValue() ? 'Yes' : 'No'
-    }),
-    columnHelper.accessor('id', {
-      header: () => t('Actions'),
-      enableSorting: false,
-      cell: (info) => {
-        return (
-          <>
-            <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
-              reset({
-                ...info.row.original,
-                type: {
-                  label: info.row.original.type,
-                  value: info.row.original.type
-                }
-              });
-              setOperation('update');
-            }} tabIndex={-1}>
-              <FontAwesomeIcon icon={faPencilAlt}/>
-            </Button>
-            <span className="mx-2 text-gray-300">|</span>
-            <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
-              <FontAwesomeIcon icon={faTrash}/>
-            </Button>
-          </>
-        )
-      }
     })
   ];
+
+  if (user?.roles?.includes('ROLE_ADMIN')){
+    columns.push(columnHelper.accessor('stores', {
+      header: () => t('Stores'),
+      enableSorting: false,
+      cell: (info) => info.getValue().map(item => item.name)
+    }));
+  }
+
+  columns.push(columnHelper.accessor('id', {
+    header: () => t('Actions'),
+    enableSorting: false,
+    cell: (info) => {
+      return (
+        <>
+          <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
+            reset({
+              ...info.row.original,
+              type: {
+                label: info.row.original.type,
+                value: info.row.original.type
+              }
+            });
+            setOperation('update');
+          }} tabIndex={-1}>
+            <FontAwesomeIcon icon={faPencilAlt}/>
+          </Button>
+          <span className="mx-2 text-gray-300">|</span>
+          <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
+            <FontAwesomeIcon icon={faTrash}/>
+          </Button>
+        </>
+      )
+    }
+  }));
 
 
   const {register, handleSubmit, setError, formState: {errors}, reset, control} = useForm();
@@ -84,6 +103,10 @@ export const PaymentTypes = () => {
 
       if(values.type){
         values.type = values.type.value;
+      }
+
+      if(values.stores){
+        values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value);
       }
 
       await fetchJson(url, {
@@ -134,6 +157,20 @@ export const PaymentTypes = () => {
     });
   };
 
+  const [stores, setStores] = useState<Store[]>([]);
+  const loadStores = async () => {
+    try{
+      const res = await fetchJson(STORE_LIST);
+      setStores(res.list);
+    }catch (e){
+      throw e;
+    }
+  };
+
+  useEffect(() => {
+    loadStores();
+  }, []);
+
   return (
     <>
       <h3 className="text-xl">Create Payment Type</h3>
@@ -181,7 +218,7 @@ export const PaymentTypes = () => {
               </div>
             )}
           </div>
-          <div className="col-span-2">
+          <div>
             <label className="w-full block">&nbsp;</label>
             <Controller
               control={control}
@@ -203,6 +240,36 @@ export const PaymentTypes = () => {
               </div>
             )}
           </div>
+          {user?.roles?.includes('ROLE_ADMIN') && (
+            <div>
+              <label htmlFor="stores">Stores</label>
+              <Controller
+                name="stores"
+                control={control}
+                render={(props) => (
+                  <ReactSelect
+                    onChange={props.field.onChange}
+                    value={props.field.value}
+                    options={stores.map(item => {
+                      return {
+                        label: item.name,
+                        value: item.id
+                      }
+                    })}
+                    isMulti
+                  />
+                )}
+              />
+
+              {errors.stores && (
+                <div className="text-red-500 text-sm">
+                  <Trans>
+                    {errors.stores.message}
+                  </Trans>
+                </div>
+              )}
+            </div>
+          )}
           <div>
             <label className="block w-full">&nbsp;</label>
             <Button variant="primary" type="submit" disabled={creating}>
@@ -227,6 +294,10 @@ export const PaymentTypes = () => {
       <TableComponent
         columns={columns}
         useLoadList={useLoadHook}
+        params={{
+          store: JSON.parse(Cookies.get('store') as string).id
+        }}
+        loaderLineItems={4}
       />
     </>
   );

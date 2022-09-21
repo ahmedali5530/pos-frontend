@@ -32,6 +32,7 @@ const Login = () => {
 
   const [modal, setModal] = useState(false);
   const [user, setUser] = useState<User>();
+  const [tokens, setTokens] = useState<any>();
 
   const submitForm = async (values: any) => {
     setLoading(true);
@@ -52,6 +53,8 @@ const Login = () => {
         secure: true
       });
 
+      setTokens(json);
+
       //get user info and store
       const info = await jsonRequest(AUTH_INFO + '?role=ROLE_USER');
       const infoJson = await info.json();
@@ -68,6 +71,9 @@ const Login = () => {
         //ask for the default store
         setModal(true);
         setUser(infoJson.user);
+
+        Cookies.remove('JWT');
+        Cookies.remove('refresh_token');
       }
     } catch (err: any) {
       if (err instanceof HttpException) {
@@ -90,6 +96,15 @@ const Login = () => {
     Cookies.set('store', JSON.stringify(store), {
       secure: true
     });
+
+    Cookies.set('JWT', tokens.token, {
+      secure: true
+    });
+    Cookies.set('refresh_token', tokens.refresh_token, {
+      secure: true
+    });
+
+    setTokens(undefined);
 
     navigate(POS);
     dispatch(userAuthenticated(user));

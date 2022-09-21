@@ -109,7 +109,7 @@ export const Expenses = () => {
 
       <Modal open={modal} onClose={() => {
         setModal(false);
-      }} title="Expenses">
+      }} title="Expenses" full>
         <form onSubmit={createHandleSubmit(createExpense)}>
           <h3 className="text-lg">Add new expenses</h3>
           <div className="grid grid-cols-7 gap-4 mb-5">

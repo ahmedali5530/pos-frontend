@@ -17,6 +17,7 @@ import {useLoadList} from "../../../api/hooks/use.load.list";
 import {createColumnHelper} from "@tanstack/react-table";
 import {TableComponent} from "../../../app-common/components/table/table";
 import { Shortcut } from "../../../app-common/components/input/shortcut";
+import Cookies from "js-cookie";
 
 
 interface Props {
@@ -162,7 +163,7 @@ export const Customers: FC<Props> = ({
 
       <Modal shouldCloseOnEsc={false} open={modal} onClose={() => {
         setModal(false);
-      }} title="Customers">
+      }} title="Customers" full>
         <form className="mb-5" onSubmit={handleSubmit(createCustomer)}>
           <div className="grid grid-cols-7 gap-4 mb-3">
             <div className="col-span-2">

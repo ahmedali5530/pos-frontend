@@ -14,16 +14,22 @@ export const Shortcut: FC<Props> = ({children, ...rest}) => {
   const state = useSelector(getShortcut);
 
   useEffect(() => {
+    const handler = function (e: Event) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      rest.handler(e);
+
+      return false;
+    };
+
     if(state){
-      Mousetrap.bind(rest.shortcut, function (e: Event) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        rest.handler(e);
-
-        return false;
-      });
+      Mousetrap.bind(rest.shortcut, handler);
+    }else{
+      Mousetrap.unbind(rest.shortcut, handler);
     }
+
+    return () => Mousetrap.unbind(rest.shortcut, handler);
   }, [state, rest]);
 
   if(!state){

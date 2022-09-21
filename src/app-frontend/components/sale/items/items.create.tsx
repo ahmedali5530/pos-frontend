@@ -174,6 +174,10 @@ export const CreateItem = ({
           label: item.name,
           value: item.id
         })),
+        stores: row.stores.map(item => ({
+          label: item.name,
+          value: item.id
+        }))
       });
     }
   }, [row, reset]);

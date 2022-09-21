@@ -1,12 +1,12 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useLoadList} from "../../../../api/hooks/use.load.list";
-import {DISCOUNT_CREATE, DISCOUNT_GET, DISCOUNT_LIST,} from "../../../../api/routing/routes/backend.app";
+import {DISCOUNT_CREATE, DISCOUNT_GET, DISCOUNT_LIST, STORE_LIST,} from "../../../../api/routing/routes/backend.app";
 import {Trans, useTranslation} from "react-i18next";
 import {createColumnHelper} from "@tanstack/react-table";
 import {Button} from "../../button";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPencilAlt, faTrash} from "@fortawesome/free-solid-svg-icons";
-import {useForm} from "react-hook-form";
+import {Controller, useForm} from "react-hook-form";
 import {fetchJson} from "../../../../api/request/request";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
@@ -14,18 +14,25 @@ import {Input} from "../../input";
 import {TableComponent} from "../../../../app-common/components/table/table";
 import {useAlert} from "react-alert";
 import {Discount} from "../../../../api/model/discount";
+import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
+import {ReactSelectOptionProps} from "../../../../api/model/common";
+import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
+import {useSelector} from "react-redux";
+import {Store} from "../../../../api/model/store";
+import Cookies from "js-cookie";
 
 export const DiscountTypes = () => {
   const [operation, setOperation] = useState('create');
 
   const useLoadHook = useLoadList<Discount>(DISCOUNT_LIST);
   const [state, action] = useLoadHook;
+  const user = useSelector(getAuthorizedUser);
 
   const {t} = useTranslation();
 
   const columnHelper = createColumnHelper<Discount>();
 
-  const columns = [
+  const columns: any = [
     columnHelper.accessor('name', {
       header: () => t('Name'),
     }),
@@ -37,31 +44,50 @@ export const DiscountTypes = () => {
     }),
     columnHelper.accessor('scope', {
       header: () => t('Discount type'),
-    }),
-    columnHelper.accessor('id', {
-      header: () => t('Actions'),
-      enableSorting: false,
-      cell: (info) => {
-        return (
-          <>
-            <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
-              reset(info.row.original);
-              setOperation('update');
-            }} tabIndex={-1}>
-              <FontAwesomeIcon icon={faPencilAlt}/>
-            </Button>
-            <span className="mx-2 text-gray-300">|</span>
-            <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
-              <FontAwesomeIcon icon={faTrash}/>
-            </Button>
-          </>
-        )
-      }
     })
   ];
 
+  if (user?.roles?.includes('ROLE_ADMIN')){
+    columns.push(columnHelper.accessor('stores', {
+      header: () => t('Stores'),
+      enableSorting: false,
+      cell: (info) => info.getValue().map(item => item.name).join(', ')
+    }));
+  }
 
-  const {register, handleSubmit, setError, formState: {errors}, reset} = useForm();
+  columns.push(columnHelper.accessor('id', {
+    header: () => t('Actions'),
+    enableSorting: false,
+    cell: (info) => {
+      return (
+        <>
+          <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
+            reset({
+              ...info.row.original,
+              rateType: {
+                label: info.row.original.rateType,
+                value: info.row.original.rateType
+              },
+              scope: {
+                label: info.row.original.scope,
+                value: info.row.original.scope,
+              }
+            });
+            setOperation('update');
+          }} tabIndex={-1}>
+            <FontAwesomeIcon icon={faPencilAlt}/>
+          </Button>
+          <span className="mx-2 text-gray-300">|</span>
+          <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
+            <FontAwesomeIcon icon={faTrash}/>
+          </Button>
+        </>
+      )
+    }
+  }));
+
+
+  const {register, handleSubmit, setError, formState: {errors}, reset, control} = useForm();
   const [creating, setCreating] = useState(false);
   const alert = useAlert();
 
@@ -73,6 +99,18 @@ export const DiscountTypes = () => {
         url = DISCOUNT_GET.replace(':id', values.id);
       } else {
         url = DISCOUNT_CREATE;
+      }
+
+      if(values.stores){
+        values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value);
+      }
+
+      if(values.rateType){
+        values.rateType = values.rateType.value;
+      }
+
+      if(values.scope){
+        values.scope = values.scope.value;
       }
 
       await fetchJson(url, {
@@ -126,12 +164,26 @@ export const DiscountTypes = () => {
     });
   };
 
+  const [stores, setStores] = useState<Store[]>([]);
+  const loadStores = async () => {
+    try{
+      const res = await fetchJson(STORE_LIST);
+      setStores(res.list);
+    }catch (e){
+      throw e;
+    }
+  };
+
+  useEffect(() => {
+    loadStores();
+  }, []);
+
   return (
     <>
-      <h3 className="text-xl">Create Payment Type</h3>
+      <h3 className="text-xl">Create Discount</h3>
       <form onSubmit={handleSubmit(createDiscount)} className="mb-5">
         <input type="hidden" {...register('id')}/>
-        <div className="grid grid-cols-5 gap-4 mb-3">
+        <div className="grid grid-cols-4 gap-4 mb-3">
           <div>
             <label htmlFor="name">Name</label>
             <Input {...register('name')} id="name" className="w-full"/>
@@ -144,16 +196,102 @@ export const DiscountTypes = () => {
             )}
           </div>
           <div>
-            <label htmlFor="location">Location</label>
-            <Input {...register('location')} id="location" className="w-full"/>
-            {errors.location && (
+            <label htmlFor="rate">Rate</label>
+            <Input {...register('rate')} id="rate" className="w-full"/>
+            {errors.rate && (
               <div className="text-red-500 text-sm">
                 <Trans>
-                  {errors.location.message}
+                  {errors.rate.message}
                 </Trans>
               </div>
             )}
           </div>
+          <div>
+            <label htmlFor="rateType">Rate type</label>
+            <Controller
+              name="rateType"
+              control={control}
+              render={(props) => (
+                <ReactSelect
+                  onChange={props.field.onChange}
+                  value={props.field.value}
+                  options={[{
+                    label: 'percent',
+                    value: 'percent'
+                  }, {
+                    label: 'fixed',
+                    value: 'fixed'
+                  }]}
+                />
+              )}
+            />
+            {errors.rateType && (
+              <div className="text-red-500 text-sm">
+                <Trans>
+                  {errors.rateType.message}
+                </Trans>
+              </div>
+            )}
+          </div>
+          <div>
+            <label htmlFor="scope">Discount type</label>
+            <Controller
+              name="scope"
+              control={control}
+              render={(props) => (
+                <ReactSelect
+                  onChange={props.field.onChange}
+                  value={props.field.value}
+                  options={[{
+                    label: 'exact',
+                    value: 'exact'
+                  }, {
+                    label: 'open',
+                    value: 'open'
+                  }]}
+                />
+              )}
+            />
+            {errors.scope && (
+              <div className="text-red-500 text-sm">
+                <Trans>
+                  {errors.scope.message}
+                </Trans>
+              </div>
+            )}
+          </div>
+
+          {user?.roles?.includes('ROLE_ADMIN') && (
+            <div>
+              <label htmlFor="stores">Stores</label>
+              <Controller
+                name="stores"
+                control={control}
+                render={(props) => (
+                  <ReactSelect
+                    onChange={props.field.onChange}
+                    value={props.field.value}
+                    options={stores.map(item => {
+                      return {
+                        label: item.name,
+                        value: item.id
+                      }
+                    })}
+                    isMulti
+                  />
+                )}
+              />
+
+              {errors.stores && (
+                <div className="text-red-500 text-sm">
+                  <Trans>
+                    {errors.stores.message}
+                  </Trans>
+                </div>
+              )}
+            </div>
+          )}
+
           <div>
             <label htmlFor="" className="block w-full">&nbsp;</label>
             <Button variant="primary" type="submit" disabled={creating}>
@@ -178,6 +316,10 @@ export const DiscountTypes = () => {
       <TableComponent
         columns={columns}
         useLoadList={useLoadHook}
+        params={{
+          store: JSON.parse(Cookies.get('store') as string).id
+        }}
+        loaderLineItems={4}
       />
     </>
   );

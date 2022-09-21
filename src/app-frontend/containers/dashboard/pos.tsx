@@ -505,7 +505,7 @@ const Pos: FC = () => {
   return (
     <>
       <div className="grid gap-4 grid-cols-12 h-[calc(100vh_-_240px)] max-h-full">
-        <div className="col-span-4 bg-gray-50 p-3" onClick={(event) => setFocus(event, searchField)}>
+        <div className="col-span-3 bg-gray-50 p-3" onClick={(event) => setFocus(event, searchField)}>
           <div className="grid grid-cols-3 gap-3 mb-3">
             <SaleBrands brands={brands} setBrands={setBrands}/>
             <SaleCategories categories={categories} setCategories={setCategories}/>
@@ -544,7 +544,7 @@ const Pos: FC = () => {
             q={q}
           />
         </div>
-        <div className="col-span-8 bg-gray-50" onClick={(event) => setFocus(event, searchField)}>
+        <div className="col-span-9 bg-gray-50" onClick={(event) => setFocus(event, searchField)}>
           <div className="overflow-auto block p-3 pt-0 h-[630px]" ref={containerRef}>
             <CartContainer
               added={added}

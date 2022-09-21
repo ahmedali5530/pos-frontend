@@ -3,11 +3,11 @@ import {Trans, useTranslation} from "react-i18next";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPencilAlt, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {Button} from "../../button";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Category} from "../../../../api/model/category";
 import {fetchJson} from "../../../../api/request/request";
-import {CATEGORY_CREATE, CATEGORY_GET, CATEGORY_LIST,} from "../../../../api/routing/routes/backend.app";
-import {useForm} from "react-hook-form";
+import {CATEGORY_CREATE, CATEGORY_GET, CATEGORY_LIST, STORE_LIST,} from "../../../../api/routing/routes/backend.app";
+import {Controller, useForm} from "react-hook-form";
 import {UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation} from "../../../../lib/validator/validation.result";
 import {TableComponent} from "../../../../app-common/components/table/table";
@@ -15,6 +15,10 @@ import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {createColumnHelper} from "@tanstack/react-table";
 import {useSelector} from "react-redux";
 import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
+import Cookies from "js-cookie";
+import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
+import {Store} from "../../../../api/model/store";
+import {ReactSelectOptionProps} from "../../../../api/model/common";
 
 export const Categories = () => {
   const [operation, setOperation] = useState('create');
@@ -62,7 +66,7 @@ export const Categories = () => {
     }
   }));
 
-  const {register, handleSubmit, setError, formState: {errors}, reset} = useForm();
+  const {register, handleSubmit, setError, formState: {errors}, reset, control} = useForm();
   const [creating, setCreating] = useState(false);
 
   const createCategory = async (values: any) => {
@@ -73,6 +77,10 @@ export const Categories = () => {
         url = CATEGORY_GET.replace(':id', values.id);
       } else {
         url = CATEGORY_CREATE;
+      }
+
+      if(values.stores){
+        values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value);
       }
 
       await fetchJson(url, {
@@ -111,6 +119,20 @@ export const Categories = () => {
     }
   };
 
+  const [stores, setStores] = useState<Store[]>([]);
+  const loadStores = async () => {
+    try{
+      const res = await fetchJson(STORE_LIST);
+      setStores(res.list);
+    }catch (e){
+      throw e;
+    }
+  };
+
+  useEffect(() => {
+    loadStores();
+  }, []);
+
   return (
     <>
       <h3 className="text-xl">Create Category</h3>
@@ -128,6 +150,38 @@ export const Categories = () => {
               </div>
             )}
           </div>
+
+          {user?.roles?.includes('ROLE_ADMIN') && (
+            <div>
+              <label htmlFor="stores">Stores</label>
+              <Controller
+                name="stores"
+                control={control}
+                render={(props) => (
+                  <ReactSelect
+                    onChange={props.field.onChange}
+                    value={props.field.value}
+                    options={stores.map(item => {
+                      return {
+                        label: item.name,
+                        value: item.id
+                      }
+                    })}
+                    isMulti
+                  />
+                )}
+              />
+
+              {errors.stores && (
+                <div className="text-red-500 text-sm">
+                  <Trans>
+                    {errors.stores.message}
+                  </Trans>
+                </div>
+              )}
+            </div>
+          )}
+
           <div>
             <label htmlFor="" className="block w-full">&nbsp;</label>
             <Button variant="primary" type="submit" disabled={creating}>
@@ -155,6 +209,10 @@ export const Categories = () => {
       <TableComponent
         columns={columns}
         useLoadList={useLoadHook}
+        params={{
+          store: JSON.parse(Cookies.get('store') as string).id
+        }}
+        loaderLineItems={3}
       />
     </>
   );

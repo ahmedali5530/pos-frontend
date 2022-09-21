@@ -1,5 +1,5 @@
 import React, {ReactNode, useEffect, useState} from 'react';
-import {Modal} from "react-bootstrap";
+import { Modal } from './modal';
 
 
 interface ConfirmBoxProps {
@@ -51,19 +51,17 @@ export const ConfirmBox = (props: ConfirmBoxProps) => {
 
   return (
     <>
-      <Modal show={show} onHide={handleHide} centered backdrop="static" keyboard={false}>
-        <Modal.Header>
-          <Modal.Title>{props?.title ? props.title : 'Are you sure?'}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>{props?.body}</Modal.Body>
-        <Modal.Footer>
+      <Modal open={show} onClose={handleHide} title={props?.title ? props.title : 'Are you sure?'}>
+
+        {props?.body}
+        <div className="flex justify-end items-center">
           <button type="button" onClick={handleClose} className="btn">
             {props?.cancelText ? props.cancelText : 'Cancel'}
           </button>
           <button type="button" onClick={handleOk} className="btn btn-primary">
             {props?.acceptText ? props.acceptText : 'Yes Please'}
           </button>
-        </Modal.Footer>
+        </div>
       </Modal>
     </>
   );
