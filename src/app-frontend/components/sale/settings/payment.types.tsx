@@ -55,7 +55,7 @@ export const PaymentTypes = () => {
     columns.push(columnHelper.accessor('stores', {
       header: () => t('Stores'),
       enableSorting: false,
-      cell: (info) => info.getValue().map(item => item.name)
+      cell: (info) => info.getValue().map(item => item.name).join(', ')
     }));
   }
 
@@ -71,7 +71,11 @@ export const PaymentTypes = () => {
               type: {
                 label: info.row.original.type,
                 value: info.row.original.type
-              }
+              },
+              stores: info.row.original.stores.map(item => ({
+                label: item.name,
+                value: item.id
+              }))
             });
             setOperation('update');
           }} tabIndex={-1}>
@@ -153,7 +157,8 @@ export const PaymentTypes = () => {
   const resetForm = () => {
     reset({
       id: null,
-      name: null
+      name: null,
+      stores: null
     });
   };
 

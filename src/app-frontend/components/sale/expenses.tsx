@@ -30,8 +30,6 @@ export const Expenses = () => {
     try {
       const url = new URL(EXPENSE_LIST);
       const params = new URLSearchParams({
-        dateTimeFrom: DateTime.now().startOf('day').toISO(),
-        dateTimeTo: DateTime.now().endOf('day').toISO(),
         ...values,
         orderBy: 'id',
         orderMode: 'DESC',
@@ -53,8 +51,8 @@ export const Expenses = () => {
     if (modal) {
       loadExpenses();
       reset({
-        dateTimeFrom: DateTime.now().startOf('day').toSQL(),
-        dateTimeTo: DateTime.now().endOf('day').toSQL()
+        dateTimeFrom: DateTime.now().startOf('day').toFormat("yyyy-MM-dd'T'HH:mm"),
+        dateTimeTo: DateTime.now().endOf('day').toFormat("yyyy-MM-dd'T'HH:mm")
       });
 
       createReset();
@@ -146,7 +144,7 @@ export const Expenses = () => {
                       disabled={creating}>
                 {creating ? 'Adding...' : (
                   <>
-                    <FontAwesomeIcon icon={faPlus} className="mr-2" /> Add Expense
+                    <FontAwesomeIcon icon={faPlus} className="mr-2" /> Expense
                   </>
                 )}
               </Button>

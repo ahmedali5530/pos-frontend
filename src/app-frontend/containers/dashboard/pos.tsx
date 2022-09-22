@@ -30,6 +30,9 @@ import {Category} from "../../../api/model/category";
 import {SaleCategories} from "../../components/sale/search/sale.categories";
 import {Supplier} from "../../../api/model/supplier";
 import {SaleSuppliers} from "../../components/sale/search/sale.suppliers";
+import {useSelector} from "react-redux";
+import {getAuthorizedUser} from "../../../duck/auth/auth.selector";
+import Cookies from "js-cookie";
 
 const Mousetrap = require('mousetrap');
 
@@ -502,6 +505,8 @@ const Pos: FC = () => {
     });
   }, [modal, selected, selectedVariant, variants, items, added, quantity]);
 
+  const user = useSelector(getAuthorizedUser);
+
   return (
     <>
       <div className="grid gap-4 grid-cols-12 h-[calc(100vh_-_240px)] max-h-full">
@@ -559,7 +564,10 @@ const Pos: FC = () => {
       </div>
       <div className="bg-gray-100 h-[240px]">
         <div className="grid gap-4 grid-cols-4 border border-x-0 border-b-0 border-gray-300">
-          <div className="col-span-1 p-3 flex flex-wrap flex-row justify-between"></div>
+          <div className="col-span-1 p-3 flex flex-wrap flex-col font-bold">
+            <div>Logged in as <span className="text-purple-500">{user?.displayName} ({user?.username})</span></div>
+            <div>Store: <span className="text-purple-500">{JSON.parse(Cookies.get('store') as string).name}</span></div>
+          </div>
           <div className="col-span-1 p-3 flex flex-wrap flex-row justify-between">
             <SaleHistory
               setAdded={setAdded}

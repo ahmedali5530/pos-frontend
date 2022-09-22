@@ -94,10 +94,7 @@ export const Categories = () => {
 
       await action.loadList();
 
-      reset({
-        name: '',
-        id: ''
-      });
+      resetForm();
       setOperation('create');
 
     } catch (exception: any) {
@@ -132,6 +129,14 @@ export const Categories = () => {
   useEffect(() => {
     loadStores();
   }, []);
+
+  const resetForm = () => {
+    reset({
+      id: null,
+      stores: null,
+      name: null
+    });
+  };
 
   return (
     <>

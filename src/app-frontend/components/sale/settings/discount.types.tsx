@@ -71,7 +71,11 @@ export const DiscountTypes = () => {
               scope: {
                 label: info.row.original.scope,
                 value: info.row.original.scope,
-              }
+              },
+              stores: info.row.original.stores.map(item => ({
+                label: item.name,
+                value: item.id
+              }))
             });
             setOperation('update');
           }} tabIndex={-1}>
@@ -160,7 +164,8 @@ export const DiscountTypes = () => {
       rate: null,
       rateType: null,
       scope: null,
-      name: null
+      name: null,
+      stores: null
     });
   };
 

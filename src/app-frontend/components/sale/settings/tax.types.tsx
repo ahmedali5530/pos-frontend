@@ -44,7 +44,7 @@ export const TaxTypes = () => {
     columns.push(columnHelper.accessor('stores', {
       header: () => t('Stores'),
       enableSorting: false,
-      cell: (info) => info.getValue().map(item => item.name)
+      cell: (info) => info.getValue().map(item => item.name).join(', ')
     }));
   }
 
@@ -55,7 +55,13 @@ export const TaxTypes = () => {
       return (
         <>
           <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
-            reset(info.row.original);
+            reset({
+              ...info.row.original,
+              stores: info.row.original.stores.map(item => ({
+                label: item.name,
+                value: item.id
+              }))
+            });
             setOperation('update');
           }} tabIndex={-1}>
             <FontAwesomeIcon icon={faPencilAlt}/>
@@ -128,7 +134,8 @@ export const TaxTypes = () => {
     reset({
       id: null,
       name: null,
-      rate: null
+      rate: null,
+      stores: null
     });
   };
 

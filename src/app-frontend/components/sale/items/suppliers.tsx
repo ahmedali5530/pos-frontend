@@ -100,12 +100,7 @@ export const Suppliers = () => {
 
       await action.loadList();
 
-      reset({
-        name: '',
-        id: '',
-        phone: '',
-        email: ''
-      });
+      resetForm();
       setOperation('create');
 
     } catch (exception: any) {
@@ -140,6 +135,15 @@ export const Suppliers = () => {
   useEffect(() => {
     loadStores();
   }, []);
+
+  const resetForm = () => {
+    reset({
+      email: null,
+      id: null,
+      stores: null,
+      phone: null
+    });
+  };
 
 
   return (

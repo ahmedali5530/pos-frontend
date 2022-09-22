@@ -221,6 +221,7 @@ export const SaleHistory: FC<Props> = ({
   }, [state]);
 
   const loadExpenses = async (values?: any) => {
+    console.log(values)
     try {
       const url = new URL(EXPENSE_LIST);
       const params = new URLSearchParams({
@@ -239,10 +240,6 @@ export const SaleHistory: FC<Props> = ({
       throw e;
     }
   };
-
-  useEffect(() => {
-    loadExpenses(params);
-  }, [params]);
 
   const orderStatus = (order: Order) => {
     return order.status;
@@ -514,8 +511,8 @@ export const SaleHistory: FC<Props> = ({
 
   useEffect(() => {
     reset({
-      dateTimeFrom: DateTime.now().startOf('day').toFormat("yyyy-MM-dd'T'HH:mm:ss"),
-      dateTimeTo: DateTime.now().endOf('day').toFormat("yyyy-MM-dd'T'HH:mm:ss")
+      dateTimeFrom: DateTime.now().startOf('day').toFormat("yyyy-MM-dd'T'HH:mm"),
+      dateTimeTo: DateTime.now().endOf('day').toFormat("yyyy-MM-dd'T'HH:mm")
     });
   }, [modal, reset]);
 
@@ -570,7 +567,7 @@ export const SaleHistory: FC<Props> = ({
 
   useEffect(() => {
     loadList();
-    loadExpenses();
+    loadExpenses(params);
   }, [pageSize, pageIndex, sorting, globalFilter, params, modal]);
 
   const pagination = React.useMemo(
