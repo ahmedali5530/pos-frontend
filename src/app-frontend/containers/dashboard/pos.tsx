@@ -33,6 +33,7 @@ import {SaleSuppliers} from "../../components/sale/search/sale.suppliers";
 import {useSelector} from "react-redux";
 import {getAuthorizedUser} from "../../../duck/auth/auth.selector";
 import Cookies from "js-cookie";
+import {CloseSaleInline} from "../../components/sale/sale/sale.inline";
 
 const Mousetrap = require('mousetrap');
 
@@ -549,7 +550,7 @@ const Pos: FC = () => {
             q={q}
           />
         </div>
-        <div className="col-span-9 bg-gray-50" onClick={(event) => setFocus(event, searchField)}>
+        <div className="col-span-6 bg-gray-50" onClick={(event) => setFocus(event, searchField)}>
           <div className="overflow-auto block p-3 pt-0 h-[630px]" ref={containerRef}>
             <CartContainer
               added={added}
@@ -561,6 +562,33 @@ const Pos: FC = () => {
             />
           </div>
         </div>
+        <div className="col-span-3 bg-gray-50 p-3" onClick={(event) => setFocus(event, searchField)}>
+          <CloseSaleInline
+            added={added}
+            setAdded={setAdded}
+            finalTotal={finalTotal}
+            paymentTypesList={paymentTypesList.list}
+            setDiscount={setDiscount}
+            setTax={setTax}
+            setDiscountAmount={setDiscountAmount}
+            subTotal={subTotal}
+            taxTotal={taxTotal}
+            couponTotal={couponTotal}
+            discountTotal={discountTotal}
+            discount={discount}
+            tax={tax}
+            customer={customer}
+            setCustomer={setCustomer}
+            discountAmount={discountAmount}
+            refundingFrom={refundingFrom}
+            setRefundingFrom={setRefundingFrom}
+            setCloseSale={setCloseSale}
+            closeSale={closeSale}
+            setDiscountRateType={setDiscountRateType}
+            discountRateType={discountRateType}
+            isInline={true}
+          />
+        </div>
       </div>
       <div className="bg-gray-100 h-[240px]">
         <div className="grid gap-4 grid-cols-4 border border-x-0 border-b-0 border-gray-300">
@@ -568,7 +596,7 @@ const Pos: FC = () => {
             <div>Logged in as <span className="text-purple-500">{user?.displayName} ({user?.username})</span></div>
             <div>Store: <span className="text-purple-500">{JSON.parse(Cookies.get('store') as string).name}</span></div>
           </div>
-          <div className="col-span-1 p-3 flex flex-wrap flex-row justify-between">
+          <div className="col-span-1 p-3 flex flex-wrap flex-row justify-between gap-5">
             <SaleHistory
               setAdded={setAdded}
               setDiscount={setDiscount}
@@ -590,57 +618,51 @@ const Pos: FC = () => {
             <Logout/>
           </div>
           <div className="col-span-1 p-3 flex flex-wrap gap-5">
+            {/*<div className="flex-1">*/}
+              {/*<CloseSale*/}
+              {/*  added={added}*/}
+              {/*  setAdded={setAdded}*/}
+              {/*  finalTotal={finalTotal}*/}
+              {/*  paymentTypesList={paymentTypesList.list}*/}
+              {/*  setDiscount={setDiscount}*/}
+              {/*  setTax={setTax}*/}
+              {/*  setDiscountAmount={setDiscountAmount}*/}
+              {/*  subTotal={subTotal}*/}
+              {/*  taxTotal={taxTotal}*/}
+              {/*  couponTotal={couponTotal}*/}
+              {/*  discountTotal={discountTotal}*/}
+              {/*  discount={discount}*/}
+              {/*  tax={tax}*/}
+              {/*  customer={customer}*/}
+              {/*  setCustomer={setCustomer}*/}
+              {/*  discountAmount={discountAmount}*/}
+              {/*  refundingFrom={refundingFrom}*/}
+              {/*  setRefundingFrom={setRefundingFrom}*/}
+              {/*  setCloseSale={setCloseSale}*/}
+              {/*  closeSale={closeSale}*/}
+              {/*  setDiscountRateType={setDiscountRateType}*/}
+              {/*  discountRateType={discountRateType}*/}
+              {/*/>*/}
+            {/*</div>*/}
             <div className="flex-1">
-              <CloseSale
-                added={added}
-                setAdded={setAdded}
-                finalTotal={finalTotal}
-                paymentTypesList={paymentTypesList.list}
-                setDiscount={setDiscount}
-                setTax={setTax}
-                setDiscountAmount={setDiscountAmount}
-                subTotal={subTotal}
-                taxTotal={taxTotal}
-                couponTotal={couponTotal}
-                discountTotal={discountTotal}
-                discount={discount}
-                tax={tax}
-                customer={customer}
-                setCustomer={setCustomer}
-                discountAmount={discountAmount}
-                refundingFrom={refundingFrom}
-                setRefundingFrom={setRefundingFrom}
-                setCloseSale={setCloseSale}
-                closeSale={closeSale}
-                setDiscountRateType={setDiscountRateType}
-                discountRateType={discountRateType}
-              />
-            </div>
-            <div className="flex-1">
-              <ClearSale
-                added={added}
-                setAdded={setAdded}
-                setDiscount={setDiscount}
-                setTax={setTax}
-                setDiscountAmount={setDiscountAmount}
-              />
+
             </div>
           </div>
           <div className="col-span-1 p-3">
-            <OrderTotals
-              subTotal={subTotal}
-              setTax={setTax}
-              taxTotal={taxTotal}
-              setDiscount={setDiscount}
-              setDiscountAmount={setDiscountAmount}
-              discountTotal={discountTotal}
-              couponTotal={couponTotal}
-              finalTotal={finalTotal}
-              discountAmount={discountAmount}
-              added={added}
-              discountRateType={discountRateType}
-              setDiscountRateType={setDiscountRateType}
-            />
+            {/*<OrderTotals*/}
+            {/*  subTotal={subTotal}*/}
+            {/*  setTax={setTax}*/}
+            {/*  taxTotal={taxTotal}*/}
+            {/*  setDiscount={setDiscount}*/}
+            {/*  setDiscountAmount={setDiscountAmount}*/}
+            {/*  discountTotal={discountTotal}*/}
+            {/*  couponTotal={couponTotal}*/}
+            {/*  finalTotal={finalTotal}*/}
+            {/*  discountAmount={discountAmount}*/}
+            {/*  added={added}*/}
+            {/*  discountRateType={discountRateType}*/}
+            {/*  setDiscountRateType={setDiscountRateType}*/}
+            {/*/>*/}
           </div>
         </div>
       </div>

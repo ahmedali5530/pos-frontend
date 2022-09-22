@@ -51,6 +51,7 @@
     "react-highlight-words": "^0.18.0",
     "react-hook-form": "^7.34.0",
     "react-i18next": "^11.18.3",
+    "react-indiana-drag-scroll": "^2.2.0",
     "react-modal": "^3.15.1",
     "react-mousetrap": "^0.2.0",
     "react-perfect-scrollbar": "^1.5.8",
