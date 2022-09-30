@@ -70,3 +70,13 @@ export const STORE_EDIT = scopeUrl('/admin/store/:id');
 export const USER_LIST = scopeUrl('/admin/user/list');
 export const USER_CREATE = scopeUrl('/admin/user/create');
 export const USER_EDIT = scopeUrl('/admin/user/:id');
+
+export const CLOSING_LIST = scopeUrl('/admin/closing/list');
+export const CLOSING_CREATE = scopeUrl('/admin/closing/create');
+export const CLOSING_EDIT = scopeUrl('/admin/closing/:id');
+export const CLOSING_DELETE = scopeUrl('/admin/closing/:id');
+export const CLOSING_OPENED = scopeUrl('/admin/closing/opened');
+
+export const DEPARTMENT_LIST = scopeUrl('/admin/department/list');
+export const DEPARTMENT_CREATE = scopeUrl('/admin/department/create');
+export const DEPARTMENT_GET = scopeUrl('/admin/department/:id');

@@ -30,6 +30,7 @@ export const Input = forwardRef((props: InputProps, ref: Ref<HTMLInputElement>) 
       type="text"
       onClick={onClick}
       autoComplete="off"
+      tabIndex={-1}
       {...props}
       className={
         classNames(

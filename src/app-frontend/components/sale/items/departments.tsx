@@ -4,46 +4,44 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPencilAlt, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {Button} from "../../button";
 import React, {useEffect, useState} from "react";
+import {Department} from "../../../../api/model/department";
 import {fetchJson} from "../../../../api/request/request";
-import {BRAND_CREATE, BRAND_EDIT, BRAND_LIST, STORE_LIST} from "../../../../api/routing/routes/backend.app";
+import {
+  DEPARTMENT_CREATE,
+  DEPARTMENT_GET,
+  DEPARTMENT_LIST,
+  STORE_LIST,
+} from "../../../../api/routing/routes/backend.app";
 import {Controller, useForm} from "react-hook-form";
 import {UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation} from "../../../../lib/validator/validation.result";
-import {Brand} from "../../../../api/model/brand";
+import {TableComponent} from "../../../../app-common/components/table/table";
 import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {createColumnHelper} from "@tanstack/react-table";
-import {TableComponent} from "../../../../app-common/components/table/table";
+import {useSelector} from "react-redux";
+import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
 import Cookies from "js-cookie";
 import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
 import {Store} from "../../../../api/model/store";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
-import {useSelector} from "react-redux";
-import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
 
-export const Brands = () => {
+export const Departments = () => {
   const [operation, setOperation] = useState('create');
 
-  const useLoadHook = useLoadList<Brand>(BRAND_LIST);
+  const useLoadHook = useLoadList<Department>(DEPARTMENT_LIST);
   const [state, action] = useLoadHook;
+
   const user = useSelector(getAuthorizedUser);
 
   const {t} = useTranslation();
 
-  const columnHelper = createColumnHelper<Brand>();
+  const columnHelper = createColumnHelper<Department>();
 
-  const columns: any = [
+  const columns: any[] = [
     columnHelper.accessor('name', {
       header: () => t('Name'),
     })
   ];
-
-  if (user?.roles?.includes('ROLE_ADMIN')){
-    columns.push(columnHelper.accessor('stores', {
-      header: () => t('Stores'),
-      enableSorting: false,
-      cell: (info) => info.getValue().map(item => item.name).join(', ')
-    }));
-  }
 
   columns.push(columnHelper.accessor('id', {
     header: () => t('Actions'),
@@ -52,12 +50,7 @@ export const Brands = () => {
       return (
         <>
           <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
-            reset({
-              ...info.row.original,
-              stores: info.row.original?.stores?.map(item => {
-                return {value: item.id, label: item.name}
-              })
-            });
+            reset(info.row.original);
             setOperation('update');
           }} tabIndex={-1}>
             <FontAwesomeIcon icon={faPencilAlt}/>
@@ -74,14 +67,14 @@ export const Brands = () => {
   const {register, handleSubmit, setError, formState: {errors}, reset, control} = useForm();
   const [creating, setCreating] = useState(false);
 
-  const createBrand = async (values: any) => {
+  const createDepartment = async (values: any) => {
     setCreating(true);
     try {
       let url = '';
       if (values.id) {
-        url = BRAND_EDIT.replace(':id', values.id);
+        url = DEPARTMENT_GET.replace(':id', values.id);
       } else {
-        url = BRAND_CREATE;
+        url = DEPARTMENT_CREATE;
       }
 
       if(values.stores){
@@ -138,21 +131,21 @@ export const Brands = () => {
   const resetForm = () => {
     reset({
       id: null,
+      stores: null,
       name: null,
-      stores: null
+      description: null
     });
   };
 
-
   return (
     <>
-      <h3 className="text-xl">Create Brand</h3>
-      <form onSubmit={handleSubmit(createBrand)} className="mb-5">
+      <h3 className="text-xl">Create Department</h3>
+      <form onSubmit={handleSubmit(createDepartment)} className="mb-5">
         <input type="hidden" {...register('id')}/>
         <div className="grid grid-cols-4 gap-4 mb-3">
           <div>
             <label htmlFor="name">Name</label>
-            <Input {...register('name')} id="name" className="w-full"/>
+            <Input {...register('name')} id="name" className="w-full" tabIndex={0}/>
             {errors.name && (
               <div className="text-red-500 text-sm">
                 <Trans>
@@ -161,6 +154,19 @@ export const Brands = () => {
               </div>
             )}
           </div>
+
+          <div>
+            <label htmlFor="description">Description</label>
+            <Input {...register('description')} id="description" className="w-full" tabIndex={0}/>
+            {errors.description && (
+              <div className="text-red-500 text-sm">
+                <Trans>
+                  {errors.description.message}
+                </Trans>
+              </div>
+            )}
+          </div>
+
           {user?.roles?.includes('ROLE_ADMIN') && (
             <div>
               <label htmlFor="stores">Stores</label>
@@ -191,6 +197,7 @@ export const Brands = () => {
               )}
             </div>
           )}
+
           <div>
             <label htmlFor="" className="block w-full">&nbsp;</label>
             <Button variant="primary" type="submit" disabled={creating}>
@@ -218,7 +225,7 @@ export const Brands = () => {
         params={{
           store: JSON.parse(Cookies.get('store') as string).id
         }}
-        loaderLineItems={2}
+        loaderLineItems={3}
       />
     </>
   );

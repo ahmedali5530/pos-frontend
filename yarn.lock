@@ -8264,6 +8264,11 @@ react-select@*, react-select@^5.4.0:
     prop-types "^15.6.0"
     react-transition-group "^4.3.0"
 
+react-simple-keyboard@^3.4.217:
+  version "3.4.217"
+  resolved "https://registry.yarnpkg.com/react-simple-keyboard/-/react-simple-keyboard-3.4.217.tgz#ead6f14b3ec68d94a799e0408f5a4377af44adf5"
+  integrity sha512-m1Akni5fDwDCyOuRNr9gwse3sj4L5S7GOzrbFbI4uZkDvC+uLJwygA2/Q5QMzKBACVgl9X596dZheMYg38A2tA==
+
 react-speech-recognition@^3.9.1:
   version "3.9.1"
   resolved "https://registry.yarnpkg.com/react-speech-recognition/-/react-speech-recognition-3.9.1.tgz#dea4c4163e7cfb8e8c9e523abc99127eee7bcd43"

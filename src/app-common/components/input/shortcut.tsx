@@ -6,6 +6,7 @@ import {getShortcut} from "../../../duck/shortcuts/shortcut.selector";
 interface Props extends PropsWithChildren, InputHTMLAttributes<HTMLSpanElement>{
   shortcut: string;
   handler: (e: Event) => void;
+  invisible?: boolean;
 }
 
 const Mousetrap = require('mousetrap');
@@ -37,16 +38,20 @@ export const Shortcut: FC<Props> = ({children, ...rest}) => {
   }
 
   return (
-    <span
-      {...rest}
-      className={
-        classNames(
-          "text-sm ml-2 bg-gray-500/70 text-gray-50 px-1 rounded",
-          rest.className && rest.className
-        )
-      }
-    >
-      <>{rest.shortcut}</>
-    </span>
+    <>
+      {rest.invisible ? '' : (
+        <span
+          {...rest}
+          className={
+            classNames(
+              "text-sm ml-2 bg-black/70 text-slate-100 px-1 rounded shadow",
+              rest.className && rest.className
+            )
+          }
+        >
+        {rest.shortcut}
+      </span>
+      )}
+    </>
   );
 };

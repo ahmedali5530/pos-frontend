@@ -12,6 +12,7 @@ interface ModalProps extends PropsWithChildren{
   shouldCloseOnEsc?: boolean;
   hideCloseButton?: boolean;
   full?: boolean;
+  bottomSheet?: boolean;
 }
 
 export const Modal: FunctionComponent<ModalProps> = (props) => {
@@ -44,7 +45,8 @@ export const Modal: FunctionComponent<ModalProps> = (props) => {
           classNames(
             "justify-center",
             closeClass,
-            props.full && 'full'
+            props.full && 'full',
+            props.bottomSheet && 'bottom-sheet'
           )
         }
         shouldCloseOnOverlayClick={props.shouldCloseOnOverlayClick}

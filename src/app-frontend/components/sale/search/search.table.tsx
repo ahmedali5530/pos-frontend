@@ -120,7 +120,7 @@ export const SearchTable = (props: SearchTableProps) => {
   const [windowHeight, setWindowHeight] = useState(0);
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setWindowHeight(window.innerHeight - 290 - 100);
+      setWindowHeight(window.innerHeight - 180);
     }
   }, []);
 

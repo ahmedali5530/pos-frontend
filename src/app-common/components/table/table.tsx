@@ -141,6 +141,15 @@ export const TableComponent: FC<TableComponentProps> = ({
     );
   };
 
+  const pageSizes: {[key: string|number]: any} = {
+    10  : 10,
+    20  : 20,
+    25  : 25,
+    50  : 50,
+    100 : 100,
+    500 : 500
+  };
+
   return (
     <>
       <div className="table-responsive">
@@ -291,8 +300,8 @@ export const TableComponent: FC<TableComponentProps> = ({
             }}
             className="w-auto form-control"
           >
-          {[10, 20, 25, 50, 100, 500].map(pageSize => (
-            <option key={pageSize} value={pageSize}>
+          {Object.keys(pageSizes).map((pageSize: string|number) => (
+            <option key={pageSize} value={pageSizes[pageSize]}>
               {t('Show')} {pageSize}
             </option>
           ))}

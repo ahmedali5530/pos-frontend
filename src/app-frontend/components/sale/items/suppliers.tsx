@@ -59,7 +59,12 @@ export const Suppliers = () => {
       return (
         <>
           <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
-            reset(info.row.original);
+            reset({
+              ...info.row.original,
+              stores: info.row.original?.stores?.map(item => {
+                return {value: item.id, label: item.name}
+              })
+            });
             setOperation('update');
           }} tabIndex={-1}>
             <FontAwesomeIcon icon={faPencilAlt}/>
@@ -141,7 +146,8 @@ export const Suppliers = () => {
       email: null,
       id: null,
       stores: null,
-      phone: null
+      phone: null,
+      name: null
     });
   };
 
@@ -230,12 +236,7 @@ export const Suppliers = () => {
                 type="button"
                 onClick={() => {
                   setOperation('create');
-                  reset({
-                    name: null,
-                    email: null,
-                    phone: null,
-                    id: null
-                  });
+                  resetForm();
                 }}
               >Cancel</Button>
             )}

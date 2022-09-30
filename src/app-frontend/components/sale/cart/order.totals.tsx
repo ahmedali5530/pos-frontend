@@ -75,17 +75,17 @@ export const OrderTotals :FC<OrderTotalsProps> = ({
         </th>
         <td className="border border-gray-300 p-2 text-right">{discountTotal.toFixed(2)}</td>
       </tr>
-      {inSale && setCustomer && (
-        <tr className="hover:bg-gray-100">
-          <th className="border border-gray-300 p-2 text-left">
-            <span className="float-right">
-              <Customers setCustomer={setCustomer} customer={customer} />
-            </span>
-            Customer
-          </th>
-          <td className="border border-gray-300 p-2 text-right">{customer?.name}</td>
-        </tr>
-      )}
+      {/*{inSale && setCustomer && (*/}
+      {/*  <tr className="hover:bg-gray-100">*/}
+      {/*    <th className="border border-gray-300 p-2 text-left">*/}
+      {/*      <span className="float-right">*/}
+      {/*        <Customers setCustomer={setCustomer} customer={customer} />*/}
+      {/*      </span>*/}
+      {/*      Customer*/}
+      {/*    </th>*/}
+      {/*    <td className="border border-gray-300 p-2 text-right">{customer?.name}</td>*/}
+      {/*  </tr>*/}
+      {/*)}*/}
       {/*<tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left">Coupons</th>
         <td className="border border-gray-300 p-2 text-right">{couponTotal}</td>

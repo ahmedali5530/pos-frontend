@@ -190,7 +190,7 @@ export const Keyboard = (props: KeyboardProps) => {
         props.onkeydown(key, formattedLetter, value);
       }
     } else if (key === '*bs') {
-      setValue(prevState => prevState.substr(0, prevState.length - 1));
+      setValue(prevState => prevState.substring(0, prevState.length - 1));
     } else if (key === '*sh') {
       setCaps(!isCaps);
     } else if (key === '*c') {

@@ -11,6 +11,7 @@ import {Items} from "./items";
 import {CreateItem} from "./items.create";
 import {Product} from "../../../../api/model/product";
 import {Shortcut} from "../../../../app-common/components/input/shortcut";
+import {Departments} from "./departments";
 
 export const ItemsTabs = () => {
   const [modal, setModal] = useState(false);
@@ -40,6 +41,7 @@ export const ItemsTabs = () => {
                 <Tab isActive={isTabActive('categories')} onClick={() => setActiveTab('categories')}>Categories</Tab>
                 <Tab isActive={isTabActive('suppliers')} onClick={() => setActiveTab('suppliers')}>Suppliers</Tab>
                 <Tab isActive={isTabActive('brands')} onClick={() => setActiveTab('brands')}>Brands</Tab>
+                <Tab isActive={isTabActive('departments')} onClick={() => setActiveTab('departments')}>Departments</Tab>
                 <Tab isActive={isTabActive('purchase')} onClick={() => setActiveTab('purchase')}>Purchase</Tab>
                 <Tab isActive={isTabActive('transfer')} onClick={() => setActiveTab('transfer')}>Transfer Inventory</Tab>
                 <Tab isActive={isTabActive('close_inventory')} onClick={() => setActiveTab('close_inventory')}>Close inventory</Tab>
@@ -68,6 +70,9 @@ export const ItemsTabs = () => {
               <TabContent isActive={isTabActive('purchase')}>purchases</TabContent>
               <TabContent isActive={isTabActive('transfer')}>transfer inventory</TabContent>
               <TabContent isActive={isTabActive('close_inventory')}>close inventory</TabContent>
+              <TabContent isActive={isTabActive('departments')}>
+                <Departments />
+              </TabContent>
             </>
           )}
         />

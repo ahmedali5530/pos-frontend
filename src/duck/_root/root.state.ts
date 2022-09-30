@@ -3,6 +3,7 @@ import {AuthState} from "../auth/auth.state";
 import {EntityState} from "../entity/entity.state";
 import {StoreState} from "../store/store.state";
 import {ShortcutState} from "../shortcuts/shortcut.state";
+import {TouchState} from "../touch/touch.state";
 
 export interface WithAuthState {
   auth: AuthState;
@@ -15,5 +16,6 @@ export interface WithEntityState {
 export interface RootState extends WithAuthState, WithEntityState {
   app: AppState,
   store: StoreState,
-  shortcut: ShortcutState
+  shortcut: ShortcutState,
+  touch: TouchState
 }

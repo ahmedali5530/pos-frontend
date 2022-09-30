@@ -55,6 +55,7 @@ import {
 import _ from "lodash";
 import Cookies from "js-cookie";
 import {Shortcut} from "../../../../app-common/components/input/shortcut";
+import {SalePrint} from "./sale.print";
 
 interface Props {
   setAdded: (item: CartItem[]) => void;
@@ -152,7 +153,7 @@ export const SaleHistory: FC<Props> = ({
     columnHelper.accessor('status', {
       header: () => t('Status'),
       cell: info => (
-        <>
+        <div className="flex gap-3">
           <span className={
             classNames(
               getOrderStatusClasses(info.getValue()),
@@ -163,7 +164,7 @@ export const SaleHistory: FC<Props> = ({
                              className="mr-1"/> {orderStatus(info.row.original)}
           </span>
           {orderStatus(info.row.original) === OrderStatus.DISPATCHED && (
-            <Button variant="danger" className="ml-3 w-[40px]" onClick={() => deleteOrder(info.row.original)}
+            <Button variant="danger" className="w-[40px]" onClick={() => deleteOrder(info.row.original)}
                     disabled={deleting} title="Delete">
               <FontAwesomeIcon icon={faTrash}/>
             </Button>
@@ -172,7 +173,7 @@ export const SaleHistory: FC<Props> = ({
             <>
               {!info.row.original.returnedFrom && (
                 <>
-                  <Button variant="danger" className="ml-3 w-[40px]" onClick={() => refundOrder(info.row.original)}
+                  <Button variant="danger" className="w-[40px]" onClick={() => refundOrder(info.row.original)}
                           disabled={refunding} title="Refund">
                     <FontAwesomeIcon icon={faBackward}/>
                   </Button>
@@ -182,7 +183,7 @@ export const SaleHistory: FC<Props> = ({
                   </Button>*/}
                 </>
               )}
-              <Button variant="danger" className="ml-3 w-[40px]" onClick={() => deleteOrder(info.row.original)}
+              <Button variant="danger" className="w-[40px]" onClick={() => deleteOrder(info.row.original)}
                       disabled={deleting} title="Delete">
                 <FontAwesomeIcon icon={faTrash}/>
               </Button>
@@ -190,11 +191,11 @@ export const SaleHistory: FC<Props> = ({
           )}
           {orderStatus(info.row.original) === OrderStatus.ON_HOLD && (
             <>
-              <Button variant="success" className="ml-3 w-[40px]" onClick={() => unsuspendOrder(info.row.original)}
+              <Button variant="success" className="w-[40px]" onClick={() => unsuspendOrder(info.row.original)}
                       disabled={unsuspending} title="Unsuspend">
                 <FontAwesomeIcon icon={faPlay}/>
               </Button>
-              <Button variant="danger" className="ml-3 w-[40px]" onClick={() => deleteOrder(info.row.original)}
+              <Button variant="danger" className="w-[40px]" onClick={() => deleteOrder(info.row.original)}
                       disabled={deleting} title="Delete">
                 <FontAwesomeIcon icon={faTrash}/>
               </Button>
@@ -202,13 +203,14 @@ export const SaleHistory: FC<Props> = ({
           )}
           {orderStatus(info.row.original) === OrderStatus.DELETED && (
             <>
-              <Button variant="success" className="ml-3 w-[40px]" onClick={() => restoreOrder(info.row.original)}
+              <Button variant="success" className="w-[40px]" onClick={() => restoreOrder(info.row.original)}
                       disabled={restoring} title="Restore">
                 <FontAwesomeIcon icon={faTrashRestoreAlt}/>
               </Button>
             </>
           )}
-        </>
+          <SalePrint order={info.row.original} />
+        </div>
       )
     }),
   ];
@@ -221,7 +223,6 @@ export const SaleHistory: FC<Props> = ({
   }, [state]);
 
   const loadExpenses = async (values?: any) => {
-    console.log(values)
     try {
       const url = new URL(EXPENSE_LIST);
       const params = new URLSearchParams({

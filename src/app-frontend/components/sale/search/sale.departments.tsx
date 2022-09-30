@@ -5,47 +5,47 @@ import {HomeProps} from "../../../../api/hooks/use.load.data";
 import localforage from "localforage";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCheckCircle} from "@fortawesome/free-solid-svg-icons";
-import {Supplier} from "../../../../api/model/supplier";
+import {Department} from "../../../../api/model/department";
 
-interface SaleSuppliersProps extends PropsWithChildren{
-  suppliers:  {[key: string]: Supplier} ;
-  setSuppliers: (suppliers:  {[key: string]: Supplier} ) => void;
+interface SaleDepartmentsProps extends PropsWithChildren{
+  departments:  {[key: string]: Department} ;
+  setDepartments: (departments:  {[key: string]: Department} ) => void;
 }
 
-export const SaleSuppliers: FC<SaleSuppliersProps> = ({
-  children, suppliers, setSuppliers
+export const SaleDepartments: FC<SaleDepartmentsProps> = ({
+  children, departments, setDepartments
 }) => {
   const [modal, setModal] = useState(false);
-  const [list, setList] = useState<Supplier[]>([]);
+  const [list, setList] = useState<Department[]>([]);
 
-  const loadSuppliersList = async () => {
+  const loadDepartmentsList = async () => {
     const list: HomeProps['list']|null = await localforage.getItem('list');
-    let suppliers: {[key: string]: Supplier} = {};
+    let departments: {[key: string]: Department} = {};
     if(list !== null) {
       list.list.forEach(item => {
-        item.suppliers.forEach(category => {
-          suppliers[category.id] = category;
-        });
+        if(item.department) {
+          departments[item.department.id] = item.department;
+        }
       });
     }
 
-    setList(Object.values(suppliers));
+    setList(Object.values(departments));
   };
 
   useEffect(() => {
-    loadSuppliersList();
+    loadDepartmentsList();
   }, [modal]);
 
-  const addRemoveSupplier = (category: Supplier) => {
-    const newSupplier = {...suppliers};
+  const addRemoveDepartment = (department: Department) => {
+    const newDepartment = {...departments};
 
-    if(newSupplier[category.id] !== undefined){
-      delete newSupplier[category.id];
+    if(newDepartment[department.id] !== undefined){
+      delete newDepartment[department.id];
     }else {
-      newSupplier[category.id] = category;
+      newDepartment[department.id] = department;
     }
 
-    setSuppliers(newSupplier);
+    setDepartments(newDepartment);
   };
 
   return (
@@ -57,23 +57,23 @@ export const SaleSuppliers: FC<SaleSuppliersProps> = ({
         }}
         type="button"
       >
-        {children || 'Suppliers'}
-        {Object.values(suppliers).length > 0 && (
-          <span className="ml-3 bg-purple-500 text-white h-5 w-5 rounded-full text-sm font-bold">{Object.values(suppliers).length}</span>
+        {children || 'Departments'}
+        {Object.values(departments).length > 0 && (
+          <span className="ml-3 bg-purple-500 text-white h-5 w-5 rounded-full text-sm font-bold">{Object.values(departments).length}</span>
         )}
       </Button>
       <Modal open={modal} onClose={() => {
         setModal(false);
-      }} title="Filter by suppliers">
+      }} title="Filter by departments">
         <div className="flex justify-center items-center gap-5">
-          {list.map((category, index) => (
+          {list.map((department, index) => (
             <Button variant="primary"
                     key={index}
-                    onClick={() => addRemoveSupplier(category)}
+                    onClick={() => addRemoveDepartment(department)}
                     className="mr-3 mb-3 h-[100px_!important] min-w-[150px] relative"
             >
-              {category.name}
-              {!!suppliers[category.id] && (
+              {department.name}
+              {!!departments[department.id] && (
                 <span className="absolute top-1 right-1">
                   <FontAwesomeIcon icon={faCheckCircle} className="text-purple-500" size="lg" />
                 </span>

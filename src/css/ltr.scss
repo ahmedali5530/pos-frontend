@@ -115,18 +115,28 @@ a{
   .table-cell{
     vertical-align: middle;
   }
+  thead{
+    th{
+      text-align: left;
+    }
+  }
 }
 .table th, .table td {
   border-collapse: collapse;
   padding: 12px;
-  text-align: left;
+  //text-align: left;
   vertical-align: middle;
   border-bottom: 1px solid #ccc;
+}
+.table-borderless{
+  th, td{
+    border-bottom: none;
+  }
 }
 .table-hover{
   tbody{
     tr{
-      @apply hover:bg-gray-100;
+      @apply hover:bg-gray-200;
     }
   }
 }
@@ -282,7 +292,21 @@ a{
       height: calc(100vh - 75px);
     }
   }
+
+  &.bottom-sheet{
+    width: 100vw;
+    height: calc(100vh - 60%);
+    @apply rounded-none border-none;
+    bottom: 0;
+    position: fixed;
+    background-color: white;
+  }
 }
+.ReactModal__Overlay:has(.bottom-sheet){
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+}
+
 .ReactModal__Content--after-open{
   animation: ease-in-out zoomIn 150ms;
 }
@@ -351,12 +375,14 @@ a{
   background-size: 20px;
 }
 
-.keyboard-input{
-  padding-right: calc(1.5em + .75rem);
+.keyboard-input, .keyboard-input-button{
   background-image: url('data:image/svg+xml,<svg aria-hidden="true" focusable="false" data-prefix="far" data-icon="keyboard" class="svg-inline--fa fa-keyboard fa-w-18" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path fill="currentColor" d="M528 64H48C21.49 64 0 85.49 0 112v288c0 26.51 21.49 48 48 48h480c26.51 0 48-21.49 48-48V112c0-26.51-21.49-48-48-48zm8 336c0 4.411-3.589 8-8 8H48c-4.411 0-8-3.589-8-8V112c0-4.411 3.589-8 8-8h480c4.411 0 8 3.589 8 8v288zM170 270v-28c0-6.627-5.373-12-12-12h-28c-6.627 0-12 5.373-12 12v28c0 6.627 5.373 12 12 12h28c6.627 0 12-5.373 12-12zm96 0v-28c0-6.627-5.373-12-12-12h-28c-6.627 0-12 5.373-12 12v28c0 6.627 5.373 12 12 12h28c6.627 0 12-5.373 12-12zm96 0v-28c0-6.627-5.373-12-12-12h-28c-6.627 0-12 5.373-12 12v28c0 6.627 5.373 12 12 12h28c6.627 0 12-5.373 12-12zm96 0v-28c0-6.627-5.373-12-12-12h-28c-6.627 0-12 5.373-12 12v28c0 6.627 5.373 12 12 12h28c6.627 0 12-5.373 12-12zm-336 82v-28c0-6.627-5.373-12-12-12H82c-6.627 0-12 5.373-12 12v28c0 6.627 5.373 12 12 12h28c6.627 0 12-5.373 12-12zm384 0v-28c0-6.627-5.373-12-12-12h-28c-6.627 0-12 5.373-12 12v28c0 6.627 5.373 12 12 12h28c6.627 0 12-5.373 12-12zM122 188v-28c0-6.627-5.373-12-12-12H82c-6.627 0-12 5.373-12 12v28c0 6.627 5.373 12 12 12h28c6.627 0 12-5.373 12-12zm96 0v-28c0-6.627-5.373-12-12-12h-28c-6.627 0-12 5.373-12 12v28c0 6.627 5.373 12 12 12h28c6.627 0 12-5.373 12-12zm96 0v-28c0-6.627-5.373-12-12-12h-28c-6.627 0-12 5.373-12 12v28c0 6.627 5.373 12 12 12h28c6.627 0 12-5.373 12-12zm96 0v-28c0-6.627-5.373-12-12-12h-28c-6.627 0-12 5.373-12 12v28c0 6.627 5.373 12 12 12h28c6.627 0 12-5.373 12-12zm96 0v-28c0-6.627-5.373-12-12-12h-28c-6.627 0-12 5.373-12 12v28c0 6.627 5.373 12 12 12h28c6.627 0 12-5.373 12-12zm-98 158v-16c0-6.627-5.373-12-12-12H180c-6.627 0-12 5.373-12 12v16c0 6.627 5.373 12 12 12h216c6.627 0 12-5.373 12-12z"></path></svg>');
   background-repeat: no-repeat;
   background-position: right calc(.375em + .1875rem) center;
   background-size: calc(.75em + .375rem) calc(.75em + .375rem);
+}
+.keyboard-input{
+  padding-right: 30px;
 }
 .btn-keyboard{
   transition: none;
@@ -479,7 +505,7 @@ a{
   background-color: rgba(255, 255, 255, 0.6);
 }
 .alert{
-  @apply p-3 border-8 border-t-0 border-b-0 border-r-0 rounded-lg mb-3;
+  @apply p-3 border-4 border-t-0 border-b-0 border-r-0 mb-3;
   &.alert-danger{
     @apply border-rose-500 bg-rose-100 text-rose-500;
   }
@@ -531,7 +557,7 @@ a{
   :nth-child(1){
     @apply rounded-bl-lg rounded-tl-lg;
   }
-  :last-child{
+  > :last-child{
     @apply rounded-br-lg rounded-tr-lg;
   }
   //remove border-right except last element

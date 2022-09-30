@@ -1,5 +1,5 @@
 import {Button} from "../button";
-import React, {useEffect, useMemo, useState} from "react";
+import React, {FC, useEffect, useMemo, useState} from "react";
 import {Input} from "../input";
 import {DateTime} from "luxon";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -16,7 +16,11 @@ import {Loader} from "../../../app-common/components/loader/loader";
 import Cookies from "js-cookie";
 import {Shortcut} from "../../../app-common/components/input/shortcut";
 
-export const Expenses = () => {
+interface ExpensesProps{
+  onClose?: () => void;
+}
+
+export const Expenses: FC<ExpensesProps> = (props) => {
   const [modal, setModal] = useState(false);
   const [isLoading, setLoading] = useState(false);
   const [list, setList] = useState<Expense[]>([]);
@@ -49,7 +53,10 @@ export const Expenses = () => {
   };
   useEffect(() => {
     if (modal) {
-      loadExpenses();
+      loadExpenses({
+        dateTimeFrom: DateTime.now().startOf('day').toFormat("yyyy-MM-dd'T'HH:mm"),
+        dateTimeTo: DateTime.now().endOf('day').toFormat("yyyy-MM-dd'T'HH:mm")
+      });
       reset({
         dateTimeFrom: DateTime.now().startOf('day').toFormat("yyyy-MM-dd'T'HH:mm"),
         dateTimeTo: DateTime.now().endOf('day').toFormat("yyyy-MM-dd'T'HH:mm")
@@ -75,7 +82,7 @@ export const Expenses = () => {
         })
       });
 
-      loadExpenses();
+      loadExpenses(filters);
       createReset();
     } catch (exception: any) {
       if (exception instanceof UnprocessableEntityException) {
@@ -107,6 +114,10 @@ export const Expenses = () => {
 
       <Modal open={modal} onClose={() => {
         setModal(false);
+        if(props.onClose){
+          props.onClose();
+        }
+
       }} title="Expenses" full>
         <form onSubmit={createHandleSubmit(createExpense)}>
           <h3 className="text-lg">Add new expenses</h3>

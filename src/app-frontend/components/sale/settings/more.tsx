@@ -19,6 +19,7 @@ import {PaymentTypes} from "./payment.types";
 import {DiscountTypes} from "./discount.types";
 import {TaxTypes} from "./tax.types";
 import {shortcutAction} from "../../../../duck/shortcuts/shortcut.action";
+import {touchAction} from "../../../../duck/touch/touch.action";
 
 interface Props{
   setList: (list: HomeProps['list']) => void;
@@ -66,6 +67,7 @@ export const More: FC<Props> = ({
 
   const [displayVariants, setDisplayVariants] = useState(false);
   const [displayShortcuts, setDisplayShortcuts] = useState(false);
+  const [enableTouch, setEnableTouch] = useState(false);
 
 
   useEffect(() => {
@@ -116,6 +118,7 @@ export const More: FC<Props> = ({
         setDisplayVariants(false);
       }
     });
+
     localforage.getItem('displayShortcuts').then((data: any) => {
       if(data){
         setDisplayShortcuts(data);
@@ -123,6 +126,16 @@ export const More: FC<Props> = ({
       }else{
         setDisplayShortcuts(false);
         dispatch(shortcutAction(false));
+      }
+    });
+
+    localforage.getItem('enableTouch').then((data: any) => {
+      if(data){
+        setEnableTouch(data);
+        dispatch(touchAction(data));
+      }else{
+        setEnableTouch(false);
+        dispatch(touchAction(false));
       }
     });
   }, []);
@@ -165,6 +178,12 @@ export const More: FC<Props> = ({
                     setDisplayShortcuts(value.target.checked);
                     dispatch(shortcutAction(value.target.checked));
                   }}>Enable shortcuts?</Switch>
+
+                  <Switch checked={enableTouch} onChange={(value) => {
+                    localforage.setItem('enableTouch', value.target.checked);
+                    setEnableTouch(value.target.checked);
+                    dispatch(touchAction(value.target.checked));
+                  }}>Enable Touch?</Switch>
                 </div>
               </TabContent>
               <TabContent isActive={isTabActive('profile')}>

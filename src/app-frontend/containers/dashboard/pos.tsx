@@ -1,4 +1,4 @@
-import React, {createRef, FC, useEffect, useMemo, useState} from "react";
+import React, {createRef, FC, useEffect, useLayoutEffect, useMemo, useState} from "react";
 import classNames from "classnames";
 import {DateTime} from "luxon";
 import {FixedSizeList} from "react-window";
@@ -29,11 +29,17 @@ import {Brand} from "../../../api/model/brand";
 import {Category} from "../../../api/model/category";
 import {SaleCategories} from "../../components/sale/search/sale.categories";
 import {Supplier} from "../../../api/model/supplier";
-import {SaleSuppliers} from "../../components/sale/search/sale.suppliers";
+import {SaleDepartments} from "../../components/sale/search/sale.departments";
 import {useSelector} from "react-redux";
 import {getAuthorizedUser} from "../../../duck/auth/auth.selector";
 import Cookies from "js-cookie";
 import {CloseSaleInline} from "../../components/sale/sale/sale.inline";
+import { Closing } from "../../../api/model/closing";
+import {jsonRequest} from "../../../api/request/request";
+import {CLOSING_OPENED} from "../../../api/routing/routes/backend.app";
+import {QueryString} from "../../../lib/location/query.string";
+import {SaleClosing} from "../../components/sale/sale/sale.closing";
+import {Department} from "../../../api/model/department";
 
 const Mousetrap = require('mousetrap');
 
@@ -200,7 +206,7 @@ const Pos: FC = () => {
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [brands, setBrands] = useState<{ [key: string]: Brand }>({});
   const [categories, setCategories] = useState<{ [key: string]: Category }>({});
-  const [suppliers, setSuppliers] = useState<{ [key: string]: Supplier }>({});
+  const [departments, setDepartment] = useState<{ [key: string]: Department }>({});
 
   const items = useMemo(() => {
     let filtered = list?.list;
@@ -227,14 +233,14 @@ const Pos: FC = () => {
       });
     }
 
-    const supplierIds = Object.keys(suppliers);
-    if (supplierIds.length > 0) {
+    const departmentIds = Object.keys(departments);
+    if (departmentIds.length > 0) {
       filtered = filtered.filter(item => {
-        const suppliersFilter = item.suppliers.filter(c => {
-          return supplierIds.includes(c.id.toString())
-        });
+        if(item.department) {
+          return departmentIds.includes(item.department.id);
+        }
 
-        return suppliersFilter.length > 0;
+        return false;
       });
     }
 
@@ -247,7 +253,7 @@ const Pos: FC = () => {
     });
 
     return filtered;
-  }, [list?.list, q, brands, categories, suppliers]);
+  }, [list?.list, q, brands, categories, departments]);
 
   const addItem = (item: Product, quantity: number, price?: number) => {
     let newPrice = 0;
@@ -510,12 +516,12 @@ const Pos: FC = () => {
 
   return (
     <>
-      <div className="grid gap-4 grid-cols-12 h-[calc(100vh_-_240px)] max-h-full">
-        <div className="col-span-3 bg-gray-50 p-3" onClick={(event) => setFocus(event, searchField)}>
+      <div className="grid gap-4 grid-cols-12 max-h-full" onClick={(event) => setFocus(event, searchField)}>
+        <div className="col-span-3 bg-gray-50 p-3">
           <div className="grid grid-cols-3 gap-3 mb-3">
             <SaleBrands brands={brands} setBrands={setBrands}/>
             <SaleCategories categories={categories} setCategories={setCategories}/>
-            <SaleSuppliers suppliers={suppliers} setSuppliers={setSuppliers}/>
+            <SaleDepartments departments={departments} setDepartments={setDepartment}/>
           </div>
           <div className="mb-1 input-group">
             <SpeechSearch setQ={setQ} setQuantity={setQuantity}/>
@@ -531,11 +537,15 @@ const Pos: FC = () => {
               selectable
               className="search-field relative mousetrap flex-1"
               value={q}
+              onFocus={() => searchField.current?.select()}
+              tabIndex={0}
             />
             <Input placeholder="QTY"
-                   className="w-24 mousetrap" value={quantity}
+                   className="w-24 mousetrap"
+                   value={quantity}
                    onChange={(event) => setQuantity(+event.currentTarget.value)}
                    selectable={true}
+                   tabIndex={0}
             />
           </div>
 
@@ -550,8 +560,8 @@ const Pos: FC = () => {
             q={q}
           />
         </div>
-        <div className="col-span-6 bg-gray-50" onClick={(event) => setFocus(event, searchField)}>
-          <div className="overflow-auto block p-3 pt-0 h-[630px]" ref={containerRef}>
+        <div className="col-span-6 bg-gray-50">
+          <div className="overflow-auto block p-3 pt-0 h-[calc(100vh_-_250px)]" ref={containerRef}>
             <CartContainer
               added={added}
               onQuantityChange={onQuantityChange}
@@ -561,8 +571,85 @@ const Pos: FC = () => {
               subTotal={subTotal}
             />
           </div>
+          <div className="bg-gray-100 h-[250px]">
+            <div className="grid gap-4 grid-cols-2 border border-x-0 border-b-0 border-gray-300">
+              <div className="col-span-1 p-3 flex flex-wrap flex-col font-bold">
+                <div>Logged in as <span className="text-purple-500">{user?.displayName} ({user?.username})</span></div>
+                <div>Store: <span className="text-purple-500">{Cookies.get('store') ? JSON.parse(Cookies.get('store') as string)?.name : ''}</span></div>
+              </div>
+              <div className="col-span-1 p-3 flex flex-wrap flex-row justify-between gap-5">
+                <SaleHistory
+                  setAdded={setAdded}
+                  setDiscount={setDiscount}
+                  setTax={setTax}
+                  setCustomer={setCustomer}
+                  setDiscountAmount={setDiscountAmount}
+                  customer={customer}
+                  setRefundingFrom={setRefundingFrom}
+                />
+                <Customers customer={customer} setCustomer={setCustomer}/>
+                <Expenses/>
+                <ItemsTabs/>
+                <More
+                  setList={setList}
+                  setPaymentTypesList={setPaymentTypesList}
+                  setTax={setTax}
+                  setDiscount={setDiscount}
+                />
+                <SaleClosing />
+                <Logout/>
+              </div>
+              <div className="col-span-1 p-3 flex flex-wrap gap-5">
+                {/*<div className="flex-1">*/}
+                {/*<CloseSale*/}
+                {/*  added={added}*/}
+                {/*  setAdded={setAdded}*/}
+                {/*  finalTotal={finalTotal}*/}
+                {/*  paymentTypesList={paymentTypesList.list}*/}
+                {/*  setDiscount={setDiscount}*/}
+                {/*  setTax={setTax}*/}
+                {/*  setDiscountAmount={setDiscountAmount}*/}
+                {/*  subTotal={subTotal}*/}
+                {/*  taxTotal={taxTotal}*/}
+                {/*  couponTotal={couponTotal}*/}
+                {/*  discountTotal={discountTotal}*/}
+                {/*  discount={discount}*/}
+                {/*  tax={tax}*/}
+                {/*  customer={customer}*/}
+                {/*  setCustomer={setCustomer}*/}
+                {/*  discountAmount={discountAmount}*/}
+                {/*  refundingFrom={refundingFrom}*/}
+                {/*  setRefundingFrom={setRefundingFrom}*/}
+                {/*  setCloseSale={setCloseSale}*/}
+                {/*  closeSale={closeSale}*/}
+                {/*  setDiscountRateType={setDiscountRateType}*/}
+                {/*  discountRateType={discountRateType}*/}
+                {/*/>*/}
+                {/*</div>*/}
+                <div className="flex-1">
+
+                </div>
+              </div>
+              <div className="col-span-1 p-3">
+                {/*<OrderTotals*/}
+                {/*  subTotal={subTotal}*/}
+                {/*  setTax={setTax}*/}
+                {/*  taxTotal={taxTotal}*/}
+                {/*  setDiscount={setDiscount}*/}
+                {/*  setDiscountAmount={setDiscountAmount}*/}
+                {/*  discountTotal={discountTotal}*/}
+                {/*  couponTotal={couponTotal}*/}
+                {/*  finalTotal={finalTotal}*/}
+                {/*  discountAmount={discountAmount}*/}
+                {/*  added={added}*/}
+                {/*  discountRateType={discountRateType}*/}
+                {/*  setDiscountRateType={setDiscountRateType}*/}
+                {/*/>*/}
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="col-span-3 bg-gray-50 p-3" onClick={(event) => setFocus(event, searchField)}>
+        <div className="col-span-3 bg-gray-50 p-3">
           <CloseSaleInline
             added={added}
             setAdded={setAdded}
@@ -588,82 +675,6 @@ const Pos: FC = () => {
             discountRateType={discountRateType}
             isInline={true}
           />
-        </div>
-      </div>
-      <div className="bg-gray-100 h-[240px]">
-        <div className="grid gap-4 grid-cols-4 border border-x-0 border-b-0 border-gray-300">
-          <div className="col-span-1 p-3 flex flex-wrap flex-col font-bold">
-            <div>Logged in as <span className="text-purple-500">{user?.displayName} ({user?.username})</span></div>
-            <div>Store: <span className="text-purple-500">{JSON.parse(Cookies.get('store') as string).name}</span></div>
-          </div>
-          <div className="col-span-1 p-3 flex flex-wrap flex-row justify-between gap-5">
-            <SaleHistory
-              setAdded={setAdded}
-              setDiscount={setDiscount}
-              setTax={setTax}
-              setCustomer={setCustomer}
-              setDiscountAmount={setDiscountAmount}
-              customer={customer}
-              setRefundingFrom={setRefundingFrom}
-            />
-            <Customers customer={customer} setCustomer={setCustomer}/>
-            <Expenses/>
-            <ItemsTabs/>
-            <More
-              setList={setList}
-              setPaymentTypesList={setPaymentTypesList}
-              setTax={setTax}
-              setDiscount={setDiscount}
-            />
-            <Logout/>
-          </div>
-          <div className="col-span-1 p-3 flex flex-wrap gap-5">
-            {/*<div className="flex-1">*/}
-              {/*<CloseSale*/}
-              {/*  added={added}*/}
-              {/*  setAdded={setAdded}*/}
-              {/*  finalTotal={finalTotal}*/}
-              {/*  paymentTypesList={paymentTypesList.list}*/}
-              {/*  setDiscount={setDiscount}*/}
-              {/*  setTax={setTax}*/}
-              {/*  setDiscountAmount={setDiscountAmount}*/}
-              {/*  subTotal={subTotal}*/}
-              {/*  taxTotal={taxTotal}*/}
-              {/*  couponTotal={couponTotal}*/}
-              {/*  discountTotal={discountTotal}*/}
-              {/*  discount={discount}*/}
-              {/*  tax={tax}*/}
-              {/*  customer={customer}*/}
-              {/*  setCustomer={setCustomer}*/}
-              {/*  discountAmount={discountAmount}*/}
-              {/*  refundingFrom={refundingFrom}*/}
-              {/*  setRefundingFrom={setRefundingFrom}*/}
-              {/*  setCloseSale={setCloseSale}*/}
-              {/*  closeSale={closeSale}*/}
-              {/*  setDiscountRateType={setDiscountRateType}*/}
-              {/*  discountRateType={discountRateType}*/}
-              {/*/>*/}
-            {/*</div>*/}
-            <div className="flex-1">
-
-            </div>
-          </div>
-          <div className="col-span-1 p-3">
-            {/*<OrderTotals*/}
-            {/*  subTotal={subTotal}*/}
-            {/*  setTax={setTax}*/}
-            {/*  taxTotal={taxTotal}*/}
-            {/*  setDiscount={setDiscount}*/}
-            {/*  setDiscountAmount={setDiscountAmount}*/}
-            {/*  discountTotal={discountTotal}*/}
-            {/*  couponTotal={couponTotal}*/}
-            {/*  finalTotal={finalTotal}*/}
-            {/*  discountAmount={discountAmount}*/}
-            {/*  added={added}*/}
-            {/*  discountRateType={discountRateType}*/}
-            {/*  setDiscountRateType={setDiscountRateType}*/}
-            {/*/>*/}
-          </div>
         </div>
       </div>
       <Modal open={modal} onClose={() => {

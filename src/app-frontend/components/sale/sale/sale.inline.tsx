@@ -77,7 +77,7 @@ export const CloseSaleInline: FC<Props> = ({
                                              saleModal,
                                              setSaleModal
                                            }) => {
-  const {register, handleSubmit, watch, reset, control, getValues} = useForm();
+  const {register, handleSubmit, watch, reset, control, getValues, setFocus} = useForm();
   const [isSaleClosing, setSaleClosing] = useState(false);
   const [payment, setPayment] = useState<PaymentType>();
   const [payments, setPayments] = useState<OrderPayment[]>([]);
@@ -130,13 +130,22 @@ export const CloseSaleInline: FC<Props> = ({
   };
 
   const onSaleSubmit = async (values: any) => {
+    let paymentsAdded: OrderPayment[] = [...payments];
     setSaleClosing(true);
+    if(payments.length === 0){
+      paymentsAdded = [{
+        received: finalTotal,
+        type: payment,
+        total: finalTotal,
+        due: 0
+      }];
+    }
     try {
       const formValues: any = {
         items: added,
         discount: discount,
         tax: tax,
-        payments: payments,
+        payments: paymentsAdded,
         customerId: customer?.id,
         discountAmount: discountTotal,
         discountRateType: discountRateType,
@@ -252,7 +261,7 @@ export const CloseSaleInline: FC<Props> = ({
     }
   }, [
     added, saleModal, payments, hold, tax, customer, discount,
-    finalTotal, discountTotal, discountRateType, refundingFrom, getValues, isInline
+    finalTotal, discountTotal, discountRateType, refundingFrom, getValues, isInline, payment
   ]);
 
   const addSplitPayment = (amount: number, payment?: PaymentType) => {
@@ -298,6 +307,13 @@ export const CloseSaleInline: FC<Props> = ({
 
   const getQuickCashCounter = (amount: number) => {
     return payments.filter(item => Number(item.received) === amount).length;
+  };
+
+  const focusAmountField = () => {
+    console.log('ctrl + enter')
+    setFocus('received', {
+      shouldSelect: true
+    });
   };
 
   return (
@@ -387,7 +403,16 @@ export const CloseSaleInline: FC<Props> = ({
                 type="button"
                 size="lg"
                 disabled={pt.type === 'credit' && (customer === undefined || customer === null)}
-              >{pt.name}</Button>
+              >
+                {pt.name}
+                <Shortcut shortcut={`alt+p+${index}`} handler={() => {
+                  if(pt.type === 'credit' && (customer === undefined || customer === null)){
+                    return false;
+                  }
+
+                  setPayment(pt)
+                }} />
+              </Button>
             );
           })}
         </ScrollContainer>
@@ -411,31 +436,47 @@ export const CloseSaleInline: FC<Props> = ({
                           placeholder="Payment"
                           className="w-full flex-1 lg input mousetrap"
                           selectable={true}
+                          ref={props.field.ref}
+                          onKeyDown={(e) => {
+                            if(e.key === 'Enter'){
+                              e.preventDefault();
+
+                              addSplitPayment(Number(watch('received')), payment);
+
+                              return false;
+                            }
+                          }}
+                          tabIndex={0}
                         />
                       </>
                     )
                   }}
                   defaultValue={finalTotal}
                 />
-                <button type="button" className="btn btn-secondary lg"
+
+                <Shortcut shortcut="ctrl+enter" handler={() => focusAmountField()} invisible={true}/>
+
+                <Button type="button" className="btn-secondary lg"
                         onClick={() => addSplitPayment(Number(watch('received')), payment)}
                         disabled={added.length === 0}
+                        tabIndex={-1}
                 >
                   <FontAwesomeIcon icon={faPlus}/>
-                  <Shortcut shortcut="ctrl+enter" handler={() => addSplitPayment(Number(watch('received')), payment)}/>
-                </button>
+                </Button>
               </div>
             </div>
 
             <div className="mb-3">
               <label htmlFor="notes">Notes</label>
-              <Textarea {...register('notes')} id="notes"/>
+              <Textarea {...register('notes')} id="notes" tabIndex={-1}/>
             </div>
 
             <div className="flex gap-3 flex-wrap">
               <Button className="btn-success w-full"
-                      type="submit" disabled={added.length === 0 || changeDue < 0 || isSaleClosing}
-                      size="lg">
+                      type="submit" disabled={added.length === 0 || isSaleClosing}
+                      size="lg"
+                      tabIndex={0}
+              >
                 {isSaleClosing ? '...' : 'Complete'}
                 <Shortcut shortcut="ctrl+s" handler={shortcutHandler}/>
               </Button>
@@ -462,8 +503,7 @@ export const CloseSaleInline: FC<Props> = ({
           </div>
           <ScrollContainer horizontal={false} className={
             classNames(
-              "grid",
-              isInline ? 'grid-cols-1 gap-y-1' : 'grid-cols-2 gap-y-3'
+              isInline ? 'flex gap-y-2 flex-col' : 'grid grid-cols-2 gap-y-3'
             )
           } vertical={true}>
             {payments.map((item, index) => (

@@ -4,6 +4,7 @@ import {ProductPrice} from "./product.price";
 import {Brand} from "./brand";
 import {Supplier} from "./supplier";
 import {Store} from "./store";
+import {Department} from "./department";
 
 export type Product = {
   id: number;
@@ -25,4 +26,5 @@ export type Product = {
   brands: Brand[];
   suppliers: Supplier[];
   stores: Store[];
+  department?: Department;
 }

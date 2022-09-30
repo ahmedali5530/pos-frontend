@@ -1,22 +1,19 @@
-import {Keyboard, KeyboardProps} from "./keyboard";
-import {FC} from "react";
+import React, {FC, InputHTMLAttributes, Ref} from "react";
 import {Input} from "./input";
+import {useSelector} from "react-redux";
+import {getTouch} from "../../duck/touch/touch.selector";
+import {ReactKeyboard} from "./react.keyboard";
 
-interface KeyboardInputProps extends KeyboardProps{
-  inputSize?: "lg"
-  selectable?: boolean;
-  innerRef?: any;
-  focus?: boolean;
+interface KeyboardInputProps extends InputHTMLAttributes<HTMLInputElement>{
+  triggerWithIcon?: boolean;
 }
 
-export const KeyboardInput: FC<KeyboardInputProps> = (props) => {
+export const KeyboardInput = React.forwardRef((props: KeyboardInputProps, ref: Ref<HTMLInputElement>)  => {
+  const isTouch = useSelector(getTouch);
 
-  //disable keyboard input for now
-  return <Input {...props} />;
-
-  if(props.hideKeyboard){
-    return <Input {...props} />
+  if(!isTouch){
+    return <Input {...props} ref={ref} />
   }else {
-    return <Keyboard {...props} />
+    return <ReactKeyboard {...props} ref={ref}/>
   }
-};
+});

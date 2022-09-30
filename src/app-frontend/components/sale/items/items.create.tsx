@@ -236,16 +236,20 @@ export const CreateItem = ({
                      "w-full",
                      getErrorClass(errors.barcode)
                    )}
+                   disabled={!!row}
             />
-            <button onClick={() => {
-              reset({
-                ...getValues(),
-                barcode: Math.floor(Math.random() * 10000000000) + 1
-              });
-            }} className="btn btn-primary" type="button"
-                    tabIndex={-1}>
-              <FontAwesomeIcon icon={faRefresh}/>
-            </button>
+            {!row && (
+              <button onClick={() => {
+                reset({
+                  ...getValues(),
+                  barcode: Math.floor(Math.random() * 10000000000) + 1
+                });
+              }} className="btn btn-primary" type="button"
+                      tabIndex={-1}>
+                <FontAwesomeIcon icon={faRefresh}/>
+              </button>
+            )}
+
           </div>
           {errors.barcode && (
             <div className="text-red-500 text-sm">
