@@ -1,5 +1,12 @@
 import {useEffect, useState} from "react";
-import {DEVICE_LIST, DISCOUNT_LIST, PAYMENT_TYPE_LIST, PRODUCT_LIST, TAX_LIST} from "../routing/routes/backend.app";
+import {
+  DEVICE_LIST,
+  DISCOUNT_LIST,
+  PAYMENT_TYPE_LIST,
+  PRODUCT_LIST,
+  SETTING_LIST,
+  TAX_LIST
+} from "../routing/routes/backend.app";
 import localforage from '../../lib/localforage/localforage';
 import {jsonRequest} from "../request/request";
 import {Product} from "../model/product";
@@ -7,6 +14,7 @@ import {Discount} from "../model/discount";
 import {Tax} from "../model/tax";
 import {PaymentType} from "../model/payment.type";
 import {Device} from "../model/device";
+import {Setting} from "../model/setting";
 
 interface ReturnAction{
   load: () => void;
@@ -37,6 +45,11 @@ export interface HomeProps {
     list: Device[];
     count: number;
     total: number;
+  },
+  settingList: {
+    list: Setting[];
+    count: number;
+    total: number;
   }
 }
 
@@ -45,7 +58,8 @@ interface ReturnState{
   discountList: HomeProps['discountList'];
   taxList: HomeProps['taxList'];
   paymentTypesList: HomeProps['paymentTypesList'];
-  deviceList: HomeProps['deviceList']
+  deviceList: HomeProps['deviceList'];
+  settingList: HomeProps['settingList']
 }
 
 export const initialData = {
@@ -60,6 +74,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
   const [taxList, setTaxList] = useState<HomeProps['taxList']>(initialData);
   const [paymentTypesList, setPaymentTypesList] = useState<HomeProps['paymentTypesList']>(initialData);
   const [deviceList, setDeviceList] = useState<HomeProps['deviceList']>(initialData);
+  const [settingList, setSettingList] = useState<HomeProps['settingList']>(initialData);
 
   const loadData = async () => {
     const localList: HomeProps['list'] | null = await localforage.getItem('list');
@@ -137,6 +152,21 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
     } else {
       setDeviceList(localDeviceList);
     }
+
+    const localSettingList: HomeProps['settingList']|null = await localforage.getItem('settingList');
+    if (localSettingList === null) {
+      try {
+        const settingList = await jsonRequest(SETTING_LIST);
+        const json = await settingList.json();
+
+        setSettingList(json);
+        localforage.setItem('settingList', json);
+      }catch (e) {
+        throw e;
+      }
+    } else {
+      setSettingList(localSettingList);
+    }
   };
 
   useEffect(() => {
@@ -145,7 +175,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
 
   return [
     {
-      list, discountList, paymentTypesList, taxList, deviceList
+      list, discountList, paymentTypesList, taxList, deviceList, settingList
     }, {
       load: loadData
     }

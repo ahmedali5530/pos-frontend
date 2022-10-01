@@ -106,8 +106,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
   }, [state.response]);
 
   const onSubmit = async (values: any) => {
-    console.log(values);
-    // toObject(values)
+    console.log(values)
     setSaving(true);
     try{
       if(values.openingBalance !== null){
@@ -117,6 +116,8 @@ export const SaleClosing: FC<TaxProps> = (props) => {
 
           values.closedBy = user?.id;
           values.closingBalance = cashInHand;
+      }else{
+        values.openingBalance = 0;
       }
 
       if(!values.updateOnly){
@@ -205,13 +206,8 @@ export const SaleClosing: FC<TaxProps> = (props) => {
               <tr>
                 <th className="text-right">Opening balance</th>
                 <td>
-                  {/*<Input {...register('openingBalance', {*/}
-                  {/*  valueAsNumber: true*/}
-                  {/*})} type="number" className="w-full" tabIndex={0} selectable={true} />*/}
-
-                  <KeyboardInput {...register('openingBalance', {
-                    valueAsNumber: true
-                  })} className="w-full" type="number" />
+                  <KeyboardInput {...register('openingBalance')}
+                                 className="w-full" type="number" defaultValue={0}/>
                 </td>
               </tr>
               <tr>

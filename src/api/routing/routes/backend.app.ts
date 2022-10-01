@@ -71,12 +71,17 @@ export const USER_LIST = scopeUrl('/admin/user/list');
 export const USER_CREATE = scopeUrl('/admin/user/create');
 export const USER_EDIT = scopeUrl('/admin/user/:id');
 
-export const CLOSING_LIST = scopeUrl('/admin/closing/list');
-export const CLOSING_CREATE = scopeUrl('/admin/closing/create');
 export const CLOSING_EDIT = scopeUrl('/admin/closing/:id');
-export const CLOSING_DELETE = scopeUrl('/admin/closing/:id');
 export const CLOSING_OPENED = scopeUrl('/admin/closing/opened');
 
 export const DEPARTMENT_LIST = scopeUrl('/admin/department/list');
 export const DEPARTMENT_CREATE = scopeUrl('/admin/department/create');
 export const DEPARTMENT_GET = scopeUrl('/admin/department/:id');
+
+export const SETTING_LIST = scopeUrl('/admin/setting/list');
+export const SETTING_GET = scopeUrl('/admin/setting/:id');
+export const SETTING_CREATE = scopeUrl('/admin/setting/create');
+
+export const TERMINAL_LIST = scopeUrl('/admin/terminal/list');
+export const TERMINAL_CREATE = scopeUrl('/admin/terminal/create');
+export const TERMINAL_GET = scopeUrl('/admin/terminal/:id');

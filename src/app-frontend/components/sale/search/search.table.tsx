@@ -106,7 +106,7 @@ export const SearchTable = (props: SearchTableProps) => {
           <div className="basis-auto grow shrink p-2 text-right">
             {getRealProductPrice(item)}
             {item.basePrice !== getRealProductPrice(item) && (
-              <div className="text-red-400">
+              <div className="text-rose-400">
                 <s>{item.basePrice}</s>
               </div>
             )}

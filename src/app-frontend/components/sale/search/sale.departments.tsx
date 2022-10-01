@@ -59,7 +59,7 @@ export const SaleDepartments: FC<SaleDepartmentsProps> = ({
       >
         {children || 'Departments'}
         {Object.values(departments).length > 0 && (
-          <span className="ml-3 bg-purple-500 text-white h-5 w-5 rounded-full text-sm font-bold">{Object.values(departments).length}</span>
+          <span className="shrink-0 ml-1 bg-blue-500 text-white h-5 w-5 rounded-full text-sm font-bold">{Object.values(departments).length}</span>
         )}
       </Button>
       <Modal open={modal} onClose={() => {
@@ -75,7 +75,7 @@ export const SaleDepartments: FC<SaleDepartmentsProps> = ({
               {department.name}
               {!!departments[department.id] && (
                 <span className="absolute top-1 right-1">
-                  <FontAwesomeIcon icon={faCheckCircle} className="text-purple-500" size="lg" />
+                  <FontAwesomeIcon icon={faCheckCircle} className="text-blue-500" size="lg" />
                 </span>
               )}
             </Button>

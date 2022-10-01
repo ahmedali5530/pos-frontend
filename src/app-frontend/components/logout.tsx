@@ -8,9 +8,6 @@ export const Logout: FC = () => {
   const [state, action] = useLogout();
 
   const logoutAction = async () => {
-    await sessionStorage.removeItem('jwt');
-    await sessionStorage.removeItem('refresh_token');
-
     action();
   };
 

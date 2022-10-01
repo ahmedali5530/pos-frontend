@@ -44,34 +44,28 @@ export const OrderTotals :FC<OrderTotalsProps> = ({
       </tr>
       <tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left">
-          Taxes
-          {inSale && (
-            <span className="float-right">
-              <ApplyTax
-                setTax={setTax}
-                tax={tax}
-              />
-            </span>
-          )}
+          {inSale ? (
+            <ApplyTax
+              setTax={setTax}
+              tax={tax}
+            />
+          ) : ('Taxes')}
         </th>
         <td className="border border-gray-300 p-2 text-right">{taxTotal}</td>
       </tr>
       <tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left">
-          Discounts
-          {inSale && (
-            <span className="float-right">
-              <ApplyDiscount
-                added={added}
-                setDiscount={setDiscount}
-                setDiscountAmount={setDiscountAmount}
-                discount={discount}
-                discountAmount={discountAmount}
-                setDiscountRateType={setDiscountRateType}
-                discountRateType={discountRateType}
-              />
-            </span>
-          )}
+          {inSale ? (
+            <ApplyDiscount
+              added={added}
+              setDiscount={setDiscount}
+              setDiscountAmount={setDiscountAmount}
+              discount={discount}
+              discountAmount={discountAmount}
+              setDiscountRateType={setDiscountRateType}
+              discountRateType={discountRateType}
+            />
+          ) : ('Discounts')}
         </th>
         <td className="border border-gray-300 p-2 text-right">{discountTotal.toFixed(2)}</td>
       </tr>

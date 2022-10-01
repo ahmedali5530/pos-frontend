@@ -170,7 +170,7 @@ export const Customers: FC<Props> = ({
               <label htmlFor="name">Name</label>
               <Input {...register('name')} id="name" className="w-full"/>
               {errors.name && (
-                <div className="text-red-500 text-sm">
+                <div className="text-rose-500 text-sm">
                   <Trans>
                     {errors.name.message}
                   </Trans>
@@ -181,7 +181,7 @@ export const Customers: FC<Props> = ({
               <label htmlFor="phone">Phone</label>
               <Input {...register('phone')} id="phone" className="w-full"/>
               {errors.phone && (
-                <div className="text-red-500 text-sm">
+                <div className="text-rose-500 text-sm">
                   <Trans>
                     {errors.phone.message}
                   </Trans>
@@ -192,7 +192,7 @@ export const Customers: FC<Props> = ({
               <label htmlFor="cnic">CNIC Number</label>
               <Input {...register('cnic')} id="cnic" className="w-full"/>
               {errors.cnic && (
-                <div className="text-red-500 text-sm">
+                <div className="text-rose-500 text-sm">
                   <Trans>
                     {errors.cnic.message}
                   </Trans>

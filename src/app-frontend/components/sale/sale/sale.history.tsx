@@ -107,7 +107,7 @@ export const SaleHistory: FC<Props> = ({
         <>
           {!!info.getValue() ? (
             <span
-              className="text-purple-500 cursor-pointer"
+              className="text-blue-500 cursor-pointer"
               title="View this customer"
             >
               <CustomerPayments customer={info.getValue()!}>
@@ -157,7 +157,7 @@ export const SaleHistory: FC<Props> = ({
           <span className={
             classNames(
               getOrderStatusClasses(info.getValue()),
-              'rounded-2xl p-1 px-2 border font-bold text-sm'
+              'inline-flex rounded-3xl px-2 justify-center items-center border font-bold text-sm'
             )
           }>
             <FontAwesomeIcon icon={getOrderStatusIcon(info.getValue())}
@@ -250,7 +250,7 @@ export const SaleHistory: FC<Props> = ({
     let classes = '';
     switch (status) {
       case('Deleted'):
-        classes = 'border-red-500 text-red-500';
+        classes = 'border-rose-500 text-rose-500';
         break;
 
       case('Completed'):
@@ -262,7 +262,7 @@ export const SaleHistory: FC<Props> = ({
         break;
 
       case('Returned'):
-        classes = 'border-red-500 text-red-500';
+        classes = 'border-rose-500 text-rose-500';
         break;
 
       case('On Hold'):
@@ -270,7 +270,7 @@ export const SaleHistory: FC<Props> = ({
         break;
 
       default:
-        classes = 'border-purple-500 text-purple-500';
+        classes = 'border-blue-500 text-blue-500';
         break;
     }
 
@@ -749,11 +749,11 @@ export const SaleHistory: FC<Props> = ({
               </div>
             )}
             <div className="grid grid-cols-5 gap-4 mb-5">
-              <div className="border border-purple-500 p-5 font-bold text-purple-500 rounded">
+              <div className="border border-blue-500 p-5 font-bold text-blue-500 rounded">
                 Total Bills
                 <span className="float-right">{list.length}</span>
               </div>
-              <div className="border border-cyan-500 p-5 font-bold text-cyan-500 rounded">
+              <div className="border border-blue-500 p-5 font-bold text-blue-500 rounded">
                 Total Amount
                 <span className="float-right">{totalAmount.toFixed(2)}</span>
               </div>
@@ -761,7 +761,7 @@ export const SaleHistory: FC<Props> = ({
                 Total Cost
                 <span className="float-right">{totalCost.toFixed(2)}</span>
               </div>
-              <div className="border border-red-500 p-5 font-bold text-red-500 rounded">
+              <div className="border border-rose-500 p-5 font-bold text-rose-500 rounded">
                 Expenses
                 <span className="float-right">{totalExpenses}</span>
               </div>
@@ -769,7 +769,7 @@ export const SaleHistory: FC<Props> = ({
                 classNames(
                   'border',
                   'p-5 font-bold rounded',
-                  totalAmount - totalCost - totalExpenses <= 0 ? 'text-red-500 border-red-500' : 'text-emerald-500 border-emerald-500'
+                  totalAmount - totalCost - totalExpenses <= 0 ? 'text-rose-500 border-rose-500' : 'text-emerald-500 border-emerald-500'
                 )
               }>
                 {totalAmount - totalCost - totalExpenses <= 0 ? 'Loss' : 'Profit'}

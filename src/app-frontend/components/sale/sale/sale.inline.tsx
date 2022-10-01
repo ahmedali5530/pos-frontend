@@ -23,6 +23,8 @@ import Cookies from "js-cookie";
 import {Shortcut} from "../../../../app-common/components/input/shortcut";
 import {ClearSale} from "./clear.sale";
 import ScrollContainer from "react-indiana-drag-scroll";
+import {print, SalePrintMarkup} from "./sale.print";
+import ReactDOM, {createPortal} from "react-dom";
 
 interface Props {
   added: CartItem[];
@@ -159,13 +161,18 @@ export const CloseSaleInline: FC<Props> = ({
         formValues['isSuspended'] = true;
       }
 
-      await jsonRequest(ORDER_CREATE, {
+      const response = await jsonRequest(ORDER_CREATE, {
         method: 'POST',
         body: JSON.stringify(formValues)
       });
 
+      const json = await response.json();
+
       resetFields();
       setPayments([]);
+
+      //print the order
+      print(json.order);
 
     } catch (e) {
       if (e instanceof UnprocessableEntityException) {
@@ -310,7 +317,6 @@ export const CloseSaleInline: FC<Props> = ({
   };
 
   const focusAmountField = () => {
-    console.log('ctrl + enter')
     setFocus('received', {
       shouldSelect: true
     });
@@ -346,7 +352,7 @@ export const CloseSaleInline: FC<Props> = ({
                 <th className={
                   classNames(
                     `border border-gray-300 p-2 text-left text-4xl font-bold`,
-                    changeDue < 0 ? 'text-red-500' : ' text-emerald-500'
+                    changeDue < 0 ? 'text-rose-500' : ' text-emerald-500'
                   )
                 }>
                   Change Due
@@ -354,7 +360,7 @@ export const CloseSaleInline: FC<Props> = ({
                 <td className={
                   classNames(
                     `border border-gray-300 p-2 text-right text-4xl font-bold`,
-                    changeDue < 0 ? 'text-red-500' : ' text-emerald-500'
+                    changeDue < 0 ? 'text-rose-500' : ' text-emerald-500'
                   )
                 }>
                   {changeDue.toFixed(2)}

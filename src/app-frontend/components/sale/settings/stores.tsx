@@ -128,7 +128,7 @@ export const Stores = () => {
             <label htmlFor="name">Name</label>
             <Input {...register('name')} id="name" className="w-full"/>
             {errors.name && (
-              <div className="text-red-500 text-sm">
+              <div className="text-rose-500 text-sm">
                 <Trans>
                   {errors.name.message}
                 </Trans>
@@ -139,7 +139,7 @@ export const Stores = () => {
             <label htmlFor="location">Location</label>
             <Input {...register('location')} id="location" className="w-full"/>
             {errors.location && (
-              <div className="text-red-500 text-sm">
+              <div className="text-rose-500 text-sm">
                 <Trans>
                   {errors.location.message}
                 </Trans>

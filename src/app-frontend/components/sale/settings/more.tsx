@@ -20,6 +20,8 @@ import {DiscountTypes} from "./discount.types";
 import {TaxTypes} from "./tax.types";
 import {shortcutAction} from "../../../../duck/shortcuts/shortcut.action";
 import {touchAction} from "../../../../duck/touch/touch.action";
+import {Terminals} from "./terminals";
+import {Departments} from "./departments";
 
 interface Props{
   setList: (list: HomeProps['list']) => void;
@@ -164,6 +166,8 @@ export const More: FC<Props> = ({
                 <Tab isActive={isTabActive('discounts')} onClick={() => setActiveTab('discounts')}>Discounts</Tab>
                 <Tab isActive={isTabActive('taxes')} onClick={() => setActiveTab('taxes')}>Taxes</Tab>
                 <Tab isActive={isTabActive('stores')} onClick={() => setActiveTab('stores')}>Stores</Tab>
+                <Tab isActive={isTabActive('terminals')} onClick={() => setActiveTab('terminals')}>Terminals</Tab>
+                <Tab isActive={isTabActive('departments')} onClick={() => setActiveTab('departments')}>Departments</Tab>
               </TabNav>
               <TabContent isActive={isTabActive('general')}>
                 <div className="inline-flex flex-col gap-5 justify-start">
@@ -187,7 +191,7 @@ export const More: FC<Props> = ({
                 </div>
               </TabContent>
               <TabContent isActive={isTabActive('profile')}>
-                <div className="border flex justify-center items-center mb-5 border-purple-500 text-purple-500 w-full font-bold p-5">
+                <div className="border flex justify-center items-center mb-5 border-blue-500 text-blue-500 w-full font-bold p-5">
                   Logged in as {user?.displayName}
                 </div>
               </TabContent>
@@ -297,6 +301,12 @@ export const More: FC<Props> = ({
               </TabContent>
               <TabContent isActive={isTabActive('users')}>
                 <Users />
+              </TabContent>
+              <TabContent isActive={isTabActive('terminals')}>
+                <Terminals />
+              </TabContent>
+              <TabContent isActive={isTabActive('departments')}>
+                <Departments />
               </TabContent>
             </>
           )}

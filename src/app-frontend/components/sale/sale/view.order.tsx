@@ -32,7 +32,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
             Discount
             <span className="float-right">-{order.discount ? order.discount.amount : '0'}</span>
           </div>
-          <div className="border border-red-500 p-5 font-bold text-red-500 rounded">
+          <div className="border border-rose-500 p-5 font-bold text-rose-500 rounded">
             Total
             <span className="float-right">
               ={order.payments.reduce((prev, payment) => {return payment.total + prev}, 0)}

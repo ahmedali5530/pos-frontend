@@ -2,7 +2,7 @@ import {Controller, useForm} from "react-hook-form";
 import React, {useEffect, useState} from "react";
 import {
   BRAND_LIST,
-  CATEGORY_LIST,
+  CATEGORY_LIST, DEPARTMENT_LIST,
   PRODUCT_CREATE,
   PRODUCT_GET, STORE_LIST,
   SUPPLIER_LIST
@@ -25,6 +25,7 @@ import {withCurrency} from "../../../../lib/currency/currency";
 import classNames from "classnames";
 import {getErrorClass} from "../../../../lib/error/error";
 import {Store} from "../../../../api/model/store";
+import {Department} from "../../../../api/model/department";
 
 interface ItemsCreateProps{
   setActiveTab: (tab: string) => void;
@@ -61,6 +62,9 @@ export const CreateItem = ({
       }
       if(values.stores){
         values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value);
+      }
+      if(values.department){
+        values.department = values.department.value;
       }
 
       await fetchJson(url, {
@@ -151,11 +155,22 @@ export const CreateItem = ({
     }
   };
 
+  const [department, setDepartment] = useState<Department[]>([]);
+  const loadDepartments = async () => {
+    try{
+      const res = await fetchJson(DEPARTMENT_LIST);
+      setDepartment(res.list);
+    }catch (e){
+      throw e;
+    }
+  };
+
   useEffect(() => {
     loadCategories();
     loadSuppliers();
     loadBrands();
     loadStores();
+    loadDepartments();
   }, []);
 
   useEffect(() => {
@@ -177,7 +192,11 @@ export const CreateItem = ({
         stores: row.stores.map(item => ({
           label: item.name,
           value: item.id
-        }))
+        })),
+        department: {
+          label: row?.department?.name,
+          value: row?.department?.id
+        }
       });
     }
   }, [row, reset]);
@@ -204,7 +223,8 @@ export const CreateItem = ({
       variants: null,
       suppliers: null,
       brands: null,
-      stores: null
+      stores: null,
+      department: null
     });
   };
 
@@ -212,6 +232,34 @@ export const CreateItem = ({
     <form onSubmit={handleSubmit(createProduct)} className="mb-5">
       <input type="hidden" {...register('id')}/>
       <div className="grid grid-cols-4 gap-4 mb-3">
+        <div>
+          <label htmlFor="department">Department</label>
+          <Controller
+            name="department"
+            control={control}
+            render={(props) => (
+              <ReactSelect
+                onChange={props.field.onChange}
+                value={props.field.value}
+                options={department.map(item => {
+                  return {
+                    label: item.name,
+                    value: item.id
+                  }
+                })}
+              />
+            )}
+          />
+
+          {errors.department && (
+            <div className="text-rose-500 text-sm">
+              <Trans>
+                {errors.department.message}
+              </Trans>
+            </div>
+          )}
+        </div>
+        <div className="col-span-4"></div>
         <div>
           <label htmlFor="name">Name</label>
           <Input {...register('name')} id="name"
@@ -221,7 +269,7 @@ export const CreateItem = ({
                  )}
           />
           {errors.name && (
-            <div className="text-red-500 text-sm">
+            <div className="text-rose-500 text-sm">
               <Trans>
                 {errors.name.message}
               </Trans>
@@ -252,7 +300,7 @@ export const CreateItem = ({
 
           </div>
           {errors.barcode && (
-            <div className="text-red-500 text-sm">
+            <div className="text-rose-500 text-sm">
               <Trans>
                 {errors.barcode.message}
               </Trans>
@@ -272,7 +320,7 @@ export const CreateItem = ({
             )}/>
           </div>
           {errors.basePrice && (
-            <div className="text-red-500 text-sm">
+            <div className="text-rose-500 text-sm">
               <Trans>
                 {errors.basePrice.message}
               </Trans>
@@ -286,7 +334,7 @@ export const CreateItem = ({
             getErrorClass(errors.name)
           )}/>
           {errors.saleUnit && (
-            <div className="text-red-500 text-sm">
+            <div className="text-rose-500 text-sm">
               <Trans>
                 {errors.saleUnit.message}
               </Trans>
@@ -306,7 +354,7 @@ export const CreateItem = ({
             )}/>
           </div>
           {errors.cost && (
-            <div className="text-red-500 text-sm">
+            <div className="text-rose-500 text-sm">
               <Trans>
                 {errors.cost.message}
               </Trans>
@@ -320,7 +368,7 @@ export const CreateItem = ({
             getErrorClass(errors.name)
           )}/>
           {errors.purchaseUnit && (
-            <div className="text-red-500 text-sm">
+            <div className="text-rose-500 text-sm">
               <Trans>
                 {errors.purchaseUnit.message}
               </Trans>
@@ -346,7 +394,7 @@ export const CreateItem = ({
             control={control}
           />
           {errors.categories && (
-            <div className="text-red-500 text-sm">
+            <div className="text-rose-500 text-sm">
               <Trans>
                 {errors.categories.message}
               </Trans>
@@ -372,7 +420,7 @@ export const CreateItem = ({
             control={control}
           />
           {errors.suppliers && (
-            <div className="text-red-500 text-sm">
+            <div className="text-rose-500 text-sm">
               <Trans>
                 {errors.suppliers.message}
               </Trans>
@@ -398,7 +446,7 @@ export const CreateItem = ({
             control={control}
           />
           {errors.brands && (
-            <div className="text-red-500 text-sm">
+            <div className="text-rose-500 text-sm">
               <Trans>
                 {errors.brands.message}
               </Trans>
@@ -427,7 +475,7 @@ export const CreateItem = ({
           />
 
           {errors.stores && (
-            <div className="text-red-500 text-sm">
+            <div className="text-rose-500 text-sm">
               <Trans>
                 {errors.stores.message}
               </Trans>

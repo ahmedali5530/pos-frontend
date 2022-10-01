@@ -12,7 +12,7 @@ body{
 }
 
 a{
-  @apply text-purple-900;
+  @apply text-blue-900;
   display: inline-flex;
   justify-content: center;
   align-items: center;
@@ -27,7 +27,7 @@ a{
 
 @keyframes fade-highlight {
   from{
-    @apply bg-purple-500;
+    @apply bg-blue-500;
   }
   to{
     background-color: white;
@@ -166,7 +166,7 @@ a{
 
 .input-addon{
   @apply font-sans inline-flex justify-center items-center leading-5 rounded-lg px-3 py-2 align-middle h-[40px]
-  bg-white border-2 border-purple-500 w-[40px] text-purple-500;
+  bg-white border-2 border-blue-500 w-[40px] text-blue-500;
 }
 .btn{
   @apply font-sans inline-flex justify-center items-center leading-5 rounded-lg px-3 py-2 align-middle h-[40px]
@@ -181,13 +181,13 @@ a{
     @apply cursor-not-allowed;
   }
   &.btn-primary{
-    @apply border-purple-500 text-purple-500 focus:outline-none focus:ring focus:ring-purple-200
-    focus:border-purple-500 active:bg-purple-500 active:text-white hover:bg-purple-100;
+    @apply border-blue-500 text-blue-500 focus:outline-none focus:ring focus:ring-blue-200
+    focus:border-blue-500 active:bg-blue-500 active:text-white hover:bg-blue-100;
     &:disabled{
-      @apply bg-purple-100;
+      @apply bg-blue-100;
     }
     &.active{
-      @apply bg-purple-500 text-white;
+      @apply bg-blue-500 text-white;
     }
   }
   &.btn-danger{
@@ -233,7 +233,7 @@ a{
 }
 .form-control, .input{
   @apply font-sans block text-sm leading-5 py-2 px-3 border-2 focus:outline-none focus:ring rounded-lg text-gray-500
-  border-purple-500 focus:ring-purple-200 focus:border-purple-500 disabled:bg-purple-100 read-only:bg-purple-100 focus:shadow-none;
+  border-blue-500 focus:ring-blue-200 focus:border-blue-500 disabled:bg-blue-100 read-only:bg-blue-100 focus:shadow-none;
   &.lg{
     @apply min-h-[48px];
   }
@@ -390,7 +390,7 @@ a{
   height: 48px;
 
   &:active{
-    @apply bg-purple-500;
+    @apply bg-blue-500;
     color: white;
   }
   &:focus, &:active{
@@ -516,7 +516,7 @@ a{
     @apply border-amber-500 bg-amber-100 text-amber-500;
   }
   &.alert-primary{
-    @apply border-purple-500 bg-purple-100 text-purple-500;
+    @apply border-blue-500 bg-blue-100 text-blue-500;
   }
 }
 
@@ -586,10 +586,10 @@ a{
 
     }
     &:checked::before{
-      @apply bg-purple-500 mr-1 ml-0;
+      @apply bg-blue-500 mr-1 ml-0;
     }
     &:checked{
-      @apply border-purple-500 justify-end;
+      @apply border-blue-500 justify-end;
     }
   }
 }

@@ -33,6 +33,7 @@
     "@types/react-window": "^1.8.5",
     "@types/redux-actions": "^2.6.2",
     "classnames": "^2.3.1",
+    "html-to-image": "^1.10.8",
     "i18next": "^21.8.16",
     "js-cookie": "^3.0.1",
     "localforage": "^1.10.0",

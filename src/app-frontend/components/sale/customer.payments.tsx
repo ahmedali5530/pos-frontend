@@ -121,7 +121,7 @@ export const CustomerPayments: FC<Props> = ({
               <label htmlFor="amount">Amount</label>
               <Input {...register('amount')} id="amount" className="w-full"/>
               {errors.amount && (
-                <div className="text-red-500 text-sm">
+                <div className="text-rose-500 text-sm">
                   <Trans>
                     {errors.amount.message}
                   </Trans>
@@ -132,7 +132,7 @@ export const CustomerPayments: FC<Props> = ({
               <label htmlFor="description">Description</label>
               <Input {...register('description')} id="description" className="w-full"/>
               {errors.description && (
-                <div className="text-red-500 text-sm">
+                <div className="text-rose-500 text-sm">
                   <Trans>
                     {errors.description.message}
                   </Trans>
@@ -159,7 +159,7 @@ export const CustomerPayments: FC<Props> = ({
                 )}
               />
               {errors.orderId && (
-                <div className="text-red-500 text-sm">
+                <div className="text-rose-500 text-sm">
                   <Trans>
                     {errors.orderId.message}
                   </Trans>
@@ -175,18 +175,18 @@ export const CustomerPayments: FC<Props> = ({
         </form>
 
         <div className="grid grid-cols-3 gap-4 mb-5">
-          <div className="border border-purple-500 p-5 font-bold text-purple-500 rounded">
+          <div className="border border-blue-500 p-5 font-bold text-blue-500 rounded">
             Total Sale
             <span className="float-right">{withCurrency(customer.sale)}</span>
           </div>
-          <div className="border border-green-500 p-5 font-bold text-green-500 rounded">
+          <div className="border border-emerald-500 p-5 font-bold text-emerald-500 rounded">
             Total Payments
             <span className="float-right">{withCurrency(customer.paid)}</span>
           </div>
           <div className={
             classNames(
               "border p-5 font-bold rounded",
-              diff > 0 ? 'border-red-500 text-red-500' : 'border-green-500 text-green-500'
+              diff > 0 ? 'border-rose-500 text-rose-500' : 'border-emerald-500 text-emerald-500'
             )
           }>
             Outstanding

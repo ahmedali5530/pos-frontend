@@ -32,6 +32,10 @@ export const Items = ({
   const columnHelper = createColumnHelper<Product>();
 
   const columns: any[] = [
+    columnHelper.accessor('department', {
+      header: () => t('Department'),
+      cell: info => info.getValue()?.name
+    }),
     columnHelper.accessor('name', {
       header: () => t('Name'),
     }),
@@ -104,7 +108,7 @@ export const Items = ({
             handler: () => {}
           }
         ]}
-        loaderLineItems={9}
+        loaderLineItems={10}
       />
     </>
   );

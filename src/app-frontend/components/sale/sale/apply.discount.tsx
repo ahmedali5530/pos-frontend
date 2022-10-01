@@ -135,7 +135,7 @@ export const ApplyDiscount: FC<Props> = ({
                           className="input w-full"
                         />
                         {errors.discountAmount && (
-                          <span className="text-red-500 text-sm">
+                          <span className="text-rose-500 text-sm">
                             <Trans>
                               {errors.discountAmount.message}
                             </Trans>

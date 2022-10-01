@@ -1,50 +1,39 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState} from 'react';
 import {useLoadList} from "../../../../api/hooks/use.load.list";
-import {USER_LIST, USER_CREATE, USER_EDIT, STORE_LIST,} from "../../../../api/routing/routes/backend.app";
+import {STORE_LIST, TERMINAL_CREATE, TERMINAL_GET, TERMINAL_LIST} from "../../../../api/routing/routes/backend.app";
 import {Trans, useTranslation} from "react-i18next";
 import {createColumnHelper} from "@tanstack/react-table";
 import {Button} from "../../button";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPencilAlt, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {Controller, useForm} from "react-hook-form";
-import {fetchJson, jsonRequest} from "../../../../api/request/request";
+import {useAlert} from "react-alert";
+import {fetchJson} from "../../../../api/request/request";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
 import {Input} from "../../input";
 import {TableComponent} from "../../../../app-common/components/table/table";
-import {useAlert} from "react-alert";
-import {User} from "../../../../api/model/user";
+import { Terminal } from '../../../../api/model/terminal';
+import {Store} from "../../../../api/model/store";
 import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
-import {ReactSelectOptionProps} from "../../../../api/model/common";
-import { Store } from "../../../../api/model/store";
 
-export const Users = () => {
+export const Terminals = () => {
   const [operation, setOperation] = useState('create');
 
-  const useLoadHook = useLoadList<User>(USER_LIST);
+  const useLoadHook = useLoadList<Terminal>(TERMINAL_LIST);
   const [state, action] = useLoadHook;
 
   const {t} = useTranslation();
 
-  const columnHelper = createColumnHelper<User>();
+  const columnHelper = createColumnHelper<Terminal>();
 
   const columns = [
-    columnHelper.accessor('displayName', {
-      header: () => t('Name'),
+    columnHelper.accessor('code', {
+      header: () => t('Code'),
     }),
-    columnHelper.accessor('username', {
-      header: () => t('Username'),
-    }),
-    columnHelper.accessor('email', {
-      header: () => t('Email'),
-    }),
-    columnHelper.accessor('roles', {
-      header: () => t('Roles'),
-      cell: info => info.getValue().join(', ')
-    }),
-    columnHelper.accessor('stores', {
-      header: () => t('Stores'),
-      cell: info => info.getValue().map(item => item.name).join(', ')
+    columnHelper.accessor('store', {
+      header: () => t('Store'),
+      cell: info => info.getValue()?.name
     }),
     columnHelper.accessor('id', {
       header: () => t('Actions'),
@@ -53,21 +42,7 @@ export const Users = () => {
         return (
           <>
             <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
-              reset({
-                ...info.row.original,
-                roles: info.row.original.roles.map(item => {
-                  return {
-                    label: item,
-                    value: item
-                  }
-                }),
-                stores: info.row.original.stores.map(item => {
-                  return {
-                    label: item.name,
-                    value: item.id
-                  }
-                })
-              });
+              reset(info.row.original);
               setOperation('update');
             }} tabIndex={-1}>
               <FontAwesomeIcon icon={faPencilAlt}/>
@@ -87,21 +62,18 @@ export const Users = () => {
   const [creating, setCreating] = useState(false);
   const alert = useAlert();
 
-  const createUser = async (values: any) => {
+  const createTerminal = async (values: any) => {
     setCreating(true);
     try {
       let url = '';
       if (values.id) {
-        url = USER_EDIT.replace(':id', values.id);
+        url = TERMINAL_GET.replace(':id', values.id);
       } else {
-        url = USER_CREATE;
+        url = TERMINAL_CREATE;
       }
 
-      if(values.roles){
-        values.roles = values.roles.map((item: ReactSelectOptionProps) => item.value);
-      }
-      if(values.stores){
-        values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value);
+      if(values.store){
+        values.store = values.store.value;
       }
 
       await fetchJson(url, {
@@ -155,105 +127,40 @@ export const Users = () => {
     }
   };
 
-  const resetForm = () => {
-    reset({
-      displayName: null,
-      email: null,
-      username: null,
-      password: null,
-      roles: null,
-      id: null,
-      stores: null
-    });
-  };
-
   useEffect(() => {
     loadStores();
   }, []);
 
+  const resetForm = () => {
+    reset({
+      name: null,
+      code: null,
+      id: null,
+      store: null
+    });
+  };
+
   return (
     <>
-      <h3 className="text-xl">Create User</h3>
-      <form onSubmit={handleSubmit(createUser)} className="mb-5">
+      <h3 className="text-xl">Create Terminal</h3>
+      <form onSubmit={handleSubmit(createTerminal)} className="mb-5">
         <input type="hidden" {...register('id')}/>
-        <div className="grid grid-cols-4 gap-4 mb-3">
+        <div className="grid grid-cols-5 gap-4 mb-3">
           <div>
-            <label htmlFor="displayName">Name</label>
-            <Input {...register('displayName')} id="displayName" className="w-full"/>
-            {errors.displayName && (
+            <label htmlFor="code">Code</label>
+            <Input {...register('code')} id="code" className="w-full"/>
+            {errors.code && (
               <div className="text-rose-500 text-sm">
                 <Trans>
-                  {errors.displayName.message}
+                  {errors.code.message}
                 </Trans>
               </div>
             )}
           </div>
           <div>
-            <label htmlFor="username">Username</label>
-            <Input {...register('username')} id="username" className="w-full"/>
-            {errors.username && (
-              <div className="text-rose-500 text-sm">
-                <Trans>
-                  {errors.username.message}
-                </Trans>
-              </div>
-            )}
-          </div>
-          <div>
-            <label htmlFor="password">Password</label>
-            <Input {...register('password')} type="password" id="password" className="w-full"/>
-            {errors.password && (
-              <div className="text-rose-500 text-sm">
-                <Trans>
-                  {errors.password.message}
-                </Trans>
-              </div>
-            )}
-          </div>
-          <div>
-            <label htmlFor="email">Email</label>
-            <Input {...register('email')} id="email" className="w-full"/>
-            {errors.email && (
-              <div className="text-rose-500 text-sm">
-                <Trans>
-                  {errors.email.message}
-                </Trans>
-              </div>
-            )}
-          </div>
-          <div>
-            <label htmlFor="roles">Roles</label>
+            <label htmlFor="store">Stores</label>
             <Controller
-              name="roles"
-              control={control}
-              render={(props) => (
-                <ReactSelect
-                  onChange={props.field.onChange}
-                  value={props.field.value}
-                  options={[{
-                    label: 'ROLE_USER',
-                    value: 'ROLE_USER'
-                  }, {
-                    label: 'ROLE_ADMIN',
-                    value: 'ROLE_ADMIN'
-                  }]}
-                  isMulti
-                />
-              )}
-            />
-
-            {errors.roles && (
-              <div className="text-rose-500 text-sm">
-                <Trans>
-                  {errors.roles.message}
-                </Trans>
-              </div>
-            )}
-          </div>
-          <div>
-            <label htmlFor="stores">Stores</label>
-            <Controller
-              name="stores"
+              name="store"
               control={control}
               render={(props) => (
                 <ReactSelect
@@ -265,14 +172,14 @@ export const Users = () => {
                       value: item.id
                     }
                   })}
-                  isMulti
                 />
               )}
             />
-            {errors.stores && (
+
+            {errors.store && (
               <div className="text-rose-500 text-sm">
                 <Trans>
-                  {errors.stores.message}
+                  {errors.store.message}
                 </Trans>
               </div>
             )}
@@ -304,4 +211,4 @@ export const Users = () => {
       />
     </>
   );
-};
+}

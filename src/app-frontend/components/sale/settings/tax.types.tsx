@@ -163,7 +163,7 @@ export const TaxTypes = () => {
             <label htmlFor="name">Name</label>
             <Input {...register('name')} id="name" className="w-full"/>
             {errors.name && (
-              <div className="text-red-500 text-sm">
+              <div className="text-rose-500 text-sm">
                 <Trans>
                   {errors.name.message}
                 </Trans>
@@ -174,7 +174,7 @@ export const TaxTypes = () => {
             <label htmlFor="rate">Rate</label>
             <Input {...register('rate')} id="rate" className="w-full"/>
             {errors.rate && (
-              <div className="text-red-500 text-sm">
+              <div className="text-rose-500 text-sm">
                 <Trans>
                   {errors.rate.message}
                 </Trans>
@@ -203,7 +203,7 @@ export const TaxTypes = () => {
               />
 
               {errors.stores && (
-                <div className="text-red-500 text-sm">
+                <div className="text-rose-500 text-sm">
                   <Trans>
                     {errors.stores.message}
                   </Trans>

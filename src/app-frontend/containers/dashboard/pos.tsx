@@ -131,11 +131,13 @@ const Pos: FC = () => {
   const [state, action] = useLoadData();
 
   useEffect(() => {
+
+  }, []);
+
+  useEffect(() => {
     setList(state.list);
-    // setDiscountList(state.discountList);
-    // setTaxList(state.taxList);
     setPaymentTypesList(state.paymentTypesList);
-  }, [state.list, state.discountList, state.taxList, state.paymentTypesList]);
+  }, [state.list, state.paymentTypesList]);
 
   const [q, setQ] = useState<string>('');
   const [added, setAdded] = useState<CartItem[]>([]);
@@ -237,7 +239,7 @@ const Pos: FC = () => {
     if (departmentIds.length > 0) {
       filtered = filtered.filter(item => {
         if(item.department) {
-          return departmentIds.includes(item.department.id);
+          return departmentIds.includes(item.department.id.toString());
         }
 
         return false;
@@ -574,8 +576,8 @@ const Pos: FC = () => {
           <div className="bg-gray-100 h-[250px]">
             <div className="grid gap-4 grid-cols-2 border border-x-0 border-b-0 border-gray-300">
               <div className="col-span-1 p-3 flex flex-wrap flex-col font-bold">
-                <div>Logged in as <span className="text-purple-500">{user?.displayName} ({user?.username})</span></div>
-                <div>Store: <span className="text-purple-500">{Cookies.get('store') ? JSON.parse(Cookies.get('store') as string)?.name : ''}</span></div>
+                <div>Logged in as <span className="text-blue-500">{user?.displayName} ({user?.username})</span></div>
+                <div>Store: <span className="text-blue-500">{Cookies.get('store') ? JSON.parse(Cookies.get('store') as string)?.name : ''}</span></div>
               </div>
               <div className="col-span-1 p-3 flex flex-wrap flex-row justify-between gap-5">
                 <SaleHistory

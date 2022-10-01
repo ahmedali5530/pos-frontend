@@ -271,7 +271,7 @@ export const Keyboard = (props: KeyboardProps) => {
         {props.triggerWithIcon && (
           <Button
             type="button"
-            className="keyboard-input-button absolute right-0 top-[24px] h-[40px] w-[40px] border rounded-lg border-purple-500 bg-transparent"
+            className="keyboard-input-button absolute right-0 top-[24px] h-[40px] w-[40px] border rounded-lg border-blue-500 bg-transparent"
             onClick={() => {
               if(!props.hideKeyboard) {
                 setShow(true)
