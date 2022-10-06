@@ -1,4 +1,5 @@
 import {Store} from "./store";
+import {ReactSelectOptionProps} from "./common";
 
 export interface Terminal {
   id: string;
@@ -8,4 +9,5 @@ export interface Terminal {
   uuid: string;
   createdAt: {datetime: string};
   updatedAt: {datetime: string};
+  products: ReactSelectOptionProps[];
 }

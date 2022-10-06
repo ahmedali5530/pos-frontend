@@ -18,7 +18,7 @@ import {Store} from "../../../../api/model/store";
 import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
 import {useSelector} from "react-redux";
 import { ReactSelect } from "../../../../app-common/components/input/custom.react.select";
-import Cookies from "js-cookie";
+import {getStore} from "../../../../duck/store/store.selector";
 
 export const TaxTypes = () => {
   const [operation, setOperation] = useState('create');
@@ -26,6 +26,7 @@ export const TaxTypes = () => {
   const useLoadHook = useLoadList<Tax>(TAX_LIST);
   const [state, action] = useLoadHook;
   const user = useSelector(getAuthorizedUser);
+  const store = useSelector(getStore);
 
   const {t} = useTranslation();
 
@@ -236,7 +237,7 @@ export const TaxTypes = () => {
         columns={columns}
         useLoadList={useLoadHook}
         params={{
-          store: JSON.parse(Cookies.get('store') as string).id
+          store: store?.id
         }}
         loaderLineItems={4}
       />

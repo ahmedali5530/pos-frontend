@@ -44,18 +44,18 @@ export const OrderTotals :FC<OrderTotalsProps> = ({
       </tr>
       <tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left">
-          {inSale ? (
+          <span className="float-left">
             <ApplyTax
               setTax={setTax}
               tax={tax}
             />
-          ) : ('Taxes')}
+          </span>
         </th>
         <td className="border border-gray-300 p-2 text-right">{taxTotal}</td>
       </tr>
       <tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left">
-          {inSale ? (
+          <span className="float-left">
             <ApplyDiscount
               added={added}
               setDiscount={setDiscount}
@@ -65,7 +65,7 @@ export const OrderTotals :FC<OrderTotalsProps> = ({
               setDiscountRateType={setDiscountRateType}
               discountRateType={discountRateType}
             />
-          ) : ('Discounts')}
+          </span>
         </th>
         <td className="border border-gray-300 p-2 text-right">{discountTotal.toFixed(2)}</td>
       </tr>
@@ -85,9 +85,9 @@ export const OrderTotals :FC<OrderTotalsProps> = ({
         <td className="border border-gray-300 p-2 text-right">{couponTotal}</td>
       </tr>*/}
       <tr className="hover:bg-gray-100">
-        <th className="border border-gray-300 p-2 text-left text-4xl font-bold text-emerald-500">Total</th>
+        <th className="border border-gray-300 p-2 text-left text-4xl font-bold text-teal-500">Total</th>
         <td
-          className="border border-gray-300 p-2 text-right text-4xl font-bold text-emerald-500">{finalTotal.toFixed(2)}</td>
+          className="border border-gray-300 p-2 text-right text-4xl font-bold text-teal-500">{finalTotal.toFixed(2)}</td>
       </tr>
       {children}
       </tbody>

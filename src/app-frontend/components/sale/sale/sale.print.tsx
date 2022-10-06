@@ -38,7 +38,7 @@ export const SalePrint: FC<SalePrintProps> = (props) => {
 
       <Modal open={show} onClose={() => {
         setShow(false)
-      }}>
+      }} title="Duplicate Sale Receipt Print">
         <div className="flex justify-center flex-col items-center">
           <SalePrintMarkup order={props.order} />
 
@@ -303,7 +303,14 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
                   style={{textAlign: "right", display: "none"}}
                   className="GSTClm"
                 />
-                <td style={{textAlign: "left"}}>{item.product.name}</td>
+                <td style={{textAlign: "left"}}>
+                  {item.product.name}
+                  {item.variant && (
+                    <>
+                      <div className="ml-1">- {item.variant.attributeName}: {item.variant.attributeValue}</div>
+                    </>
+                  )}
+                </td>
                 <td style={{textAlign: "right"}}>{item.price}</td>
                 <td style={{textAlign: "right"}}>{item.quantity}</td>
                 <td

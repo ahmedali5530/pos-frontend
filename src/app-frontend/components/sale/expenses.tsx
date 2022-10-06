@@ -1,9 +1,9 @@
 import {Button} from "../button";
-import React, {FC, useEffect, useMemo, useState} from "react";
+import React, {FC, useEffect, useState} from "react";
 import {Input} from "../input";
 import {DateTime} from "luxon";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPlus, faSpinner, faSearch} from "@fortawesome/free-solid-svg-icons";
+import {faPlus, faSearch} from "@fortawesome/free-solid-svg-icons";
 import {Modal} from "../modal";
 import {fetchJson} from "../../../api/request/request";
 import {useForm} from "react-hook-form";
@@ -13,8 +13,9 @@ import {ConstraintViolation} from "../../../lib/validator/validation.result";
 import {Trans} from "react-i18next";
 import {UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
 import {Loader} from "../../../app-common/components/loader/loader";
-import Cookies from "js-cookie";
 import {Shortcut} from "../../../app-common/components/input/shortcut";
+import {useSelector} from "react-redux";
+import {getStore} from "../../../duck/store/store.selector";
 
 interface ExpensesProps{
   onClose?: () => void;
@@ -25,6 +26,8 @@ export const Expenses: FC<ExpensesProps> = (props) => {
   const [isLoading, setLoading] = useState(false);
   const [list, setList] = useState<Expense[]>([]);
   const [filters, setFilters] = useState<any>();
+
+  const store = useSelector(getStore);
 
   const {register, handleSubmit, reset} = useForm();
   const loadExpenses = async (values?: any) => {
@@ -37,7 +40,7 @@ export const Expenses: FC<ExpensesProps> = (props) => {
         ...values,
         orderBy: 'id',
         orderMode: 'DESC',
-        store: Cookies.get('store') ? JSON.parse(Cookies.get('store') as string).id : null
+        store: store?.id
       });
 
       url.search = params.toString();
@@ -78,7 +81,7 @@ export const Expenses: FC<ExpensesProps> = (props) => {
         body: JSON.stringify({
           ...values,
           dateTime: DateTime.now().toISO(),
-          store: Cookies.get('store') ? JSON.parse(Cookies.get('store') as string).id : null
+          store: store?.id
         })
       });
 

@@ -20,10 +20,10 @@ import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {createColumnHelper} from "@tanstack/react-table";
 import {useSelector} from "react-redux";
 import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
-import Cookies from "js-cookie";
 import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
 import {Store} from "../../../../api/model/store";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
+import {getStore} from "../../../../duck/store/store.selector";
 
 export const Departments = () => {
   const [operation, setOperation] = useState('create');
@@ -32,6 +32,7 @@ export const Departments = () => {
   const [state, action] = useLoadHook;
 
   const user = useSelector(getAuthorizedUser);
+  const store = useSelector(getStore);
 
   const {t} = useTranslation();
 
@@ -223,7 +224,7 @@ export const Departments = () => {
         columns={columns}
         useLoadList={useLoadHook}
         params={{
-          store: JSON.parse(Cookies.get('store') as string).id
+          store: store?.id
         }}
         loaderLineItems={3}
       />

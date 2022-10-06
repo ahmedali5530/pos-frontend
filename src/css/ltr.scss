@@ -221,19 +221,22 @@ a{
     }
   }
   &.btn-success{
-    @apply border-emerald-500 text-emerald-500 focus:outline-none focus:ring focus:ring-emerald-200
-    focus:border-emerald-500 active:bg-emerald-500 active:text-white hover:bg-emerald-50;
+    @apply border-teal-500 text-teal-500 focus:outline-none focus:ring focus:ring-teal-200
+    focus:border-teal-500 active:bg-teal-500 active:text-white hover:bg-teal-50;
     &:disabled{
-      @apply bg-emerald-100;
+      @apply bg-teal-100;
     }
     &.active{
-      @apply bg-emerald-500 text-white;
+      @apply bg-teal-500 text-white;
     }
   }
 }
 .form-control, .input{
   @apply font-sans block text-sm leading-5 py-2 px-3 border-2 focus:outline-none focus:ring rounded-lg text-gray-500
   border-blue-500 focus:ring-blue-200 focus:border-blue-500 disabled:bg-blue-100 read-only:bg-blue-100 focus:shadow-none;
+  &:disabled, &:read-only{
+    @apply bg-blue-100;
+  }
   &.lg{
     @apply min-h-[48px];
   }
@@ -256,7 +259,7 @@ a{
     }
   }
   &.success{
-    @apply border-emerald-500 focus:ring-emerald-200 focus:border-emerald-500 disabled:bg-emerald-100 read-only:bg-emerald-100;
+    @apply border-teal-500 focus:ring-teal-200 focus:border-teal-500 disabled:bg-teal-100 read-only:bg-teal-100;
     &.with-feedback {
       background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(16,185,129)" viewBox="0 0 512 512"><path d="M470.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L192 338.7 425.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>');
     }
@@ -350,8 +353,12 @@ a{
     width: 100%;
     border-radius: 0;
   }
-
 }
+
+.modal-header{
+  box-shadow: 0 5px 10px 0 rgb(0 0 0 / 20%);
+}
+
 .login-box{
   backdrop-filter: blur(5px);
   background: rgba(255, 255, 255, 0.1);
@@ -505,18 +512,42 @@ a{
   background-color: rgba(255, 255, 255, 0.6);
 }
 .alert{
-  @apply p-3 border-4 border-t-0 border-b-0 border-r-0 mb-3;
+  @apply p-3 border-4 border-t-0 border-b-0 border-r-0 mb-3 rounded-xl relative;
+  padding-left: 48px;
+
+  &:before{
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    left: 12px;
+  }
+
   &.alert-danger{
     @apply border-rose-500 bg-rose-100 text-rose-500;
+    &:before{
+      background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(244,63,94)" viewBox="0 0 512 512"><path d="M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0S0 114.6 0 256S114.6 512 256 512zm0-384c13.3 0 24 10.7 24 24V264c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24zm32 224c0 17.7-14.3 32-32 32s-32-14.3-32-32s14.3-32 32-32s32 14.3 32 32z"/></svg>');
+    }
   }
   &.alert-success{
-    @apply border-emerald-500 bg-emerald-100 text-emerald-500;
+    @apply border-teal-500 bg-teal-100 text-teal-500;
+    &:before{
+      background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(16,185,129)" viewBox="0 0 512 512"><path d="M470.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L192 338.7 425.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>');
+    }
   }
   &.alert-warning{
     @apply border-amber-500 bg-amber-100 text-amber-500;
+    &:before{
+      background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(245,158,11)" viewBox="0 0 512 512"><path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24V296c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224c0-17.7-14.3-32-32-32s-32 14.3-32 32s14.3 32 32 32s32-14.3 32-32z"/></svg>');
+    }
   }
   &.alert-primary{
     @apply border-blue-500 bg-blue-100 text-blue-500;
+    &:before {
+      background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(59,130,246)" viewBox="0 0 512 512"><path d="M470.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L192 338.7 425.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>');
+    }
   }
 }
 

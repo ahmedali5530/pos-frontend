@@ -23,33 +23,21 @@ interface ReturnAction{
 export interface HomeProps {
   list: {
     list: Product[];
-    count: number;
-    total: number;
   },
   discountList: {
     list: Discount[];
-    count: number;
-    total: number;
   },
   taxList: {
     list: Tax[];
-    count: number;
-    total: number;
   },
   paymentTypesList: {
     list: PaymentType[];
-    count: number;
-    total: number;
   },
   deviceList: {
     list: Device[];
-    count: number;
-    total: number;
   },
   settingList: {
     list: Setting[];
-    count: number;
-    total: number;
   }
 }
 
@@ -63,9 +51,7 @@ interface ReturnState{
 }
 
 export const initialData = {
-  list: [],
-  count: 0,
-  total: 0
+  list: []
 };
 
 export const useLoadData = (): [ReturnState, ReturnAction] => {
@@ -76,22 +62,43 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
   const [deviceList, setDeviceList] = useState<HomeProps['deviceList']>(initialData);
   const [settingList, setSettingList] = useState<HomeProps['settingList']>(initialData);
 
+  const loadProducts = async (offset = 0, limit = 100) => {
+    let total: number;
+
+    const res = await jsonRequest(`${PRODUCT_LIST}?limit=${limit}&offset=${offset}`);
+    const l = await res.json();
+
+    total = l.total;
+
+    offset += l.count;
+
+    setList(prev => {
+      localforage.setItem('list', {
+        list: [...prev.list, ...l.list]
+      });
+
+      return {
+        ...prev,
+        list: [...prev.list, ...l.list]
+      }
+    });
+
+    if(total !== offset) {
+      await loadProducts(offset);
+    }
+  };
+
   const loadData = async () => {
     const localList: HomeProps['list'] | null = await localforage.getItem('list');
     if (localList === null) {
       try {
-        const res = await jsonRequest(PRODUCT_LIST);
-        const json = await res.json();
-        setList(json);
-
-        localforage.setItem('list', json);
+        await loadProducts();
       }catch (e) {
         throw e;
       }
     } else {
       setList(localList);
     }
-
 
     const localDiscountList: HomeProps['discountList'] | null = await localforage.getItem('discountList');
     if (localDiscountList === null) {
@@ -100,7 +107,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
         const discountList = await discount.json();
 
         setDiscountList(discountList);
-        localforage.setItem('discountList', discountList);
+        await localforage.setItem('discountList', discountList);
       }catch(e){
         throw e;
       }
@@ -115,7 +122,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
         const json = await taxList.json();
         setTaxList(json);
 
-        localforage.setItem('taxList', json);
+        await localforage.setItem('taxList', json);
       }catch (e) {
         throw e;
       }
@@ -130,7 +137,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
         const json = await paymentTypesList.json();
 
         setPaymentTypesList(json);
-        localforage.setItem('paymentTypesList', json);
+        await localforage.setItem('paymentTypesList', json);
       }catch (e) {
         throw e;
       }
@@ -145,7 +152,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
         const json = await deviceList.json();
 
         setDeviceList(json);
-        localforage.setItem('deviceList', json);
+        await localforage.setItem('deviceList', json);
       }catch (e) {
         throw e;
       }
@@ -160,7 +167,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
         const json = await settingList.json();
 
         setSettingList(json);
-        localforage.setItem('settingList', json);
+        await localforage.setItem('settingList', json);
       }catch (e) {
         throw e;
       }

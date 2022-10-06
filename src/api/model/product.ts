@@ -5,6 +5,7 @@ import {Brand} from "./brand";
 import {Supplier} from "./supplier";
 import {Store} from "./store";
 import {Department} from "./department";
+import {Terminal} from "./terminal";
 
 export type Product = {
   id: number;
@@ -27,4 +28,5 @@ export type Product = {
   suppliers: Supplier[];
   stores: Store[];
   department?: Department;
+  terminals: Terminal[];
 }

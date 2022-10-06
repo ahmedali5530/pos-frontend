@@ -11,14 +11,13 @@ import {HttpException, UnauthorizedException} from "../../../lib/http/exception/
 import {useNavigate} from "react-router";
 import {FORGOT_PASSWORD, POS} from "../../routes/frontend.routes";
 import {Link} from "react-router-dom";
-import classNames from "classnames";
 import {Modal} from "../../components/modal";
-import {getRealProductPrice} from "../dashboard/pos";
 import {Store} from "../../../api/model/store";
 import {Button} from "../../components/button";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCheckCircle} from "@fortawesome/free-solid-svg-icons";
 import {User} from "../../../api/model/user";
+import {Terminal} from "../../../api/model/terminal";
+import {storeAction} from "../../../duck/store/store.action";
+import {terminalAction} from "../../../duck/terminal/terminal.action";
 
 
 const Login = () => {
@@ -33,6 +32,7 @@ const Login = () => {
   const [modal, setModal] = useState(false);
   const [user, setUser] = useState<User>();
   const [tokens, setTokens] = useState<any>();
+  const [store, setStore] = useState<Store>();
 
   const submitForm = async (values: any) => {
     setLoading(true);
@@ -60,21 +60,16 @@ const Login = () => {
       const infoJson = await info.json();
 
       if(infoJson.user.stores.length === 1) {
-        //save store in cookie
-        Cookies.set('store', JSON.stringify(infoJson.user.stores[0]), {
-          secure: true
-        });
-
-        navigate(POS);
-        dispatch(userAuthenticated(infoJson.user));
-      }else{
-        //ask for the default store
-        setModal(true);
-        setUser(infoJson.user);
-
-        Cookies.remove('JWT');
-        Cookies.remove('refresh_token');
+        setStore(infoJson.user.stores[0]);
       }
+
+      //ask for the default store
+      setModal(true);
+      setUser(infoJson.user);
+
+      Cookies.remove('JWT');
+      Cookies.remove('refresh_token');
+
     } catch (err: any) {
       if (err instanceof HttpException) {
         setErrorMessage(err.message);
@@ -92,10 +87,14 @@ const Login = () => {
     }
   }
 
-  const setStore = (store: Store) => {
-    Cookies.set('store', JSON.stringify(store), {
-      secure: true
-    });
+  const selectTerminal = (terminal: Terminal, store: Store) => {
+    // terminal.products = [];
+    terminal.store = undefined;
+
+    store.terminals = [];
+
+    Cookies.set('store', JSON.stringify(store));
+    Cookies.set('terminal', JSON.stringify(terminal));
 
     Cookies.set('JWT', tokens.token, {
       secure: true
@@ -108,6 +107,8 @@ const Login = () => {
 
     navigate(POS);
     dispatch(userAuthenticated(user));
+    dispatch(storeAction(store));
+    dispatch(terminalAction(terminal));
   }
 
   const {t} = useTranslation();
@@ -172,18 +173,36 @@ const Login = () => {
 
       <Modal open={modal} onClose={() => {
         setModal(false);
-      }} title="Choose a default store" shouldCloseOnEsc={false} shouldCloseOnOverlayClick={false} hideCloseButton={true}>
+      }} title="Choose a store" shouldCloseOnEsc={false} shouldCloseOnOverlayClick={false} hideCloseButton={true}>
         <div className="flex justify-center items-center gap-5">
-          {user?.stores.map((store, index) => (
+          {user?.stores.map((str, index) => (
             <Button variant="primary"
                     key={index}
-                    onClick={() => setStore(store)}
+                    onClick={() => setStore(str)}
                     className="mr-3 mb-3 h-[100px_!important] min-w-[150px] relative"
+                    active={store === str}
             >
-              {store.name}
+              {str.name}
             </Button>
           ))}
         </div>
+
+        {store && (
+          <>
+            <h4 className="text-xl text-center my-3">Choose a Terminal</h4>
+            <div className="flex justify-center items-center gap-5 flex-wrap">
+              {store.terminals.map((terminal, index) => (
+                <Button variant="primary"
+                        key={index}
+                        onClick={() => selectTerminal(terminal, store)}
+                        className="mr-3 mb-3 h-[100px_!important] min-w-[150px] relative"
+                >
+                  {terminal.code}
+                </Button>
+              ))}
+            </div>
+          </>
+        )}
       </Modal>
     </Layout>
   );

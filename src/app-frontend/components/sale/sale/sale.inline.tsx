@@ -19,12 +19,13 @@ import {Input} from "../../input";
 import {useAlert} from "react-alert";
 import {UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ValidationResult} from "../../../../lib/validator/validation.result";
-import Cookies from "js-cookie";
 import {Shortcut} from "../../../../app-common/components/input/shortcut";
 import {ClearSale} from "./clear.sale";
 import ScrollContainer from "react-indiana-drag-scroll";
 import {print, SalePrintMarkup} from "./sale.print";
-import ReactDOM, {createPortal} from "react-dom";
+import {useSelector} from "react-redux";
+import {getStore} from "../../../../duck/store/store.selector";
+import {getTerminal} from "../../../../duck/terminal/terminal.selector";
 
 interface Props {
   added: CartItem[];
@@ -86,6 +87,9 @@ export const CloseSaleInline: FC<Props> = ({
   const [hold, setHold] = useState(false);
   const [quickCashOperation, setQuickCashOperation] = useState<'add' | 'subtract' | 'exact'>('exact');
   const [quickCashItems, setQuickCashItems] = useState<number[]>([5000, 1000, 500, 100, 50, 20, 10, 5, 2, 1]);
+
+  const store = useSelector(getStore);
+  const terminal = useSelector(getTerminal);
 
   const alert = useAlert();
 
@@ -153,8 +157,9 @@ export const CloseSaleInline: FC<Props> = ({
         discountRateType: discountRateType,
         refundingFrom: refundingFrom,
         notes: values.notes,
-        store: Cookies.get('store') ? JSON.parse(Cookies.get('store') as string).id : null,
-        total: finalTotal
+        store: store?.id,
+        total: finalTotal,
+        terminal: terminal?.id
       };
 
       if (hold) {
@@ -200,8 +205,12 @@ export const CloseSaleInline: FC<Props> = ({
 
   const changeDue = useMemo(() => {
     //get a total of payments
-    return payments.reduce((prev, current) => Number(prev) + Number(current.received), 0) - finalTotal;
-  }, [payments, finalTotal]);
+    if(payments.length === 0){
+      return finalTotal - Number(watch('received'));
+    }
+
+    return finalTotal - payments.reduce((prev, current) => Number(prev) + Number(current.received), 0);
+  }, [payments, finalTotal, watch('received')]);
 
   useEffect(() => {
     if (payment === undefined) {
@@ -352,15 +361,15 @@ export const CloseSaleInline: FC<Props> = ({
                 <th className={
                   classNames(
                     `border border-gray-300 p-2 text-left text-4xl font-bold`,
-                    changeDue < 0 ? 'text-rose-500' : ' text-emerald-500'
+                    changeDue < 0 ? 'text-rose-500' : ' text-teal-500'
                   )
                 }>
-                  Change Due
+                  {changeDue < 0 ? 'Receivable' : 'Change Due'}
                 </th>
                 <td className={
                   classNames(
                     `border border-gray-300 p-2 text-right text-4xl font-bold`,
-                    changeDue < 0 ? 'text-rose-500' : ' text-emerald-500'
+                    changeDue < 0 ? 'text-rose-500' : ' text-teal-500'
                   )
                 }>
                   {changeDue.toFixed(2)}

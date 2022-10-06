@@ -10,9 +10,9 @@ import { useTranslation } from "react-i18next";
 import { createColumnHelper} from "@tanstack/react-table";
 import {ImportItems} from "./import.items";
 import {ExportItems} from "./export.items";
-import Cookies from "js-cookie";
 import {useSelector} from "react-redux";
 import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
+import {getStore} from "../../../../duck/store/store.selector";
 
 interface ItemsProps {
   setActiveTab: (tab: string) => void;
@@ -26,6 +26,7 @@ export const Items = ({
   const useLoadHook = useLoadList<Product>(PRODUCT_LIST);
 
   const user = useSelector(getAuthorizedUser);
+  const store = useSelector(getStore);
 
   const {t} = useTranslation();
 
@@ -97,7 +98,7 @@ export const Items = ({
         columns={columns}
         useLoadList={useLoadHook}
         params={{
-          store: JSON.parse(Cookies.get('store') as string).id
+          store: store?.id
         }}
         buttons={[
           {

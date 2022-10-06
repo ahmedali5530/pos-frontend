@@ -4,6 +4,9 @@ import { AuthInfoResponse, getAuthInfo, UserNotAuthorizedException } from '../..
 import { User } from "../../api/model/user";
 import {jsonRequest} from "../../api/request/request";
 import {LOGOUT} from "../../api/routing/routes/backend.app";
+import {storeAction} from "../store/store.action";
+import Cookies from "js-cookie";
+import {terminalAction} from "../terminal/terminal.action";
 
 export async function authLogout(): Promise<void> {
   await jsonRequest(LOGOUT, { method: 'post' });
@@ -26,6 +29,14 @@ export function* authenticateUser() {
 
   yield put(
     userAuthenticated(response.user as User)
+  );
+
+  yield put(
+    storeAction(JSON.parse(Cookies.get('store') as string))
+  );
+
+  yield put(
+    terminalAction(JSON.parse(Cookies.get('terminal') as string))
   );
 }
 

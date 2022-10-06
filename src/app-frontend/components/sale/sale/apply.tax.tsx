@@ -3,7 +3,7 @@ import {Modal} from "../../modal";
 import React, {FC, PropsWithChildren, useEffect, useState} from "react";
 import localforage from "../../../../lib/localforage/localforage";
 import {Tax} from "../../../../api/model/tax";
-import {HomeProps} from "../../../../api/hooks/use.load.data";
+import {HomeProps, useLoadData} from "../../../../api/hooks/use.load.data";
 import {Shortcut} from "../../../../app-common/components/input/shortcut";
 
 interface TaxProps extends PropsWithChildren{
@@ -15,16 +15,17 @@ export const ApplyTax: FC<TaxProps> = ({setTax, tax, children}) => {
   const [modal, setModal] = useState(false);
   const [taxList, setTaxList] = useState<Tax[]>([]);
 
+  const [state, action] = useLoadData();
+
   const loadTaxList = async () => {
-    const list: HomeProps['taxList']|null = await localforage.getItem('taxList');
-    if(list !== null) {
-      setTaxList(list.list);
+    if(state.taxList.list) {
+      setTaxList(state.taxList.list);
     }
   };
 
   useEffect(() => {
     loadTaxList();
-  }, []);
+  }, [state.taxList]);
 
   return (
     <>

@@ -19,7 +19,7 @@ import {ReactSelectOptionProps} from "../../../../api/model/common";
 import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
 import {useSelector} from "react-redux";
 import {Store} from "../../../../api/model/store";
-import Cookies from "js-cookie";
+import {getStore} from "../../../../duck/store/store.selector";
 
 export const DiscountTypes = () => {
   const [operation, setOperation] = useState('create');
@@ -27,6 +27,7 @@ export const DiscountTypes = () => {
   const useLoadHook = useLoadList<Discount>(DISCOUNT_LIST);
   const [state, action] = useLoadHook;
   const user = useSelector(getAuthorizedUser);
+  const store = useSelector(getStore);
 
   const {t} = useTranslation();
 
@@ -47,7 +48,7 @@ export const DiscountTypes = () => {
     })
   ];
 
-  if (user?.roles?.includes('ROLE_ADMIN')){
+  if (user?.roles?.includes('ROLE_ADMIN')) {
     columns.push(columnHelper.accessor('stores', {
       header: () => t('Stores'),
       enableSorting: false,
@@ -105,15 +106,15 @@ export const DiscountTypes = () => {
         url = DISCOUNT_CREATE;
       }
 
-      if(values.stores){
+      if (values.stores) {
         values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value);
       }
 
-      if(values.rateType){
+      if (values.rateType) {
         values.rateType = values.rateType.value;
       }
 
-      if(values.scope){
+      if (values.scope) {
         values.scope = values.scope.value;
       }
 
@@ -171,10 +172,10 @@ export const DiscountTypes = () => {
 
   const [stores, setStores] = useState<Store[]>([]);
   const loadStores = async () => {
-    try{
+    try {
       const res = await fetchJson(STORE_LIST);
       setStores(res.list);
-    }catch (e){
+    } catch (e) {
       throw e;
     }
   };
@@ -322,7 +323,7 @@ export const DiscountTypes = () => {
         columns={columns}
         useLoadList={useLoadHook}
         params={{
-          store: JSON.parse(Cookies.get('store') as string).id
+          store: store?.id
         }}
         loaderLineItems={4}
       />

@@ -1,9 +1,9 @@
 import React, {useEffect, useState} from "react";
 import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {
-  PAYMENT_TYPE_LIST,
   PAYMENT_TYPE_CREATE,
   PAYMENT_TYPE_GET,
+  PAYMENT_TYPE_LIST,
   STORE_LIST,
 } from "../../../../api/routing/routes/backend.app";
 import {Trans, useTranslation} from "react-i18next";
@@ -21,11 +21,11 @@ import {useAlert} from "react-alert";
 import {PaymentType} from "../../../../api/model/payment.type";
 import {Switch} from "../../../../app-common/components/input/switch";
 import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
-import { Store } from "../../../../api/model/store";
+import {Store} from "../../../../api/model/store";
 import {useSelector} from "react-redux";
 import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
-import Cookies from "js-cookie";
+import {getStore} from "../../../../duck/store/store.selector";
 
 export const PaymentTypes = () => {
   const [operation, setOperation] = useState('create');
@@ -33,6 +33,7 @@ export const PaymentTypes = () => {
   const useLoadHook = useLoadList<PaymentType>(PAYMENT_TYPE_LIST);
   const [state, action] = useLoadHook;
   const user = useSelector(getAuthorizedUser);
+  const store = useSelector(getStore);
 
   const {t} = useTranslation();
 
@@ -51,7 +52,7 @@ export const PaymentTypes = () => {
     })
   ];
 
-  if (user?.roles?.includes('ROLE_ADMIN')){
+  if (user?.roles?.includes('ROLE_ADMIN')) {
     columns.push(columnHelper.accessor('stores', {
       header: () => t('Stores'),
       enableSorting: false,
@@ -105,11 +106,11 @@ export const PaymentTypes = () => {
         url = PAYMENT_TYPE_CREATE;
       }
 
-      if(values.type){
+      if (values.type) {
         values.type = values.type.value;
       }
 
-      if(values.stores){
+      if (values.stores) {
         values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value);
       }
 
@@ -126,8 +127,8 @@ export const PaymentTypes = () => {
       setOperation('create');
 
     } catch (exception: any) {
-      if(exception instanceof HttpException){
-        if(exception.message){
+      if (exception instanceof HttpException) {
+        if (exception.message) {
           alert.error(exception.message);
         }
       }
@@ -141,7 +142,7 @@ export const PaymentTypes = () => {
           });
         });
 
-        if(e.errorMessage){
+        if (e.errorMessage) {
           alert.error(e.errorMessage);
         }
 
@@ -164,10 +165,10 @@ export const PaymentTypes = () => {
 
   const [stores, setStores] = useState<Store[]>([]);
   const loadStores = async () => {
-    try{
+    try {
       const res = await fetchJson(STORE_LIST);
       setStores(res.list);
-    }catch (e){
+    } catch (e) {
       throw e;
     }
   };
@@ -300,7 +301,7 @@ export const PaymentTypes = () => {
         columns={columns}
         useLoadList={useLoadHook}
         params={{
-          store: JSON.parse(Cookies.get('store') as string).id
+          store: store?.id
         }}
         loaderLineItems={4}
       />

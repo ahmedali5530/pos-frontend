@@ -3,9 +3,11 @@ import Select, {GroupBase, Props} from "react-select";
 
 const primaryColor = 'rgb(59 130 246 / 1)';
 
-export function ReactSelect<Option,
+export function ReactSelect<
+  Option,
   IsMulti extends boolean = false,
-  Group extends GroupBase<Option> = GroupBase<Option>>(props: Props<Option, IsMulti, Group>) {
+  Group extends GroupBase<Option> = GroupBase<Option>,
+  >(props: Props<Option, IsMulti, Group>) {
   return (
     <Select
       {...props}

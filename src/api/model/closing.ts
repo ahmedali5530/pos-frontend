@@ -1,5 +1,6 @@
 import {User} from "./user";
 import {Store} from "./store";
+import {Terminal} from "./terminal";
 
 export interface Closing{
   id: string;
@@ -16,4 +17,5 @@ export interface Closing{
   store: Store;
   denominations?: any;
   createdAt: {datetime: string};
+  terminal: Terminal;
 }

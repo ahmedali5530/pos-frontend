@@ -1,4 +1,4 @@
-import React, {createRef, FC, useEffect, useLayoutEffect, useMemo, useState} from "react";
+import React, {createRef, FC, useEffect, useMemo, useState} from "react";
 import classNames from "classnames";
 import {DateTime} from "luxon";
 import {FixedSizeList} from "react-window";
@@ -14,32 +14,25 @@ import {Input} from "../../components/input";
 import {SearchTable} from "../../components/sale/search/search.table";
 import {CartContainer} from "../../components/sale/cart/cart.container";
 import {Modal} from "../../components/modal";
-import {CloseSale} from "../../components/sale/sale/sale";
-import {ClearSale} from "../../components/sale/sale/clear.sale";
 import {SaleHistory} from "../../components/sale/sale/sale.history";
 import {Customers} from "../../components/sale/customers";
 import {Logout} from "../../components/logout";
 import {Expenses} from "../../components/sale/expenses";
 import {ItemsTabs} from "../../components/sale/items/items.tabs";
 import {More} from "../../components/sale/settings/more";
-import {OrderTotals} from "../../components/sale/cart/order.totals";
 import {HomeProps, initialData, useLoadData} from "../../../api/hooks/use.load.data";
 import {SaleBrands} from "../../components/sale/search/sale.brands";
 import {Brand} from "../../../api/model/brand";
 import {Category} from "../../../api/model/category";
 import {SaleCategories} from "../../components/sale/search/sale.categories";
-import {Supplier} from "../../../api/model/supplier";
 import {SaleDepartments} from "../../components/sale/search/sale.departments";
 import {useSelector} from "react-redux";
 import {getAuthorizedUser} from "../../../duck/auth/auth.selector";
-import Cookies from "js-cookie";
 import {CloseSaleInline} from "../../components/sale/sale/sale.inline";
-import { Closing } from "../../../api/model/closing";
-import {jsonRequest} from "../../../api/request/request";
-import {CLOSING_OPENED} from "../../../api/routing/routes/backend.app";
-import {QueryString} from "../../../lib/location/query.string";
 import {SaleClosing} from "../../components/sale/sale/sale.closing";
 import {Department} from "../../../api/model/department";
+import {getStore} from "../../../duck/store/store.selector";
+import {getTerminal} from "../../../duck/terminal/terminal.selector";
 
 const Mousetrap = require('mousetrap');
 
@@ -127,12 +120,10 @@ const Pos: FC = () => {
 
   const [list, setList] = useState<HomeProps['list']>(initialData);
   const [paymentTypesList, setPaymentTypesList] = useState<HomeProps['paymentTypesList']>(initialData);
+  const store = useSelector(getStore);
+  const terminal = useSelector(getTerminal);
 
   const [state, action] = useLoadData();
-
-  useEffect(() => {
-
-  }, []);
 
   useEffect(() => {
     setList(state.list);
@@ -213,32 +204,71 @@ const Pos: FC = () => {
   const items = useMemo(() => {
     let filtered = list?.list;
 
+    if (!filtered) {
+      return [];
+    }
+
+    // filter products by store
+    if (store) {
+      filtered = filtered?.filter(item => {
+        if (item.stores.length > 0) {
+          const stores = item.stores.map(item => item.id);
+
+          return stores.includes(store?.id);
+        } else {
+          return true;
+        }
+      });
+    }
+
+    //filter products by terminal
+    if (terminal) {
+      filtered = filtered?.filter(item => {
+        if (item.terminals.length > 0) {
+          const terminals = item.terminals.map(item => item.id);
+
+          return terminals.includes(terminal?.id);
+        } else {
+          return true;
+        }
+      });
+    }
+
+
     const brandIds = Object.keys(brands);
     if (brandIds.length > 0) {
       filtered = filtered.filter(item => {
-        const brandsFilter = item.brands.filter(b => {
-          return brandIds.includes(b.id.toString())
-        });
+        if (item.brands.length > 0) {
+          const brandsFilter = item.brands.filter(b => {
+            return brandIds.includes(b.id.toString())
+          });
 
-        return brandsFilter.length > 0;
+          return brandsFilter.length > 0;
+        } else {
+          return true;
+        }
       });
     }
 
     const categoryIds = Object.keys(categories);
     if (categoryIds.length > 0) {
       filtered = filtered.filter(item => {
-        const categoriesFilter = item.categories.filter(c => {
-          return categoryIds.includes(c.id.toString())
-        });
+        if (item.categories.length > 0) {
+          const categoriesFilter = item.categories.filter(c => {
+            return categoryIds.includes(c.id.toString())
+          });
 
-        return categoriesFilter.length > 0;
+          return categoriesFilter.length > 0;
+        } else {
+          return true;
+        }
       });
     }
 
     const departmentIds = Object.keys(departments);
     if (departmentIds.length > 0) {
       filtered = filtered.filter(item => {
-        if(item.department) {
+        if (item.department) {
           return departmentIds.includes(item.department.id.toString());
         }
 
@@ -255,7 +285,7 @@ const Pos: FC = () => {
     });
 
     return filtered;
-  }, [list?.list, q, brands, categories, departments]);
+  }, [list?.list, q, brands, categories, departments, terminal, store]);
 
   const addItem = (item: Product, quantity: number, price?: number) => {
     let newPrice = 0;
@@ -374,8 +404,6 @@ const Pos: FC = () => {
   };
 
   const deleteItem = (index: number) => {
-    if (!window.confirm('Delete item?')) return false;
-
     const oldItems = [...added];
 
     oldItems.splice(index, 1);
@@ -506,7 +534,7 @@ const Pos: FC = () => {
         moveVariantsCursor(e);
       } else {
         //skip if some other modal is open
-        if(!document.body.classList.contains('ReactModal__Body--open')) {
+        if (!document.body.classList.contains('ReactModal__Body--open')) {
           //move cursor in items
           moveCursor(e);
         }
@@ -575,9 +603,10 @@ const Pos: FC = () => {
           </div>
           <div className="bg-gray-100 h-[250px]">
             <div className="grid gap-4 grid-cols-2 border border-x-0 border-b-0 border-gray-300">
-              <div className="col-span-1 p-3 flex flex-wrap flex-col font-bold">
-                <div>Logged in as <span className="text-blue-500">{user?.displayName} ({user?.username})</span></div>
-                <div>Store: <span className="text-blue-500">{Cookies.get('store') ? JSON.parse(Cookies.get('store') as string)?.name : ''}</span></div>
+              <div className="col-span-1 grid grid-cols-2 font-bold gap-0 auto-rows-min">
+                <span>User</span><span className="text-blue-500">{user?.displayName}</span>
+                <span>Store</span><span className="text-blue-500">{store?.name}</span>
+                <span>Terminal</span><span className="text-blue-500">{terminal?.code}</span>
               </div>
               <div className="col-span-1 p-3 flex flex-wrap flex-row justify-between gap-5">
                 <SaleHistory
@@ -593,12 +622,10 @@ const Pos: FC = () => {
                 <Expenses/>
                 <ItemsTabs/>
                 <More
-                  setList={setList}
-                  setPaymentTypesList={setPaymentTypesList}
                   setTax={setTax}
                   setDiscount={setDiscount}
                 />
-                <SaleClosing />
+                <SaleClosing/>
                 <Logout/>
               </div>
               <div className="col-span-1 p-3 flex flex-wrap gap-5">
@@ -687,10 +714,10 @@ const Pos: FC = () => {
           <div className="table w-full">
             <div className="table-header-group">
               <div className="table-row">
-                <div className="table-cell p-2 text-left font-bold">Item</div>
-                <div className="table-cell p-2 text-left font-bold">Attribute</div>
-                <div className="table-cell p-2 text-left font-bold">Value</div>
-                <div className="table-cell p-2 text-right font-bold">Rate</div>
+                <div className="table-cell p-5 text-left font-bold">Item</div>
+                <div className="table-cell p-5 text-left font-bold">Attribute</div>
+                <div className="table-cell p-5 text-left font-bold">Value</div>
+                <div className="table-cell p-5 text-right font-bold">Rate</div>
               </div>
             </div>
             <div className="table-row-group">
@@ -701,7 +728,7 @@ const Pos: FC = () => {
                     selectedVariant === index ? 'bg-gray-300' : ''
                   )
                 } onClick={() => addItemVariant(latest!, item, quantity)} key={index}>
-                  <div className="table-cell p-2">
+                  <div className="table-cell p-5">
                     {item.name}
                     {item.barcode && (
                       <div className="text-gray-400">{item.barcode}</div>

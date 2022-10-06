@@ -38,7 +38,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
               ={order.payments.reduce((prev, payment) => {return payment.total + prev}, 0)}
             </span>
           </div>
-          <div className="border border-emerald-500 p-5 font-bold text-emerald-500 rounded">
+          <div className="border border-teal-500 p-5 font-bold text-teal-500 rounded">
             Payments breakdown
             <ul className="font-normal">
               {order.payments.map(item => (

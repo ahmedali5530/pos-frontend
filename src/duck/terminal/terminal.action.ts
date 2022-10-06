@@ -1,6 +1,6 @@
 import {createAction} from 'redux-actions';
 
-export const storeAction = createAction(
-  'STORE_ACTION',
+export const terminalAction = createAction(
+  'TERMINAL_ACTION',
   (payload: any) => payload
 );

@@ -12,6 +12,7 @@ export const UPDATE_LOCALE = scopeUrl('/locale');
 export const AUTH_LOGOUT = scopeUrl('/auth/logout');
 
 export const PRODUCT_LIST = scopeUrl('/admin/product/list');
+export const PRODUCT_KEYWORDS = scopeUrl('/admin/product/keywords');
 export const PRODUCT_CREATE = scopeUrl('/admin/product/create');
 export const PRODUCT_GET = scopeUrl('/admin/product/:id');
 export const PRODUCT_UPLOAD = scopeUrl('/admin/product/import');

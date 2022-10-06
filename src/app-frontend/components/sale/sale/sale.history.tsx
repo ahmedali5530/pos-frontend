@@ -53,9 +53,10 @@ import {
   useReactTable
 } from "@tanstack/react-table";
 import _ from "lodash";
-import Cookies from "js-cookie";
 import {Shortcut} from "../../../../app-common/components/input/shortcut";
 import {SalePrint} from "./sale.print";
+import {useSelector} from "react-redux";
+import {getStore} from "../../../../duck/store/store.selector";
 
 interface Props {
   setAdded: (item: CartItem[]) => void;
@@ -83,6 +84,7 @@ export const SaleHistory: FC<Props> = ({
 
   const useLoadHook = useLoadList<Order>(ORDER_LIST);
   const [state, action] = useLoadHook;
+  const store = useSelector(getStore);
 
   const {t} = useTranslation();
 
@@ -229,7 +231,7 @@ export const SaleHistory: FC<Props> = ({
         ...values,
         orderBy: 'id',
         orderMode: 'DESC',
-        store: Cookies.get('store') ? JSON.parse(Cookies.get('store') as string).id : null
+        store: store?.id
       });
 
       url.search = params.toString();
@@ -254,11 +256,11 @@ export const SaleHistory: FC<Props> = ({
         break;
 
       case('Completed'):
-        classes = 'border-emerald-500 text-emerald-500';
+        classes = 'border-teal-500 text-teal-500';
         break;
 
       case('Dispatched'):
-        classes = 'border-emerald-500 text-emerald-500';
+        classes = 'border-teal-500 text-teal-500';
         break;
 
       case('Returned'):
@@ -551,7 +553,7 @@ export const SaleHistory: FC<Props> = ({
       ...params,
       limit: pageSize,
       offset: pageIndex * pageSize,
-      store: Cookies.get('store') ? JSON.parse(Cookies.get('store') as string).id : null
+      store: store?.id
     };
 
     if (sorting.length > 0) {
@@ -769,7 +771,7 @@ export const SaleHistory: FC<Props> = ({
                 classNames(
                   'border',
                   'p-5 font-bold rounded',
-                  totalAmount - totalCost - totalExpenses <= 0 ? 'text-rose-500 border-rose-500' : 'text-emerald-500 border-emerald-500'
+                  totalAmount - totalCost - totalExpenses <= 0 ? 'text-rose-500 border-rose-500' : 'text-teal-500 border-teal-500'
                 )
               }>
                 {totalAmount - totalCost - totalExpenses <= 0 ? 'Loss' : 'Profit'}

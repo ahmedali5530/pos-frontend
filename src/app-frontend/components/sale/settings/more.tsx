@@ -24,24 +24,17 @@ import {Terminals} from "./terminals";
 import {Departments} from "./departments";
 
 interface Props{
-  setList: (list: HomeProps['list']) => void;
-  setPaymentTypesList: (list: HomeProps['paymentTypesList']) => void;
   setTax: (data?: Tax) => void;
   setDiscount: (data?: Discount) => void;
 }
 
 export const More: FC<Props> = ({
-  setList, setPaymentTypesList, setTax, setDiscount
+  setTax, setDiscount
 }) => {
   const [modal, setModal] = useState(false);
   const [state, action] = useLoadData();
 
   const dispatch = useDispatch();
-
-  useEffect(() => {
-    setList(state.list);
-    setPaymentTypesList(state.paymentTypesList);
-  }, [state.list, state.discountList, state.taxList, state.paymentTypesList]);
 
   const [isLoading, setLoading] = useState(false);
 
@@ -161,7 +154,6 @@ export const More: FC<Props> = ({
                 <Tab isActive={isTabActive('general')} onClick={() => setActiveTab('general')}>General</Tab>
                 <Tab isActive={isTabActive('profile')} onClick={() => setActiveTab('profile')}>Profile</Tab>
                 <Tab isActive={isTabActive('users')} onClick={() => setActiveTab('users')}>Users</Tab>
-                <Tab isActive={isTabActive('defaults')} onClick={() => setActiveTab('defaults')}>Default options</Tab>
                 <Tab isActive={isTabActive('payments')} onClick={() => setActiveTab('payments')}>Payment types</Tab>
                 <Tab isActive={isTabActive('discounts')} onClick={() => setActiveTab('discounts')}>Discounts</Tab>
                 <Tab isActive={isTabActive('taxes')} onClick={() => setActiveTab('taxes')}>Taxes</Tab>
@@ -189,14 +181,7 @@ export const More: FC<Props> = ({
                     dispatch(touchAction(value.target.checked));
                   }}>Enable Touch?</Switch>
                 </div>
-              </TabContent>
-              <TabContent isActive={isTabActive('profile')}>
-                <div className="border flex justify-center items-center mb-5 border-blue-500 text-blue-500 w-full font-bold p-5">
-                  Logged in as {user?.displayName}
-                </div>
-              </TabContent>
-              <TabContent isActive={isTabActive('defaults')}>
-                <div className="grid grid-cols-4 gap-5">
+                <div className="grid grid-cols-6 gap-5">
                   <div>
                     <h3 className="text-xl">Set Default tax</h3>
                     <ReactSelect
@@ -285,6 +270,11 @@ export const More: FC<Props> = ({
                       value={defaultDevice}
                     />
                   </div>
+                </div>
+              </TabContent>
+              <TabContent isActive={isTabActive('profile')}>
+                <div className="border flex justify-center items-center mb-5 border-blue-500 text-blue-500 w-full font-bold p-5">
+                  Logged in as {user?.displayName}
                 </div>
               </TabContent>
               <TabContent isActive={isTabActive('payments')}>

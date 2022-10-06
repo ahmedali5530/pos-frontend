@@ -2,7 +2,6 @@ import React, {FC, PropsWithChildren, useEffect, useLayoutEffect, useMemo, useSt
 import {Modal} from "../../modal";
 import {Closing} from "../../../../api/model/closing";
 import {QueryString} from "../../../../lib/location/query.string";
-import Cookies from "js-cookie";
 import {fetchJson, jsonRequest} from "../../../../api/request/request";
 import {CLOSING_EDIT, CLOSING_OPENED, EXPENSE_LIST, ORDER_LIST} from "../../../../api/routing/routes/backend.app";
 import {Button} from "../../button";
@@ -17,6 +16,8 @@ import {useSelector} from "react-redux";
 import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
 import classNames from "classnames";
 import {KeyboardInput} from "../../keyboard.input";
+import {getStore} from "../../../../duck/store/store.selector";
+import {getTerminal} from "../../../../duck/terminal/terminal.selector";
 
 interface TaxProps extends PropsWithChildren {
 
@@ -24,6 +25,8 @@ interface TaxProps extends PropsWithChildren {
 
 export const SaleClosing: FC<TaxProps> = (props) => {
   const [modal, setModal] = useState(false);
+  const store = useSelector(getStore);
+  const terminal = useSelector(getTerminal);
 
   const [payments, setPayments] = useState<{ [key: string]: number }>({});
 
@@ -35,7 +38,8 @@ export const SaleClosing: FC<TaxProps> = (props) => {
   const checkDayOpening = async () => {
     try{
       const queryString = QueryString.stringify({
-        store: JSON.parse(Cookies.get('store') as string).id
+        store: store?.id,
+        terminal: terminal?.id
       })
 
       const res = await jsonRequest(CLOSING_OPENED + '?' + queryString);
@@ -78,7 +82,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
 
       action.loadList({
         dateTimeFrom: closing.dateFrom?.datetime,
-        store: JSON.parse(Cookies.get('store') as string).id
+        store: store?.id
       });
     }
   }, [closing]);
@@ -93,7 +97,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
     }
   }, [modal]);
 
-  const {reset, register, formState: { errors }, handleSubmit, setError, control, watch, getValues} = useForm();
+  const {reset, register, handleSubmit, control, watch, getValues} = useForm();
   const [saving, setSaving] = useState(false);
   const [expenses, setExpenses] = useState(0);
 
@@ -106,7 +110,6 @@ export const SaleClosing: FC<TaxProps> = (props) => {
   }, [state.response]);
 
   const onSubmit = async (values: any) => {
-    console.log(values)
     setSaving(true);
     try{
       if(values.openingBalance !== null){
@@ -125,6 +128,8 @@ export const SaleClosing: FC<TaxProps> = (props) => {
           datetime: DateTime.now().toISO()
         }
       }
+
+      values.terminal = terminal?.id;
 
       const response = await jsonRequest(CLOSING_EDIT.replace(':id', closing?.id as string), {
         method: 'POST',
@@ -151,7 +156,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
         ...values,
         orderBy: 'id',
         orderMode: 'DESC',
-        store: Cookies.get('store') ? JSON.parse(Cookies.get('store') as string).id : null
+        store: store?.id
       });
 
       url.search = params.toString();
@@ -196,8 +201,16 @@ export const SaleClosing: FC<TaxProps> = (props) => {
                 <td>{closing?.store?.name}</td>
               </tr>
               <tr>
-                <th className="text-right">Cashier</th>
+                <th className="text-right">Terminal</th>
+                <td>{closing?.terminal?.code}</td>
+              </tr>
+              <tr>
+                <th className="text-right">Day started by</th>
                 <td>{closing?.openedBy?.displayName}</td>
+              </tr>
+              <tr>
+                <th className="text-right">Day started at</th>
+                <td>{closing?.createdAt?.datetime && DateTime.fromISO(closing?.createdAt?.datetime).toFormat(process.env.REACT_APP_DATE_TIME_FORMAT as string)}</td>
               </tr>
               <tr>
                 <th className="text-right">Previous closing</th>
@@ -222,9 +235,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
                 <>
                   <tr>
                     <th className="text-right">
-                      Expenses <Expenses onClose={() => loadExpenses({
-                      dateTimeFrom: closing?.dateFrom?.datetime
-                    })} />
+                      Expenses
                     </th>
                     <td>
                       <Controller
@@ -255,7 +266,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
                 </>
               )}
               {Object.keys(payments).map(paymentType => (
-                <tr>
+                <tr key={paymentType}>
                   <th className="text-right">{paymentType.toUpperCase()} sale</th>
                   <td>
                     {payments[paymentType]}
@@ -268,7 +279,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
                 <td className={
                   classNames(
                     'text-2xl font-bold',
-                    cashInHand < 0 ? 'text-rose-500' : 'text-emerald-500'
+                    cashInHand < 0 ? 'text-rose-500' : 'text-teal-500'
                   )
                 }>
                   {cashInHand}
@@ -276,7 +287,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
               </tr>
               <tr>
                 <td colSpan={2}>
-                  <div className="alert alert-primary">
+                  <div className="alert alert-warning">
                     Click on Update button if you are only saving the closing.
                   </div>
                   <div className="flex gap-3 items-center justify-center">
@@ -297,6 +308,9 @@ export const SaleClosing: FC<TaxProps> = (props) => {
             </tbody>
           </table>
         </form>
+        <Expenses onClose={() => loadExpenses({
+          dateTimeFrom: closing?.dateFrom?.datetime
+        })} />
       </Modal>
     </>
   );

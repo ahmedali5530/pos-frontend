@@ -5,5 +5,5 @@ export interface StoreState {
 }
 
 export const INITIAL_STATE: StoreState = {
-
+  store: undefined
 };

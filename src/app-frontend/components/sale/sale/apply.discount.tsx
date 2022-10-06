@@ -7,7 +7,7 @@ import {Modal} from "../../modal";
 import {Controller, useForm} from "react-hook-form";
 import localforage from "localforage";
 import {Trans} from "react-i18next";
-import {HomeProps} from "../../../../api/hooks/use.load.data";
+import {HomeProps, useLoadData} from "../../../../api/hooks/use.load.data";
 import {Shortcut} from "../../../../app-common/components/input/shortcut";
 
 
@@ -30,16 +30,17 @@ export const ApplyDiscount: FC<Props> = ({
   const {register, handleSubmit, reset, control, formState: {errors}} = useForm();
   const [discountList, setDiscountList] = useState<Discount[]>([]);
 
+  const [state, action] = useLoadData();
+
   const loadDiscounts = async () => {
-    const list: HomeProps['discountList'] | null = await localforage.getItem('discountList');
-    if (list !== null) {
-      setDiscountList(list.list);
+    if (state.discountList.list) {
+      setDiscountList(state.discountList.list);
     }
   };
 
   useEffect(() => {
     loadDiscounts();
-  }, []);
+  }, [state.discountList]);
 
   const submitForm = (values: any) => {
     setDiscountAmount(Number(values.discountAmount));
