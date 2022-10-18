@@ -1,48 +1,48 @@
-import {Input} from "../../input";
+import {Input} from "../../../input";
 import {Trans, useTranslation} from "react-i18next";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPencilAlt, faTrash} from "@fortawesome/free-solid-svg-icons";
-import {Button} from "../../button";
+import {Button} from "../../../button";
 import React, {useEffect, useState} from "react";
-import {Category} from "../../../../api/model/category";
-import {fetchJson} from "../../../../api/request/request";
-import {CATEGORY_CREATE, CATEGORY_GET, CATEGORY_LIST, STORE_LIST,} from "../../../../api/routing/routes/backend.app";
+import {fetchJson} from "../../../../../api/request/request";
+import {BRAND_CREATE, BRAND_EDIT, BRAND_LIST, STORE_LIST} from "../../../../../api/routing/routes/backend.app";
 import {Controller, useForm} from "react-hook-form";
-import {UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
-import {ConstraintViolation} from "../../../../lib/validator/validation.result";
-import {TableComponent} from "../../../../app-common/components/table/table";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
+import {UnprocessableEntityException} from "../../../../../lib/http/exception/http.exception";
+import {ConstraintViolation} from "../../../../../lib/validator/validation.result";
+import {Brand} from "../../../../../api/model/brand";
+import {useLoadList} from "../../../../../api/hooks/use.load.list";
 import {createColumnHelper} from "@tanstack/react-table";
+import {TableComponent} from "../../../../../app-common/components/table/table";
+import {ReactSelect} from "../../../../../app-common/components/input/custom.react.select";
+import {Store} from "../../../../../api/model/store";
+import {ReactSelectOptionProps} from "../../../../../api/model/common";
 import {useSelector} from "react-redux";
-import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
-import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
-import {Store} from "../../../../api/model/store";
-import {ReactSelectOptionProps} from "../../../../api/model/common";
-import {getStore} from "../../../../duck/store/store.selector";
+import {getAuthorizedUser} from "../../../../../duck/auth/auth.selector";
+import {getStore} from "../../../../../duck/store/store.selector";
 
-export const Categories = () => {
+export const Brands = () => {
   const [operation, setOperation] = useState('create');
 
-  const useLoadHook = useLoadList<Category>(CATEGORY_LIST);
+  const useLoadHook = useLoadList<Brand>(BRAND_LIST);
   const [state, action] = useLoadHook;
-
   const user = useSelector(getAuthorizedUser);
   const store = useSelector(getStore);
 
   const {t} = useTranslation();
 
-  const columnHelper = createColumnHelper<Category>();
+  const columnHelper = createColumnHelper<Brand>();
 
-  const columns: any[] = [
+  const columns: any = [
     columnHelper.accessor('name', {
       header: () => t('Name'),
     })
   ];
 
-  if(user?.roles.includes('ROLE_ADMIN')) {
+  if (user?.roles?.includes('ROLE_ADMIN')){
     columns.push(columnHelper.accessor('stores', {
       header: () => t('Stores'),
-      cell: info => info.getValue().map(item => item.name).join(', ')
+      enableSorting: false,
+      cell: (info) => info.getValue().map(item => item.name).join(', ')
     }));
   }
 
@@ -75,14 +75,14 @@ export const Categories = () => {
   const {register, handleSubmit, setError, formState: {errors}, reset, control} = useForm();
   const [creating, setCreating] = useState(false);
 
-  const createCategory = async (values: any) => {
+  const createBrand = async (values: any) => {
     setCreating(true);
     try {
       let url = '';
       if (values.id) {
-        url = CATEGORY_GET.replace(':id', values.id);
+        url = BRAND_EDIT.replace(':id', values.id);
       } else {
-        url = CATEGORY_CREATE;
+        url = BRAND_CREATE;
       }
 
       if(values.stores){
@@ -139,15 +139,16 @@ export const Categories = () => {
   const resetForm = () => {
     reset({
       id: null,
-      stores: null,
-      name: null
+      name: null,
+      stores: null
     });
   };
 
+
   return (
     <>
-      <h3 className="text-xl">Create Category</h3>
-      <form onSubmit={handleSubmit(createCategory)} className="mb-5">
+      <h3 className="text-xl">Create Brand</h3>
+      <form onSubmit={handleSubmit(createBrand)} className="mb-5">
         <input type="hidden" {...register('id')}/>
         <div className="grid grid-cols-4 gap-4 mb-3">
           <div>
@@ -161,7 +162,6 @@ export const Categories = () => {
               </div>
             )}
           </div>
-
           {user?.roles?.includes('ROLE_ADMIN') && (
             <div>
               <label htmlFor="stores">Stores</label>
@@ -192,7 +192,6 @@ export const Categories = () => {
               )}
             </div>
           )}
-
           <div>
             <label htmlFor="" className="block w-full">&nbsp;</label>
             <Button variant="primary" type="submit" disabled={creating}>
@@ -220,7 +219,7 @@ export const Categories = () => {
         params={{
           store: store?.id
         }}
-        loaderLineItems={3}
+        loaderLineItems={2}
       />
     </>
   );

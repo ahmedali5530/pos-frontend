@@ -58,10 +58,10 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
         <table className="table border border-collapse">
           <thead>
           <tr>
-            <th>Product</th>
-            <th>Quantity</th>
-            <th>Price</th>
-            <th>Total</th>
+            <th className="text-left">Product</th>
+            <th className="text-right">Quantity</th>
+            <th className="text-right">Price</th>
+            <th className="text-right">Total</th>
           </tr>
           </thead>
           <tbody>
@@ -72,22 +72,22 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
                 {item.variant && (
                   <>
                     <br/>
-                    {item.variant?.attributeName}: {item.variant?.attributeValue}
+                    {item.variant?.attributeValue}
                   </>
                 )}
               </td>
-              <td>{item.quantity}</td>
-              <td>{item.price}</td>
-              <td>{item.price * item.quantity}</td>
+              <td className="text-right">{item.quantity}</td>
+              <td className="text-right">{item.price}</td>
+              <td className="text-right">{item.price * item.quantity}</td>
             </tr>
           ))}
           </tbody>
           <tfoot>
             <tr>
-              <th>Total</th>
-              <th>{order.items.reduce((prev, item) => prev + (item.quantity), 0)}</th>
+              <th className="text-left">Total</th>
+              <th className="text-right">{order.items.reduce((prev, item) => prev + (item.quantity), 0)}</th>
               <th></th>
-              <th>{order.items.reduce((prev, item) => prev + (item.quantity * item.price), 0)}</th>
+              <th className="text-right">{order.items.reduce((prev, item) => prev + (item.quantity * item.price), 0)}</th>
             </tr>
           </tfoot>
         </table>

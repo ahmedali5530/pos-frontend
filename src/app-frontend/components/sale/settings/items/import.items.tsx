@@ -1,9 +1,9 @@
 import React, {useState} from "react";
 import {faUpload} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {Button} from "../../button";
-import {request} from "../../../../api/request/request";
-import {PRODUCT_UPLOAD} from "../../../../api/routing/routes/backend.app";
+import {Button} from "../../../button";
+import {request} from "../../../../../api/request/request";
+import {PRODUCT_UPLOAD} from "../../../../../api/routing/routes/backend.app";
 
 export const ImportItems = () => {
   const [loading, setLoading] = useState(false);

@@ -148,7 +148,9 @@ a{
       background: white;
     }
   }
-}
+}.table-background{
+  background-color: #fbfcfc;
+ }
 
 .bg-white-50{
   background: rgba(255,255,255,0.5);
@@ -164,10 +166,6 @@ a{
   z-index: -1;
 }
 
-.input-addon{
-  @apply font-sans inline-flex justify-center items-center leading-5 rounded-lg px-3 py-2 align-middle h-[40px]
-  bg-white border-2 border-blue-500 w-[40px] text-blue-500;
-}
 .btn{
   @apply font-sans inline-flex justify-center items-center leading-5 rounded-lg px-3 py-2 align-middle h-[40px]
   active:shadow-none bg-white border-2 font-medium;
@@ -182,12 +180,12 @@ a{
   }
   &.btn-primary{
     @apply border-blue-500 text-blue-500 focus:outline-none focus:ring focus:ring-blue-200
-    focus:border-blue-500 active:bg-blue-500 active:text-white hover:bg-blue-100;
+    focus:border-blue-500 hover:bg-blue-100;
     &:disabled{
       @apply bg-blue-100;
     }
-    &.active{
-      @apply bg-blue-500 text-white;
+    &.active, &:active{
+      @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white;
     }
   }
   &.btn-danger{
@@ -526,27 +524,33 @@ a{
   }
 
   &.alert-danger{
-    @apply border-rose-500 bg-rose-100 text-rose-500;
+    @apply border-rose-500 bg-rose-50 text-rose-500;
     &:before{
       background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(244,63,94)" viewBox="0 0 512 512"><path d="M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0S0 114.6 0 256S114.6 512 256 512zm0-384c13.3 0 24 10.7 24 24V264c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24zm32 224c0 17.7-14.3 32-32 32s-32-14.3-32-32s14.3-32 32-32s32 14.3 32 32z"/></svg>');
     }
   }
   &.alert-success{
-    @apply border-teal-500 bg-teal-100 text-teal-500;
+    @apply border-teal-500 bg-teal-50 text-teal-500;
     &:before{
       background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(16,185,129)" viewBox="0 0 512 512"><path d="M470.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L192 338.7 425.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>');
     }
   }
   &.alert-warning{
-    @apply border-amber-500 bg-amber-100 text-amber-500;
+    @apply border-amber-500 bg-amber-50 text-amber-500;
     &:before{
       background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(245,158,11)" viewBox="0 0 512 512"><path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24V296c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224c0-17.7-14.3-32-32-32s-32 14.3-32 32s14.3 32 32 32s32-14.3 32-32z"/></svg>');
     }
   }
   &.alert-primary{
-    @apply border-blue-500 bg-blue-100 text-blue-500;
+    @apply border-blue-500 bg-blue-50 text-blue-500;
     &:before {
       background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(59,130,246)" viewBox="0 0 512 512"><path d="M470.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L192 338.7 425.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>');
+    }
+  }
+  &.alert-info{
+    @apply border-sky-500 bg-sky-50 text-sky-500;
+    &:before{
+      background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(14,165,233)"><path d="M18 13v-2h4v2Zm1.2 7L16 17.6l1.2-1.6 3.2 2.4Zm-2-12L16 6.4 19.2 4l1.2 1.6ZM5 19v-4H4q-.825 0-1.412-.588Q2 13.825 2 13v-2q0-.825.588-1.413Q3.175 9 4 9h4l5-3v12l-5-3H7v4Zm9-3.65v-6.7q.675.6 1.088 1.463.412.862.412 1.887t-.412 1.887q-.413.863-1.088 1.463ZM4 11v2h4.55L11 14.45v-4.9L8.55 11Zm3.5 1Z"/></svg>');
     }
   }
 }
@@ -580,9 +584,17 @@ a{
     max-width: 50%;
   }
 }
+.input-addon{
+  @apply font-sans inline-flex justify-center items-center leading-5 rounded-lg px-3 py-2 align-middle h-[40px]
+  bg-white border-2 border-blue-500 min-w-[40px] text-blue-500;
+}
+
 .input-group{
   @apply flex;
   > *{
+    border-radius: 0;
+  }
+  .rs-__control{
     border-radius: 0;
   }
   :nth-child(1){
@@ -639,4 +651,10 @@ a{
   top: -5px;
   font-size: 12px;
   font-weight: bold;
+}
+.text-right{
+  text-align: right !important;
+}
+.text-left{
+  text-align: left !important;
 }

@@ -1,29 +1,29 @@
-import {Input} from "../../input";
+import {Input} from "../../../input";
 import {Trans, useTranslation} from "react-i18next";
-import {Button} from "../../button";
-import React, {useEffect, useState} from "react";
-import {fetchJson} from "../../../../api/request/request";
-import {STORE_LIST, SUPPLIER_CREATE, SUPPLIER_EDIT, SUPPLIER_LIST} from "../../../../api/routing/routes/backend.app";
-import {Controller, useForm} from "react-hook-form";
-import {UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
-import {ConstraintViolation} from "../../../../lib/validator/validation.result";
-import {Supplier} from "../../../../api/model/supplier";
-import {TableComponent} from "../../../../app-common/components/table/table";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
-import {createColumnHelper} from "@tanstack/react-table";
-import {useSelector} from "react-redux";
-import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPencilAlt, faTrash} from "@fortawesome/free-solid-svg-icons";
-import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
-import {Store} from "../../../../api/model/store";
-import {ReactSelectOptionProps} from "../../../../api/model/common";
-import {getStore} from "../../../../duck/store/store.selector";
+import {Button} from "../../../button";
+import React, {useEffect, useState} from "react";
+import {Category} from "../../../../../api/model/category";
+import {fetchJson} from "../../../../../api/request/request";
+import {CATEGORY_CREATE, CATEGORY_GET, CATEGORY_LIST, STORE_LIST,} from "../../../../../api/routing/routes/backend.app";
+import {Controller, useForm} from "react-hook-form";
+import {UnprocessableEntityException} from "../../../../../lib/http/exception/http.exception";
+import {ConstraintViolation} from "../../../../../lib/validator/validation.result";
+import {TableComponent} from "../../../../../app-common/components/table/table";
+import {useLoadList} from "../../../../../api/hooks/use.load.list";
+import {createColumnHelper} from "@tanstack/react-table";
+import {useSelector} from "react-redux";
+import {getAuthorizedUser} from "../../../../../duck/auth/auth.selector";
+import {ReactSelect} from "../../../../../app-common/components/input/custom.react.select";
+import {Store} from "../../../../../api/model/store";
+import {ReactSelectOptionProps} from "../../../../../api/model/common";
+import {getStore} from "../../../../../duck/store/store.selector";
 
-export const Suppliers = () => {
+export const Categories = () => {
   const [operation, setOperation] = useState('create');
 
-  const useLoadHook = useLoadList<Supplier>(SUPPLIER_LIST);
+  const useLoadHook = useLoadList<Category>(CATEGORY_LIST);
   const [state, action] = useLoadHook;
 
   const user = useSelector(getAuthorizedUser);
@@ -31,27 +31,20 @@ export const Suppliers = () => {
 
   const {t} = useTranslation();
 
-  const columnHelper = createColumnHelper<Supplier>();
+  const columnHelper = createColumnHelper<Category>();
 
-  const columns: any = [
+  const columns: any[] = [
     columnHelper.accessor('name', {
       header: () => t('Name'),
-    }),
-    columnHelper.accessor('phone', {
-      header: () => t('Phone'),
-    }),
-    columnHelper.accessor('email', {
-      header: () => t('Email'),
     })
   ];
 
-  if (user?.roles?.includes('ROLE_ADMIN')){
+  // if(user?.roles.includes('ROLE_ADMIN')) {
     columns.push(columnHelper.accessor('stores', {
       header: () => t('Stores'),
-      enableSorting: false,
-      cell: (info) => info.getValue().map(item => item.name).join(', ')
+      cell: info => info.getValue().map(item => item.name).join(', ')
     }));
-  }
+  // }
 
   columns.push(columnHelper.accessor('id', {
     header: () => t('Actions'),
@@ -79,18 +72,17 @@ export const Suppliers = () => {
     }
   }));
 
-
-    const {register, handleSubmit, setError, formState: {errors}, reset, control} = useForm();
+  const {register, handleSubmit, setError, formState: {errors}, reset, control} = useForm();
   const [creating, setCreating] = useState(false);
 
-  const createSupplier = async (values: any) => {
+  const createCategory = async (values: any) => {
     setCreating(true);
     try {
       let url = '';
       if (values.id) {
-        url = SUPPLIER_EDIT.replace(':id', values.id);
+        url = CATEGORY_GET.replace(':id', values.id);
       } else {
-        url = SUPPLIER_CREATE;
+        url = CATEGORY_CREATE;
       }
 
       if(values.stores){
@@ -101,6 +93,8 @@ export const Suppliers = () => {
         method: 'POST',
         body: JSON.stringify({
           ...values,
+          type: 'product',
+          isActive: true
         })
       });
 
@@ -144,21 +138,18 @@ export const Suppliers = () => {
 
   const resetForm = () => {
     reset({
-      email: null,
       id: null,
       stores: null,
-      phone: null,
       name: null
     });
   };
 
-
   return (
     <>
-      <h3 className="text-xl">Create Supplier</h3>
-      <form onSubmit={handleSubmit(createSupplier)} className="mb-5">
+      <h3 className="text-xl">Create Category</h3>
+      <form onSubmit={handleSubmit(createCategory)} className="mb-5">
         <input type="hidden" {...register('id')}/>
-        <div className="grid grid-cols-5 gap-4 mb-3">
+        <div className="grid grid-cols-4 gap-4 mb-3">
           <div>
             <label htmlFor="name">Name</label>
             <Input {...register('name')} id="name" className="w-full"/>
@@ -170,30 +161,8 @@ export const Suppliers = () => {
               </div>
             )}
           </div>
-          <div>
-            <label htmlFor="phone">Phone</label>
-            <Input {...register('phone')} id="phone" className="w-full"/>
-            {errors.phone && (
-              <div className="text-rose-500 text-sm">
-                <Trans>
-                  {errors.phone.message}
-                </Trans>
-              </div>
-            )}
-          </div>
-          <div>
-            <label htmlFor="email">Email</label>
-            <Input {...register('email')} id="email" className="w-full"/>
-            {errors.email && (
-              <div className="text-rose-500 text-sm">
-                <Trans>
-                  {errors.email.message}
-                </Trans>
-              </div>
-            )}
-          </div>
 
-          {user?.roles?.includes('ROLE_ADMIN') && (
+          {/*{user?.roles?.includes('ROLE_ADMIN') && (*/}
             <div>
               <label htmlFor="stores">Stores</label>
               <Controller
@@ -222,7 +191,7 @@ export const Suppliers = () => {
                 </div>
               )}
             </div>
-          )}
+          {/*)}*/}
 
           <div>
             <label htmlFor="" className="block w-full">&nbsp;</label>
@@ -251,7 +220,7 @@ export const Suppliers = () => {
         params={{
           store: store?.id
         }}
-        loaderLineItems={4}
+        loaderLineItems={3}
       />
     </>
   );

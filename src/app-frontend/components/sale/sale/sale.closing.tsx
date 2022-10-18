@@ -72,8 +72,8 @@ export const SaleClosing: FC<TaxProps> = (props) => {
 
       if(closing.openingBalance !== null && DateTime.now().diff(DateTime.fromISO(closing.createdAt.datetime), 'hours').hours > 24){
         setModal(true);
-        // setHideCloseButton(true);
-        setTitle('Close previous day');
+        setHideCloseButton(true);
+        setTitle('Close previous day first');
       }
 
       loadExpenses({
@@ -308,9 +308,11 @@ export const SaleClosing: FC<TaxProps> = (props) => {
             </tbody>
           </table>
         </form>
-        <Expenses onClose={() => loadExpenses({
-          dateTimeFrom: closing?.dateFrom?.datetime
-        })} />
+        <div className="text-center">
+          <Expenses onClose={() => loadExpenses({
+            dateTimeFrom: closing?.dateFrom?.datetime
+          })} />
+        </div>
       </Modal>
     </>
   );

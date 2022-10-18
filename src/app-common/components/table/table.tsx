@@ -154,7 +154,18 @@ export const TableComponent: FC<TableComponentProps> = ({
     <>
       <div className="table-responsive">
         <div className="grid my-5 grid-cols-12 g-0">
-          <div className="col-span-9">
+          {(globalSearch === undefined || globalSearch) && (
+            <div className="col-span-3">
+              <DebouncedInput
+                value={globalFilter ?? ''}
+                onChange={value => setGlobalFilter(String(value))}
+                className="input w-full search-field"
+                placeholder={t('Search in all columns') + '...'}
+                type="search"
+              />
+            </div>
+          )}
+          <div className="col-span-9 flex justify-end">
             <div className="input-group">
               <button className="btn btn-secondary" onClick={() => loadList()}>
                 <FontAwesomeIcon icon={faRefresh} />
@@ -174,18 +185,6 @@ export const TableComponent: FC<TableComponentProps> = ({
               )}
             </div>
           </div>
-
-          {(globalSearch === undefined || globalSearch) && (
-            <div className="col-span-3">
-              <DebouncedInput
-                value={globalFilter ?? ''}
-                onChange={value => setGlobalFilter(String(value))}
-                className="input w-full"
-                placeholder={t('Search in all columns') + '...'}
-                type="search"
-              />
-            </div>
-          )}
         </div>
 
         {(state.isLoading || isLoading) ? (
@@ -193,7 +192,7 @@ export const TableComponent: FC<TableComponentProps> = ({
             <Loader lines={pageSize} lineItems={loaderLineItems || 5}/>
           </div>
         ) : (
-          <table className="table table-hover">
+          <table className="table table-hover table-background">
             <thead>
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={Math.random() + headerGroup.id} id={Math.random() + headerGroup.id}>

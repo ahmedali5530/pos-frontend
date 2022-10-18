@@ -1,18 +1,18 @@
-import {Button} from "../../button";
+import {Button} from "../../../button";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPencilAlt, faTrash} from "@fortawesome/free-solid-svg-icons";
 import React from "react";
-import {Product} from "../../../../api/model/product";
-import {PRODUCT_LIST} from "../../../../api/routing/routes/backend.app";
-import {TableComponent} from "../../../../app-common/components/table/table";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
+import {Product} from "../../../../../api/model/product";
+import {PRODUCT_LIST} from "../../../../../api/routing/routes/backend.app";
+import {TableComponent} from "../../../../../app-common/components/table/table";
+import {useLoadList} from "../../../../../api/hooks/use.load.list";
 import { useTranslation } from "react-i18next";
 import { createColumnHelper} from "@tanstack/react-table";
 import {ImportItems} from "./import.items";
 import {ExportItems} from "./export.items";
 import {useSelector} from "react-redux";
-import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
-import {getStore} from "../../../../duck/store/store.selector";
+import {getAuthorizedUser} from "../../../../../duck/auth/auth.selector";
+import {getStore} from "../../../../../duck/store/store.selector";
 
 interface ItemsProps {
   setActiveTab: (tab: string) => void;
@@ -60,15 +60,23 @@ export const Items = ({
     columnHelper.accessor('brands', {
       header: () => t('Brands'),
       cell: info => info.getValue().map(item => item.name).join(', ')
-    })
+    }),
+    columnHelper.accessor('variants', {
+      header: () => t('Variants'),
+      cell: info => `${info.getValue().length} variants`
+    }),
+    columnHelper.accessor('taxes', {
+      header: () => t('Taxes'),
+      cell: info => info.getValue().map(item => `${item.name} ${item.rate}%`).join(', ')
+    }),
   ];
 
-  if(user?.roles.includes('ROLE_ADMIN')) {
+  // if(user?.roles.includes('ROLE_ADMIN')) {
     columns.push(columnHelper.accessor('stores', {
       header: () => t('Stores'),
       cell: info => info.getValue().map(item => item.name).join(', ')
     }));
-  }
+  // }
 
   columns.push(columnHelper.accessor('id', {
     header: () => t('Actions'),

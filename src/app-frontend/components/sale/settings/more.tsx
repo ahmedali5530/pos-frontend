@@ -22,6 +22,12 @@ import {shortcutAction} from "../../../../duck/shortcuts/shortcut.action";
 import {touchAction} from "../../../../duck/touch/touch.action";
 import {Terminals} from "./terminals";
 import {Departments} from "./departments";
+import {Items} from "./items/items";
+import {CreateItem} from "./items/items.create";
+import {Categories} from "./items/categories";
+import {Suppliers} from "./items/suppliers";
+import {Brands} from "./items/brands";
+import {Product} from "../../../../api/model/product";
 
 interface Props{
   setTax: (data?: Tax) => void;
@@ -33,6 +39,8 @@ export const More: FC<Props> = ({
 }) => {
   const [modal, setModal] = useState(false);
   const [state, action] = useLoadData();
+  const [operation, setOperation] = useState('create');
+  const [row, setRow] = useState<Product>();
 
   const dispatch = useDispatch();
 
@@ -40,14 +48,14 @@ export const More: FC<Props> = ({
 
   const clearCache = async () => {
     setLoading(true);
-    await localforage.setItem('list', null);
-    await localforage.setItem('deviceList', null);
-    await localforage.setItem('discountList', null);
-    await localforage.setItem('taxList', null);
-    await localforage.setItem('paymentTypesList', null);
-    await localforage.setItem('defaultTax', null);
-    await localforage.setItem('defaultDiscount', null);
-    await localforage.setItem('defaultPaymentType', null);
+    await localforage.removeItem('list');
+    await localforage.removeItem('deviceList');
+    await localforage.removeItem('discountList');
+    await localforage.removeItem('taxList');
+    await localforage.removeItem('paymentTypesList');
+    await localforage.removeItem('defaultTax');
+    await localforage.removeItem('defaultDiscount');
+    await localforage.removeItem('defaultPaymentType');
     await action.load();
 
     setLoading(false);
@@ -160,6 +168,15 @@ export const More: FC<Props> = ({
                 <Tab isActive={isTabActive('stores')} onClick={() => setActiveTab('stores')}>Stores</Tab>
                 <Tab isActive={isTabActive('terminals')} onClick={() => setActiveTab('terminals')}>Terminals</Tab>
                 <Tab isActive={isTabActive('departments')} onClick={() => setActiveTab('departments')}>Departments</Tab>
+                <Tab isActive={isTabActive('list')} onClick={() => setActiveTab('list')}>Items list</Tab>
+                <Tab isActive={isTabActive('form')}
+                     onClick={() => setActiveTab('form')}>{operation === 'create' ? 'Create item' : 'Update item'}</Tab>
+                <Tab isActive={isTabActive('categories')} onClick={() => setActiveTab('categories')}>Categories</Tab>
+                <Tab isActive={isTabActive('suppliers')} onClick={() => setActiveTab('suppliers')}>Suppliers</Tab>
+                <Tab isActive={isTabActive('brands')} onClick={() => setActiveTab('brands')}>Brands</Tab>
+                {/*<Tab isActive={isTabActive('purchase')} onClick={() => setActiveTab('purchase')}>Purchase</Tab>
+                <Tab isActive={isTabActive('transfer')} onClick={() => setActiveTab('transfer')}>Transfer Inventory</Tab>
+                <Tab isActive={isTabActive('close_inventory')} onClick={() => setActiveTab('close_inventory')}>Close inventory</Tab>*/}
               </TabNav>
               <TabContent isActive={isTabActive('general')}>
                 <div className="inline-flex flex-col gap-5 justify-start">
@@ -298,6 +315,30 @@ export const More: FC<Props> = ({
               <TabContent isActive={isTabActive('departments')}>
                 <Departments />
               </TabContent>
+              <TabContent isActive={isTabActive('list')}>
+                <Items setActiveTab={setActiveTab} setOperation={setOperation} setRow={setRow}/>
+              </TabContent>
+              <TabContent isActive={isTabActive('form')}>
+                <CreateItem
+                  setActiveTab={setActiveTab}
+                  operation={operation}
+                  setOperation={setOperation}
+                  row={row}
+                  setRow={setRow}
+                />
+              </TabContent>
+              <TabContent isActive={isTabActive('categories')}>
+                <Categories/>
+              </TabContent>
+              <TabContent isActive={isTabActive('suppliers')}>
+                <Suppliers/>
+              </TabContent>
+              <TabContent isActive={isTabActive('brands')}>
+                <Brands/>
+              </TabContent>
+              <TabContent isActive={isTabActive('purchase')}>purchases</TabContent>
+              <TabContent isActive={isTabActive('transfer')}>transfer inventory</TabContent>
+              <TabContent isActive={isTabActive('close_inventory')}>close inventory</TabContent>
             </>
           )}
         />

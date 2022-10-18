@@ -6,6 +6,7 @@ import {Supplier} from "./supplier";
 import {Store} from "./store";
 import {Department} from "./department";
 import {Terminal} from "./terminal";
+import {Tax} from "./tax";
 
 export type Product = {
   id: number;
@@ -29,4 +30,5 @@ export type Product = {
   stores: Store[];
   department?: Department;
   terminals: Terminal[];
+  taxes: Tax[];
 }

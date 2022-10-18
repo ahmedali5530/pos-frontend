@@ -18,7 +18,6 @@ import {SaleHistory} from "../../components/sale/sale/sale.history";
 import {Customers} from "../../components/sale/customers";
 import {Logout} from "../../components/logout";
 import {Expenses} from "../../components/sale/expenses";
-import {ItemsTabs} from "../../components/sale/items/items.tabs";
 import {More} from "../../components/sale/settings/more";
 import {HomeProps, initialData, useLoadData} from "../../../api/hooks/use.load.data";
 import {SaleBrands} from "../../components/sale/search/sale.brands";
@@ -620,7 +619,6 @@ const Pos: FC = () => {
                 />
                 <Customers customer={customer} setCustomer={setCustomer}/>
                 <Expenses/>
-                <ItemsTabs/>
                 <More
                   setTax={setTax}
                   setDiscount={setDiscount}
@@ -715,8 +713,7 @@ const Pos: FC = () => {
             <div className="table-header-group">
               <div className="table-row">
                 <div className="table-cell p-5 text-left font-bold">Item</div>
-                <div className="table-cell p-5 text-left font-bold">Attribute</div>
-                <div className="table-cell p-5 text-left font-bold">Value</div>
+                <div className="table-cell p-5 text-left font-bold">Variant</div>
                 <div className="table-cell p-5 text-right font-bold">Rate</div>
               </div>
             </div>
@@ -734,7 +731,6 @@ const Pos: FC = () => {
                       <div className="text-gray-400">{item.barcode}</div>
                     )}
                   </div>
-                  <div className="table-cell p-5">{item.attributeName}</div>
                   <div className="table-cell p-5">{item.attributeValue}</div>
                   <div className="table-cell p-5 text-right">
                     {item.price === null ? (
