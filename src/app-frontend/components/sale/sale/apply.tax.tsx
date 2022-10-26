@@ -1,17 +1,17 @@
 import {Button} from "../../button";
 import {Modal} from "../../modal";
 import React, {FC, PropsWithChildren, useEffect, useState} from "react";
-import localforage from "../../../../lib/localforage/localforage";
 import {Tax} from "../../../../api/model/tax";
-import {HomeProps, useLoadData} from "../../../../api/hooks/use.load.data";
+import {useLoadData} from "../../../../api/hooks/use.load.data";
 import {Shortcut} from "../../../../app-common/components/input/shortcut";
 
 interface TaxProps extends PropsWithChildren{
   setTax: (tax?: Tax) => void;
   tax?: Tax;
+  buttonVariant?: string;
 }
 
-export const ApplyTax: FC<TaxProps> = ({setTax, tax, children}) => {
+export const ApplyTax: FC<TaxProps> = ({setTax, tax, children, buttonVariant}) => {
   const [modal, setModal] = useState(false);
   const [taxList, setTaxList] = useState<Tax[]>([]);
 
@@ -30,7 +30,7 @@ export const ApplyTax: FC<TaxProps> = ({setTax, tax, children}) => {
   return (
     <>
       <Button
-        className="block w-full" variant="secondary" size="lg"
+        className="block w-full" variant={buttonVariant || "secondary"}
         onClick={() => {
           setModal(true);
         }}

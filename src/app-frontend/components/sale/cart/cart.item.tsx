@@ -21,7 +21,7 @@ interface CartItemProps {
 }
 
 export const CartItem: FunctionComponent<CartItemProps> = ({
-                                                             added, latest, onQuantityChange, onPriceChange, onDiscountChange, deleteItem, subTotal,
+                                                             latest, onQuantityChange, onPriceChange, onDiscountChange, deleteItem, subTotal,
                                                              item, index
                                                            }) => {
   return (
@@ -78,6 +78,9 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
           }}
           selectable={true}
         />
+      </div>
+      <div className="table-cell p-2 text-center">
+        {item.taxes.reduce((prev, tax) => prev + (tax.rate * item.price / 100), 0)}
       </div>
       <div className="table-cell p-2 text-right">
         <Input

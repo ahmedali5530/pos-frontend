@@ -32,6 +32,8 @@ import {SaleClosing} from "../../components/sale/sale/sale.closing";
 import {Department} from "../../../api/model/department";
 import {getStore} from "../../../duck/store/store.selector";
 import {getTerminal} from "../../../duck/terminal/terminal.selector";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faCubesStacked, faFlag, faIcons} from "@fortawesome/free-solid-svg-icons";
 
 const Mousetrap = require('mousetrap');
 
@@ -106,11 +108,23 @@ export const getRealProductPrice = (item: Product) => {
   return price;
 };
 
+export const getExclusiveRowTotal = (item: CartItem) => {
+  let total = item.price * item.quantity;
+  if (item.discount) {
+    total -= item.discount;
+  }
+
+  return total;
+}
+
 export const getRowTotal = (item: CartItem) => {
   let total = item.price * item.quantity;
   if (item.discount) {
     total -= item.discount;
   }
+
+  //add taxes
+  total += item.taxes.reduce((prev, tax) => prev + (tax.rate * (item.price * item.quantity) / 100), 0);
 
   return total;
 };
@@ -151,11 +165,15 @@ const Pos: FC = () => {
     return added.reduce((prev, item) => prev + getRowTotal(item), 0);
   }, [added]);
 
+  const exclusiveSubTotal = useMemo(() => {
+    return added.reduce((prev, item) => prev + getExclusiveRowTotal(item), 0);
+  }, [added])
+
   const taxTotal = useMemo(() => {
     if (!tax) return 0;
 
-    return tax.rate * subTotal / 100;
-  }, [tax, subTotal]);
+    return tax.rate * exclusiveSubTotal / 100;
+  }, [tax, exclusiveSubTotal]);
 
   const discountTotal = useMemo(() => {
     if (discountAmount) {
@@ -321,7 +339,8 @@ const Pos: FC = () => {
         quantity: quantity,
         item: item,
         price: newPrice,
-        discount: 0
+        discount: 0,
+        taxes: item.taxes
       });
     }
 
@@ -346,7 +365,8 @@ const Pos: FC = () => {
         item: item,
         price: variant.price ? variant.price : getRealProductPrice(item),
         variant: variant,
-        discount: 0
+        discount: 0,
+        taxes: item.taxes
       });
     }
 
@@ -529,7 +549,7 @@ const Pos: FC = () => {
     Mousetrap.bind(['up', 'down', 'enter'], function (e: Event) {
       e.preventDefault();
       if (modal) {
-        //move cursor in variant chooser
+        //move cursor in variant chooser modal
         moveVariantsCursor(e);
       } else {
         //skip if some other modal is open
@@ -548,9 +568,15 @@ const Pos: FC = () => {
       <div className="grid gap-4 grid-cols-12 max-h-full" onClick={(event) => setFocus(event, searchField)}>
         <div className="col-span-3 bg-gray-50 p-3">
           <div className="grid grid-cols-3 gap-3 mb-3">
-            <SaleBrands brands={brands} setBrands={setBrands}/>
-            <SaleCategories categories={categories} setCategories={setCategories}/>
-            <SaleDepartments departments={departments} setDepartments={setDepartment}/>
+            <SaleBrands brands={brands} setBrands={setBrands}>
+              <FontAwesomeIcon icon={faFlag} />
+            </SaleBrands>
+            <SaleCategories categories={categories} setCategories={setCategories}>
+              <FontAwesomeIcon icon={faCubesStacked} />
+            </SaleCategories>
+            <SaleDepartments departments={departments} setDepartments={setDepartment}>
+              <FontAwesomeIcon icon={faIcons} />
+            </SaleDepartments>
           </div>
           <div className="mb-1 input-group">
             <SpeechSearch setQ={setQ} setQuantity={setQuantity}/>
@@ -625,53 +651,6 @@ const Pos: FC = () => {
                 />
                 <SaleClosing/>
                 <Logout/>
-              </div>
-              <div className="col-span-1 p-3 flex flex-wrap gap-5">
-                {/*<div className="flex-1">*/}
-                {/*<CloseSale*/}
-                {/*  added={added}*/}
-                {/*  setAdded={setAdded}*/}
-                {/*  finalTotal={finalTotal}*/}
-                {/*  paymentTypesList={paymentTypesList.list}*/}
-                {/*  setDiscount={setDiscount}*/}
-                {/*  setTax={setTax}*/}
-                {/*  setDiscountAmount={setDiscountAmount}*/}
-                {/*  subTotal={subTotal}*/}
-                {/*  taxTotal={taxTotal}*/}
-                {/*  couponTotal={couponTotal}*/}
-                {/*  discountTotal={discountTotal}*/}
-                {/*  discount={discount}*/}
-                {/*  tax={tax}*/}
-                {/*  customer={customer}*/}
-                {/*  setCustomer={setCustomer}*/}
-                {/*  discountAmount={discountAmount}*/}
-                {/*  refundingFrom={refundingFrom}*/}
-                {/*  setRefundingFrom={setRefundingFrom}*/}
-                {/*  setCloseSale={setCloseSale}*/}
-                {/*  closeSale={closeSale}*/}
-                {/*  setDiscountRateType={setDiscountRateType}*/}
-                {/*  discountRateType={discountRateType}*/}
-                {/*/>*/}
-                {/*</div>*/}
-                <div className="flex-1">
-
-                </div>
-              </div>
-              <div className="col-span-1 p-3">
-                {/*<OrderTotals*/}
-                {/*  subTotal={subTotal}*/}
-                {/*  setTax={setTax}*/}
-                {/*  taxTotal={taxTotal}*/}
-                {/*  setDiscount={setDiscount}*/}
-                {/*  setDiscountAmount={setDiscountAmount}*/}
-                {/*  discountTotal={discountTotal}*/}
-                {/*  couponTotal={couponTotal}*/}
-                {/*  finalTotal={finalTotal}*/}
-                {/*  discountAmount={discountAmount}*/}
-                {/*  added={added}*/}
-                {/*  discountRateType={discountRateType}*/}
-                {/*  setDiscountRateType={setDiscountRateType}*/}
-                {/*/>*/}
               </div>
             </div>
           </div>

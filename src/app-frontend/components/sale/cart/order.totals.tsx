@@ -1,4 +1,4 @@
-import React, {FC, PropsWithChildren} from "react";
+import React, {FC, PropsWithChildren, useMemo} from "react";
 import {Tax} from "../../../../api/model/tax";
 import {Discount} from "../../../../api/model/discount";
 import {Customers} from "../customers";
@@ -6,6 +6,9 @@ import {Customer} from "../../../../api/model/customer";
 import {ApplyDiscount} from "../sale/apply.discount";
 import {CartItem} from "../../../../api/model/cart.item";
 import {ApplyTax} from "../sale/apply.tax";
+import {getExclusiveRowTotal} from "../../../containers/dashboard/pos";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faPencil} from "@fortawesome/free-solid-svg-icons";
 
 interface OrderTotalsProps extends PropsWithChildren{
   subTotal: number;
@@ -35,6 +38,10 @@ export const OrderTotals :FC<OrderTotalsProps> = ({
   setCustomer, customer, added, discountAmount,
   discountRateType, setDiscountRateType
 }) => {
+  const exclusiveSubTotal = useMemo(() => {
+    return added.reduce((prev, item) => prev + getExclusiveRowTotal(item), 0);
+  }, [added])
+
   return (
     <table className="border border-collapse w-full">
       <tbody>
@@ -43,29 +50,33 @@ export const OrderTotals :FC<OrderTotalsProps> = ({
         <td className="border border-gray-300 p-2 text-right" style={{width: '35%'}}>{subTotal}</td>
       </tr>
       <tr className="hover:bg-gray-100">
+        <th className="border border-gray-300 p-2 text-left">Taxable amount</th>
+        <td className="border border-gray-300 p-2 text-right" style={{width: '35%'}}>{exclusiveSubTotal}</td>
+      </tr>
+      <tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left">
-          <span className="float-left">
-            <ApplyTax
-              setTax={setTax}
-              tax={tax}
-            />
-          </span>
+          <ApplyTax
+            setTax={setTax}
+            tax={tax}
+          >
+            Taxes <FontAwesomeIcon icon={faPencil} className="ml-3" />
+          </ApplyTax>
         </th>
         <td className="border border-gray-300 p-2 text-right">{taxTotal}</td>
       </tr>
       <tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left">
-          <span className="float-left">
-            <ApplyDiscount
-              added={added}
-              setDiscount={setDiscount}
-              setDiscountAmount={setDiscountAmount}
-              discount={discount}
-              discountAmount={discountAmount}
-              setDiscountRateType={setDiscountRateType}
-              discountRateType={discountRateType}
-            />
-          </span>
+          <ApplyDiscount
+            added={added}
+            setDiscount={setDiscount}
+            setDiscountAmount={setDiscountAmount}
+            discount={discount}
+            discountAmount={discountAmount}
+            setDiscountRateType={setDiscountRateType}
+            discountRateType={discountRateType}
+          >
+            Discount <FontAwesomeIcon icon={faPencil} className="ml-3" />
+          </ApplyDiscount>
         </th>
         <td className="border border-gray-300 p-2 text-right">{discountTotal.toFixed(2)}</td>
       </tr>

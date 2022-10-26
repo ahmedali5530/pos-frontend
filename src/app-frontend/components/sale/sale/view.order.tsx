@@ -1,7 +1,8 @@
-import React, {FunctionComponent, PropsWithChildren, useState} from "react";
+import React, {FunctionComponent, PropsWithChildren, useMemo, useState} from "react";
 import {Order} from "../../../../api/model/order";
 import {Button} from "../../button";
 import {Modal} from "../../modal";
+import {OrderItem} from "../../../../api/model/order.item";
 
 interface ViewOrderProps extends PropsWithChildren{
   order: Order;
@@ -11,6 +12,23 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
   order, children
 }) => {
   const [modal, setModal] = useState(false);
+
+  const itemTax = (item: OrderItem) => {
+    return item.taxes.reduce((prev, tax) => prev + (tax.rate * (item.price * item.quantity) / 100), 0);
+  };
+
+  const itemsTotal = useMemo(() => {
+    return order.items.reduce((prev, item) => (
+      (prev + (item.quantity * item.price)) + item.taxesTotal
+    ), 0);
+  }, [order]);
+
+  const orderTotal = useMemo(() => {
+    return itemsTotal + order.items.reduce((prev, item) => (
+      prev + itemTax(item)
+    ), 0);
+  }, [order, itemsTotal]);
+
   return (
     <>
       <Button type="button" variant="primary" onClick={() => setModal(true)}>
@@ -21,21 +39,21 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
       }} title={`Order# ${order.orderId}`}>
         <div className="grid grid-cols-5 gap-3 mb-5">
           <div className="border border-gray-500 p-5 font-bold text-gray-500 rounded">
-            Items total
-            <span className="float-right">+{order.items.reduce((prev, item) => prev + (item.quantity * item.price), 0)}</span>
+            Items total with tax
+            <span className="float-right">+{itemsTotal}</span>
           </div>
           <div className="border border-gray-500 p-5 font-bold text-gray-500 rounded">
             Tax
-            <span className="float-right">+{order.tax ? order.tax.amount : '0'}</span>
+            <span className="float-right">+{order.tax ? order.tax.amount?.toFixed(2) : '0'}</span>
           </div>
           <div className="border border-gray-500 p-5 font-bold text-gray-500 rounded">
             Discount
-            <span className="float-right">-{order.discount ? order.discount.amount : '0'}</span>
+            <span className="float-right">-{order.discount ? order.discount.amount?.toFixed(2) : '0'}</span>
           </div>
           <div className="border border-rose-500 p-5 font-bold text-rose-500 rounded">
             Total
             <span className="float-right">
-              ={order.payments.reduce((prev, payment) => {return payment.total + prev}, 0)}
+              ={orderTotal}
             </span>
           </div>
           <div className="border border-teal-500 p-5 font-bold text-teal-500 rounded">
@@ -58,8 +76,9 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
         <table className="table border border-collapse">
           <thead>
           <tr>
-            <th className="text-left">Product</th>
+            <th className="text-left">Item</th>
             <th className="text-right">Quantity</th>
+            <th className="text-right">Tax</th>
             <th className="text-right">Price</th>
             <th className="text-right">Total</th>
           </tr>
@@ -77,8 +96,11 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
                 )}
               </td>
               <td className="text-right">{item.quantity}</td>
+              <td className="text-right">
+                {itemTax(item)}
+              </td>
               <td className="text-right">{item.price}</td>
-              <td className="text-right">{item.price * item.quantity}</td>
+              <td className="text-right">{(item.price * item.quantity) + itemTax(item)}</td>
             </tr>
           ))}
           </tbody>
@@ -87,7 +109,8 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
               <th className="text-left">Total</th>
               <th className="text-right">{order.items.reduce((prev, item) => prev + (item.quantity), 0)}</th>
               <th></th>
-              <th className="text-right">{order.items.reduce((prev, item) => prev + (item.quantity * item.price), 0)}</th>
+              <th></th>
+              <th className="text-right">{itemsTotal}</th>
             </tr>
           </tfoot>
         </table>

@@ -1,5 +1,6 @@
 import {Product} from "./product";
 import {ProductVariant} from "./product.variant";
+import {Tax} from "./tax";
 
 export interface CartItem {
   item: Product;
@@ -7,5 +8,5 @@ export interface CartItem {
   price: number;
   variant?: ProductVariant;
   discount?: number;
-  tax?: number;
+  taxes: Tax[];
 }

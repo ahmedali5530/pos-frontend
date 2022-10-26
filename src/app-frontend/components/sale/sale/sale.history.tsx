@@ -127,44 +127,61 @@ export const SaleHistory: FC<Props> = ({
       )
     }),
     columnHelper.accessor('tax', {
-      header: () => t('Tax'),
-      cell: info => '+' + (info.getValue()?.amount || '0')
+      header: () => t('Order Tax'),
+      cell: info => (
+        <>
+          +{(info.getValue()?.amount || 0).toFixed(2)}
+        </>
+      )
+    }),
+    columnHelper.accessor('itemTaxes', {
+      header: () => t('Items Tax'),
+      cell: info => `+${info.getValue().toFixed(2)}`
     }),
     columnHelper.accessor('discount', {
       header: () => t('Discount'),
-      cell: info => '-' + (info.getValue()?.amount || '0')
+      cell: info => '-' + (info.getValue()?.amount || 0).toFixed(2)
     }),
     columnHelper.accessor('items', {
       header: () => t('Rate'),
       cell: info => '+' + info.getValue().reduce((prev, item) => {
         return (item.price * item.quantity) + prev
-      }, 0)
+      }, 0),
+      enableSorting: false,
     }),
     columnHelper.accessor('items', {
       header: () => t('Cost'),
       cell: info => info.getValue().reduce((prev, item) => {
         return ((item.product?.cost || 0) * item.quantity) + prev
-      }, 0)
+      }, 0),
+      enableSorting: false,
     }),
     columnHelper.accessor('payments', {
       header: () => t('Total'),
       cell: info => '=' + info.getValue().reduce((prev, payment) => {
         return payment.received + prev
-      }, 0)
+      }, 0),
+      enableSorting: false,
     }),
     columnHelper.accessor('status', {
       header: () => t('Status'),
       cell: info => (
+        <span className={
+          classNames(
+            getOrderStatusClasses(info.getValue()),
+            'inline-flex rounded-3xl p-2 justify-center items-center border font-bold text-sm bg-white'
+          )
+        }>
+          <FontAwesomeIcon icon={getOrderStatusIcon(info.getValue())}
+                           className="mr-1"/> {orderStatus(info.row.original)}
+        </span>
+      )
+    }),
+    columnHelper.accessor('id', {
+      header: '',
+      enableSorting: false,
+      cell: info => (
         <div className="flex gap-3">
-          <span className={
-            classNames(
-              getOrderStatusClasses(info.getValue()),
-              'inline-flex rounded-3xl px-2 justify-center items-center border font-bold text-sm'
-            )
-          }>
-            <FontAwesomeIcon icon={getOrderStatusIcon(info.getValue())}
-                             className="mr-1"/> {orderStatus(info.row.original)}
-          </span>
           {orderStatus(info.row.original) === OrderStatus.DISPATCHED && (
             <Button variant="danger" className="w-[40px]" onClick={() => deleteOrder(info.row.original)}
                     disabled={deleting} title="Delete">
@@ -214,7 +231,7 @@ export const SaleHistory: FC<Props> = ({
           <SalePrint order={info.row.original} />
         </div>
       )
-    }),
+    })
   ];
 
   const [params, setParams] = useState<{ [key: string]: any }>();
@@ -326,7 +343,8 @@ export const SaleHistory: FC<Props> = ({
           price: item.price,
           discount: 0,
           variant: item.variant,
-          item: item.product
+          item: item.product,
+          taxes: item.taxes
         });
       });
 
@@ -360,7 +378,8 @@ export const SaleHistory: FC<Props> = ({
           price: item.price,
           discount: 0,
           variant: item.variant,
-          item: item.product
+          item: item.product,
+          taxes: item.taxes
         });
       });
 

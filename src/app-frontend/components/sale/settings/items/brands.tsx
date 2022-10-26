@@ -38,13 +38,13 @@ export const Brands = () => {
     })
   ];
 
-  if (user?.roles?.includes('ROLE_ADMIN')){
+  // if (user?.roles?.includes('ROLE_ADMIN')){
     columns.push(columnHelper.accessor('stores', {
       header: () => t('Stores'),
       enableSorting: false,
       cell: (info) => info.getValue().map(item => item.name).join(', ')
     }));
-  }
+  // }
 
   columns.push(columnHelper.accessor('id', {
     header: () => t('Actions'),
@@ -162,7 +162,7 @@ export const Brands = () => {
               </div>
             )}
           </div>
-          {user?.roles?.includes('ROLE_ADMIN') && (
+          {/*{user?.roles?.includes('ROLE_ADMIN') && (*/}
             <div>
               <label htmlFor="stores">Stores</label>
               <Controller
@@ -191,7 +191,7 @@ export const Brands = () => {
                 </div>
               )}
             </div>
-          )}
+          {/*)}*/}
           <div>
             <label htmlFor="" className="block w-full">&nbsp;</label>
             <Button variant="primary" type="submit" disabled={creating}>

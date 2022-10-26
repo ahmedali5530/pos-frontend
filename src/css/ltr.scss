@@ -185,7 +185,7 @@ a{
       @apply bg-blue-100;
     }
     &.active, &:active{
-      @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white;
+      @apply bg-blue-500 text-white;
     }
   }
   &.btn-danger{

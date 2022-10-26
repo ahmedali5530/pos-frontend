@@ -1,5 +1,6 @@
 import {Product} from "./product";
 import {ProductVariant} from "./product.variant";
+import {Tax} from "./tax";
 
 export interface OrderItem {
   id: string;
@@ -10,4 +11,6 @@ export interface OrderItem {
   isSuspended?: boolean;
   isDeleted?: boolean;
   isReturned?: boolean;
+  taxes: Tax[];
+  taxesTotal: number;
 }

@@ -26,6 +26,7 @@ export interface Order {
   notes?: string;
   store: Store;
   terminal: Terminal;
+  itemTaxes: number;
 }
 
 export enum OrderStatus{

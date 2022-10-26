@@ -22,7 +22,7 @@ import {ValidationResult} from "../../../../lib/validator/validation.result";
 import {Shortcut} from "../../../../app-common/components/input/shortcut";
 import {ClearSale} from "./clear.sale";
 import ScrollContainer from "react-indiana-drag-scroll";
-import {print, SalePrintMarkup} from "./sale.print";
+import {PrintOrder} from "./sale.print";
 import {useSelector} from "react-redux";
 import {getStore} from "../../../../duck/store/store.selector";
 import {getTerminal} from "../../../../duck/terminal/terminal.selector";
@@ -151,6 +151,7 @@ export const CloseSaleInline: FC<Props> = ({
         items: added,
         discount: discount,
         tax: tax,
+        taxAmount: taxTotal,
         payments: paymentsAdded,
         customerId: customer?.id,
         discountAmount: discountTotal,
@@ -176,8 +177,10 @@ export const CloseSaleInline: FC<Props> = ({
       resetFields();
       setPayments([]);
 
-      //print the order
-      print(json.order);
+      if(!hold) {
+        //print the order
+        PrintOrder(json.order);
+      }
 
     } catch (e) {
       if (e instanceof UnprocessableEntityException) {
@@ -206,10 +209,10 @@ export const CloseSaleInline: FC<Props> = ({
   const changeDue = useMemo(() => {
     //get a total of payments
     if(payments.length === 0){
-      return finalTotal - Number(watch('received'));
+      return Number(watch('received')) - finalTotal;
     }
 
-    return finalTotal - payments.reduce((prev, current) => Number(prev) + Number(current.received), 0);
+    return payments.reduce((prev, current) => Number(prev) + Number(current.received), 0) - finalTotal;
   }, [payments, finalTotal, watch('received')]);
 
   useEffect(() => {
@@ -488,7 +491,7 @@ export const CloseSaleInline: FC<Props> = ({
 
             <div className="flex gap-3 flex-wrap">
               <Button className="btn-success w-full"
-                      type="submit" disabled={added.length === 0 || isSaleClosing}
+                      type="submit" disabled={added.length === 0 || isSaleClosing || changeDue < 0}
                       size="lg"
                       tabIndex={0}
               >

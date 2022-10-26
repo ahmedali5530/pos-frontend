@@ -56,6 +56,7 @@ export const SaleBrands: FC<SaleBrandsProps> = ({
           setModal(true);
         }}
         type="button"
+        title="Filter by Brands"
       >
         {children || 'Brands'}
         {Object.values(brands).length > 0 && (

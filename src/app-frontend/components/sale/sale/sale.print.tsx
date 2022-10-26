@@ -14,7 +14,7 @@ interface SalePrintProps {
   order: Order;
 }
 
-export const print = (order: Order) => {
+export const PrintOrder = (order: Order) => {
   //open print window
   const myWindow: any = window.open('','', 'height: 500;width:500');
   ReactDOM.render(<SalePrintMarkup order={order} /> , myWindow.document.body);
@@ -43,7 +43,7 @@ export const SalePrint: FC<SalePrintProps> = (props) => {
           <SalePrintMarkup order={props.order} />
 
           <div className="flex flex-row gap-3">
-            <Button variant="success" onClick={() => print(props.order)}>
+            <Button variant="success" onClick={() => PrintOrder(props.order)}>
               <FontAwesomeIcon icon={faPrint} />
             </Button>
             <Button active={sendEmail} variant="secondary" onClick={() => setSendEmail(!sendEmail)}>
@@ -53,8 +53,8 @@ export const SalePrint: FC<SalePrintProps> = (props) => {
 
           {sendEmail && (
             <form className="mt-3">
-              <div className="input-group">
-                <Input placeholder="Enter your email"/>
+              <div className="input-group w-full">
+                <Input placeholder="Enter comma separated emails"/>
                 <Button variant="primary">Send</Button>
               </div>
             </form>
@@ -79,7 +79,7 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
   }, []);
 
   const itemsTotal = useMemo(() => {
-    return order.items.reduce((prev, item) => (item.price * item.quantity) + prev, 0)
+    return order.items.reduce((prev, item) => ((item.price * item.quantity) + item.taxesTotal) + prev, 0)
   }, [order]);
 
   const netTotal = useMemo(() => {
@@ -97,6 +97,10 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
 
   const changeDue = useMemo(() => {
     return order.payments.reduce((prev, item) => prev + (item.total - item.received), 0)
+  }, [order]);
+
+  const itemsQuantity = useMemo(() => {
+    return order.items.reduce((prev, item) => item.quantity + prev, 0)
   }, [order]);
 
   return (
@@ -264,18 +268,6 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
                   width: 63,
                   textAlign: "right",
                   paddingRight: 4,
-                  display: "none"
-                }}
-                className="GSTClm"
-              >
-                <strong>GST Rate</strong>
-              </td>
-              <td
-                style={{
-                  width: 63,
-                  textAlign: "right",
-                  paddingRight: 4,
-                  display: "none"
                 }}
                 className="GSTClm"
               >
@@ -318,16 +310,15 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
                   className="GSTClm"
                 />
                 <td
-                  style={{textAlign: "right", display: "none"}}
-                  className="GSTClm"
-                />
+                  style={{textAlign: "right"}}
+                >{item.taxesTotal}</td>
                 <td
                   className="DiscColumnData3Inch"
                   style={{textAlign: "right", display: "none"}}
                 >
                   0
                 </td>
-                <td style={{textAlign: "right"}}>{item.price * item.quantity}</td>
+                <td style={{textAlign: "right"}}>{(item.price * item.quantity) + item.taxesTotal}</td>
               </tr>
             ))}
             <tr
@@ -342,21 +333,11 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
               />
               <td style={{textAlign: "left"}}>Total:</td>
               <td style={{textAlign: "right"}}/>
-              <td style={{textAlign: "right"}}>1</td>
+              <td style={{textAlign: "right"}}>{itemsQuantity}</td>
               <td
-                style={{textAlign: "right", display: "none"}}
+                style={{textAlign: "right"}}
                 className="GSTClm"
-              />
-              <td
-                style={{textAlign: "right", display: "none"}}
-                className="GSTClm"
-              />
-              <td
-                className="DiscColumnData3Inch"
-                style={{textAlign: "right", display: "none"}}
-              >
-                0
-              </td>
+              ></td>
               <td style={{textAlign: "right"}}>{itemsTotal}</td>
             </tr>
             </tbody>

@@ -24,6 +24,7 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
             <div className="table-cell p-2 text-left font-bold">Item</div>
             <div className="table-cell p-2 text-center font-bold">QTY</div>
             <div className="table-cell p-2 text-center font-bold w-[80px]">Disc.</div>
+            <div className="table-cell p-2 text-center font-bold w-[80px]">Tax</div>
             <div className="table-cell p-2 text-center font-bold w-[100px]">Rate</div>
             <div className="table-cell p-2 text-right font-bold w-[90px]">Total</div>
             <div className="table-cell w-[80px]"/>
@@ -52,6 +53,7 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
                 return item.quantity + previous
               }, 0)}
             </div>
+            <div className="table-cell"></div>
             <div className="table-cell"></div>
             <div className="table-cell"></div>
             <div className="table-cell text-right p-2">

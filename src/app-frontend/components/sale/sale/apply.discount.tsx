@@ -1,4 +1,4 @@
-import React, {FC, useEffect, useState} from "react";
+import React, {FC, PropsWithChildren, useEffect, useState} from "react";
 import {Button} from "../../button";
 import {CartItem} from "../../../../api/model/cart.item";
 import {Discount, DiscountScope} from "../../../../api/model/discount";
@@ -11,7 +11,7 @@ import {HomeProps, useLoadData} from "../../../../api/hooks/use.load.data";
 import {Shortcut} from "../../../../app-common/components/input/shortcut";
 
 
-interface Props {
+interface Props extends PropsWithChildren {
   added: CartItem[];
   setDiscount: (discount?: Discount) => void;
   setDiscountAmount: (amount?: number) => void;
@@ -23,7 +23,7 @@ interface Props {
 
 export const ApplyDiscount: FC<Props> = ({
                                            added, setDiscount, setDiscountAmount, discount, discountAmount,
-                                           setDiscountRateType, discountRateType
+                                           setDiscountRateType, discountRateType, children
                                          }) => {
   const [modal, setModal] = useState(false);
   const [askDiscount, setAskDiscount] = useState(false);
@@ -60,14 +60,13 @@ export const ApplyDiscount: FC<Props> = ({
     <>
       <Button className="block w-full"
               variant="secondary"
-              size="lg"
               disabled={added.length === 0}
               onClick={() => {
                 setModal(true);
               }}
               type="button"
       >
-        Discounts
+        {children || 'Discounts'}
         <Shortcut shortcut="ctrl+d" handler={() => setModal(true)} />
       </Button>
 

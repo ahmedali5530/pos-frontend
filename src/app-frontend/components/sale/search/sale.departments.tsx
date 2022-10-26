@@ -56,6 +56,7 @@ export const SaleDepartments: FC<SaleDepartmentsProps> = ({
           setModal(true);
         }}
         type="button"
+        title="Filter by Departments"
       >
         {children || 'Departments'}
         {Object.values(departments).length > 0 && (

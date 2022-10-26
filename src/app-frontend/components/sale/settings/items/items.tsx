@@ -63,7 +63,8 @@ export const Items = ({
     }),
     columnHelper.accessor('variants', {
       header: () => t('Variants'),
-      cell: info => `${info.getValue().length} variants`
+      cell: info => `${info.getValue().length} variants`,
+      enableSorting: false
     }),
     columnHelper.accessor('taxes', {
       header: () => t('Taxes'),
@@ -117,7 +118,7 @@ export const Items = ({
             handler: () => {}
           }
         ]}
-        loaderLineItems={10}
+        loaderLineItems={12}
       />
     </>
   );
