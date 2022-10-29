@@ -160,6 +160,7 @@ const Pos: FC = () => {
   const [customer, setCustomer] = useState<Customer>();
   const [refundingFrom, setRefundingFrom] = useState<number>();
   const [closeSale, setCloseSale] = useState(false);
+  const [adjustment, setAdjustment] = useState(0);
 
   const subTotal = useMemo(() => {
     return added.reduce((prev, item) => prev + getRowTotal(item), 0);
@@ -208,8 +209,8 @@ const Pos: FC = () => {
   const couponTotal = useMemo(() => 0, [coupon]);
 
   const finalTotal = useMemo(() => {
-    return subTotal + taxTotal - discountTotal - couponTotal;
-  }, [subTotal, taxTotal, discountTotal, couponTotal]);
+    return subTotal + taxTotal - discountTotal - couponTotal + adjustment;
+  }, [subTotal, taxTotal, discountTotal, couponTotal, adjustment]);
 
   const [modal, setModal] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
@@ -508,6 +509,10 @@ const Pos: FC = () => {
 
   useEffect(() => {
     localforage.setItem('data', added);
+
+    if(added.length === 0){
+      setAdjustment(0);
+    }
   }, [added]);
 
   useEffect(() => {
@@ -680,6 +685,8 @@ const Pos: FC = () => {
             setDiscountRateType={setDiscountRateType}
             discountRateType={discountRateType}
             isInline={true}
+            adjustment={adjustment}
+            setAdjustment={setAdjustment}
           />
         </div>
       </div>

@@ -27,6 +27,7 @@ export interface Order {
   store: Store;
   terminal: Terminal;
   itemTaxes: number;
+  adjustment?: number;
 }
 
 export enum OrderStatus{

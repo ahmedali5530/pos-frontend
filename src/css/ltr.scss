@@ -219,13 +219,13 @@ a{
     }
   }
   &.btn-success{
-    @apply border-teal-500 text-teal-500 focus:outline-none focus:ring focus:ring-teal-200
-    focus:border-teal-500 active:bg-teal-500 active:text-white hover:bg-teal-50;
+    @apply border-emerald-500 text-emerald-500 focus:outline-none focus:ring focus:ring-emerald-200
+    focus:border-emerald-500 active:bg-emerald-500 active:text-white hover:bg-emerald-50;
     &:disabled{
-      @apply bg-teal-100;
+      @apply bg-emerald-100;
     }
     &.active{
-      @apply bg-teal-500 text-white;
+      @apply bg-emerald-500 text-white;
     }
   }
 }
@@ -257,7 +257,7 @@ a{
     }
   }
   &.success{
-    @apply border-teal-500 focus:ring-teal-200 focus:border-teal-500 disabled:bg-teal-100 read-only:bg-teal-100;
+    @apply border-emerald-500 focus:ring-emerald-200 focus:border-emerald-500 disabled:bg-emerald-100 read-only:bg-emerald-100;
     &.with-feedback {
       background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(16,185,129)" viewBox="0 0 512 512"><path d="M470.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L192 338.7 425.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>');
     }
@@ -530,7 +530,7 @@ a{
     }
   }
   &.alert-success{
-    @apply border-teal-500 bg-teal-50 text-teal-500;
+    @apply border-emerald-500 bg-emerald-50 text-emerald-500;
     &:before{
       background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(16,185,129)" viewBox="0 0 512 512"><path d="M470.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L192 338.7 425.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>');
     }

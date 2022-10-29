@@ -13,7 +13,7 @@ import {Customer} from "../../../../api/model/customer";
 import classNames from "classnames";
 import localforage from "../../../../lib/localforage/localforage";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
+import {faPause, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {OrderPayment} from "../../../../api/model/order.payment";
 import {Input} from "../../input";
 import {useAlert} from "react-alert";
@@ -53,6 +53,8 @@ interface Props {
   isInline?: boolean;
   saleModal?: boolean;
   setSaleModal?: (state: boolean) => void;
+  adjustment: number;
+  setAdjustment: (adj: number) => void;
 }
 
 export const CloseSaleInline: FC<Props> = ({
@@ -78,7 +80,7 @@ export const CloseSaleInline: FC<Props> = ({
                                              setDiscountRateType,
                                              isInline,
                                              saleModal,
-                                             setSaleModal
+                                             setSaleModal, adjustment, setAdjustment
                                            }) => {
   const {register, handleSubmit, watch, reset, control, getValues, setFocus} = useForm();
   const [isSaleClosing, setSaleClosing] = useState(false);
@@ -96,6 +98,8 @@ export const CloseSaleInline: FC<Props> = ({
   const resetFields = () => {
     setAdded([]);
     setCustomer(undefined);
+    setAdjustment(0);
+
     if(setRefundingFrom) {
       setRefundingFrom!(undefined);
     }
@@ -103,7 +107,7 @@ export const CloseSaleInline: FC<Props> = ({
       setSaleModal!(false);
     }
     reset({
-      received: undefined
+      received: undefined,
     });
 
     localforage.getItem('defaultPaymentType').then((data: any) => {
@@ -160,7 +164,8 @@ export const CloseSaleInline: FC<Props> = ({
         notes: values.notes,
         store: store?.id,
         total: finalTotal,
-        terminal: terminal?.id
+        terminal: terminal?.id,
+        adjustment: adjustment
       };
 
       if (hold) {
@@ -212,8 +217,8 @@ export const CloseSaleInline: FC<Props> = ({
       return Number(watch('received')) - finalTotal;
     }
 
-    return payments.reduce((prev, current) => Number(prev) + Number(current.received), 0) - finalTotal;
-  }, [payments, finalTotal, watch('received')]);
+    return payments.reduce((prev, current) => Number(prev) + Number(current.received), 0) - finalTotal + adjustment;
+  }, [payments, finalTotal, watch('received'), adjustment]);
 
   useEffect(() => {
     if (payment === undefined) {
@@ -334,6 +339,16 @@ export const CloseSaleInline: FC<Props> = ({
     });
   };
 
+  const addAdjustment = () => {
+    const adj = finalTotal % 10;
+
+    if(adj < 5){
+      setAdjustment(-adj);
+    }else{
+      setAdjustment(10 - adj)
+    }
+  }
+
   return (
     <>
       <div className="mb-5">
@@ -360,11 +375,27 @@ export const CloseSaleInline: FC<Props> = ({
               discountRateType={discountRateType}
               tax={tax}
             >
+              {!!adjustment && (
+                <tr>
+                  <th className={
+                    classNames(
+                      `border border-gray-300 p-2 text-left text-4xl font-bold`,
+                      adjustment < 5 ? 'text-rose-500' : ' text-emerald-500'
+                    )
+                  }>Adjustment</th>
+                  <td className={
+                    classNames(
+                      `border border-gray-300 p-2 text-right text-4xl font-bold`,
+                      adjustment < 5 ? 'text-rose-500' : ' text-emerald-500'
+                    )
+                  }>{adjustment}</td>
+                </tr>
+              )}
               <tr>
                 <th className={
                   classNames(
                     `border border-gray-300 p-2 text-left text-4xl font-bold`,
-                    changeDue < 0 ? 'text-rose-500' : ' text-teal-500'
+                    changeDue < 0 ? 'text-rose-500' : ' text-emerald-500'
                   )
                 }>
                   {changeDue < 0 ? 'Receivable' : 'Change Due'}
@@ -372,7 +403,7 @@ export const CloseSaleInline: FC<Props> = ({
                 <td className={
                   classNames(
                     `border border-gray-300 p-2 text-right text-4xl font-bold`,
-                    changeDue < 0 ? 'text-rose-500' : ' text-teal-500'
+                    changeDue < 0 ? 'text-rose-500' : ' text-emerald-500'
                   )
                 }>
                   {changeDue.toFixed(2)}
@@ -420,16 +451,14 @@ export const CloseSaleInline: FC<Props> = ({
                 active={payment?.id === pt.id}
                 type="button"
                 size="lg"
-                disabled={pt.type === 'credit' && (customer === undefined || customer === null)}
+                disabled={(pt.type === 'credit' && (customer === undefined || customer === null)) || added.length === 0}
               >
                 {pt.name}
-                <Shortcut shortcut={`alt+p+${index}`} handler={() => {
-                  if(pt.type === 'credit' && (customer === undefined || customer === null)){
-                    return false;
-                  }
-
-                  setPayment(pt)
-                }} />
+                {pt.type === 'credit' && (customer === undefined || customer === null) ? '' : (
+                  <Shortcut shortcut={`alt+p+${index}`} handler={() => {
+                    setPayment(pt)
+                  }} />
+                )}
               </Button>
             );
           })}
@@ -464,6 +493,7 @@ export const CloseSaleInline: FC<Props> = ({
                               return false;
                             }
                           }}
+                          disabled={added.length === 0}
                           tabIndex={0}
                         />
                       </>
@@ -474,7 +504,7 @@ export const CloseSaleInline: FC<Props> = ({
 
                 <Shortcut shortcut="ctrl+enter" handler={() => focusAmountField()} invisible={true}/>
 
-                <Button type="button" className="btn-secondary lg"
+                <Button type="button" className="btn-secondary lg w-[48px]"
                         onClick={() => addSplitPayment(Number(watch('received')), payment)}
                         disabled={added.length === 0}
                         tabIndex={-1}
@@ -484,9 +514,27 @@ export const CloseSaleInline: FC<Props> = ({
               </div>
             </div>
 
+            <div className="input-group">
+              <Button type="button" className="btn-secondary lg w-full"
+                      disabled={added.length === 0}
+                      tabIndex={-1}
+                      onClick={addAdjustment}
+              >
+                Add Adjustment
+              </Button>
+              {!!adjustment && (
+                <Button type="button" className="btn-danger lg w-[48px]"
+                        disabled={added.length === 0}
+                        tabIndex={-1}
+                        onClick={() => setAdjustment(0)}
+                >
+                  <FontAwesomeIcon icon={faTrash}/>
+                </Button>
+              )}
+            </div>
             <div className="mb-3">
               <label htmlFor="notes">Notes</label>
-              <Textarea {...register('notes')} id="notes" tabIndex={-1}/>
+              <Textarea {...register('notes')} className="w-full" id="notes" tabIndex={-1}/>
             </div>
 
             <div className="flex gap-3 flex-wrap">
@@ -506,7 +554,7 @@ export const CloseSaleInline: FC<Props> = ({
                 className="btn-warning flex-1"
                 onClick={() => setHold(true)}
               >
-                {isSaleClosing ? '...' : 'Hold'}
+                <FontAwesomeIcon icon={faPause} className="m-2"/> {isSaleClosing ? '...' : 'Hold'}
               </Button>
               <div className="flex-1">
                 <ClearSale
@@ -515,6 +563,7 @@ export const CloseSaleInline: FC<Props> = ({
                   setDiscount={setDiscount}
                   setTax={setTax}
                   setDiscountAmount={setDiscountAmount}
+                  setAdjustment={setAdjustment}
                 />
               </div>
             </div>

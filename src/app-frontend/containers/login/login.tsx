@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import Layout from "../layout/layout";
 import {AUTH_INFO, LOGIN} from "../../../api/routing/routes/backend.app";
 import {jsonRequest} from "../../../api/request/request";
@@ -59,17 +59,24 @@ const Login = () => {
       const info = await jsonRequest(AUTH_INFO + '?role=ROLE_USER');
       const infoJson = await info.json();
 
-      if(infoJson.user.stores.length === 1) {
-        setStore(infoJson.user.stores[0]);
-      }
-
-      //ask for the default store
-      setModal(true);
       setUser(infoJson.user);
 
       Cookies.remove('JWT');
       Cookies.remove('refresh_token');
 
+      if(infoJson.user.stores.length === 1) {
+        if(infoJson?.user?.stores[0]?.terminals?.length === 1){
+          //auto select single store and single terminal
+          setTimeout(() => {
+            selectTerminal(infoJson.user.stores[0].terminals[0], infoJson.user.stores[0], infoJson.user, json)
+          }, 300);
+        }else{
+          setStore(infoJson.user.stores[0]);
+          setModal(true);
+        }
+      }else{
+        setModal(true);
+      }
     } catch (err: any) {
       if (err instanceof HttpException) {
         setErrorMessage(err.message);
@@ -85,9 +92,9 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  const selectTerminal = (terminal: Terminal, store: Store) => {
+  const selectTerminal = (terminal: Terminal, store: Store, paramUser?: User, paramTokens?: any) => {
     // terminal.products = [];
     terminal.store = undefined;
 
@@ -96,19 +103,31 @@ const Login = () => {
     Cookies.set('store', JSON.stringify(store));
     Cookies.set('terminal', JSON.stringify(terminal));
 
-    Cookies.set('JWT', tokens.token, {
+    let t = tokens;
+    if(!t){
+      t = paramTokens;
+    }
+
+    Cookies.set('JWT', t?.token, {
       secure: true
     });
-    Cookies.set('refresh_token', tokens.refresh_token, {
+    Cookies.set('refresh_token', t?.refresh_token, {
       secure: true
     });
 
     setTokens(undefined);
 
-    navigate(POS);
-    dispatch(userAuthenticated(user));
+    let u = user;
+    if(!u){
+      u = paramUser;
+    }
+
+    dispatch(userAuthenticated(u));
+
     dispatch(storeAction(store));
     dispatch(terminalAction(terminal));
+
+    navigate(POS);
   }
 
   const {t} = useTranslation();

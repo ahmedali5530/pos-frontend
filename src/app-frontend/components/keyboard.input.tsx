@@ -1,4 +1,4 @@
-import React, {FC, InputHTMLAttributes, Ref} from "react";
+import React, {InputHTMLAttributes, Ref} from "react";
 import {Input} from "./input";
 import {useSelector} from "react-redux";
 import {getTouch} from "../../duck/touch/touch.selector";

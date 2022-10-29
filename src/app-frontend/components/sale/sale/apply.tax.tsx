@@ -4,14 +4,15 @@ import React, {FC, PropsWithChildren, useEffect, useState} from "react";
 import {Tax} from "../../../../api/model/tax";
 import {useLoadData} from "../../../../api/hooks/use.load.data";
 import {Shortcut} from "../../../../app-common/components/input/shortcut";
+import {CartItem} from "../../../../api/model/cart.item";
 
 interface TaxProps extends PropsWithChildren{
   setTax: (tax?: Tax) => void;
   tax?: Tax;
-  buttonVariant?: string;
+  added: CartItem[];
 }
 
-export const ApplyTax: FC<TaxProps> = ({setTax, tax, children, buttonVariant}) => {
+export const ApplyTax: FC<TaxProps> = ({setTax, tax, children, added}) => {
   const [modal, setModal] = useState(false);
   const [taxList, setTaxList] = useState<Tax[]>([]);
 
@@ -29,16 +30,17 @@ export const ApplyTax: FC<TaxProps> = ({setTax, tax, children, buttonVariant}) =
 
   return (
     <>
-      <Button
-        className="block w-full" variant={buttonVariant || "secondary"}
+      <button
+        className="block w-full text-left"
         onClick={() => {
           setModal(true);
         }}
         type="button"
+        disabled={added.length === 0}
       >
         {children || 'Taxes'}
         <Shortcut shortcut="ctrl+q" handler={() => setModal(true)} />
-      </Button>
+      </button>
       <Modal open={modal} onClose={() => {
         setModal(false);
       }} title="Apply Tax">

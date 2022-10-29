@@ -15,14 +15,16 @@ interface Props{
   setDiscount: (discount?: Discount) => void;
   setTax: (tax?: Tax) => void;
   setDiscountAmount: (discount?: number) => void;
+  setAdjustment: (adjustment: number) => void;
 }
 
 export const ClearSale: FC<Props> = ({
-  added, setAdded, setDiscount, setTax, setDiscountAmount
+  added, setAdded, setDiscount, setTax, setDiscountAmount, setAdjustment
 }) => {
 
   const cancel = () => {
     setAdded([]);
+    setAdjustment(0);
     //delete from localforage
 
     localforage.getItem('defaultDiscount').then((data: any) => {

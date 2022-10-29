@@ -1,5 +1,5 @@
 import Keyboard, {KeyboardReactInterface} from "react-simple-keyboard";
-import React, {FC, forwardRef, InputHTMLAttributes, Ref, useRef, useState} from "react";
+import React, {FC, forwardRef, InputHTMLAttributes, Ref, useEffect, useRef, useState} from "react";
 import "react-simple-keyboard/build/css/index.css";
 import {Input} from "./input";
 import {Modal} from "./modal";
@@ -21,7 +21,7 @@ export const LayoutNames = {
 };
 
 export const ReactKeyboard: FC<ReactKeyboardProps> = forwardRef((props: ReactKeyboardProps, ref: Ref<HTMLInputElement>)  => {
-  const [input, setInput] = useState<string>("");
+  const [input, setInput] = useState<string>('');
   // @ts-ignore
   const [layout, setLayout] = useState(LayoutNames[props.type || 'text']);
 
@@ -69,6 +69,13 @@ export const ReactKeyboard: FC<ReactKeyboardProps> = forwardRef((props: ReactKey
     setInput(input);
     keyboard.current!.setInput(input);
   };
+
+  useEffect(() => {
+    setInput(props?.value as string);
+    if(keyboard.current) {
+      keyboard?.current!.setInput(props?.value as string);
+    }
+  }, [keyboard?.current]);
 
   return (
     <>

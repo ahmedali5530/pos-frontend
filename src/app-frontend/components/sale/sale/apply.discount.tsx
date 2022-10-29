@@ -58,8 +58,7 @@ export const ApplyDiscount: FC<Props> = ({
 
   return (
     <>
-      <Button className="block w-full"
-              variant="secondary"
+      <button className="block w-full text-left"
               disabled={added.length === 0}
               onClick={() => {
                 setModal(true);
@@ -68,7 +67,7 @@ export const ApplyDiscount: FC<Props> = ({
       >
         {children || 'Discounts'}
         <Shortcut shortcut="ctrl+d" handler={() => setModal(true)} />
-      </Button>
+      </button>
 
       <Modal open={modal} onClose={() => {
         setModal(false);

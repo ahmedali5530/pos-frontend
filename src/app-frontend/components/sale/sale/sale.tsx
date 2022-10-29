@@ -33,6 +33,8 @@ interface Props {
   setCloseSale?: (state: boolean) => void;
   discountRateType: string | undefined;
   setDiscountRateType: (string?: string) => void;
+  adjustment: number;
+  setAdjustment: (adj: number) => void;
 }
 
 export const CloseSale: FC<Props> = ({
@@ -41,7 +43,7 @@ export const CloseSale: FC<Props> = ({
                                        couponTotal, discountTotal, customer, setCustomer, discountAmount,
                                        refundingFrom, setRefundingFrom,
                                        closeSale, setCloseSale,
-                                       discountRateType, setDiscountRateType
+                                       discountRateType, setDiscountRateType, adjustment, setAdjustment
                                      }) => {
   const [saleModal, setSaleModal] = useState<boolean>(false);
 
@@ -89,6 +91,8 @@ export const CloseSale: FC<Props> = ({
           isInline={false}
           setSaleModal={setSaleModal}
           saleModal={saleModal}
+          adjustment={adjustment}
+          setAdjustment={setAdjustment}
         />
       </Modal>
     </>

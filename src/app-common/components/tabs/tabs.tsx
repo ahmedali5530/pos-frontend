@@ -44,7 +44,7 @@ export const TabControl: FunctionComponent<TabControlProps> = (props) => {
 interface TabNavProps extends PropsWithChildren{}
 export const TabNav = (props: TabNavProps) => {
   return (
-    <div className="flex justify-start items-center gap-3 flex-wrap">{props.children}</div>
+    <div className="flex justify-between items-center gap-3 flex-wrap">{props.children}</div>
   );
 };
 
@@ -55,10 +55,10 @@ export const Tab = (props: TabProps) => {
   return (
     <button {...props} className={
       classNames(
-        'btn btn-primary rounded-[999px_!important] lg px-[1.5rem_!important]',
+        'border-b-4 p-3 px-5 flex-grow flex-shrink-0',
         props.isActive ?
-          'active' :
-          ''
+          'border-blue-500 bg-blue-50 rounded-t-2xl text-blue-500' :
+          'border-transparent'
       )
     }>{props.children}</button>
   );

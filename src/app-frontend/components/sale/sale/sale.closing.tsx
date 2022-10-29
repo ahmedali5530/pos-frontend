@@ -219,8 +219,19 @@ export const SaleClosing: FC<TaxProps> = (props) => {
               <tr>
                 <th className="text-right">Opening balance</th>
                 <td>
-                  <KeyboardInput {...register('openingBalance')}
-                                 className="w-full" type="number" defaultValue={0}/>
+                  <Controller
+                    render={(props) => (
+                      <KeyboardInput
+                        className="w-full"
+                        type="number"
+                        defaultValue={props.field.value}
+                        value={props.field.value}
+                        onChange={props.field.onChange}
+                      />
+                    )}
+                    name="openingBalance"
+                    control={control}
+                  />
                 </td>
               </tr>
               <tr>
@@ -279,7 +290,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
                 <td className={
                   classNames(
                     'text-2xl font-bold',
-                    cashInHand < 0 ? 'text-rose-500' : 'text-teal-500'
+                    cashInHand < 0 ? 'text-rose-500' : 'text-emerald-500'
                   )
                 }>
                   {cashInHand}

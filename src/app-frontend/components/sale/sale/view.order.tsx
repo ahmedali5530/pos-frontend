@@ -37,30 +37,32 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
       <Modal open={modal} onClose={() => {
         setModal(false);
       }} title={`Order# ${order.orderId}`}>
-        <div className="grid grid-cols-5 gap-3 mb-5">
-          <div className="border border-gray-500 p-5 font-bold text-gray-500 rounded">
+        <div className="grid grid-cols-6 gap-3 mb-5">
+          <div className="border border-gray-500 p-5 rounded">
+            <div className="text-2xl">+{itemsTotal.toFixed(2)}</div>
             Items total with tax
-            <span className="float-right">+{itemsTotal}</span>
           </div>
-          <div className="border border-gray-500 p-5 font-bold text-gray-500 rounded">
+          <div className="border border-gray-500 p-5 rounded">
+            <div className="text-2xl">+{(order.tax ? order.tax.amount : 0)?.toFixed(2)}</div>
             Tax
-            <span className="float-right">+{order.tax ? order.tax.amount?.toFixed(2) : '0'}</span>
           </div>
-          <div className="border border-gray-500 p-5 font-bold text-gray-500 rounded">
+          <div className="border border-gray-500 p-5 rounded">
+            <div className="text-2xl">-{(order.discount ? (order.discount.amount) : 0)?.toFixed(2)}</div>
             Discount
-            <span className="float-right">-{order.discount ? order.discount.amount?.toFixed(2) : '0'}</span>
           </div>
-          <div className="border border-rose-500 p-5 font-bold text-rose-500 rounded">
+          <div className="border border-gray-500 p-5 rounded">
+            <div className="text-2xl">{(order.adjustment ? order.adjustment : 0)?.toFixed(2)}</div>
+            Adjustment
+          </div>
+          <div className="border border-rose-500 p-5 text-rose-500 rounded">
+            <div className="text-2xl">={orderTotal.toFixed(2)}</div>
             Total
-            <span className="float-right">
-              ={orderTotal}
-            </span>
           </div>
-          <div className="border border-teal-500 p-5 font-bold text-teal-500 rounded">
+          <div className="border border-emerald-500 p-5 text-emerald-500 rounded">
             Payments breakdown
             <ul className="font-normal">
               {order.payments.map(item => (
-                <li>{item.type?.name}: <span className="float-right">{item.received}</span></li>
+                <li>{item.type?.name}: <span className="float-right">{item.received.toFixed(2)}</span></li>
               ))}
             </ul>
           </div>

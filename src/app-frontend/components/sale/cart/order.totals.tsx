@@ -47,22 +47,23 @@ export const OrderTotals :FC<OrderTotalsProps> = ({
       <tbody>
       <tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left">Sub total</th>
-        <td className="border border-gray-300 p-2 text-right" style={{width: '35%'}}>{subTotal}</td>
+        <td className="border border-gray-300 p-2 text-right" style={{width: '35%'}}>{subTotal.toFixed(2)}</td>
       </tr>
       <tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left">Taxable amount</th>
-        <td className="border border-gray-300 p-2 text-right" style={{width: '35%'}}>{exclusiveSubTotal}</td>
+        <td className="border border-gray-300 p-2 text-right" style={{width: '35%'}}>{exclusiveSubTotal.toFixed(2)}</td>
       </tr>
       <tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left">
           <ApplyTax
             setTax={setTax}
             tax={tax}
+            added={added}
           >
             Taxes <FontAwesomeIcon icon={faPencil} className="ml-3" />
           </ApplyTax>
         </th>
-        <td className="border border-gray-300 p-2 text-right">{taxTotal}</td>
+        <td className="border border-gray-300 p-2 text-right">{taxTotal.toFixed(2)}</td>
       </tr>
       <tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left">
@@ -80,25 +81,10 @@ export const OrderTotals :FC<OrderTotalsProps> = ({
         </th>
         <td className="border border-gray-300 p-2 text-right">{discountTotal.toFixed(2)}</td>
       </tr>
-      {/*{inSale && setCustomer && (*/}
-      {/*  <tr className="hover:bg-gray-100">*/}
-      {/*    <th className="border border-gray-300 p-2 text-left">*/}
-      {/*      <span className="float-right">*/}
-      {/*        <Customers setCustomer={setCustomer} customer={customer} />*/}
-      {/*      </span>*/}
-      {/*      Customer*/}
-      {/*    </th>*/}
-      {/*    <td className="border border-gray-300 p-2 text-right">{customer?.name}</td>*/}
-      {/*  </tr>*/}
-      {/*)}*/}
-      {/*<tr className="hover:bg-gray-100">
-        <th className="border border-gray-300 p-2 text-left">Coupons</th>
-        <td className="border border-gray-300 p-2 text-right">{couponTotal}</td>
-      </tr>*/}
       <tr className="hover:bg-gray-100">
-        <th className="border border-gray-300 p-2 text-left text-4xl font-bold text-teal-500">Total</th>
+        <th className="border border-gray-300 p-2 text-left text-4xl font-bold text-emerald-500">Total</th>
         <td
-          className="border border-gray-300 p-2 text-right text-4xl font-bold text-teal-500">{finalTotal.toFixed(2)}</td>
+          className="border border-gray-300 p-2 text-right text-4xl font-bold text-emerald-500">{finalTotal.toFixed(2)}</td>
       </tr>
       {children}
       </tbody>

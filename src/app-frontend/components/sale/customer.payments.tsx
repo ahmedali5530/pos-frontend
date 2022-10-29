@@ -179,14 +179,14 @@ export const CustomerPayments: FC<Props> = ({
             Total Sale
             <span className="float-right">{withCurrency(customer.sale)}</span>
           </div>
-          <div className="border border-teal-500 p-5 font-bold text-teal-500 rounded">
+          <div className="border border-emerald-500 p-5 font-bold text-emerald-500 rounded">
             Total Payments
             <span className="float-right">{withCurrency(customer.paid)}</span>
           </div>
           <div className={
             classNames(
               "border p-5 font-bold rounded",
-              diff > 0 ? 'border-rose-500 text-rose-500' : 'border-teal-500 text-teal-500'
+              diff > 0 ? 'border-rose-500 text-rose-500' : 'border-emerald-500 text-emerald-500'
             )
           }>
             Outstanding

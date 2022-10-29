@@ -156,6 +156,10 @@ export const SaleHistory: FC<Props> = ({
       }, 0),
       enableSorting: false,
     }),
+    columnHelper.accessor('adjustment', {
+      header: () => t('Adjustment'),
+      enableSorting: false,
+    }),
     columnHelper.accessor('payments', {
       header: () => t('Total'),
       cell: info => '=' + info.getValue().reduce((prev, payment) => {
@@ -273,11 +277,11 @@ export const SaleHistory: FC<Props> = ({
         break;
 
       case('Completed'):
-        classes = 'border-teal-500 text-teal-500';
+        classes = 'border-emerald-500 text-emerald-500';
         break;
 
       case('Dispatched'):
-        classes = 'border-teal-500 text-teal-500';
+        classes = 'border-emerald-500 text-emerald-500';
         break;
 
       case('Returned'):
@@ -790,7 +794,7 @@ export const SaleHistory: FC<Props> = ({
                 classNames(
                   'border',
                   'p-5 font-bold rounded',
-                  totalAmount - totalCost - totalExpenses <= 0 ? 'text-rose-500 border-rose-500' : 'text-teal-500 border-teal-500'
+                  totalAmount - totalCost - totalExpenses <= 0 ? 'text-rose-500 border-rose-500' : 'text-emerald-500 border-emerald-500'
                 )
               }>
                 {totalAmount - totalCost - totalExpenses <= 0 ? 'Loss' : 'Profit'}

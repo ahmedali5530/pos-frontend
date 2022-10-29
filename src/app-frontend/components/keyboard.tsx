@@ -230,7 +230,7 @@ export const Keyboard = (props: KeyboardProps) => {
   };
 
   const buttonClasses: {[name: string]: string} = {
-    '*ok': 'bg-teal-500 text-white',
+    '*ok': 'bg-emerald-500 text-white',
     '*cancel': 'bg-rose-500 text-white px-5',
     '*space': 'w-[250px]'
   };
