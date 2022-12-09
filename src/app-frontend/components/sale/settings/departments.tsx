@@ -148,7 +148,7 @@ export const Departments = () => {
             <label htmlFor="name">Name</label>
             <Input {...register('name')} id="name" className="w-full" tabIndex={0}/>
             {errors.name && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.name.message}
                 </Trans>
@@ -160,7 +160,7 @@ export const Departments = () => {
             <label htmlFor="description">Description</label>
             <Input {...register('description')} id="description" className="w-full" tabIndex={0}/>
             {errors.description && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.description.message}
                 </Trans>
@@ -190,7 +190,7 @@ export const Departments = () => {
               />
 
               {errors.stores && (
-                <div className="text-rose-500 text-sm">
+                <div className="text-danger-500 text-sm">
                   <Trans>
                     {errors.stores.message}
                   </Trans>

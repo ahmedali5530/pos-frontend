@@ -60,7 +60,7 @@ export const SaleCategories: FC<SaleCategoriesProps> = ({
       >
         {children || 'Categories'}
         {Object.values(categories).length > 0 && (
-          <span className="shrink-0 ml-1 bg-blue-500 text-white h-5 w-5 rounded-full text-sm font-bold">{Object.values(categories).length}</span>
+          <span className="shrink-0 ml-1 bg-primary-500 text-white h-5 w-5 rounded-full text-sm font-bold">{Object.values(categories).length}</span>
         )}
       </Button>
       <Modal open={modal} onClose={() => {
@@ -76,7 +76,7 @@ export const SaleCategories: FC<SaleCategoriesProps> = ({
               {category.name}
               {!!categories[category.id] && (
                 <span className="absolute top-1 right-1">
-                  <FontAwesomeIcon icon={faCheckCircle} className="text-blue-500" size="lg" />
+                  <FontAwesomeIcon icon={faCheckCircle} className="text-primary-500" size="lg" />
                 </span>
               )}
             </Button>

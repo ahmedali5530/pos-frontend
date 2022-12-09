@@ -1,5 +1,5 @@
 import {Button} from "../../button";
-import React, {FC, useCallback, useEffect, useMemo, useState} from "react";
+import React, {FC, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {OrderTotals} from "../cart/order.totals";
 import {Textarea} from "../../textarea";
 import {CartItem} from "../../../../api/model/cart.item";
@@ -15,7 +15,6 @@ import localforage from "../../../../lib/localforage/localforage";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPause, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {OrderPayment} from "../../../../api/model/order.payment";
-import {Input} from "../../input";
 import {useAlert} from "react-alert";
 import {UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ValidationResult} from "../../../../lib/validator/validation.result";
@@ -58,31 +57,13 @@ interface Props {
 }
 
 export const CloseSaleInline: FC<Props> = ({
-                                             added,
-                                             setAdded,
-                                             discount,
-                                             tax,
-                                             finalTotal,
-                                             setDiscount,
-                                             setTax,
-                                             setDiscountAmount,
-                                             paymentTypesList,
-                                             subTotal,
-                                             taxTotal,
-                                             couponTotal,
-                                             discountTotal,
-                                             customer,
-                                             setCustomer,
-                                             discountAmount,
-                                             refundingFrom,
-                                             setRefundingFrom,
-                                             discountRateType,
-                                             setDiscountRateType,
-                                             isInline,
-                                             saleModal,
-                                             setSaleModal, adjustment, setAdjustment
-                                           }) => {
-  const {register, handleSubmit, watch, reset, control, getValues, setFocus} = useForm();
+  added, setAdded, discount, tax, finalTotal, setDiscount,
+  setTax, setDiscountAmount, paymentTypesList, subTotal, taxTotal, couponTotal,
+  discountTotal, customer, setCustomer, discountAmount, refundingFrom,
+  setRefundingFrom, discountRateType, setDiscountRateType, isInline, saleModal,
+  setSaleModal, adjustment, setAdjustment
+}) => {
+  const {register, handleSubmit, watch, reset, control, getValues} = useForm();
   const [isSaleClosing, setSaleClosing] = useState(false);
   const [payment, setPayment] = useState<PaymentType>();
   const [payments, setPayments] = useState<OrderPayment[]>([]);
@@ -100,10 +81,10 @@ export const CloseSaleInline: FC<Props> = ({
     setCustomer(undefined);
     setAdjustment(0);
 
-    if(setRefundingFrom) {
+    if (setRefundingFrom) {
       setRefundingFrom!(undefined);
     }
-    if(setSaleModal) {
+    if (setSaleModal) {
       setSaleModal!(false);
     }
     reset({
@@ -142,11 +123,11 @@ export const CloseSaleInline: FC<Props> = ({
   const onSaleSubmit = async (values: any) => {
     let paymentsAdded: OrderPayment[] = [...payments];
     setSaleClosing(true);
-    if(payments.length === 0){
+    if (payments.length === 0) {
       paymentsAdded = [{
-        received: finalTotal,
+        received: finalTotal + adjustment,
         type: payment,
-        total: finalTotal,
+        total: finalTotal + adjustment,
         due: 0
       }];
     }
@@ -182,7 +163,7 @@ export const CloseSaleInline: FC<Props> = ({
       resetFields();
       setPayments([]);
 
-      if(!hold) {
+      if (!hold) {
         //print the order
         PrintOrder(json.order);
       }
@@ -213,8 +194,8 @@ export const CloseSaleInline: FC<Props> = ({
 
   const changeDue = useMemo(() => {
     //get a total of payments
-    if(payments.length === 0){
-      return Number(watch('received')) - finalTotal;
+    if (payments.length === 0) {
+      return Number(watch('received')) - finalTotal - adjustment;
     }
 
     return payments.reduce((prev, current) => Number(prev) + Number(current.received), 0) - finalTotal + adjustment;
@@ -251,9 +232,9 @@ export const CloseSaleInline: FC<Props> = ({
 
   useEffect(() => {
     reset({
-      received: finalTotal.toFixed(2)
+      received: (finalTotal + adjustment).toFixed(2)
     });
-  }, [finalTotal]);
+  }, [finalTotal, adjustment]);
 
   const addQuickCash = useCallback((item: number, cashOperation?: string) => {
     let method = cashOperation || quickCashOperation;
@@ -270,7 +251,7 @@ export const CloseSaleInline: FC<Props> = ({
   const shortcutHandler = useCallback((e: Event) => {
     //open sale modal
     if (added.length > 0) {
-      if(setSaleModal) {
+      if (setSaleModal) {
         setSaleModal!(true);
       }
     }
@@ -280,7 +261,7 @@ export const CloseSaleInline: FC<Props> = ({
       onSaleSubmit(getValues());
     }
 
-    if(isInline){
+    if (isInline) {
       onSaleSubmit(getValues());
     }
   }, [
@@ -334,18 +315,28 @@ export const CloseSaleInline: FC<Props> = ({
   };
 
   const focusAmountField = () => {
-    setFocus('received', {
-      shouldSelect: true
-    });
+    selectPaymentInput();
   };
 
   const addAdjustment = () => {
     const adj = finalTotal % 10;
 
-    if(adj < 5){
+    if (adj < 5) {
       setAdjustment(-adj);
-    }else{
+    } else {
       setAdjustment(10 - adj)
+    }
+  }
+
+  const canAdjust = useMemo(() => {
+    return finalTotal % 10 !== 0
+  }, [finalTotal]);
+
+
+  const paymentInputRef = useRef<HTMLInputElement>(null);
+  const selectPaymentInput = () => {
+    if (paymentInputRef.current !== null) {
+      paymentInputRef.current.select();
     }
   }
 
@@ -380,22 +371,23 @@ export const CloseSaleInline: FC<Props> = ({
                   <th className={
                     classNames(
                       `border border-gray-300 p-2 text-left text-4xl font-bold`,
-                      adjustment < 5 ? 'text-rose-500' : ' text-emerald-500'
+                      finalTotal % 10 < 5 ? 'text-danger-500' : ' text-success-500'
                     )
-                  }>Adjustment</th>
+                  }>Adjustment
+                  </th>
                   <td className={
                     classNames(
                       `border border-gray-300 p-2 text-right text-4xl font-bold`,
-                      adjustment < 5 ? 'text-rose-500' : ' text-emerald-500'
+                      finalTotal % 10 < 5 ? 'text-danger-500' : ' text-success-500'
                     )
-                  }>{adjustment}</td>
+                  }>{adjustment.toFixed(2)}</td>
                 </tr>
               )}
               <tr>
                 <th className={
                   classNames(
                     `border border-gray-300 p-2 text-left text-4xl font-bold`,
-                    changeDue < 0 ? 'text-rose-500' : ' text-emerald-500'
+                    changeDue < 0 ? 'text-danger-500' : ' text-success-500'
                   )
                 }>
                   {changeDue < 0 ? 'Receivable' : 'Change Due'}
@@ -403,7 +395,7 @@ export const CloseSaleInline: FC<Props> = ({
                 <td className={
                   classNames(
                     `border border-gray-300 p-2 text-right text-4xl font-bold`,
-                    changeDue < 0 ? 'text-rose-500' : ' text-emerald-500'
+                    changeDue < 0 ? 'text-danger-500' : ' text-success-500'
                   )
                 }>
                   {changeDue.toFixed(2)}
@@ -457,7 +449,7 @@ export const CloseSaleInline: FC<Props> = ({
                 {pt.type === 'credit' && (customer === undefined || customer === null) ? '' : (
                   <Shortcut shortcut={`alt+p+${index}`} handler={() => {
                     setPayment(pt)
-                  }} />
+                  }}/>
                 )}
               </Button>
             );
@@ -475,17 +467,17 @@ export const CloseSaleInline: FC<Props> = ({
                   render={(props) => {
                     return (
                       <>
-                        <Input
+                        <input
+                          ref={paymentInputRef}
                           onChange={props.field.onChange}
                           value={props.field.value}
                           type="number"
                           id="amount"
                           placeholder="Payment"
-                          className="w-full flex-1 lg input mousetrap"
-                          selectable={true}
-                          ref={props.field.ref}
+                          className="w-full flex-1 lg input mousetrap form-control"
+                          onClick={selectPaymentInput}
                           onKeyDown={(e) => {
-                            if(e.key === 'Enter'){
+                            if (e.key === 'Enter') {
                               e.preventDefault();
 
                               addSplitPayment(Number(watch('received')), payment);
@@ -499,7 +491,7 @@ export const CloseSaleInline: FC<Props> = ({
                       </>
                     )
                   }}
-                  defaultValue={finalTotal}
+                  defaultValue={finalTotal + adjustment}
                 />
 
                 <Shortcut shortcut="ctrl+enter" handler={() => focusAmountField()} invisible={true}/>
@@ -514,24 +506,28 @@ export const CloseSaleInline: FC<Props> = ({
               </div>
             </div>
 
-            <div className="input-group">
-              <Button type="button" className="btn-secondary lg w-full"
-                      disabled={added.length === 0}
-                      tabIndex={-1}
-                      onClick={addAdjustment}
-              >
-                Add Adjustment
-              </Button>
-              {!!adjustment && (
-                <Button type="button" className="btn-danger lg w-[48px]"
-                        disabled={added.length === 0}
-                        tabIndex={-1}
-                        onClick={() => setAdjustment(0)}
-                >
-                  <FontAwesomeIcon icon={faTrash}/>
-                </Button>
-              )}
-            </div>
+            {canAdjust && (
+              <>
+                {!!adjustment ? (
+                  <Button type="button" className="btn-danger lg w-full"
+                          disabled={added.length === 0}
+                          tabIndex={-1}
+                          onClick={() => setAdjustment(0)}
+                  >
+                    <FontAwesomeIcon icon={faTrash} className="mr-2"/> Adjustment
+                  </Button>
+                ) : (
+                  <Button type="button" className="btn-secondary lg w-full"
+                          disabled={added.length === 0}
+                          tabIndex={-1}
+                          onClick={addAdjustment}
+                  >
+                    Add Adjustment
+                  </Button>
+                )}
+              </>
+            )}
+
             <div className="mb-3">
               <label htmlFor="notes">Notes</label>
               <Textarea {...register('notes')} className="w-full" id="notes" tabIndex={-1}/>

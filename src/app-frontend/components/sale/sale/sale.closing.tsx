@@ -290,7 +290,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
                 <td className={
                   classNames(
                     'text-2xl font-bold',
-                    cashInHand < 0 ? 'text-rose-500' : 'text-emerald-500'
+                    cashInHand < 0 ? 'text-danger-500' : 'text-success-500'
                   )
                 }>
                   {cashInHand}
@@ -298,9 +298,11 @@ export const SaleClosing: FC<TaxProps> = (props) => {
               </tr>
               <tr>
                 <td colSpan={2}>
-                  <div className="alert alert-warning">
-                    Click on Update button if you are only saving the closing.
-                  </div>
+                  {closing?.openingBalance !== null && (
+                    <div className="alert alert-warning">
+                      Click on Update button if you are only saving the closing.
+                    </div>
+                  )}
                   <div className="flex gap-3 items-center justify-center">
                     <Button onClick={() => {
                       reset({
@@ -308,11 +310,13 @@ export const SaleClosing: FC<TaxProps> = (props) => {
                         updateOnly: true
                       });
                     }} type="submit" variant="primary" tabIndex={0} disabled={saving}>
-                      {saving ? '...' : 'Update'}
+                      {saving ? '...' : (closing?.openingBalance === null ? 'Start day' : 'Update')}
                     </Button>
-                    <Button type="submit" variant="primary" tabIndex={0} disabled={saving}>
-                      {saving ? '...' : (closing?.openingBalance === null ? 'Start day' : 'Close day')}
-                    </Button>
+                    {closing?.openingBalance !== null && (
+                      <Button type="submit" variant="primary" tabIndex={0} disabled={saving}>
+                        {saving ? '...' : 'Close day'}
+                      </Button>
+                    )}
                   </div>
                 </td>
               </tr>

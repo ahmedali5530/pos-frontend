@@ -189,7 +189,7 @@ export const TableComponent: FC<TableComponentProps> = ({
 
         {(state.isLoading || isLoading) ? (
           <div className="flex justify-center items-center">
-            <Loader lines={pageSize} lineItems={loaderLineItems || 5}/>
+            <Loader lines={1} lineItems={loaderLineItems || 5}/>
           </div>
         ) : (
           <table className="table table-hover table-background">

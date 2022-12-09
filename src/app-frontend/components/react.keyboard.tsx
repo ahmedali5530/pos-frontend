@@ -112,7 +112,7 @@ export const ReactKeyboard: FC<ReactKeyboardProps> = forwardRef((props: ReactKey
       {show && (
         <Modal open={show} onClose={() => {
           setShow(false);
-        }} title="&nbsp;" bottomSheet={true}>
+        }} title="&nbsp;" size={'bottom-sheet'}>
           <Keyboard
             keyboardRef={r => (keyboard.current = r)}
             onChange={onChange}

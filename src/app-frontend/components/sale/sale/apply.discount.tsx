@@ -5,9 +5,8 @@ import {Discount, DiscountScope} from "../../../../api/model/discount";
 import {Input} from "../../input";
 import {Modal} from "../../modal";
 import {Controller, useForm} from "react-hook-form";
-import localforage from "localforage";
 import {Trans} from "react-i18next";
-import {HomeProps, useLoadData} from "../../../../api/hooks/use.load.data";
+import {useLoadData} from "../../../../api/hooks/use.load.data";
 import {Shortcut} from "../../../../app-common/components/input/shortcut";
 
 
@@ -22,15 +21,15 @@ interface Props extends PropsWithChildren {
 }
 
 export const ApplyDiscount: FC<Props> = ({
-                                           added, setDiscount, setDiscountAmount, discount, discountAmount,
-                                           setDiscountRateType, discountRateType, children
-                                         }) => {
+  added, setDiscount, setDiscountAmount, discount, discountAmount,
+  setDiscountRateType, discountRateType, children
+}) => {
   const [modal, setModal] = useState(false);
   const [askDiscount, setAskDiscount] = useState(false);
   const {register, handleSubmit, reset, control, formState: {errors}} = useForm();
   const [discountList, setDiscountList] = useState<Discount[]>([]);
 
-  const [state, action] = useLoadData();
+  const [state]  = useLoadData();
 
   const loadDiscounts = async () => {
     if (state.discountList.list) {
@@ -134,7 +133,7 @@ export const ApplyDiscount: FC<Props> = ({
                           className="input w-full"
                         />
                         {errors.discountAmount && (
-                          <span className="text-rose-500 text-sm">
+                          <span className="text-danger-500 text-sm">
                             <Trans>
                               {errors.discountAmount.message}
                             </Trans>

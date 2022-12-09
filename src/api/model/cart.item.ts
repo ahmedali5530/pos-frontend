@@ -9,4 +9,8 @@ export interface CartItem {
   variant?: ProductVariant;
   discount?: number;
   taxes: Tax[];
+  checked?: boolean;
+  void?: boolean;
+  taxIncluded?: boolean;
+  discountIncluded?: boolean;
 }

@@ -6,13 +6,13 @@
 }
 
 body{
-  color: #444444;
+  @apply bg-black;
   font-family: 'Poppins', sans-serif;
   background-color: #f3f3f3;
 }
 
 a{
-  @apply text-blue-900;
+  @apply text-black;
   display: inline-flex;
   justify-content: center;
   align-items: center;
@@ -27,7 +27,7 @@ a{
 
 @keyframes fade-highlight {
   from{
-    @apply bg-blue-500;
+    @apply bg-primary-500;
   }
   to{
     background-color: white;
@@ -179,23 +179,23 @@ a{
     @apply cursor-not-allowed;
   }
   &.btn-primary{
-    @apply border-blue-500 text-blue-500 focus:outline-none focus:ring focus:ring-blue-200
-    focus:border-blue-500 hover:bg-blue-100;
+    @apply border-primary-500 text-primary-500 focus:outline-none focus:ring focus:ring-primary-200
+    focus:border-primary-500 hover:bg-primary-100;
     &:disabled{
-      @apply bg-blue-100;
+      @apply bg-primary-100;
     }
     &.active, &:active{
-      @apply bg-blue-500 text-white;
+      @apply bg-primary-500 text-white;
     }
   }
   &.btn-danger{
-    @apply border-rose-500 text-rose-500 focus:outline-none focus:ring focus:ring-rose-200 focus:border-rose-500
-    active:bg-rose-500 active:text-white hover:bg-rose-50;
+    @apply border-danger-500 text-danger-500 focus:outline-none focus:ring focus:ring-danger-200 focus:border-danger-500
+    active:bg-danger-500 active:text-white hover:bg-danger-50;
     &:disabled{
-      @apply bg-rose-100;
+      @apply bg-danger-100;
     }
     &.active{
-      @apply bg-rose-500 text-white;
+      @apply bg-danger-500 text-white;
     }
   }
   &.btn-secondary{
@@ -209,31 +209,31 @@ a{
     }
   }
   &.btn-warning{
-    @apply disabled:bg-amber-200 border-amber-500 text-amber-500 focus:outline-none focus:ring focus:ring-amber-200
-    focus:border-amber-500 active:bg-amber-500 active:text-white hover:bg-amber-50;
+    @apply disabled:bg-warning-200 border-warning-500 text-warning-500 focus:outline-none focus:ring focus:ring-warning-200
+    focus:border-warning-500 active:bg-warning-500 active:text-white hover:bg-warning-50;
     &:disabled{
-      @apply bg-amber-100;
+      @apply bg-warning-100;
     }
     &.active{
-      @apply bg-amber-500 text-white;
+      @apply bg-warning-500 text-white;
     }
   }
   &.btn-success{
-    @apply border-emerald-500 text-emerald-500 focus:outline-none focus:ring focus:ring-emerald-200
-    focus:border-emerald-500 active:bg-emerald-500 active:text-white hover:bg-emerald-50;
+    @apply border-success-500 text-success-500 focus:outline-none focus:ring focus:ring-success-200
+    focus:border-success-500 active:bg-success-500 active:text-white hover:bg-success-50;
     &:disabled{
-      @apply bg-emerald-100;
+      @apply bg-success-100;
     }
     &.active{
-      @apply bg-emerald-500 text-white;
+      @apply bg-success-500 text-white;
     }
   }
 }
 .form-control, .input{
-  @apply font-sans block text-sm leading-5 py-2 px-3 border-2 focus:outline-none focus:ring rounded-lg text-gray-500
-  border-blue-500 focus:ring-blue-200 focus:border-blue-500 disabled:bg-blue-100 read-only:bg-blue-100 focus:shadow-none;
+  @apply font-sans block text-sm leading-5 py-2 px-3 focus:outline-none focus:ring rounded-lg text-gray-500 border-2
+  border-primary-500 focus:ring-primary-200 focus:border-primary-500 disabled:bg-primary-100 read-only:bg-primary-100 focus:shadow-none;
   &:disabled, &:read-only{
-    @apply bg-blue-100;
+    @apply bg-primary-100;
   }
   &.lg{
     @apply min-h-[48px];
@@ -244,20 +244,20 @@ a{
     background-position: right 12px center;
   }
   &.warning{
-    @apply border-amber-500 focus:ring-amber-200 focus:border-amber-500 disabled:bg-amber-100 read-only:bg-amber-100;
+    @apply border-warning-500 focus:ring-warning-200 focus:border-warning-500 disabled:bg-warning-100 read-only:bg-warning-100;
 
     &.with-feedback {
       background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(245,158,11)" viewBox="0 0 512 512"><path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24V296c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224c0-17.7-14.3-32-32-32s-32 14.3-32 32s14.3 32 32 32s32-14.3 32-32z"/></svg>');
     }
   }
   &.error{
-    @apply border-rose-500 focus:ring-rose-200 focus:border-rose-500 disabled:bg-rose-100 read-only:bg-rose-100;
+    @apply border-danger-500 focus:ring-danger-200 focus:border-danger-500 disabled:bg-danger-100 read-only:bg-danger-100;
     &.with-feedback {
       background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(244,63,94)" viewBox="0 0 512 512"><path d="M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0S0 114.6 0 256S114.6 512 256 512zm0-384c13.3 0 24 10.7 24 24V264c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24zm32 224c0 17.7-14.3 32-32 32s-32-14.3-32-32s14.3-32 32-32s32 14.3 32 32z"/></svg>');
     }
   }
   &.success{
-    @apply border-emerald-500 focus:ring-emerald-200 focus:border-emerald-500 disabled:bg-emerald-100 read-only:bg-emerald-100;
+    @apply border-success-500 focus:ring-success-200 focus:border-success-500 disabled:bg-success-100 read-only:bg-success-100;
     &.with-feedback {
       background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(16,185,129)" viewBox="0 0 512 512"><path d="M470.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L192 338.7 425.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>');
     }
@@ -284,7 +284,13 @@ a{
 
   background-color: rgba(255, 255, 255, 0.3);
 
-  &.full{
+  .static-content{
+    position: sticky;
+    top: 0;
+    background: white;
+  }
+
+  &.modal-full{
     width: 100vw;
     height: 100vh;
     @apply rounded-none border-none shadow-none overflow-hidden;
@@ -294,7 +300,7 @@ a{
     }
   }
 
-  &.bottom-sheet{
+  &.modal-bottom-sheet{
     width: 100vw;
     height: calc(100vh - 60%);
     @apply rounded-none border-none;
@@ -302,8 +308,12 @@ a{
     position: fixed;
     background-color: white;
   }
+
+  &.modal-sm{
+    width: 30vw;
+  }
 }
-.ReactModal__Overlay:has(.bottom-sheet){
+.ReactModal__Overlay:has(.modal-bottom-sheet){
   background-color: transparent !important;
   backdrop-filter: none !important;
 }
@@ -395,7 +405,7 @@ a{
   height: 48px;
 
   &:active{
-    @apply bg-blue-500;
+    @apply bg-primary-500;
     color: white;
   }
   &:focus, &:active{
@@ -444,6 +454,20 @@ a{
     margin-left: -3.5rem;
     height: 1.5rem;
     margin-top: 0;
+  }
+}
+.checkbox{
+  @apply font-sans inline-flex h-[32px] w-[32px] relative cursor-pointer rounded-lg focus:outline-none border-none
+  appearance-none bg-white;
+  box-shadow: 0 0 0 2px theme('colors.gray.300');
+  &:checked:after{
+    content: '';
+    background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(0,149,255)" viewBox="0 0 40 40"><path d="m15.792 29.833-9.375-9.375 2-2 7.375 7.417 15.791-15.792 1.959 2Z"/></svg>');
+    height: 100%;
+    width: 100%;
+  }
+  &:checked{
+    box-shadow: 0 0 0 2px theme('colors.primary.500');
   }
 }
 .react-select{
@@ -524,31 +548,31 @@ a{
   }
 
   &.alert-danger{
-    @apply border-rose-500 bg-rose-50 text-rose-500;
+    @apply border-danger-500 bg-danger-50 text-danger-500;
     &:before{
       background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(244,63,94)" viewBox="0 0 512 512"><path d="M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0S0 114.6 0 256S114.6 512 256 512zm0-384c13.3 0 24 10.7 24 24V264c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24zm32 224c0 17.7-14.3 32-32 32s-32-14.3-32-32s14.3-32 32-32s32 14.3 32 32z"/></svg>');
     }
   }
   &.alert-success{
-    @apply border-emerald-500 bg-emerald-50 text-emerald-500;
+    @apply border-success-500 bg-success-50 text-success-500;
     &:before{
       background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(16,185,129)" viewBox="0 0 512 512"><path d="M470.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L192 338.7 425.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>');
     }
   }
   &.alert-warning{
-    @apply border-amber-500 bg-amber-50 text-amber-500;
+    @apply border-warning-500 bg-warning-50 text-warning-500;
     &:before{
       background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(245,158,11)" viewBox="0 0 512 512"><path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24V296c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224c0-17.7-14.3-32-32-32s-32 14.3-32 32s14.3 32 32 32s32-14.3 32-32z"/></svg>');
     }
   }
   &.alert-primary{
-    @apply border-blue-500 bg-blue-50 text-blue-500;
+    @apply border-primary-500 bg-primary-50 text-primary-500;
     &:before {
-      background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(59,130,246)" viewBox="0 0 512 512"><path d="M470.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L192 338.7 425.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>');
+      background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(0,149,255)" viewBox="0 0 512 512"><path d="M470.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L192 338.7 425.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>');
     }
   }
   &.alert-info{
-    @apply border-sky-500 bg-sky-50 text-sky-500;
+    @apply border-primary-500 bg-primary-50 text-primary-500;
     &:before{
       background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(14,165,233)"><path d="M18 13v-2h4v2Zm1.2 7L16 17.6l1.2-1.6 3.2 2.4Zm-2-12L16 6.4 19.2 4l1.2 1.6ZM5 19v-4H4q-.825 0-1.412-.588Q2 13.825 2 13v-2q0-.825.588-1.413Q3.175 9 4 9h4l5-3v12l-5-3H7v4Zm9-3.65v-6.7q.675.6 1.088 1.463.412.862.412 1.887t-.412 1.887q-.413.863-1.088 1.463ZM4 11v2h4.55L11 14.45v-4.9L8.55 11Zm3.5 1Z"/></svg>');
     }
@@ -586,7 +610,7 @@ a{
 }
 .input-addon{
   @apply font-sans inline-flex justify-center items-center leading-5 rounded-lg px-3 py-2 align-middle h-[40px]
-  bg-white border-2 border-blue-500 min-w-[40px] text-blue-500;
+  bg-white border-2 border-primary-500 min-w-[40px] text-primary-500;
 }
 
 .input-group{
@@ -597,10 +621,10 @@ a{
   .rs-__control{
     border-radius: 0;
   }
-  :nth-child(1){
+  :nth-child(1), .rs-__control{
     @apply rounded-bl-lg rounded-tl-lg;
   }
-  > :last-child{
+  > :last-child, > .rs-__control{
     @apply rounded-br-lg rounded-tr-lg;
   }
   //remove border-right except last element
@@ -608,7 +632,7 @@ a{
     border-right: none;
   }
 }
-.checkbox{
+.switch{
   @apply inline-flex items-center;
   label{
     @apply font-bold cursor-pointer;
@@ -629,10 +653,10 @@ a{
 
     }
     &:checked::before{
-      @apply bg-blue-500 mr-1 ml-0;
+      @apply bg-primary-500 mr-1 ml-0;
     }
     &:checked{
-      @apply border-blue-500 justify-end;
+      @apply border-primary-500 justify-end;
     }
   }
 }
@@ -640,7 +664,7 @@ a{
   z-index: 1000;
 }
 .quick-cash-badge{
-  @apply rounded-full absolute left-0 bg-rose-500 text-white;
+  @apply rounded-full absolute left-0 bg-danger-500 text-white;
   width: 22px;
   height: 22px;
   padding: 0;

@@ -8,7 +8,7 @@ export const Switch: FC<Props> = ({children, ...rest}) => {
   const id = useMemo(() => nanoid(5), []);
 
   return (
-    <div className="checkbox">
+    <div className="switch">
       <label htmlFor={id}>
         <input {...rest} type="checkbox" id={rest.id || id}/>
         {children && (

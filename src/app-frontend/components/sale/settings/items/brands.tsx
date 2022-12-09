@@ -155,7 +155,7 @@ export const Brands = () => {
             <label htmlFor="name">Name</label>
             <Input {...register('name')} id="name" className="w-full"/>
             {errors.name && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.name.message}
                 </Trans>
@@ -184,7 +184,7 @@ export const Brands = () => {
               />
 
               {errors.stores && (
-                <div className="text-rose-500 text-sm">
+                <div className="text-danger-500 text-sm">
                   <Trans>
                     {errors.stores.message}
                   </Trans>

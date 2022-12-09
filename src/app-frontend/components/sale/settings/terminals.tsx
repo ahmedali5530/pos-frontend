@@ -238,7 +238,7 @@ export const Terminals = () => {
             <label htmlFor="code">Code</label>
             <Input {...register('code')} id="code" className="w-full"/>
             {errors.code && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.code.message}
                 </Trans>
@@ -265,7 +265,7 @@ export const Terminals = () => {
             />
 
             {errors.store && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.store.message}
                 </Trans>
@@ -295,7 +295,7 @@ export const Terminals = () => {
             />
 
             {errors.categories && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.categories.message}
                 </Trans>
@@ -320,7 +320,7 @@ export const Terminals = () => {
             />
 
             {errors.products && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.products.message}
                 </Trans>
@@ -345,7 +345,7 @@ export const Terminals = () => {
             />
 
             {errors.excludeProducts && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.excludeProducts.message}
                 </Trans>
@@ -380,7 +380,7 @@ export const Terminals = () => {
 
       <Modal open={terminalProducts.length > 0} onClose={() => {
         setTerminalProducts([]);
-      }} title="Terminal products" full>
+      }} title="Terminal products" size="full">
         <div className="w-full mb-3">
           <Input type="search" placeholder="Filter products" onChange={(e) => setFilter(e.target.value)} value={filter} />
         </div>
@@ -388,9 +388,9 @@ export const Terminals = () => {
         {/*TODO: implement removal of products*/}
         <div className="flex flex-wrap gap-3">
           {terminalProductsFilter.map(item => (
-            <span className="pl-3 rounded-full inline-flex justify-center items-center bg-blue-500 text-white h-[40px]">
+            <span className="pl-3 rounded-full inline-flex justify-center items-center bg-primary-500 text-white h-[40px]">
               {item.label}
-              <button className="ml-3 bg-white text-rose-500 rounded-full h-[40px] w-[40px] border-2 border-rose-500" title={`Remove ${item.label}?`}>
+              <button className="ml-3 bg-white text-danger-500 rounded-full h-[40px] w-[40px] border-2" title={`Remove ${item.label}?`}>
                 <FontAwesomeIcon icon={faTimes} />
               </button>
             </span>

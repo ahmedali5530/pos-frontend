@@ -109,7 +109,7 @@ export const SaleHistory: FC<Props> = ({
         <>
           {!!info.getValue() ? (
             <span
-              className="text-blue-500 cursor-pointer"
+              className="text-primary-500 cursor-pointer"
               title="View this customer"
             >
               <CustomerPayments customer={info.getValue()!}>
@@ -273,27 +273,27 @@ export const SaleHistory: FC<Props> = ({
     let classes = '';
     switch (status) {
       case('Deleted'):
-        classes = 'border-rose-500 text-rose-500';
+        classes = 'border-danger-500 text-danger-500';
         break;
 
       case('Completed'):
-        classes = 'border-emerald-500 text-emerald-500';
+        classes = 'border-success-500 text-success-500';
         break;
 
       case('Dispatched'):
-        classes = 'border-emerald-500 text-emerald-500';
+        classes = 'border-success-500 text-success-500';
         break;
 
       case('Returned'):
-        classes = 'border-rose-500 text-rose-500';
+        classes = 'border-danger-500 text-danger-500';
         break;
 
       case('On Hold'):
-        classes = 'border-amber-500 text-amber-500';
+        classes = 'border-warning-500 text-warning-500';
         break;
 
       default:
-        classes = 'border-blue-500 text-blue-500';
+        classes = 'border-primary-500 text-primary-500';
         break;
     }
 
@@ -638,7 +638,7 @@ export const SaleHistory: FC<Props> = ({
 
       <Modal open={modal} onClose={() => {
         setModal(false);
-      }} title="Sale history" full>
+      }} title="Sale history" size="full">
         <form onSubmit={handleSubmit(mergeFilters)}>
           <div className="grid grid-cols-6 gap-4 mb-5">
             <div className="col-span-3">
@@ -774,19 +774,19 @@ export const SaleHistory: FC<Props> = ({
               </div>
             )}
             <div className="grid grid-cols-5 gap-4 mb-5">
-              <div className="border border-blue-500 p-5 font-bold text-blue-500 rounded">
+              <div className="border border-primary-500 p-5 font-bold text-primary-500 rounded">
                 Total Bills
                 <span className="float-right">{list.length}</span>
               </div>
-              <div className="border border-blue-500 p-5 font-bold text-blue-500 rounded">
+              <div className="border border-primary-500 p-5 font-bold text-primary-500 rounded">
                 Total Amount
                 <span className="float-right">{totalAmount.toFixed(2)}</span>
               </div>
-              <div className="border border-amber-500 p-5 font-bold text-amber-500 rounded">
+              <div className="border border-warning-500 p-5 font-bold text-warning-500 rounded">
                 Total Cost
                 <span className="float-right">{totalCost.toFixed(2)}</span>
               </div>
-              <div className="border border-rose-500 p-5 font-bold text-rose-500 rounded">
+              <div className="border border-danger-500 p-5 font-bold text-danger-500 rounded">
                 Expenses
                 <span className="float-right">{totalExpenses}</span>
               </div>
@@ -794,7 +794,7 @@ export const SaleHistory: FC<Props> = ({
                 classNames(
                   'border',
                   'p-5 font-bold rounded',
-                  totalAmount - totalCost - totalExpenses <= 0 ? 'text-rose-500 border-rose-500' : 'text-emerald-500 border-emerald-500'
+                  totalAmount - totalCost - totalExpenses <= 0 ? 'text-danger-500 border-danger-500' : 'text-success-500 border-success-500'
                 )
               }>
                 {totalAmount - totalCost - totalExpenses <= 0 ? 'Loss' : 'Profit'}

@@ -121,7 +121,7 @@ export const Expenses: FC<ExpensesProps> = (props) => {
           props.onClose();
         }
 
-      }} title="Expenses" full>
+      }} title="Expenses" size="full">
         <form onSubmit={createHandleSubmit(createExpense)}>
           <h3 className="text-lg">Add new expenses</h3>
           <div className="grid grid-cols-7 gap-4 mb-5">
@@ -132,7 +132,7 @@ export const Expenses: FC<ExpensesProps> = (props) => {
                      className="w-full"
               />
               {createErrors.description && (
-                <div className="text-rose-500 text-sm">
+                <div className="text-danger-500 text-sm">
                   <Trans>
                     {createErrors.description.message}
                   </Trans>
@@ -146,7 +146,7 @@ export const Expenses: FC<ExpensesProps> = (props) => {
                      className="w-full"
               />
               {createErrors.amount && (
-                <div className="text-rose-500 text-sm">
+                <div className="text-danger-500 text-sm">
                   <Trans>
                     {createErrors.amount.message}
                   </Trans>
@@ -202,7 +202,7 @@ export const Expenses: FC<ExpensesProps> = (props) => {
         {!isLoading && (
           <>
           <div className="grid grid-cols-4 gap-4 mb-5">
-            <div className="border border-rose-500 p-5 font-bold text-rose-500 rounded">
+            <div className="border border-danger-500 p-5 font-bold text-danger-500 rounded">
               Expenses
               <span className="float-right">
                 {list.reduce((prev, item) => prev + item.amount , 0)}

@@ -56,7 +56,7 @@ export const More: FC<Props> = ({
     await localforage.removeItem('defaultTax');
     await localforage.removeItem('defaultDiscount');
     await localforage.removeItem('defaultPaymentType');
-    await action.load();
+    // await action.load();
 
     setLoading(false);
 
@@ -153,7 +153,7 @@ export const More: FC<Props> = ({
 
       <Modal open={modal} onClose={() => {
         setModal(false);
-      }} title="Settings" full>
+      }} title="Settings" size="full" transparentContainer={false}>
         <TabControl
           defaultTab="general"
           render={({isTabActive, setActiveTab, activeTab}) => (
@@ -174,8 +174,8 @@ export const More: FC<Props> = ({
                 <Tab isActive={isTabActive('categories')} onClick={() => setActiveTab('categories')}>Categories</Tab>
                 <Tab isActive={isTabActive('suppliers')} onClick={() => setActiveTab('suppliers')}>Suppliers</Tab>
                 <Tab isActive={isTabActive('brands')} onClick={() => setActiveTab('brands')}>Brands</Tab>
-                {/*<Tab isActive={isTabActive('purchase')} onClick={() => setActiveTab('purchase')}>Purchase</Tab>
-                <Tab isActive={isTabActive('transfer')} onClick={() => setActiveTab('transfer')}>Transfer Inventory</Tab>
+                <Tab isActive={isTabActive('purchase')} onClick={() => setActiveTab('purchase')}>Purchase</Tab>
+                {/*<Tab isActive={isTabActive('transfer')} onClick={() => setActiveTab('transfer')}>Transfer Inventory</Tab>
                 <Tab isActive={isTabActive('close_inventory')} onClick={() => setActiveTab('close_inventory')}>Close inventory</Tab>*/}
               </TabNav>
               <TabContent isActive={isTabActive('general')}>
@@ -290,7 +290,7 @@ export const More: FC<Props> = ({
                 </div>
               </TabContent>
               <TabContent isActive={isTabActive('profile')}>
-                <div className="border flex justify-center items-center mb-5 border-blue-500 text-blue-500 w-full font-bold p-5">
+                <div className="border flex justify-center items-center mb-5 border-primary-500 text-primary-500 w-full font-bold p-5">
                   Logged in as {user?.displayName}
                 </div>
               </TabContent>

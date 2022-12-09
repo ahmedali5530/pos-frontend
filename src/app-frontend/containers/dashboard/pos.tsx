@@ -33,7 +33,9 @@ import {Department} from "../../../api/model/department";
 import {getStore} from "../../../duck/store/store.selector";
 import {getTerminal} from "../../../duck/terminal/terminal.selector";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCubesStacked, faFlag, faIcons} from "@fortawesome/free-solid-svg-icons";
+import {faCubesStacked, faFlag, faIcons, faPencil} from "@fortawesome/free-solid-svg-icons";
+import {useAlert} from "react-alert";
+import {CartControls} from "../../components/sale/cart/cart.controls";
 
 const Mousetrap = require('mousetrap');
 
@@ -109,7 +111,9 @@ export const getRealProductPrice = (item: Product) => {
 };
 
 export const getExclusiveRowTotal = (item: CartItem) => {
-  let total = item.price * item.quantity;
+  const quantity = parseFloat(item.quantity as unknown as string);
+
+  let total = item.price * quantity;
   if (item.discount) {
     total -= item.discount;
   }
@@ -118,16 +122,24 @@ export const getExclusiveRowTotal = (item: CartItem) => {
 }
 
 export const getRowTotal = (item: CartItem) => {
-  let total = item.price * item.quantity;
+  const quantity = parseFloat(item.quantity as unknown as string);
+
+  let total = item.price * quantity;
   if (item.discount) {
     total -= item.discount;
   }
 
   //add taxes
-  total += item.taxes.reduce((prev, tax) => prev + (tax.rate * (item.price * item.quantity) / 100), 0);
+  if(item.taxIncluded) {
+    total += item.taxes.reduce((prev, tax) => prev + (tax.rate * (item.price * quantity) / 100), 0);
+  }
 
   return total;
 };
+
+export const scrollToBottom = (container: HTMLDivElement|null) => {
+  container?.scrollTo(0, container?.scrollHeight * 1.5);
+}
 
 const Pos: FC = () => {
 
@@ -136,7 +148,8 @@ const Pos: FC = () => {
   const store = useSelector(getStore);
   const terminal = useSelector(getTerminal);
 
-  const [state, action] = useLoadData();
+  const [state] = useLoadData();
+  const alert = useAlert();
 
   useEffect(() => {
     setList(state.list);
@@ -209,8 +222,8 @@ const Pos: FC = () => {
   const couponTotal = useMemo(() => 0, [coupon]);
 
   const finalTotal = useMemo(() => {
-    return subTotal + taxTotal - discountTotal - couponTotal + adjustment;
-  }, [subTotal, taxTotal, discountTotal, couponTotal, adjustment]);
+    return subTotal + taxTotal - discountTotal - couponTotal;
+  }, [subTotal, taxTotal, discountTotal, couponTotal]);
 
   const [modal, setModal] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
@@ -229,7 +242,7 @@ const Pos: FC = () => {
     // filter products by store
     if (store) {
       filtered = filtered?.filter(item => {
-        if (item.stores.length > 0) {
+        if (item?.stores?.length > 0) {
           const stores = item.stores.map(item => item.id);
 
           return stores.includes(store?.id);
@@ -242,7 +255,7 @@ const Pos: FC = () => {
     //filter products by terminal
     if (terminal) {
       filtered = filtered?.filter(item => {
-        if (item.terminals.length > 0) {
+        if (item?.terminals?.length > 0) {
           const terminals = item.terminals.map(item => item.id);
 
           return terminals.includes(terminal?.id);
@@ -256,22 +269,22 @@ const Pos: FC = () => {
     const brandIds = Object.keys(brands);
     if (brandIds.length > 0) {
       filtered = filtered.filter(item => {
-        if (item.brands.length > 0) {
+        if (item?.brands?.length > 0) {
           const brandsFilter = item.brands.filter(b => {
             return brandIds.includes(b.id.toString())
           });
 
           return brandsFilter.length > 0;
-        } else {
-          return true;
         }
+
+        return false;
       });
     }
 
     const categoryIds = Object.keys(categories);
     if (categoryIds.length > 0) {
       filtered = filtered.filter(item => {
-        if (item.categories.length > 0) {
+        if (item?.categories?.length > 0) {
           const categoriesFilter = item.categories.filter(c => {
             return categoryIds.includes(c.id.toString())
           });
@@ -286,8 +299,8 @@ const Pos: FC = () => {
     const departmentIds = Object.keys(departments);
     if (departmentIds.length > 0) {
       filtered = filtered.filter(item => {
-        if (item.department) {
-          return departmentIds.includes(item.department.id.toString());
+        if (item?.department) {
+          return departmentIds.includes(item?.department?.id?.toString());
         }
 
         return false;
@@ -295,11 +308,11 @@ const Pos: FC = () => {
     }
 
     filtered = filtered?.filter(item => {
-      if (item.barcode && item.barcode.toLowerCase().startsWith(q.toLowerCase())) {
+      if (item?.barcode && item?.barcode.toLowerCase().startsWith(q.toLowerCase())) {
         return true;
       }
 
-      return item.name.toLowerCase().indexOf(q.toLowerCase()) !== -1;
+      return item?.name?.toLowerCase().indexOf(q.toLowerCase()) !== -1;
     });
 
     return filtered;
@@ -341,7 +354,8 @@ const Pos: FC = () => {
         item: item,
         price: newPrice,
         discount: 0,
-        taxes: item.taxes
+        taxes: item.taxes,
+        taxIncluded: true
       });
     }
 
@@ -350,6 +364,8 @@ const Pos: FC = () => {
 
     setSelected(items.findIndex(i => i.id === item.id));
     setQuantity(1);
+
+    scrollToBottom(containerRef.current);
   };
 
   const addItemVariant = (item: Product, variant: ProductVariant, quantity: number) => {
@@ -367,7 +383,8 @@ const Pos: FC = () => {
         price: variant.price ? variant.price : getRealProductPrice(item),
         variant: variant,
         discount: 0,
-        taxes: item.taxes
+        taxes: item.taxes,
+        taxIncluded: true
       });
     }
 
@@ -381,17 +398,20 @@ const Pos: FC = () => {
     setSelectedVariant(0);
 
     setQ('');
+
+    scrollToBottom(containerRef.current);
   };
 
-  const onQuantityChange = (item: CartItem, newQuantity: number) => {
+  const onQuantityChange = (item: CartItem, newQuantity: any) => {
     const oldItems = [...added];
     let index = oldItems.findIndex(addItem => addItem.item.id === item.item.id && item.variant === addItem.variant);
     if (index !== -1) {
-      if (newQuantity === 0) {
-        oldItems.splice(index, 1);
-      } else {
-        oldItems[index].quantity = newQuantity;
+      if(newQuantity < 0) {
+        alert.error('Quantity cannot be less then 0');
+        return false;
       }
+
+      oldItems[index].quantity = newQuantity;
     }
 
     setAdded(oldItems);
@@ -412,8 +432,10 @@ const Pos: FC = () => {
     let index = oldItems.findIndex(addItem => addItem.item.id === item.item.id && item.variant === addItem.variant);
 
     //discount cannot exceed price
-    if (newDiscount >= oldItems[index].price * oldItems[index].quantity) {
-      newDiscount = oldItems[index].price * oldItems[index].quantity;
+    const quantity = parseFloat(oldItems[index].quantity as unknown as string);
+
+    if (newDiscount >= oldItems[index].price * quantity) {
+      newDiscount = oldItems[index].price * quantity;
     }
 
     if (index !== -1) {
@@ -540,7 +562,7 @@ const Pos: FC = () => {
       setList(data);
     });
     localforage.getItem('tax').then((data: any) => setTax(data));
-    //load previously added discont
+    //load previously added discount
     localforage.getItem('discount').then((data: any) => setDiscount(data));
     localforage.getItem('customer').then((data: any) => setCustomer(data));
   }, []);
@@ -566,12 +588,27 @@ const Pos: FC = () => {
     });
   }, [modal, selected, selectedVariant, variants, items, added, quantity]);
 
+  const onCheckAll = (e: any) => {
+    const newAdded = [...added];
+    newAdded.map(item => item.checked = e.target.checked);
+
+    setAdded(newAdded);
+  }
+
+  const onCheck = (state: boolean, index: number) => {
+    const items = [...added];
+
+    items[index].checked = state;
+
+    setAdded(items);
+  }
+
   const user = useSelector(getAuthorizedUser);
 
   return (
     <>
-      <div className="grid gap-4 grid-cols-12 max-h-full" onClick={(event) => setFocus(event, searchField)}>
-        <div className="col-span-3 bg-gray-50 p-3">
+      <div className="grid gap-1 grid-cols-12 max-h-full" onClick={(event) => setFocus(event, searchField)}>
+        <div className="col-span-3 bg-gray-50 p-3 bg-white">
           <div className="grid grid-cols-3 gap-3 mb-3">
             <SaleBrands brands={brands} setBrands={setBrands}>
               <FontAwesomeIcon icon={faFlag} />
@@ -620,8 +657,9 @@ const Pos: FC = () => {
             q={q}
           />
         </div>
-        <div className="col-span-6 bg-gray-50">
-          <div className="overflow-auto block p-3 pt-0 h-[calc(100vh_-_250px)]" ref={containerRef}>
+        <div className="col-span-6 bg-gray-50 bg-white">
+          <CartControls added={added} setAdded={setAdded} containerRef={containerRef.current}/>
+          <div className="overflow-auto block h-[calc(100vh_-_250px)]" ref={containerRef}>
             <CartContainer
               added={added}
               onQuantityChange={onQuantityChange}
@@ -629,16 +667,18 @@ const Pos: FC = () => {
               onPriceChange={onPriceChange}
               deleteItem={deleteItem}
               subTotal={subTotal}
+              onCheckAll={onCheckAll}
+              onCheck={onCheck}
             />
           </div>
-          <div className="bg-gray-100 h-[250px]">
-            <div className="grid gap-4 grid-cols-2 border border-x-0 border-b-0 border-gray-300">
+          <div className="bg-gray-100 h-[180px]">
+            <div className="grid gap-4 grid-cols-3 border border-x-0 border-b-0 border-gray-300">
               <div className="col-span-1 grid grid-cols-2 font-bold gap-0 auto-rows-min">
-                <span>User</span><span className="text-blue-500">{user?.displayName}</span>
-                <span>Store</span><span className="text-blue-500">{store?.name}</span>
-                <span>Terminal</span><span className="text-blue-500">{terminal?.code}</span>
+                <span>User</span><span className="text-primary-500">{user?.displayName}</span>
+                <span>Store</span><span className="text-primary-500">{store?.name}</span>
+                <span>Terminal</span><span className="text-primary-500">{terminal?.code}</span>
               </div>
-              <div className="col-span-1 p-3 flex flex-wrap flex-row justify-between gap-5">
+              <div className="col-span-2 p-3 flex flex-wrap flex-row justify-between gap-3 items-end">
                 <SaleHistory
                   setAdded={setAdded}
                   setDiscount={setDiscount}
@@ -660,7 +700,7 @@ const Pos: FC = () => {
             </div>
           </div>
         </div>
-        <div className="col-span-3 bg-gray-50 p-3">
+        <div className="col-span-3 bg-gray-50 p-3 bg-white">
           <CloseSaleInline
             added={added}
             setAdded={setAdded}

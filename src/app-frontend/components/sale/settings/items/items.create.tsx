@@ -29,6 +29,7 @@ import {Department} from "../../../../../api/model/department";
 import {ProductVariants} from "./products/variants";
 import {CreateVariants} from "./products/create.variants";
 import {Tax} from "../../../../../api/model/tax";
+import {useAlert} from "react-alert";
 
 interface ItemsCreateProps{
   setActiveTab: (tab: string) => void;
@@ -44,6 +45,7 @@ export const CreateItem = ({
   const useFormHook = useForm();
   const {register, handleSubmit, setError, formState: {errors}, reset, getValues, control} = useFormHook;
   const [creating, setCreating] = useState(false);
+  const alert = useAlert();
 
   const createProduct = async (values: any) => {
     setCreating(true);
@@ -94,12 +96,18 @@ export const CreateItem = ({
     } catch (exception: any) {
       if (exception instanceof UnprocessableEntityException) {
         const e = await exception.response.json();
-        e.violations.forEach((item: ConstraintViolation) => {
-          setError(item.propertyPath, {
-            message: item.message,
-            type: 'server'
+        if(e.violations){
+          e.violations.forEach((item: ConstraintViolation) => {
+            setError(item.propertyPath, {
+              message: item.message,
+              type: 'server'
+            });
           });
-        });
+        }
+
+        if(e.errorMessage){
+          alert.error(e.errorMessage);
+        }
 
         return false;
       }
@@ -276,7 +284,7 @@ export const CreateItem = ({
           />
 
           {errors.department && (
-            <div className="text-rose-500 text-sm">
+            <div className="text-danger-500 text-sm">
               <Trans>
                 {errors.department.message}
               </Trans>
@@ -293,7 +301,7 @@ export const CreateItem = ({
                  )}
           />
           {errors.name && (
-            <div className="text-rose-500 text-sm">
+            <div className="text-danger-500 text-sm">
               <Trans>
                 {errors.name.message}
               </Trans>
@@ -324,7 +332,7 @@ export const CreateItem = ({
 
           </div>
           {errors.barcode && (
-            <div className="text-rose-500 text-sm">
+            <div className="text-danger-500 text-sm">
               <Trans>
                 {errors.barcode.message}
               </Trans>
@@ -344,7 +352,7 @@ export const CreateItem = ({
             )}/>
           </div>
           {errors.basePrice && (
-            <div className="text-rose-500 text-sm">
+            <div className="text-danger-500 text-sm">
               <Trans>
                 {errors.basePrice.message}
               </Trans>
@@ -358,7 +366,7 @@ export const CreateItem = ({
             getErrorClass(errors.name)
           )}/>
           {errors.saleUnit && (
-            <div className="text-rose-500 text-sm">
+            <div className="text-danger-500 text-sm">
               <Trans>
                 {errors.saleUnit.message}
               </Trans>
@@ -377,7 +385,7 @@ export const CreateItem = ({
             )}/>
           </div>
           {errors.cost && (
-            <div className="text-rose-500 text-sm">
+            <div className="text-danger-500 text-sm">
               <Trans>
                 {errors.cost.message}
               </Trans>
@@ -391,7 +399,7 @@ export const CreateItem = ({
             getErrorClass(errors.name)
           )}/>
           {errors.purchaseUnit && (
-            <div className="text-rose-500 text-sm">
+            <div className="text-danger-500 text-sm">
               <Trans>
                 {errors.purchaseUnit.message}
               </Trans>
@@ -417,7 +425,7 @@ export const CreateItem = ({
             control={control}
           />
           {errors.taxes && (
-            <div className="text-rose-500 text-sm">
+            <div className="text-danger-500 text-sm">
               <Trans>
                 {errors.taxes.message}
               </Trans>
@@ -445,7 +453,7 @@ export const CreateItem = ({
           />
 
           {errors.stores && (
-            <div className="text-rose-500 text-sm">
+            <div className="text-danger-500 text-sm">
               <Trans>
                 {errors.stores.message}
               </Trans>
@@ -471,7 +479,7 @@ export const CreateItem = ({
               control={control}
             />
             {errors.categories && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.categories.message}
                 </Trans>
@@ -496,7 +504,7 @@ export const CreateItem = ({
               control={control}
             />
             {errors.suppliers && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.suppliers.message}
                 </Trans>
@@ -521,7 +529,7 @@ export const CreateItem = ({
               control={control}
             />
             {errors.brands && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.brands.message}
                 </Trans>

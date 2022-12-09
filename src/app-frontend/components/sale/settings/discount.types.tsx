@@ -194,7 +194,7 @@ export const DiscountTypes = () => {
             <label htmlFor="name">Name</label>
             <Input {...register('name')} id="name" className="w-full"/>
             {errors.name && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.name.message}
                 </Trans>
@@ -205,7 +205,7 @@ export const DiscountTypes = () => {
             <label htmlFor="rate">Rate</label>
             <Input {...register('rate')} id="rate" className="w-full"/>
             {errors.rate && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.rate.message}
                 </Trans>
@@ -232,7 +232,7 @@ export const DiscountTypes = () => {
               )}
             />
             {errors.rateType && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.rateType.message}
                 </Trans>
@@ -259,7 +259,7 @@ export const DiscountTypes = () => {
               )}
             />
             {errors.scope && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.scope.message}
                 </Trans>
@@ -289,7 +289,7 @@ export const DiscountTypes = () => {
               />
 
               {errors.stores && (
-                <div className="text-rose-500 text-sm">
+                <div className="text-danger-500 text-sm">
                   <Trans>
                     {errors.stores.message}
                   </Trans>

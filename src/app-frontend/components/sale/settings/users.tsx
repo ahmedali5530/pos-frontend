@@ -181,7 +181,7 @@ export const Users = () => {
             <label htmlFor="displayName">Name</label>
             <Input {...register('displayName')} id="displayName" className="w-full"/>
             {errors.displayName && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.displayName.message}
                 </Trans>
@@ -192,7 +192,7 @@ export const Users = () => {
             <label htmlFor="username">Username</label>
             <Input {...register('username')} id="username" className="w-full"/>
             {errors.username && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.username.message}
                 </Trans>
@@ -203,7 +203,7 @@ export const Users = () => {
             <label htmlFor="password">Password</label>
             <Input {...register('password')} type="password" id="password" className="w-full"/>
             {errors.password && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.password.message}
                 </Trans>
@@ -214,7 +214,7 @@ export const Users = () => {
             <label htmlFor="email">Email</label>
             <Input {...register('email')} id="email" className="w-full"/>
             {errors.email && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.email.message}
                 </Trans>
@@ -243,7 +243,7 @@ export const Users = () => {
             />
 
             {errors.roles && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.roles.message}
                 </Trans>
@@ -270,7 +270,7 @@ export const Users = () => {
               )}
             />
             {errors.stores && (
-              <div className="text-rose-500 text-sm">
+              <div className="text-danger-500 text-sm">
                 <Trans>
                   {errors.stores.message}
                 </Trans>

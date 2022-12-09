@@ -1,4 +1,4 @@
-import React, {FunctionComponent, PropsWithChildren, useEffect, useRef, useState} from "react";
+import React, {FunctionComponent, PropsWithChildren, ReactNode, useEffect, useRef, useState} from "react";
 import ReactModal from 'react-modal';
 import classNames from "classnames";
 import {faTimes} from "@fortawesome/free-solid-svg-icons";
@@ -11,8 +11,9 @@ interface ModalProps extends PropsWithChildren{
   shouldCloseOnOverlayClick?: boolean;
   shouldCloseOnEsc?: boolean;
   hideCloseButton?: boolean;
-  full?: boolean;
-  bottomSheet?: boolean;
+  transparentContainer?: boolean;
+  header?: ReactNode;
+  size?: string;
 }
 
 export const Modal: FunctionComponent<ModalProps> = (props) => {
@@ -34,6 +35,8 @@ export const Modal: FunctionComponent<ModalProps> = (props) => {
     }, 150);
   };
 
+  const ref = useRef<HTMLDivElement>(null);
+
   return (
     <>
       <ReactModal
@@ -45,8 +48,9 @@ export const Modal: FunctionComponent<ModalProps> = (props) => {
           classNames(
             "justify-center",
             closeClass,
-            props.full && 'full',
-            props.bottomSheet && 'bottom-sheet'
+            props.size === 'full' && 'modal-full',
+            props.size === 'bottom-sheet' && 'modal-bottom-sheet',
+            props.size === 'sm' && 'modal-sm'
           )
         }
         shouldCloseOnOverlayClick={props.shouldCloseOnOverlayClick}
@@ -68,10 +72,15 @@ export const Modal: FunctionComponent<ModalProps> = (props) => {
             </button>
           )}
 
-          <div className="p-5 border-b-2 border-gray-200">
+          <div className="p-5 border-b-2 border-gray-200" ref={ref}>
             <h3 className="text-2xl">{props?.title}</h3>
+            {props.header && props.header}
           </div>
-          <div className="p-5 pb-12 overflow-y-auto modal-container">
+          <div className={
+            classNames(
+              "pb-12 overflow-y-auto modal-container px-5 py-3",
+              'bg-white'
+            )}>
             {props.children}
           </div>
         </div>

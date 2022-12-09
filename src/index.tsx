@@ -7,19 +7,18 @@ import {StoreFactory} from "./store/store.factory";
 import {Provider} from "react-redux";
 import { createRoot } from 'react-dom/client';
 import {positions, Provider as AlertProvider} from "react-alert";
-import AlertTemplate from 'react-alert-template-basic';
+import AlertTemplate from '../src/app-common/components/alert/src';
 import {I18nextProvider} from "react-i18next";
 import i18n from './i18next';
 
-require('./typings.d.ts');
+require('./types.d.ts');
 
 const store = StoreFactory.createStore();
 
 const options = {
   timeout: 3000,
-  position: positions.TOP_CENTER,
+  position: positions.BOTTOM_RIGHT,
   containerStyle: {
-    top: '50px',
     paddingRight: '20px'
   }
 };

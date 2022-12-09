@@ -230,8 +230,8 @@ export const Keyboard = (props: KeyboardProps) => {
   };
 
   const buttonClasses: {[name: string]: string} = {
-    '*ok': 'bg-emerald-500 text-white',
-    '*cancel': 'bg-rose-500 text-white px-5',
+    '*ok': 'bg-success-500 text-white',
+    '*cancel': 'bg-danger-500 text-white px-5',
     '*space': 'w-[250px]'
   };
 
@@ -271,7 +271,7 @@ export const Keyboard = (props: KeyboardProps) => {
         {props.triggerWithIcon && (
           <Button
             type="button"
-            className="keyboard-input-button absolute right-0 top-[24px] h-[40px] w-[40px] border rounded-lg border-blue-500 bg-transparent"
+            className="keyboard-input-button absolute right-0 top-[24px] h-[40px] w-[40px] border rounded-lg border-primary-500 bg-transparent"
             onClick={() => {
               if(!props.hideKeyboard) {
                 setShow(true)

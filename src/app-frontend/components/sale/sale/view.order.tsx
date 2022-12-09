@@ -26,7 +26,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
   const orderTotal = useMemo(() => {
     return itemsTotal + order.items.reduce((prev, item) => (
       prev + itemTax(item)
-    ), 0);
+    ), 0) + (order?.adjustment || 0);
   }, [order, itemsTotal]);
 
   return (
@@ -51,14 +51,16 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
             Discount
           </div>
           <div className="border border-gray-500 p-5 rounded">
-            <div className="text-2xl">{(order.adjustment ? order.adjustment : 0)?.toFixed(2)}</div>
+            <div className="text-2xl">{order.adjustment && (
+              (itemsTotal + (order?.tax?.amount || 0) - (order?.discount?.amount || 0)) % 10 < 5 ? '-' : '+'
+            )}{(order.adjustment ? order.adjustment : 0)?.toFixed(2)}</div>
             Adjustment
           </div>
-          <div className="border border-rose-500 p-5 text-rose-500 rounded">
+          <div className="border border-primary-500 p-5 text-primary-500 rounded font-bold">
             <div className="text-2xl">={orderTotal.toFixed(2)}</div>
             Total
           </div>
-          <div className="border border-emerald-500 p-5 text-emerald-500 rounded">
+          <div className="border border-danger-500 p-5 text-danger-500 rounded">
             Payments breakdown
             <ul className="font-normal">
               {order.payments.map(item => (

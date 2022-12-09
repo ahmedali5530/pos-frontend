@@ -1,5 +1,6 @@
 import {ButtonHTMLAttributes, FunctionComponent, PropsWithChildren, ReactElement, useCallback, useState} from 'react';
 import classNames from "classnames";
+import ScrollContainer from "react-indiana-drag-scroll";
 
 export interface TabControlState {
   activeTab: string;
@@ -44,7 +45,9 @@ export const TabControl: FunctionComponent<TabControlProps> = (props) => {
 interface TabNavProps extends PropsWithChildren{}
 export const TabNav = (props: TabNavProps) => {
   return (
-    <div className="flex justify-between items-center gap-3 flex-wrap">{props.children}</div>
+    <ScrollContainer horizontal nativeMobileScroll={true}>
+      <div className="flex justify-between items-center">{props.children}</div>
+    </ScrollContainer>
   );
 };
 
@@ -55,10 +58,9 @@ export const Tab = (props: TabProps) => {
   return (
     <button {...props} className={
       classNames(
-        'border-b-4 p-3 px-5 flex-grow flex-shrink-0',
+        'p-3 px-5 flex-grow flex-shrink-0 rounded-full',
         props.isActive ?
-          'border-blue-500 bg-blue-50 rounded-t-2xl text-blue-500' :
-          'border-transparent'
+          'bg-neutral-500 text-white font-bold' : ''
       )
     }>{props.children}</button>
   );
