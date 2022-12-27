@@ -431,7 +431,7 @@ export const CloseSaleInline: FC<Props> = ({
         </div>
       </div>
       <div>
-        <ScrollContainer horizontal className="scroll-container flex gap-3 mb-3" vertical={false}>
+        <ScrollContainer horizontal className="scroll-container flex gap-3 mb-3 py-3" vertical={false}>
           {paymentTypesList.map((pt, index) => {
             return (
               <Button

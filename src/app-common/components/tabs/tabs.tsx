@@ -46,7 +46,7 @@ interface TabNavProps extends PropsWithChildren{}
 export const TabNav = (props: TabNavProps) => {
   return (
     <ScrollContainer horizontal nativeMobileScroll={true}>
-      <div className="flex justify-between items-center">{props.children}</div>
+      <div className="flex justify-start items-center">{props.children}</div>
     </ScrollContainer>
   );
 };
@@ -58,9 +58,9 @@ export const Tab = (props: TabProps) => {
   return (
     <button {...props} className={
       classNames(
-        'p-3 px-5 flex-grow flex-shrink-0 rounded-full',
+        'p-3 px-5 flex-shrink-0 border-b',
         props.isActive ?
-          'bg-neutral-500 text-white font-bold' : ''
+          'text-primary-500 border-primary-500 shadow-[inset_0px_-2px_0_0]' : ''
       )
     }>{props.children}</button>
   );

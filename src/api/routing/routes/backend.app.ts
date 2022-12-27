@@ -39,6 +39,7 @@ export const PAYMENT_TYPE_GET = scopeUrl('/admin/payment-types/:id');
 
 export const CUSTOMER_LIST = scopeUrl('/admin/customer/list');
 export const CUSTOMER_CREATE = scopeUrl('/admin/customer/create');
+export const CUSTOMER_EDIT = scopeUrl('/admin/customer/:id');
 export const CUSTOMER_PAYMENT_CREATE = scopeUrl('/admin/customer/payment/:id');
 
 export const CATEGORY_LIST = scopeUrl('/admin/category/list');

@@ -9,4 +9,5 @@ export interface Supplier{
   whatsApp?: string;
   address?: string;
   stores: Store[];
+  openingBalance?: number;
 }

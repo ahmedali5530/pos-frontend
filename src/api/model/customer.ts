@@ -15,4 +15,5 @@ export interface Customer {
   cnic?: string;
   payments: CustomerPayment[];
   orders: Omit<Order, "customer">[];
+  openingBalance?: number;
 }

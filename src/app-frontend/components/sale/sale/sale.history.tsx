@@ -629,10 +629,10 @@ export const SaleHistory: FC<Props> = ({
 
   return (
     <>
-      <Button variant="primary" className="w-24" size="lg" onClick={() => {
+      <Button variant="primary" size="lg" onClick={() => {
         setModal(true);
       }} title="Sale history">
-        <FontAwesomeIcon icon={faClockRotateLeft}/>
+        <FontAwesomeIcon icon={faClockRotateLeft} className="mr-2"/> History
         <Shortcut shortcut="ctrl+h" handler={() => setModal(true)} />
       </Button>
 

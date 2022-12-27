@@ -36,6 +36,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCubesStacked, faFlag, faIcons, faPencil} from "@fortawesome/free-solid-svg-icons";
 import {useAlert} from "react-alert";
 import {CartControls} from "../../components/sale/cart/cart.controls";
+import {PurchaseModal} from "../../components/sale/purchase/purchase";
 
 const Mousetrap = require('mousetrap');
 
@@ -632,13 +633,13 @@ const Pos: FC = () => {
               autoFocus
               ref={searchField}
               selectable
-              className="search-field relative mousetrap flex-1"
+              className="search-field relative mousetrap flex-1 lg"
               value={q}
               onFocus={() => searchField.current?.select()}
               tabIndex={0}
             />
             <Input placeholder="QTY"
-                   className="w-24 mousetrap"
+                   className="w-24 mousetrap lg"
                    value={quantity}
                    onChange={(event) => setQuantity(+event.currentTarget.value)}
                    selectable={true}
@@ -688,6 +689,7 @@ const Pos: FC = () => {
                   customer={customer}
                   setRefundingFrom={setRefundingFrom}
                 />
+                <PurchaseModal />
                 <Customers customer={customer} setCustomer={setCustomer}/>
                 <Expenses/>
                 <More

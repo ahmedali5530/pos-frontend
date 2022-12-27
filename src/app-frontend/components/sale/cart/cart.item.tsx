@@ -58,16 +58,16 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
       <div className="table-cell p-2">
         <div className="flex justify-center">
           <div className="input-group">
-            <Button type="button" variant="secondary" onClick={() => onQuantityChange(item, item.quantity - 1)}>
+            <Button size="lg" type="button" variant="primary" onClick={() => onQuantityChange(item, item.quantity - 1)}>
               <FontAwesomeIcon icon={faMinus}/>
             </Button>
             <Input
               value={item.quantity}
-              className="text-center w-[64px]"
+              className="text-center w-[64px] lg"
               onChange={(event) => onQuantityChange(item, event.currentTarget.value)}
               selectable={true}
             />
-            <Button type="button" variant="secondary" onClick={() => onQuantityChange(item, item.quantity + 1)}>
+            <Button size="lg" type="button" variant="primary" onClick={() => onQuantityChange(item, item.quantity + 1)}>
               <FontAwesomeIcon icon={faPlus}/>
             </Button>
           </div>
@@ -76,7 +76,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
       <div className="table-cell p-2 text-center">
         <Input
           value={item.discount}
-          className="text-center w-full"
+          className="text-center w-full lg"
           onChange={(event) => {
             onDiscountChange(item, +event.currentTarget.value)
           }}
@@ -94,7 +94,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
       <div className="table-cell p-2 text-right">
         <Input
           value={item.price}
-          className="text-center w-full"
+          className="text-center w-full lg"
           onChange={(event) => onPriceChange(item, +event.currentTarget.value)}
           selectable={true}
         />

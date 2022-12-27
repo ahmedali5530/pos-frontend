@@ -368,6 +368,16 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
                 <strong>{netTotal}</strong>
               </td>
             </tr>
+            {order.adjustment && (
+              <tr>
+                <td style={{textAlign: "right", width: "60%"}}>
+                  <strong>Adjustment:</strong>
+                </td>
+                <td style={{textAlign: "right", width: "40%"}}>
+                  <strong>{order.adjustment}</strong>
+                </td>
+              </tr>
+            )}
             {order.payments.map(item => (
               <tr>
                 <td style={{textAlign: "right", width: "60%"}}>{item.type?.name} Amount</td>

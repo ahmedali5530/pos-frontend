@@ -25,7 +25,7 @@ import {Departments} from "./departments";
 import {Items} from "./items/items";
 import {CreateItem} from "./items/items.create";
 import {Categories} from "./items/categories";
-import {Suppliers} from "./items/suppliers";
+import {Suppliers} from "../purchase/suppliers";
 import {Brands} from "./items/brands";
 import {Product} from "../../../../api/model/product";
 
@@ -149,14 +149,14 @@ export const More: FC<Props> = ({
     <>
       <Button variant="secondary" className="w-auto" size="lg" onClick={() => {
         setModal(true);
-      }} title="Settings"><FontAwesomeIcon icon={faCog} className="mr-3"/> Settings</Button>
+      }} title="Settings"><FontAwesomeIcon icon={faCog} className="mr-2"/> Settings</Button>
 
       <Modal open={modal} onClose={() => {
         setModal(false);
       }} title="Settings" size="full" transparentContainer={false}>
         <TabControl
           defaultTab="general"
-          render={({isTabActive, setActiveTab, activeTab}) => (
+          render={({isTabActive, setActiveTab}) => (
             <>
               <TabNav>
                 <Tab isActive={isTabActive('general')} onClick={() => setActiveTab('general')}>General</Tab>
@@ -172,9 +172,7 @@ export const More: FC<Props> = ({
                 <Tab isActive={isTabActive('form')}
                      onClick={() => setActiveTab('form')}>{operation === 'create' ? 'Create item' : 'Update item'}</Tab>
                 <Tab isActive={isTabActive('categories')} onClick={() => setActiveTab('categories')}>Categories</Tab>
-                <Tab isActive={isTabActive('suppliers')} onClick={() => setActiveTab('suppliers')}>Suppliers</Tab>
                 <Tab isActive={isTabActive('brands')} onClick={() => setActiveTab('brands')}>Brands</Tab>
-                <Tab isActive={isTabActive('purchase')} onClick={() => setActiveTab('purchase')}>Purchase</Tab>
                 {/*<Tab isActive={isTabActive('transfer')} onClick={() => setActiveTab('transfer')}>Transfer Inventory</Tab>
                 <Tab isActive={isTabActive('close_inventory')} onClick={() => setActiveTab('close_inventory')}>Close inventory</Tab>*/}
               </TabNav>
@@ -330,13 +328,9 @@ export const More: FC<Props> = ({
               <TabContent isActive={isTabActive('categories')}>
                 <Categories/>
               </TabContent>
-              <TabContent isActive={isTabActive('suppliers')}>
-                <Suppliers/>
-              </TabContent>
               <TabContent isActive={isTabActive('brands')}>
                 <Brands/>
               </TabContent>
-              <TabContent isActive={isTabActive('purchase')}>purchases</TabContent>
               <TabContent isActive={isTabActive('transfer')}>transfer inventory</TabContent>
               <TabContent isActive={isTabActive('close_inventory')}>close inventory</TabContent>
             </>

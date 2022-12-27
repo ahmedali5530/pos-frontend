@@ -13,7 +13,7 @@ interface ModalProps extends PropsWithChildren{
   hideCloseButton?: boolean;
   transparentContainer?: boolean;
   header?: ReactNode;
-  size?: string;
+  size?: "full"|"bottom-sheet"|"sm";
 }
 
 export const Modal: FunctionComponent<ModalProps> = (props) => {
@@ -56,7 +56,7 @@ export const Modal: FunctionComponent<ModalProps> = (props) => {
         shouldCloseOnOverlayClick={props.shouldCloseOnOverlayClick}
         style={{
           overlay: {
-            backgroundColor: 'rgba(255,255,255,0.1)',
+            backgroundColor: 'transparent',
             backdropFilter: 'blur(15px)'
           }
         }}
