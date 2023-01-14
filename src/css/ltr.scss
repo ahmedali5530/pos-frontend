@@ -326,6 +326,17 @@ a{
     width: 30vw;
   }
 }
+
+@media (max-width: 1024px) {
+  .ReactModal__Content.modal-sm{
+    width: 50vw;
+  }
+}
+@media (max-width: 768px) {
+  .ReactModal__Content.modal-sm{
+    width: 95vw;
+  }
+}
 .ReactModal__Overlay:has(.modal-bottom-sheet){
   background-color: transparent !important;
   backdrop-filter: none !important;

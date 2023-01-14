@@ -19,7 +19,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
 
   const itemsTotal = useMemo(() => {
     return order.items.reduce((prev, item) => (
-      (prev + (item.quantity * item.price)) + item.taxesTotal
+      (prev + (item.quantity * item.price)) + item.taxesTotal - item.discount
     ), 0);
   }, [order]);
 
@@ -83,6 +83,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
             <th className="text-left">Item</th>
             <th className="text-right">Quantity</th>
             <th className="text-right">Tax</th>
+            <th className="text-right">Discount</th>
             <th className="text-right">Price</th>
             <th className="text-right">Total</th>
           </tr>
@@ -103,8 +104,9 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
               <td className="text-right">
                 {itemTax(item)}
               </td>
+              <td className="text-right">{item.discount}</td>
               <td className="text-right">{item.price}</td>
-              <td className="text-right">{(item.price * item.quantity) + itemTax(item)}</td>
+              <td className="text-right">{(item.price * item.quantity) + itemTax(item) - item.discount}</td>
             </tr>
           ))}
           </tbody>
@@ -112,6 +114,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
             <tr>
               <th className="text-left">Total</th>
               <th className="text-right">{order.items.reduce((prev, item) => prev + (item.quantity), 0)}</th>
+              <th></th>
               <th></th>
               <th></th>
               <th className="text-right">{itemsTotal}</th>

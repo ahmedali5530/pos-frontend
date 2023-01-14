@@ -17,12 +17,12 @@ export const PurchaseModal: FC<Props> = ({
       <Button variant="primary" onClick={() => {
         setModal(true);
       }} size="lg">
-        {children || 'Purchase'}
+        {children || 'Inventory'}
       </Button>
 
       <Modal open={modal} onClose={() => {
         setModal(false);
-      }} title={'Purchase'} size="full" transparentContainer={false}>
+      }} title={'Inventory'} size="full" transparentContainer={false}>
         <TabControl
           defaultTab="purchase"
           render={({isTabActive, setActiveTab, activeTab}) => (

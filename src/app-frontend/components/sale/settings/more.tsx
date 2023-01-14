@@ -161,20 +161,17 @@ export const More: FC<Props> = ({
               <TabNav>
                 <Tab isActive={isTabActive('general')} onClick={() => setActiveTab('general')}>General</Tab>
                 <Tab isActive={isTabActive('profile')} onClick={() => setActiveTab('profile')}>Profile</Tab>
+                <Tab isActive={isTabActive('stores')} onClick={() => setActiveTab('stores')}>Stores</Tab>
                 <Tab isActive={isTabActive('users')} onClick={() => setActiveTab('users')}>Users</Tab>
+                <Tab isActive={isTabActive('brands')} onClick={() => setActiveTab('brands')}>Brands</Tab>
+                <Tab isActive={isTabActive('categories')} onClick={() => setActiveTab('categories')}>Categories</Tab>
                 <Tab isActive={isTabActive('payments')} onClick={() => setActiveTab('payments')}>Payment types</Tab>
                 <Tab isActive={isTabActive('discounts')} onClick={() => setActiveTab('discounts')}>Discounts</Tab>
                 <Tab isActive={isTabActive('taxes')} onClick={() => setActiveTab('taxes')}>Taxes</Tab>
-                <Tab isActive={isTabActive('stores')} onClick={() => setActiveTab('stores')}>Stores</Tab>
-                <Tab isActive={isTabActive('terminals')} onClick={() => setActiveTab('terminals')}>Terminals</Tab>
                 <Tab isActive={isTabActive('departments')} onClick={() => setActiveTab('departments')}>Departments</Tab>
+                <Tab isActive={isTabActive('form')} onClick={() => setActiveTab('form')}>{operation === 'create' ? 'Create item' : 'Update item'}</Tab>
                 <Tab isActive={isTabActive('list')} onClick={() => setActiveTab('list')}>Items list</Tab>
-                <Tab isActive={isTabActive('form')}
-                     onClick={() => setActiveTab('form')}>{operation === 'create' ? 'Create item' : 'Update item'}</Tab>
-                <Tab isActive={isTabActive('categories')} onClick={() => setActiveTab('categories')}>Categories</Tab>
-                <Tab isActive={isTabActive('brands')} onClick={() => setActiveTab('brands')}>Brands</Tab>
-                {/*<Tab isActive={isTabActive('transfer')} onClick={() => setActiveTab('transfer')}>Transfer Inventory</Tab>
-                <Tab isActive={isTabActive('close_inventory')} onClick={() => setActiveTab('close_inventory')}>Close inventory</Tab>*/}
+                <Tab isActive={isTabActive('terminals')} onClick={() => setActiveTab('terminals')}>Terminals</Tab>
               </TabNav>
               <TabContent isActive={isTabActive('general')}>
                 <div className="inline-flex flex-col gap-5 justify-start">
@@ -196,7 +193,7 @@ export const More: FC<Props> = ({
                     dispatch(touchAction(value.target.checked));
                   }}>Enable Touch?</Switch>
                 </div>
-                <div className="grid grid-cols-6 gap-5">
+                <div className="grid grid-cols-5 gap-5 mt-3">
                   <div>
                     <h3 className="text-xl">Set Default tax</h3>
                     <ReactSelect

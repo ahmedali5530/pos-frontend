@@ -13,4 +13,5 @@ export interface OrderItem {
   isReturned?: boolean;
   taxes: Tax[];
   taxesTotal: number;
+  discount: number;
 }

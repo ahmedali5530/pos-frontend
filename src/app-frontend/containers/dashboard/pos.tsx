@@ -680,6 +680,7 @@ const Pos: FC = () => {
                 <span>Terminal</span><span className="text-primary-500">{terminal?.code}</span>
               </div>
               <div className="col-span-2 p-3 flex flex-wrap flex-row justify-between gap-3 items-end">
+                <PurchaseModal />
                 <SaleHistory
                   setAdded={setAdded}
                   setDiscount={setDiscount}
@@ -689,7 +690,6 @@ const Pos: FC = () => {
                   customer={customer}
                   setRefundingFrom={setRefundingFrom}
                 />
-                <PurchaseModal />
                 <Customers customer={customer} setCustomer={setCustomer}/>
                 <Expenses/>
                 <More

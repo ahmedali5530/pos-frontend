@@ -39,15 +39,19 @@ export interface TabControlProps {
 export const TabControl: FunctionComponent<TabControlProps> = (props) => {
   const [{ activeTab, isTabActive }, { setActiveTab }] = useTabControl(props);
 
-  return props.render({ activeTab, setActiveTab, isTabActive });
+  return (
+    <div className="tab-control flex gap-5">
+      {props.render({ activeTab, setActiveTab, isTabActive })}
+    </div>
+  );
 };
 
 interface TabNavProps extends PropsWithChildren{}
 export const TabNav = (props: TabNavProps) => {
   return (
-    <ScrollContainer horizontal nativeMobileScroll={true}>
-      <div className="flex justify-start items-center">{props.children}</div>
-    </ScrollContainer>
+    // <ScrollContainer horizontal nativeMobileScroll={true}>
+      <div className="flex flex-col w-[220px] flex-shrink-0 border-r pr-3">{props.children}</div>
+    // </ScrollContainer>
   );
 };
 
@@ -58,9 +62,9 @@ export const Tab = (props: TabProps) => {
   return (
     <button {...props} className={
       classNames(
-        'p-3 px-5 flex-shrink-0 border-b',
+        'rounded-r-lg p-3 px-5 flex-shrink-0 text-left hover:text-primary-500 hover:bg-primary-100 hover:shadow-[inset_5px_0_0_0]',
         props.isActive ?
-          'text-primary-500 border-primary-500 shadow-[inset_0px_-2px_0_0]' : ''
+          'text-primary-500 bg-primary-100 shadow-[inset_5px_0_0_0]' : ''
       )
     }>{props.children}</button>
   );
@@ -79,7 +83,7 @@ export const TabContent = (props: TabContentProps) => {
   return (
     <div className={
       classNames(
-        'py-5',
+        'py-5 flex-grow-1 w-full',
         !props.isActive && 'hidden'
       )
     }>{props.children}</div>

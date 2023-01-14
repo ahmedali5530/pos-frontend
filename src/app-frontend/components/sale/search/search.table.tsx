@@ -73,7 +73,7 @@ export const SearchTable = (props: SearchTableProps) => {
           })}
           className={
             classNames(
-              "hover:bg-gray-200 cursor-pointer",
+              "hover:bg-gray-200 cursor-pointer rounded",
               selected === index ? 'bg-gray-300' : ''
             )
           }
@@ -82,9 +82,9 @@ export const SearchTable = (props: SearchTableProps) => {
           }}
         >
           <div className="basis-auto grow-1 shrink-1 p-2">
-            {item.variants.length > 0 && (
+            {/*{item.variants.length > 0 && (
               <FontAwesomeIcon icon={faLayerGroup} className="mr-2 text-gray-400" />
-            )}
+            )}*/}
             <Highlighter
               highlightClassName="YourHighlightClass"
               searchWords={[q]}

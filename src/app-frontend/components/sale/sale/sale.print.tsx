@@ -79,7 +79,7 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
   }, []);
 
   const itemsTotal = useMemo(() => {
-    return order.items.reduce((prev, item) => ((item.price * item.quantity) + item.taxesTotal) + prev, 0)
+    return order.items.reduce((prev, item) => ((item.price * item.quantity) + item.taxesTotal - item.discount) + prev, 0)
   }, [order]);
 
   const netTotal = useMemo(() => {
@@ -148,17 +148,6 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
           <h3 className="h3Style" id="shopName3Inch" style={{margin: "0 0"}}>
             Shop name
           </h3>
-          <h5 className="h5Style" id="shopAddress3Inch" style={{margin: "0 0"}}></h5>
-          <h5
-            className="h5Style"
-            id="shopEmail3Inch"
-            style={{margin: "0 0", fontWeight: "normal"}}
-          ></h5>
-          <h5
-            className="h5Style"
-            id="phoneNumber3Inch"
-            style={{margin: "0 0", fontWeight: "normal"}}
-          ></h5>
           <h5
             className="h5Style"
             id="STNNo3inchid"
@@ -180,20 +169,6 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
           >
             POS No:
           </h5>
-        </div>
-        <div
-          style={{
-            textAlign: "center",
-            background: "rgba(218, 232, 239, 0.18)",
-            padding: "0 2px"
-          }}
-          id="StatusSection"
-        >
-          <h5
-            className="h5Style"
-            id="invoiceStatus3Inch"
-            style={{margin: "0 0"}}
-          />
         </div>
         <div
           style={{
@@ -275,7 +250,7 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
               </td>
               <td
                 className="DiscColumnData3Inch"
-                style={{width: 50, textAlign: "right", display: "none"}}
+                style={{width: 50, textAlign: "right"}}
                 id="DiscountColumnHeader"
               >
                 <strong>Disc.</strong>
@@ -314,11 +289,11 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
                 >{item.taxesTotal}</td>
                 <td
                   className="DiscColumnData3Inch"
-                  style={{textAlign: "right", display: "none"}}
+                  style={{textAlign: "right"}}
                 >
-                  0
+                  {item.discount}
                 </td>
-                <td style={{textAlign: "right"}}>{(item.price * item.quantity) + item.taxesTotal}</td>
+                <td style={{textAlign: "right"}}>{(item.price * item.quantity) + item.taxesTotal - item.discount}</td>
               </tr>
             ))}
             <tr
@@ -338,6 +313,7 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
                 style={{textAlign: "right"}}
                 className="GSTClm"
               ></td>
+              <td></td>
               <td style={{textAlign: "right"}}>{itemsTotal}</td>
             </tr>
             </tbody>
