@@ -1,10 +1,10 @@
 import {Input} from "../../input";
 import {Trans, useTranslation} from "react-i18next";
 import {Button} from "../../button";
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 import {fetchJson} from "../../../../api/request/request";
-import {STORE_LIST, SUPPLIER_CREATE, SUPPLIER_EDIT, SUPPLIER_LIST} from "../../../../api/routing/routes/backend.app";
-import {Controller, useForm} from "react-hook-form";
+import {SUPPLIER_CREATE, SUPPLIER_EDIT, SUPPLIER_LIST} from "../../../../api/routing/routes/backend.app";
+import {useForm} from "react-hook-form";
 import {UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation} from "../../../../lib/validator/validation.result";
 import {Supplier} from "../../../../api/model/supplier";
@@ -15,18 +15,16 @@ import {useSelector} from "react-redux";
 import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPencilAlt, faTrash} from "@fortawesome/free-solid-svg-icons";
-import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
-import {Store} from "../../../../api/model/store";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
 import {getStore} from "../../../../duck/store/store.selector";
+import {StoresInput} from "../../../../app-common/components/input/stores";
 
 export const Suppliers = () => {
   const [operation, setOperation] = useState('create');
 
   const useLoadHook = useLoadList<Supplier>(SUPPLIER_LIST);
-  const [state, action] = useLoadHook;
+  const {fetchData} = useLoadHook;
 
-  const user = useSelector(getAuthorizedUser);
   const store = useSelector(getStore);
 
   const {t} = useTranslation();
@@ -49,11 +47,11 @@ export const Suppliers = () => {
   ];
 
   // if (user?.roles?.includes('ROLE_ADMIN')){
-    columns.push(columnHelper.accessor('stores', {
-      header: () => t('Stores'),
-      enableSorting: false,
-      cell: (info) => info.getValue().map(item => item.name).join(', ')
-    }));
+  columns.push(columnHelper.accessor('stores', {
+    header: () => t('Stores'),
+    enableSorting: false,
+    cell: (info) => info.getValue().map(item => item.name).join(', ')
+  }));
   // }
 
   columns.push(columnHelper.accessor('id', {
@@ -85,7 +83,7 @@ export const Suppliers = () => {
   }));
 
 
-    const {register, handleSubmit, setError, formState: {errors}, reset, control} = useForm();
+  const {register, handleSubmit, setError, formState: {errors}, reset, control} = useForm();
   const [creating, setCreating] = useState(false);
 
   const createSupplier = async (values: any) => {
@@ -98,7 +96,7 @@ export const Suppliers = () => {
         url = SUPPLIER_CREATE;
       }
 
-      if(values.stores){
+      if (values.stores) {
         values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value);
       }
 
@@ -109,7 +107,7 @@ export const Suppliers = () => {
         })
       });
 
-      await action.loadList();
+      fetchData!();
 
       resetForm();
       setOperation('create');
@@ -132,20 +130,6 @@ export const Suppliers = () => {
       setCreating(false);
     }
   };
-
-  const [stores, setStores] = useState<Store[]>([]);
-  const loadStores = async () => {
-    try{
-      const res = await fetchJson(STORE_LIST);
-      setStores(res.list);
-    }catch (e){
-      throw e;
-    }
-  };
-
-  useEffect(() => {
-    loadStores();
-  }, []);
 
   const resetForm = () => {
     reset({
@@ -210,36 +194,7 @@ export const Suppliers = () => {
             )}
           </div>
 
-          {/*{user?.roles?.includes('ROLE_ADMIN') && (*/}
-            <div>
-              <label htmlFor="stores">Stores</label>
-              <Controller
-                name="stores"
-                control={control}
-                render={(props) => (
-                  <ReactSelect
-                    onChange={props.field.onChange}
-                    value={props.field.value}
-                    options={stores.map(item => {
-                      return {
-                        label: item.name,
-                        value: item.id
-                      }
-                    })}
-                    isMulti
-                  />
-                )}
-              />
-
-              {errors.stores && (
-                <div className="text-danger-500 text-sm">
-                  <Trans>
-                    {errors.stores.message}
-                  </Trans>
-                </div>
-              )}
-            </div>
-          {/*)}*/}
+          <StoresInput control={control} errors={errors}/>
 
           <div>
             <label htmlFor="" className="md:block w-full sm:hidden">&nbsp;</label>

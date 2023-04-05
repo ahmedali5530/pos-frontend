@@ -82,9 +82,6 @@ export const SearchTable = (props: SearchTableProps) => {
           }}
         >
           <div className="basis-auto grow-1 shrink-1 p-2">
-            {/*{item.variants.length > 0 && (
-              <FontAwesomeIcon icon={faLayerGroup} className="mr-2 text-gray-400" />
-            )}*/}
             <Highlighter
               highlightClassName="YourHighlightClass"
               searchWords={[q]}
@@ -92,7 +89,7 @@ export const SearchTable = (props: SearchTableProps) => {
               textToHighlight={item.name}
             />
             {item.barcode && (
-              <div className="text-gray-400">
+              <div className="text-gray-500">
                 <FontAwesomeIcon icon={faBarcode} className="mr-2" />
                 <Highlighter
                   highlightClassName="YourHighlightClass"
@@ -103,10 +100,10 @@ export const SearchTable = (props: SearchTableProps) => {
               </div>
             )}
           </div>
-          <div className="basis-auto grow shrink p-2 text-right">
+          <div className="basis-auto grow shrink p-2 text-right font-bold">
             {getRealProductPrice(item)}
             {item.basePrice !== getRealProductPrice(item) && (
-              <div className="text-danger-400">
+              <div className="text-danger-500 font-normal text-sm">
                 <s>{item.basePrice}</s>
               </div>
             )}

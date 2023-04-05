@@ -1,8 +1,9 @@
 import {Product} from "./product";
 import {ProductVariant} from "./product.variant";
 import {Tax} from "./tax";
+import {HydraId, HydraType} from "./hydra";
 
-export interface OrderItem {
+export interface OrderItem extends HydraId, HydraType {
   id: string;
   product: Product;
   variant?: ProductVariant;

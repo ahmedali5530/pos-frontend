@@ -1,8 +1,9 @@
 import {User} from "./user";
 import {Store} from "./store";
 import {Terminal} from "./terminal";
+import {HydraId, HydraType} from "./hydra";
 
-export interface Closing{
+export interface Closing extends HydraId, HydraType{
   id: string;
   dateFrom?: { datetime: string };
   dateTo?: { datetime: string };

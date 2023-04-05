@@ -1,59 +1,102 @@
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import {jsonRequest} from "../request/request";
-import {HttpException, UnauthorizedException} from "../../lib/http/exception/http.exception";
 import {QueryString} from "../../lib/location/query.string";
-export interface LoadListState<T> {
-  isLoading: boolean;
-  list: T[];
-  error?: string;
-  total: number;
-  count: number;
-  response: any;
+import {HydraCollection, HydraError} from "../model/hydra";
+
+export interface FetchDataState{
+  loading: boolean;
+  error: Error | null;
+  page: number;
+  limit: number;
+  filter: {[key: string]: string|string[]}|undefined;
+  order?: { [sort: string]: string };
+  sort?: string;
+  sortMode?: string;
 }
 
-export interface LoadListActions {
-  loadList: (params?: any) => Promise<void>;
+export interface FetchDataReturns<T> extends FetchDataState{
+  handlePageChange?: (page: number) => void;
+  handleLimitChange?: (limit: number) => void;
+  handleFilterChange?: (filter: any) => void;
+  handleSortChange?: (sort?: string) => void;
+  handleSortModeChange?: (sortMode?: string) => void;
+  fetchData: () => void;
+  data: HydraCollection<T>|HydraError|any;
 }
 
-export const useLoadList = <L>(url: string): [LoadListState<L>, LoadListActions] => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [foundError, setFoundError] = useState<string | undefined>();
-  const [list, setList] = useState<L[]>([]);
-  const [total, setTotal] = useState(0);
-  const [count, setCount] = useState(0);
-  const [response, setResponse] = useState<any>();
+const defaultState: FetchDataState = {
+  loading: true,
+  error: null,
+  page: 1,
+  limit: 10,
+  sort: undefined,
+  sortMode: undefined,
+  filter: undefined
+};
 
-  const loadList = async (params?: any) => {
-    setIsLoading(true);
-    setFoundError(undefined);
+export const useLoadList = <L>(url: string): FetchDataReturns<L> => {
+  const [data, setData] = useState<any>();
+  const [state, setState] = useState<FetchDataState>(defaultState);
 
-    const a = new URL(url);
-    a.search = QueryString.stringify(params);
+  async function fetchData() {
+    let query: any = {
+      ...state.filter, // filters
+      page: state.page,
+      itemsPerPage: state.limit,
+
+    };
+
+    if(state.sort){
+      query['order'] = {
+        [state.sort]: state.sortMode
+      }
+    }
 
     try {
-      const response = await jsonRequest(a.toString());
-      const json = await response.json();
+      setState((prevState) => ({ ...prevState, loading: true }));
+      const response = await jsonRequest(url + '?' + QueryString.stringify(query));
+      let json: HydraCollection|any = await response.json();
 
-      setList(json.list);
-      setCount(json.count);
-      setTotal(json.total);
-      setResponse(json);
-
-    }catch (exception){
-      if(exception instanceof HttpException){
-        setFoundError(exception.message);
-      }
-
-      if(exception instanceof UnauthorizedException){
-        const res = await exception.response.json();
-        setFoundError(res.message);
-      }
-
-      throw exception;
-    }finally {
-      setIsLoading(false);
+      setData(json);
+    } catch (error: any) {
+      setState((prevState) => ({ ...prevState, error }));
+    } finally {
+      setState((prevState) => ({ ...prevState, loading: false }));
     }
-  };
+  }
 
-  return [{ isLoading, list, error: foundError, total, count, response }, { loadList }];
-};
+  useEffect(() => {
+    fetchData();
+  }, [url, state.page, state.limit, state.filter, state.sort, state.sortMode]);
+
+  function handlePageChange(page: number) {
+    setState((prevState) => ({ ...prevState, page }));
+  }
+
+  function handleLimitChange(limit: number) {
+    setState((prevState) => ({ ...prevState, limit }));
+  }
+
+  function handleFilterChange(filter: any) {
+    setState((prevState) => ({ ...prevState, filter }));
+  }
+
+  function handleSortChange(sort?: string) {
+    setState((prevState) => ({ ...prevState, sort }));
+  }
+
+  function handleSortModeChange(sortMode?: string) {
+    setState((prevState) => ({ ...prevState, sortMode }));
+  }
+
+  return {
+    data: data,
+    ...state,
+    handlePageChange,
+    handleLimitChange,
+    handleFilterChange,
+    handleSortChange,
+    handleSortModeChange,
+    fetchData
+  };
+}

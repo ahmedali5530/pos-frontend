@@ -1,6 +1,7 @@
 import {Store} from "./store";
+import {HydraId, HydraType} from "./hydra";
 
-export interface Discount {
+export interface Discount extends HydraId, HydraType {
   id: number;
   name: string;
   rate?: number;

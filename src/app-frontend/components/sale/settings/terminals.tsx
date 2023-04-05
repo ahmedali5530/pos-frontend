@@ -25,19 +25,21 @@ import {ReactSelect} from "../../../../app-common/components/input/custom.react.
 import {ReactSelectOptionProps} from "../../../../api/model/common";
 import {Category} from "../../../../api/model/category";
 import {Modal} from "../../modal";
+import {StoresInput} from "../../../../app-common/components/input/stores";
+import {Product} from "../../../../api/model/product";
 
 export const Terminals = () => {
   const [operation, setOperation] = useState('create');
 
   const useLoadHook = useLoadList<Terminal>(TERMINAL_LIST);
-  const [state, action] = useLoadHook;
+  const {fetchData} = useLoadHook;
 
-  const [terminalProducts, setTerminalProducts] = useState<ReactSelectOptionProps[]>([]);
+  const [terminalProducts, setTerminalProducts] = useState<Product[]>([]);
   const [filter, setFilter] = useState<string>();
 
   const terminalProductsFilter = useMemo(() => {
     if(filter) {
-      return terminalProducts.filter(item => item.label.toLowerCase().indexOf(filter.toLowerCase()) !== -1);
+      return terminalProducts.filter(item => item.name.toLowerCase().indexOf(filter.toLowerCase()) !== -1);
     }
 
     return terminalProducts;
@@ -56,13 +58,13 @@ export const Terminals = () => {
       header: () => t('Products'),
       cell: info => (
         <>
-          {info.getValue().slice(0, 5).map(p => p.label).join(', ')}{' '}
-          {info.getValue().slice(5).length > 0 && (
+          {info.getValue().slice(0, 7).map(p => p.name).join(', ')}{' '}
+          {info.getValue().slice(7).length > 0 && (
             <Button
-              className="btn btn-primary"
+              className="btn btn-secondary"
               onClick={() => setTerminalProducts(info.getValue())}
               type="button"
-            >+{info.getValue().slice(5).length} more
+            >+{info.getValue().slice(7).length} more
             </Button>
           )}
         </>
@@ -137,7 +139,7 @@ export const Terminals = () => {
         })
       });
 
-      await action.loadList();
+      fetchData!();
 
       resetForm();
       setOperation('create');
@@ -171,16 +173,6 @@ export const Terminals = () => {
     }
   };
 
-  const [stores, setStores] = useState<Store[]>([]);
-  const loadStores = async () => {
-    try{
-      const res = await fetchJson(STORE_LIST);
-      setStores(res.list);
-    }catch (e){
-      throw e;
-    }
-  };
-
   const [isProductsLoading, setProductsLoading] = useState(false);
   const [products, setProducts] = useState<ReactSelectOptionProps[]>([]);
   const loadProducts = async () => {
@@ -203,7 +195,7 @@ export const Terminals = () => {
 
     try{
       const res = await fetchJson(CATEGORY_LIST);
-      setCategories(res.list);
+      setCategories(res['hydra:member']);
     }catch (e){
       throw e;
     }finally {
@@ -212,7 +204,6 @@ export const Terminals = () => {
   };
 
   useEffect(() => {
-    loadStores();
     loadProducts();
     loadCategories();
   }, []);
@@ -245,33 +236,7 @@ export const Terminals = () => {
               </div>
             )}
           </div>
-          <div>
-            <label htmlFor="store">Stores</label>
-            <Controller
-              name="store"
-              control={control}
-              render={(props) => (
-                <ReactSelect
-                  onChange={props.field.onChange}
-                  value={props.field.value}
-                  options={stores.map(item => {
-                    return {
-                      label: item.name,
-                      value: item.id
-                    }
-                  })}
-                />
-              )}
-            />
-
-            {errors.store && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.store.message}
-                </Trans>
-              </div>
-            )}
-          </div>
+          <StoresInput control={control} errors={errors} />
           <div>
             <label htmlFor="categories">Categories</label>
             <Controller
@@ -389,8 +354,8 @@ export const Terminals = () => {
         <div className="flex flex-wrap gap-3">
           {terminalProductsFilter.map(item => (
             <span className="pl-3 rounded-full inline-flex justify-center items-center bg-primary-500 text-white h-[40px]">
-              {item.label}
-              <button className="ml-3 bg-white text-danger-500 rounded-full h-[40px] w-[40px] border-2" title={`Remove ${item.label}?`}>
+              {item.name}
+              <button className="ml-3 bg-white text-danger-500 rounded-full h-[40px] w-[40px] border-2" title={`Remove ${item.name}?`}>
                 <FontAwesomeIcon icon={faTimes} />
               </button>
             </span>

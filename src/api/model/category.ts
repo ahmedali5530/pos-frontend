@@ -1,6 +1,7 @@
 import {Store} from "./store";
+import {HydraId, HydraType} from "./hydra";
 
-export interface Category {
+export interface Category extends HydraId, HydraType {
   id: number;
   name: string;
   type: string;

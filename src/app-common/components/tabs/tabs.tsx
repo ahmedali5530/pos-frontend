@@ -1,6 +1,5 @@
 import {ButtonHTMLAttributes, FunctionComponent, PropsWithChildren, ReactElement, useCallback, useState} from 'react';
 import classNames from "classnames";
-import ScrollContainer from "react-indiana-drag-scroll";
 
 export interface TabControlState {
   activeTab: string;
@@ -50,7 +49,7 @@ interface TabNavProps extends PropsWithChildren{}
 export const TabNav = (props: TabNavProps) => {
   return (
     // <ScrollContainer horizontal nativeMobileScroll={true}>
-      <div className="flex flex-col w-[220px] flex-shrink-0 border-r pr-3">{props.children}</div>
+      <div className="flex flex-col w-[220px] flex-shrink-0 border-r ml-[-20px]">{props.children}</div>
     // </ScrollContainer>
   );
 };
@@ -62,9 +61,9 @@ export const Tab = (props: TabProps) => {
   return (
     <button {...props} className={
       classNames(
-        'rounded-r-lg p-3 px-5 flex-shrink-0 text-left hover:text-primary-500 hover:bg-primary-100 hover:shadow-[inset_5px_0_0_0]',
+        'p-3 px-5 flex-shrink-0 text-left hover:text-primary-500 hover:bg-primary-100 hover:shadow-[inset_-5px_0_0_0]',
         props.isActive ?
-          'text-primary-500 bg-primary-100 shadow-[inset_5px_0_0_0]' : ''
+          'text-primary-500 bg-primary-100 shadow-[inset_-5px_0_0_0]' : ''
       )
     }>{props.children}</button>
   );

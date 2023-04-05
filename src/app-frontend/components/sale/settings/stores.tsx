@@ -19,7 +19,7 @@ export const Stores = () => {
   const [operation, setOperation] = useState('create');
 
   const useLoadHook = useLoadList<Store>(STORE_LIST);
-  const [state, action] = useLoadHook;
+  const {fetchData} = useLoadHook;
 
   const {t} = useTranslation();
 
@@ -62,7 +62,7 @@ export const Stores = () => {
   const createStore = async (values: any) => {
     setCreating(true);
     try {
-      let url = '';
+      let url;
       if (values.id) {
         url = STORE_EDIT.replace(':id', values.id);
       } else {
@@ -76,7 +76,7 @@ export const Stores = () => {
         })
       });
 
-      await action.loadList();
+      fetchData!();
 
       resetForm();
       setOperation('create');

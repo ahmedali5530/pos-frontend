@@ -31,7 +31,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
   const [payments, setPayments] = useState<{ [key: string]: number }>({});
 
   const useLoadHook = useLoadList<Order>(ORDER_LIST);
-  const [state, action] = useLoadHook;
+  const {handleFilterChange, data} = useLoadHook;
 
   //check for day closing
   const [closing, setClosing] = useState<Closing>();
@@ -80,7 +80,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
         dateTimeFrom: closing.dateFrom?.datetime
       });
 
-      action.loadList({
+      handleFilterChange!({
         dateTimeFrom: closing.dateFrom?.datetime,
         store: store?.id
       });
@@ -104,10 +104,10 @@ export const SaleClosing: FC<TaxProps> = (props) => {
   const user = useSelector(getAuthorizedUser);
 
   useEffect(() => {
-    if(state?.response?.payments) {
-      setPayments(state?.response?.payments);
+    if(data?.data?.payments) {
+      setPayments(data?.data?.payments);
     }
-  }, [state.response]);
+  }, [data]);
 
   const onSubmit = async (values: any) => {
     setSaving(true);

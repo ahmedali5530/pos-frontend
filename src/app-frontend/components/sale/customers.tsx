@@ -31,7 +31,7 @@ export const Customers: FC<Props> = ({
   const [operation, setOperation] = useState('create');
 
   const useLoadHook = useLoadList<Customer>(CUSTOMER_LIST);
-  const [state, action] = useLoadHook;
+  const {fetchData} = useLoadHook;
 
   const {t} = useTranslation();
 
@@ -106,7 +106,7 @@ export const Customers: FC<Props> = ({
               <FontAwesomeIcon icon={faTrash}/>
             </Button>
             <span className="mx-2 text-gray-300">|</span>
-            <CustomerPayments customer={info.row.original} onCreate={() => action.loadList(params)}/>
+            <CustomerPayments customer={info.row.original} onCreate={fetchData}/>
           </>
         )
       }
@@ -136,7 +136,7 @@ export const Customers: FC<Props> = ({
 
       setCustomer(response.customer);
 
-      action.loadList();
+      fetchData!();
 
       resetForm();
       setOperation('create');

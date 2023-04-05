@@ -9,3 +9,11 @@ export const getState = (state: RootState): ShortcutState => {
 export const getShortcut = createSelector(
     [getState], state => state.shortcut
 );
+
+export const getDisplayState = (state: RootState) => {
+    return state.displayShortcut;
+}
+
+export const displayShortcut = createSelector(
+  [getDisplayState], state => state.display
+)

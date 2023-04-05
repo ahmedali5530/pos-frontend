@@ -11,12 +11,14 @@ export const UPDATE_LOCALE = scopeUrl('/locale');
 
 export const AUTH_LOGOUT = scopeUrl('/auth/logout');
 
-export const PRODUCT_LIST = scopeUrl('/admin/product/list');
+export const PRODUCT_LIST = scopeUrl('/products');
 export const PRODUCT_KEYWORDS = scopeUrl('/admin/product/keywords');
-export const PRODUCT_CREATE = scopeUrl('/admin/product/create');
-export const PRODUCT_GET = scopeUrl('/admin/product/:id');
-export const PRODUCT_UPLOAD = scopeUrl('/admin/product/import');
-export const PRODUCT_DOWNLOAD = scopeUrl('/admin/product/export');
+export const PRODUCT_CREATE = scopeUrl('/products');
+export const PRODUCT_GET = scopeUrl('/products/:id');
+export const PRODUCT_UPLOAD = scopeUrl('/products/import');
+export const PRODUCT_DOWNLOAD = scopeUrl('/products/export');
+export const PRODUCT_VARIANT = scopeUrl('/product_variants');
+export const PRODUCT_VARIANT_GET = scopeUrl('/product_variants/:id')
 
 export const ORDER_LIST = scopeUrl('/admin/order/list');
 export const ORDER_CREATE = scopeUrl('/admin/order/create');
@@ -25,65 +27,80 @@ export const ORDER_DISPATCH = scopeUrl('/admin/order/dispatch/:id');
 export const ORDER_RESTORE = scopeUrl('/admin/order/restore/:id');
 export const ORDER_REFUND = scopeUrl('/admin/order/refund/:id');
 
-export const DISCOUNT_LIST = scopeUrl('/admin/discount/list');
-export const DISCOUNT_CREATE = scopeUrl('/admin/discount/create');
-export const DISCOUNT_GET = scopeUrl('/admin/discount/:id');
+export const DISCOUNT_LIST = scopeUrl('/discounts');
+export const DISCOUNT_CREATE = scopeUrl('/discounts');
+export const DISCOUNT_GET = scopeUrl('/discounts/:id');
 
-export const TAX_LIST = scopeUrl('/admin/tax/list');
-export const TAX_CREATE = scopeUrl('/admin/tax/create');
-export const TAX_GET = scopeUrl('/admin/tax/:id');
+export const TAX_LIST = scopeUrl('/taxes');
+export const TAX_CREATE = scopeUrl('/taxes');
+export const TAX_GET = scopeUrl('/taxes/:id');
 
-export const PAYMENT_TYPE_LIST = scopeUrl('/admin/payment-types/list');
-export const PAYMENT_TYPE_CREATE = scopeUrl('/admin/payment-types/create');
-export const PAYMENT_TYPE_GET = scopeUrl('/admin/payment-types/:id');
+export const PAYMENT_TYPE_LIST = scopeUrl('/payments');
+export const PAYMENT_TYPE_CREATE = scopeUrl('/payments');
+export const PAYMENT_TYPE_GET = scopeUrl('/payments/:id');
 
-export const CUSTOMER_LIST = scopeUrl('/admin/customer/list');
-export const CUSTOMER_CREATE = scopeUrl('/admin/customer/create');
-export const CUSTOMER_EDIT = scopeUrl('/admin/customer/:id');
-export const CUSTOMER_PAYMENT_CREATE = scopeUrl('/admin/customer/payment/:id');
+export const CUSTOMER_LIST = scopeUrl('/customers');
+export const CUSTOMER_CREATE = scopeUrl('/customers');
+export const CUSTOMER_EDIT = scopeUrl('/customers/:id');
+export const CUSTOMER_PAYMENT_CREATE = scopeUrl('/customer_payments/:id');
 
-export const CATEGORY_LIST = scopeUrl('/admin/category/list');
-export const CATEGORY_CREATE = scopeUrl('/admin/category/create');
-export const CATEGORY_GET = scopeUrl('/admin/category/:id');
+export const CATEGORY_LIST = scopeUrl('/categories');
+export const CATEGORY_CREATE = scopeUrl('/categories');
+export const CATEGORY_GET = scopeUrl('/categories/:id');
 
-export const DEVICE_LIST = scopeUrl('/admin/device/list');
-export const DEVICE_CREATE = scopeUrl('/admin/device/create');
+export const DEVICE_LIST = scopeUrl('/devices');
+export const DEVICE_CREATE = scopeUrl('/devices');
 
 export const EXPENSE_LIST = scopeUrl('/admin/expense/list');
 export const EXPENSE_CREATE = scopeUrl('/admin/expense/create');
 
-export const SUPPLIER_LIST = scopeUrl('/admin/supplier/list');
-export const SUPPLIER_CREATE = scopeUrl('/admin/supplier/create');
-export const SUPPLIER_EDIT = scopeUrl('/admin/supplier/:id');
+export const SUPPLIER_LIST = scopeUrl('/suppliers');
+export const SUPPLIER_CREATE = scopeUrl('/supplier');
+export const SUPPLIER_EDIT = scopeUrl('/suppliers/:id');
 
-export const BRAND_LIST = scopeUrl('/admin/brand/list');
-export const BRAND_CREATE = scopeUrl('/admin/brand/create');
-export const BRAND_EDIT = scopeUrl('/admin/brand/:id');
+export const BRAND_LIST = scopeUrl('/brands');
+export const BRAND_CREATE = scopeUrl('/brands');
+export const BRAND_EDIT = scopeUrl('/brands/:id');
 
-export const PURCHASE_LIST = scopeUrl('/admin/purchase/list');
-export const PURCHASE_CREATE = scopeUrl('/admin/purchase/create');
-export const PURCHASE_EDIT = scopeUrl('/admin/purchase/:id');
-export const PURCHASE_DELETE = scopeUrl('/admin/purchase/:id');
+export const PURCHASE_LIST = scopeUrl('/purchases');
+export const PURCHASE_CREATE = scopeUrl('/purchases');
+export const PURCHASE_EDIT = scopeUrl('/purchases/:id');
+export const PURCHASE_DELETE = scopeUrl('/purchases/:id');
 
-export const STORE_LIST = scopeUrl('/admin/store/list');
-export const STORE_CREATE = scopeUrl('/admin/store/create');
-export const STORE_EDIT = scopeUrl('/admin/store/:id');
+export const PURCHASE_ITEM_LIST = scopeUrl('/purchase_items');
+export const PURCHASE_ITEM_CREATE = scopeUrl('/purchase_items');
+export const PURCHASE_ITEM_EDIT = scopeUrl('/purchase_items/:id');
+export const PURCHASE_ITEM_DELETE = scopeUrl('/purchase_items/:id');
 
-export const USER_LIST = scopeUrl('/admin/user/list');
-export const USER_CREATE = scopeUrl('/admin/user/create');
-export const USER_EDIT = scopeUrl('/admin/user/:id');
+export const PURCHASE_ORDER_LIST = scopeUrl('/purchase_orders');
+export const PURCHASE_ORDER_CREATE = scopeUrl('/purchase_orders');
+export const PURCHASE_ORDER_EDIT = scopeUrl('/purchase_orders/:id');
+export const PURCHASE_ORDER_DELETE = scopeUrl('/purchase_orders/:id');
+
+export const PURCHASE_ORDER_ITEM_LIST = scopeUrl('/purchase_order_items');
+export const PURCHASE_ORDER_ITEM_CREATE = scopeUrl('/purchase_order_items');
+export const PURCHASE_ORDER_ITEM_EDIT = scopeUrl('/purchase_order_items/:id');
+export const PURCHASE_ORDER_ITEM_DELETE = scopeUrl('/purchase_order_items/:id');
+
+export const STORE_LIST = scopeUrl('/stores');
+export const STORE_CREATE = scopeUrl('/stores');
+export const STORE_EDIT = scopeUrl('/stores/:id');
+
+export const USER_LIST = scopeUrl('/users');
+export const USER_CREATE = scopeUrl('/users');
+export const USER_EDIT = scopeUrl('/users/:id');
 
 export const CLOSING_EDIT = scopeUrl('/admin/closing/:id');
 export const CLOSING_OPENED = scopeUrl('/admin/closing/opened');
 
-export const DEPARTMENT_LIST = scopeUrl('/admin/department/list');
-export const DEPARTMENT_CREATE = scopeUrl('/admin/department/create');
-export const DEPARTMENT_GET = scopeUrl('/admin/department/:id');
+export const DEPARTMENT_LIST = scopeUrl('/departments');
+export const DEPARTMENT_CREATE = scopeUrl('/departments');
+export const DEPARTMENT_GET = scopeUrl('/departments/:id');
 
-export const SETTING_LIST = scopeUrl('/admin/setting/list');
-export const SETTING_GET = scopeUrl('/admin/setting/:id');
-export const SETTING_CREATE = scopeUrl('/admin/setting/create');
+export const SETTING_LIST = scopeUrl('/settings');
+export const SETTING_GET = scopeUrl('/settings/:id');
+export const SETTING_CREATE = scopeUrl('/settings');
 
-export const TERMINAL_LIST = scopeUrl('/admin/terminal/list');
-export const TERMINAL_CREATE = scopeUrl('/admin/terminal/create');
-export const TERMINAL_GET = scopeUrl('/admin/terminal/:id');
+export const TERMINAL_LIST = scopeUrl('/terminals');
+export const TERMINAL_CREATE = scopeUrl('/terminals');
+export const TERMINAL_GET = scopeUrl('/terminals/:id');

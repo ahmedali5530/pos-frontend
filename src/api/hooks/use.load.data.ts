@@ -62,28 +62,28 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
   const [deviceList, setDeviceList] = useState<HomeProps['deviceList']>(initialData);
   const [settingList, setSettingList] = useState<HomeProps['settingList']>(initialData);
 
-  const loadProducts = async (offset = 0, limit = 100) => {
+  const loadProducts = async (offset = 1, limit = 100) => {
     let total: number;
 
-    const res = await jsonRequest(`${PRODUCT_LIST}?limit=${limit}&offset=${offset}`);
+    const res = await jsonRequest(`${PRODUCT_LIST}?itemsPerPage=${limit}&page=${offset}`);
     const l = await res.json();
 
-    total = l.total;
+    total = l['hydra:totalItems'];
 
-    offset += l.count;
+    offset += 1;
 
     setList(prev => {
       localforage.setItem('list', {
-        list: [...prev.list, ...l.list]
+        list: [...prev.list, ...l['hydra:member']]
       });
 
       return {
         ...prev,
-        list: [...prev.list, ...l.list]
+        list: [...prev.list, ...l['hydra:member']]
       }
     });
 
-    if(total !== offset) {
+    if(l['hydra:member'].length > 0) {
       await loadProducts(offset);
     }
   };
@@ -106,6 +106,9 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
         const discount = await jsonRequest(DISCOUNT_LIST);
         const discountList = await discount.json();
 
+        discountList.list = discountList['hydra:member'];
+        delete discountList['hydra:member'];
+
         setDiscountList(discountList);
         await localforage.setItem('discountList', discountList);
       }catch(e){
@@ -120,6 +123,9 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
       try {
         const taxList = await jsonRequest(TAX_LIST);
         const json = await taxList.json();
+
+        json.list = json['hydra:member'];
+        delete json['hydra:member'];
         setTaxList(json);
 
         await localforage.setItem('taxList', json);
@@ -136,6 +142,9 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
         const paymentTypesList = await jsonRequest(PAYMENT_TYPE_LIST);
         const json = await paymentTypesList.json();
 
+        json.list = json['hydra:member'];
+        delete json['hydra:member'];
+
         setPaymentTypesList(json);
         await localforage.setItem('paymentTypesList', json);
       }catch (e) {
@@ -151,6 +160,9 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
         const deviceList = await jsonRequest(DEVICE_LIST);
         const json = await deviceList.json();
 
+        json.list = json['hydra:member'];
+        delete json['hydra:member'];
+
         setDeviceList(json);
         await localforage.setItem('deviceList', json);
       }catch (e) {
@@ -165,6 +177,9 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
       try {
         const settingList = await jsonRequest(SETTING_LIST);
         const json = await settingList.json();
+
+        json.list = json['hydra:member'];
+        delete json['hydra:member'];
 
         setSettingList(json);
         await localforage.setItem('settingList', json);

@@ -1,6 +1,7 @@
 import {User} from "./user";
+import {HydraId, HydraType} from "./hydra";
 
-export interface Setting {
+export interface Setting extends HydraId, HydraType {
   id: string;
   name: string;
   value?: string;

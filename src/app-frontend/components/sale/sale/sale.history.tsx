@@ -33,7 +33,7 @@ import {Tax} from "../../../../api/model/tax";
 import {Customer} from "../../../../api/model/customer";
 import {Input} from "../../input";
 import {IconProp} from "@fortawesome/fontawesome-svg-core";
-import {useForm, Controller} from "react-hook-form";
+import {Controller, useForm} from "react-hook-form";
 import {Expense} from "../../../../api/model/expense";
 import {ViewOrder} from "./view.order";
 import {CustomerPayments} from "../customer.payments";
@@ -69,21 +69,21 @@ interface Props {
 }
 
 export const SaleHistory: FC<Props> = ({
-                                         setAdded,
-                                         setDiscountAmount,
-                                         setDiscount,
-                                         setCustomer,
-                                         setTax,
-                                         customer,
-                                         setRefundingFrom
-                                       }) => {
+  setAdded,
+  setDiscountAmount,
+  setDiscount,
+  setCustomer,
+  setTax,
+  customer,
+  setRefundingFrom
+}) => {
   const [modal, setModal] = useState(false);
   const [list, setList] = useState<Order[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [payments, setPayments] = useState<{ [key: string]: number }>({});
 
   const useLoadHook = useLoadList<Order>(ORDER_LIST);
-  const [state, action] = useLoadHook;
+  const {data, handleFilterChange, loading, handleSortChange, handleSortModeChange, handleLimitChange, handlePageChange} = useLoadHook;
   const store = useSelector(getStore);
 
   const {t} = useTranslation();
@@ -232,7 +232,7 @@ export const SaleHistory: FC<Props> = ({
               </Button>
             </>
           )}
-          <SalePrint order={info.row.original} />
+          <SalePrint order={info.row.original}/>
         </div>
       )
     })
@@ -241,9 +241,14 @@ export const SaleHistory: FC<Props> = ({
   const [params, setParams] = useState<{ [key: string]: any }>();
 
   useEffect(() => {
-    setPayments(state.response?.payments);
-    setList(state.list);
-  }, [state]);
+    if (data?.list) {
+      setList(data?.list);
+    }
+
+    if(data?.payments){
+      setPayments(data?.payments);
+    }
+  }, [data?.list, data?.payments]);
 
   const loadExpenses = async (values?: any) => {
     try {
@@ -270,7 +275,7 @@ export const SaleHistory: FC<Props> = ({
   };
 
   const getOrderStatusClasses = (status: string) => {
-    let classes = '';
+    let classes: string;
     switch (status) {
       case('Deleted'):
         classes = 'border-danger-500 text-danger-500';
@@ -537,7 +542,7 @@ export const SaleHistory: FC<Props> = ({
 
   useEffect(() => {
     reset({
-      dateTimeFrom: DateTime.now().startOf('day').toFormat("yyyy-MM-dd'T'HH:mm"),
+      dateTimeFrom: DateTime.now().minus({day: 1}).startOf('day').toFormat("yyyy-MM-dd'T'HH:mm"),
       dateTimeTo: DateTime.now().endOf('day').toFormat("yyyy-MM-dd'T'HH:mm")
     });
   }, [modal, reset]);
@@ -566,29 +571,19 @@ export const SaleHistory: FC<Props> = ({
   const [globalFilter, setGlobalFilter] = React.useState('');
 
   const loadList = async () => {
-    const newParams: {
-      limit?: number,
-      offset?: number,
-      orderBy?: string,
-      orderMode?: string,
-      [key: string]: any
-    } = {
-      ...params,
-      limit: pageSize,
-      offset: pageIndex * pageSize,
-      store: store?.id
-    };
+    handlePageChange!(pageIndex * pageSize);
+    handleLimitChange!(pageSize);
 
     if (sorting.length > 0) {
-      newParams.orderBy = sorting[0].id;
-      newParams.orderMode = sorting[0].desc ? 'desc' : 'asc';
+      handleSortChange!(sorting[0].id);
+      handleSortModeChange!(sorting[0].desc ? 'desc' : 'asc');
     }
 
     if (globalFilter) {
-      newParams.q = globalFilter;
+      handleFilterChange!({
+        q: globalFilter
+      });
     }
-
-    await action.loadList(newParams);
   };
 
   useEffect(() => {
@@ -605,8 +600,8 @@ export const SaleHistory: FC<Props> = ({
   );
 
   const table = useReactTable({
-    data: state.list,
-    pageCount: Math.ceil(state.total / pageSize),
+    data: data?.list,
+    pageCount: Math.ceil(data?.total / pageSize),
     columns,
     getCoreRowModel: getCoreRowModel(),
     state: {
@@ -633,7 +628,7 @@ export const SaleHistory: FC<Props> = ({
         setModal(true);
       }} title="Sale history">
         <FontAwesomeIcon icon={faClockRotateLeft} className="mr-2"/> History
-        <Shortcut shortcut="ctrl+h" handler={() => setModal(true)} />
+        <Shortcut shortcut="ctrl+h" handler={() => setModal(true)}/>
       </Button>
 
       <Modal open={modal} onClose={() => {
@@ -677,8 +672,8 @@ export const SaleHistory: FC<Props> = ({
               />
             </div>
             <div>
-              <Button variant="primary" className="w-full" type="submit" disabled={state.isLoading}>
-                {state.isLoading ? 'Searching...' : (
+              <Button variant="primary" className="w-full" type="submit" disabled={loading}>
+                {loading ? 'Searching...' : (
                   <>
                     <FontAwesomeIcon icon={faSearch} className="mr-2"/> Search sale
                   </>
@@ -688,7 +683,7 @@ export const SaleHistory: FC<Props> = ({
           </div>
         </form>
 
-        {!state.isLoading && (
+        {!loading && (
           <>
             <h3 className="mb-3 text-lg cursor-pointer" onClick={() => setChartsOpen(!areChartsOpen)}>
               Charts {areChartsOpen ? <FontAwesomeIcon icon={faChevronDown}/> :
@@ -805,7 +800,7 @@ export const SaleHistory: FC<Props> = ({
         )}
         <>
           <div className="table-responsive">
-            {(state.isLoading) ? (
+            {(loading) ? (
               <div className="flex justify-center items-center">
                 <Loader lines={pageSize} lineItems={8 || 5}/>
               </div>
@@ -920,7 +915,7 @@ export const SaleHistory: FC<Props> = ({
                   {t('Show')} {pageSize}
                 </option>
               ))}
-              </select> &bull; {t('Total records')} <strong>{state.total}</strong>
+              </select> &bull; {t('Total records')} <strong>{data?.total}</strong>
             </span>
                 </div>
               </>

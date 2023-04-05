@@ -7,8 +7,9 @@ import {Store} from "./store";
 import {Department} from "./department";
 import {Terminal} from "./terminal";
 import {Tax} from "./tax";
+import {HydraId, HydraType} from "./hydra";
 
-export type Product = {
+export interface Product extends HydraId, HydraType{
   id: number;
   name: string;
   sku?: string;

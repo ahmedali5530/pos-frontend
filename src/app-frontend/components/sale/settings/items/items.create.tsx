@@ -4,7 +4,7 @@ import {
   BRAND_LIST,
   CATEGORY_LIST, DEPARTMENT_LIST,
   PRODUCT_CREATE,
-  PRODUCT_GET, STORE_LIST,
+  PRODUCT_GET, PRODUCT_VARIANT, PRODUCT_VARIANT_GET,
   SUPPLIER_LIST, TAX_LIST
 } from "../../../../../api/routing/routes/backend.app";
 import {fetchJson, jsonRequest} from "../../../../../api/request/request";
@@ -24,12 +24,13 @@ import {Brand} from "../../../../../api/model/brand";
 import {withCurrency} from "../../../../../lib/currency/currency";
 import classNames from "classnames";
 import {getErrorClass} from "../../../../../lib/error/error";
-import {Store} from "../../../../../api/model/store";
 import {Department} from "../../../../../api/model/department";
 import {ProductVariants} from "./products/variants";
 import {CreateVariants} from "./products/create.variants";
 import {Tax} from "../../../../../api/model/tax";
 import {useAlert} from "react-alert";
+import {StoresInput} from "../../../../../app-common/components/input/stores";
+import {ProductVariant} from "../../../../../api/model/product.variant";
 
 interface ItemsCreateProps{
   setActiveTab: (tab: string) => void;
@@ -38,6 +39,18 @@ interface ItemsCreateProps{
   row?: Product;
   setRow: (row?: Product) => void;
 }
+
+export const submitProductVariant = async (token: Omit<ProductVariant, 'id'>) => {
+  try {
+    let response = await jsonRequest(PRODUCT_VARIANT, {
+      method: 'POST',
+      body  : JSON.stringify(token)
+    });
+    return await response.json();
+  }catch(e) {
+    // throw e;
+  }
+};
 
 export const CreateItem = ({
   setOperation, setActiveTab, operation, row, setRow
@@ -55,6 +68,7 @@ export const CreateItem = ({
         url = PRODUCT_GET.replace(':id', values.id);
       } else {
         url = PRODUCT_CREATE;
+        delete values.id;
       }
 
       if(values.categories){
@@ -75,6 +89,31 @@ export const CreateItem = ({
       if(values.taxes){
         values.taxes = values.taxes.map((item: ReactSelectOptionProps) => item.value);
       }
+      if(values.barcode){
+        values.barcode = values.barcode.toString();
+      }
+
+
+
+      let variants: string[] = [];
+      let loopItems: any[] = [];
+      if(values.variants){
+        values.variants.forEach((token: ProductVariant) => {
+          loopItems.push(submitProductVariant(token));
+        });
+      }
+
+      await Promise.all(loopItems).then(tValues => {
+        tValues.forEach((item: ProductVariant) => {
+          variants.push(item['@id'] as string);
+        });
+
+        values.variants = variants;
+      });
+
+      if(variants.length === 0){
+        values.variants = [];
+      }
 
       await fetchJson(url, {
         method: 'POST',
@@ -83,7 +122,7 @@ export const CreateItem = ({
           purchaseUnit: 'Unit',
           saleUnit: 'Unit',
           baseQuantity: 1,
-          quantity: 1000,
+          quantity: '1000',
           isAvailable: true,
           isActive: true
         })
@@ -124,7 +163,7 @@ export const CreateItem = ({
       const response = await jsonRequest(CATEGORY_LIST);
       const json = await response.json();
 
-      setCategories(json.list);
+      setCategories(json['hydra:member']);
     } catch (e) {
       throw e;
     } finally {
@@ -138,7 +177,7 @@ export const CreateItem = ({
       const response = await jsonRequest(SUPPLIER_LIST);
       const json = await response.json();
 
-      setSuppliers(json.list);
+      setSuppliers(json['hydra:member']);
     } catch (e) {
       throw e;
     } finally {
@@ -152,7 +191,7 @@ export const CreateItem = ({
       const response = await jsonRequest(BRAND_LIST);
       const json = await response.json();
 
-      setBrands(json.list);
+      setBrands(json['hydra:member']);
     } catch (e) {
       throw e;
     } finally {
@@ -160,21 +199,11 @@ export const CreateItem = ({
     }
   };
 
-  const [stores, setStores] = useState<Store[]>([]);
-  const loadStores = async () => {
-    try{
-      const res = await fetchJson(STORE_LIST);
-      setStores(res.list);
-    }catch (e){
-      throw e;
-    }
-  };
-
   const [department, setDepartment] = useState<Department[]>([]);
   const loadDepartments = async () => {
     try{
       const res = await fetchJson(DEPARTMENT_LIST);
-      setDepartment(res.list);
+      setDepartment(res['hydra:member']);
     }catch (e){
       throw e;
     }
@@ -184,7 +213,7 @@ export const CreateItem = ({
   const loadTaxes = async () => {
     try{
       const res = await fetchJson(TAX_LIST);
-      setTaxes(res.list);
+      setTaxes(res['hydra:member']);
     }catch (e){
       throw e;
     }
@@ -194,7 +223,6 @@ export const CreateItem = ({
     loadCategories();
     loadSuppliers();
     loadBrands();
-    loadStores();
     loadDepartments();
     loadTaxes();
   }, []);
@@ -205,19 +233,19 @@ export const CreateItem = ({
         ...row,
         suppliers: row.suppliers.map(item => ({
           label: item.name,
-          value: item.id
+          value: item['@id']
         })),
         brands: row.brands.map(item => ({
           label: item.name,
-          value: item.id
+          value: item['@id']
         })),
         categories: row.categories.map(item => ({
           label: item.name,
-          value: item.id
+          value: item['@id']
         })),
         stores: row.stores.map(item => ({
           label: item.name,
-          value: item.id
+          value: item['@id']
         })),
         department: {
           label: row?.department?.name,
@@ -225,7 +253,7 @@ export const CreateItem = ({
         },
         taxes: row.taxes.map(item => ({
           label: `${item.name} ${item.rate}%`,
-          value: item.id
+          value: item['@id']
         }))
       });
     }
@@ -276,7 +304,7 @@ export const CreateItem = ({
                 options={department.map(item => {
                   return {
                     label: item.name,
-                    value: item.id
+                    value: item['@id']
                   }
                 })}
               />
@@ -415,7 +443,7 @@ export const CreateItem = ({
               <ReactSelect
                 options={taxes.map(item => ({
                   label: `${item.name} ${item.rate}%`,
-                  value: item.id
+                  value: item['@id']
                 }))}
                 onChange={props.field.onChange}
                 value={props.field.value}
@@ -432,34 +460,9 @@ export const CreateItem = ({
             </div>
           )}
         </div>
-        <div>
-          <label htmlFor="stores">Stores</label>
-          <Controller
-            name="stores"
-            control={control}
-            render={(props) => (
-              <ReactSelect
-                onChange={props.field.onChange}
-                value={props.field.value}
-                options={stores.map(item => {
-                  return {
-                    label: item.name,
-                    value: item.id
-                  }
-                })}
-                isMulti
-              />
-            )}
-          />
 
-          {errors.stores && (
-            <div className="text-danger-500 text-sm">
-              <Trans>
-                {errors.stores.message}
-              </Trans>
-            </div>
-          )}
-        </div>
+        <StoresInput control={control} errors={errors} />
+
         <div className="col-span-4 grid grid-cols-3 gap-3 gap-y-2">
           <div>
             <label htmlFor="categories">Categories</label>
@@ -469,7 +472,7 @@ export const CreateItem = ({
                 <ReactSelect
                   options={categories.map(item => ({
                     label: item.name,
-                    value: item.id
+                    value: item['@id']
                   }))}
                   onChange={props.field.onChange}
                   value={props.field.value}
@@ -494,7 +497,7 @@ export const CreateItem = ({
                 <ReactSelect
                   options={suppliers.map(item => ({
                     label: item.name,
-                    value: item.id
+                    value: item['@id']
                   }))}
                   onChange={props.field.onChange}
                   value={props.field.value}
@@ -519,7 +522,7 @@ export const CreateItem = ({
                 <ReactSelect
                   options={brands.map(item => ({
                     label: item.name,
-                    value: item.id
+                    value: item['@id']
                   }))}
                   onChange={props.field.onChange}
                   value={props.field.value}

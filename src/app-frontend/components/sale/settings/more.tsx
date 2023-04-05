@@ -18,14 +18,13 @@ import { Users } from "./users";
 import {PaymentTypes} from "./payment.types";
 import {DiscountTypes} from "./discount.types";
 import {TaxTypes} from "./tax.types";
-import {shortcutAction} from "../../../../duck/shortcuts/shortcut.action";
+import {displayShortcutAction, shortcutAction} from "../../../../duck/shortcuts/shortcut.action";
 import {touchAction} from "../../../../duck/touch/touch.action";
 import {Terminals} from "./terminals";
 import {Departments} from "./departments";
 import {Items} from "./items/items";
 import {CreateItem} from "./items/items.create";
 import {Categories} from "./items/categories";
-import {Suppliers} from "../purchase/suppliers";
 import {Brands} from "./items/brands";
 import {Product} from "../../../../api/model/product";
 
@@ -69,6 +68,7 @@ export const More: FC<Props> = ({
   const [defaultDevice, setDefaultDevice] = useState<ReactSelectOptionProps>();
 
   const [displayVariants, setDisplayVariants] = useState(false);
+  const [enableShortcuts, setEnableShortcuts] = useState(false);
   const [displayShortcuts, setDisplayShortcuts] = useState(false);
   const [enableTouch, setEnableTouch] = useState(false);
 
@@ -122,13 +122,23 @@ export const More: FC<Props> = ({
       }
     });
 
+    localforage.getItem('enableShortcuts').then((data: any) => {
+      if(data){
+        setEnableShortcuts(data);
+        dispatch(shortcutAction(data));
+      }else{
+        setEnableShortcuts(false);
+        dispatch(shortcutAction(false));
+      }
+    });
+
     localforage.getItem('displayShortcuts').then((data: any) => {
       if(data){
         setDisplayShortcuts(data);
-        dispatch(shortcutAction(data));
+        dispatch(displayShortcutAction(data));
       }else{
         setDisplayShortcuts(false);
-        dispatch(shortcutAction(false));
+        dispatch(displayShortcutAction(false));
       }
     });
 
@@ -181,19 +191,27 @@ export const More: FC<Props> = ({
                     {isLoading ? 'Clearing...' : 'Refresh Cache'}
                   </Button>
 
-                  <Switch checked={displayShortcuts} onChange={(value) => {
-                    localforage.setItem('displayShortcuts', value.target.checked);
-                    setDisplayShortcuts(value.target.checked);
+                  <Switch checked={enableShortcuts} onChange={(value) => {
+                    localforage.setItem('enableShortcuts', value.target.checked);
+                    setEnableShortcuts(value.target.checked);
                     dispatch(shortcutAction(value.target.checked));
                   }}>Enable shortcuts?</Switch>
+
+                  {enableShortcuts && (
+                    <Switch checked={displayShortcuts} onChange={(value) => {
+                      localforage.setItem('displayShortcuts', value.target.checked);
+                      setDisplayShortcuts(value.target.checked);
+                      dispatch(displayShortcutAction(value.target.checked));
+                    }}>Display shortcut texts?</Switch>
+                  )}
 
                   <Switch checked={enableTouch} onChange={(value) => {
                     localforage.setItem('enableTouch', value.target.checked);
                     setEnableTouch(value.target.checked);
                     dispatch(touchAction(value.target.checked));
-                  }}>Enable Touch?</Switch>
+                  }}>Enable Ttouch support?</Switch>
                 </div>
-                <div className="grid grid-cols-5 gap-5 mt-3">
+                <div className="grid grid-cols-4 gap-5 mt-3">
                   <div>
                     <h3 className="text-xl">Set Default tax</h3>
                     <ReactSelect

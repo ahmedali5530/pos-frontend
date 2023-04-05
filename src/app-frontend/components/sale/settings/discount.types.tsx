@@ -20,12 +20,13 @@ import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
 import {useSelector} from "react-redux";
 import {Store} from "../../../../api/model/store";
 import {getStore} from "../../../../duck/store/store.selector";
+import {StoresInput} from "../../../../app-common/components/input/stores";
 
 export const DiscountTypes = () => {
   const [operation, setOperation] = useState('create');
 
   const useLoadHook = useLoadList<Discount>(DISCOUNT_LIST);
-  const [state, action] = useLoadHook;
+  const {fetchData} = useLoadHook;
   const user = useSelector(getAuthorizedUser);
   const store = useSelector(getStore);
 
@@ -125,7 +126,7 @@ export const DiscountTypes = () => {
         })
       });
 
-      await action.loadList();
+      fetchData!();
 
       resetForm();
       setOperation('create');
@@ -169,20 +170,6 @@ export const DiscountTypes = () => {
       stores: null
     });
   };
-
-  const [stores, setStores] = useState<Store[]>([]);
-  const loadStores = async () => {
-    try {
-      const res = await fetchJson(STORE_LIST);
-      setStores(res.list);
-    } catch (e) {
-      throw e;
-    }
-  };
-
-  useEffect(() => {
-    loadStores();
-  }, []);
 
   return (
     <>
@@ -267,36 +254,7 @@ export const DiscountTypes = () => {
             )}
           </div>
 
-          {/*{user?.roles?.includes('ROLE_ADMIN') && (*/}
-            <div>
-              <label htmlFor="stores">Stores</label>
-              <Controller
-                name="stores"
-                control={control}
-                render={(props) => (
-                  <ReactSelect
-                    onChange={props.field.onChange}
-                    value={props.field.value}
-                    options={stores.map(item => {
-                      return {
-                        label: item.name,
-                        value: item.id
-                      }
-                    })}
-                    isMulti
-                  />
-                )}
-              />
-
-              {errors.stores && (
-                <div className="text-danger-500 text-sm">
-                  <Trans>
-                    {errors.stores.message}
-                  </Trans>
-                </div>
-              )}
-            </div>
-          {/*)}*/}
+          <StoresInput control={control} errors={errors} />
 
           <div>
             <label htmlFor="" className="block w-full">&nbsp;</label>

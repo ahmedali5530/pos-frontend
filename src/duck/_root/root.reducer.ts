@@ -4,7 +4,7 @@ import { RootState } from './root.state';
 import { authReducer } from '../auth/auth.reducer';
 import { entityReducer } from '../entity/entity.reducer';
 import {storeReducer} from "../store/store.reducer";
-import {shortcutReducer} from "../shortcuts/shortcut.reducer";
+import {displayShortcutReducer, shortcutReducer} from "../shortcuts/shortcut.reducer";
 import {touchReducer} from "../touch/touch.reducer";
 import {terminalReducer} from "../terminal/terminal.reducer";
 
@@ -14,6 +14,7 @@ export const rootReducer = combineReducers<RootState>({
   entity: entityReducer,
   store: storeReducer,
   shortcut: shortcutReducer,
+  displayShortcut: displayShortcutReducer,
   touch: touchReducer,
   terminal: terminalReducer
 });

@@ -33,10 +33,10 @@ import {Department} from "../../../api/model/department";
 import {getStore} from "../../../duck/store/store.selector";
 import {getTerminal} from "../../../duck/terminal/terminal.selector";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCubesStacked, faFlag, faIcons, faPencil} from "@fortawesome/free-solid-svg-icons";
+import {faCubesStacked, faFlag, faIcons} from "@fortawesome/free-solid-svg-icons";
 import {useAlert} from "react-alert";
 import {CartControls} from "../../components/sale/cart/cart.controls";
-import {PurchaseModal} from "../../components/sale/purchase/purchase";
+import {PurchaseTabs} from "../../components/sale/purchase/purchase.tabs";
 
 const Mousetrap = require('mousetrap');
 
@@ -680,7 +680,6 @@ const Pos: FC = () => {
                 <span>Terminal</span><span className="text-primary-500">{terminal?.code}</span>
               </div>
               <div className="col-span-2 p-3 flex flex-wrap flex-row justify-between gap-3 items-end">
-                <PurchaseModal />
                 <SaleHistory
                   setAdded={setAdded}
                   setDiscount={setDiscount}
@@ -692,6 +691,7 @@ const Pos: FC = () => {
                 />
                 <Customers customer={customer} setCustomer={setCustomer}/>
                 <Expenses/>
+                <PurchaseTabs />
                 <More
                   setTax={setTax}
                   setDiscount={setDiscount}

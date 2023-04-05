@@ -30,7 +30,7 @@ export const jsonRequest = async (input: RequestInfo, init: RequestInit = {}) =>
   const initHeaders = init.headers || {};
 
   const headers = composeHeaders(
-    initHeaders, jsonContentTypeHeader(), jsonAcceptHeader()
+    initHeaders, jsonContentTypeHeader()
   );
 
   init = {

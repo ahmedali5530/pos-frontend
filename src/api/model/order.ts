@@ -6,8 +6,9 @@ import {OrderDiscount} from "./order.discount";
 import {OrderTax} from "./order.tax";
 import {Store} from "./store";
 import {Terminal} from "./terminal";
+import {HydraId, HydraType} from "./hydra";
 
-export interface Order {
+export interface Order extends HydraId, HydraType {
   id: string;
   orderId?: string;
   customer?: Customer;

@@ -1,7 +1,7 @@
-import {FC, InputHTMLAttributes, PropsWithChildren, useEffect} from "react";
+import {FC, InputHTMLAttributes, PropsWithChildren, useEffect, useState} from "react";
 import classNames from "classnames";
 import {useSelector} from "react-redux";
-import {getShortcut} from "../../../duck/shortcuts/shortcut.selector";
+import {displayShortcut, getShortcut} from "../../../duck/shortcuts/shortcut.selector";
 
 interface Props extends PropsWithChildren, InputHTMLAttributes<HTMLSpanElement>{
   shortcut: string;
@@ -13,6 +13,13 @@ const Mousetrap = require('mousetrap');
 
 export const Shortcut: FC<Props> = ({children, ...rest}) => {
   const state = useSelector(getShortcut);
+  const displayShortcuts = useSelector(displayShortcut);
+
+  const [visible, setVisible] = useState<boolean|undefined>(rest.invisible);
+
+  useEffect(() => {
+    setVisible(displayShortcuts);
+  }, [displayShortcuts]);
 
   useEffect(() => {
     const handler = function (e: Event) {
@@ -37,9 +44,13 @@ export const Shortcut: FC<Props> = ({children, ...rest}) => {
     return (<></>);
   }
 
+  if(rest.invisible){
+    return (<></>);
+  }
+
   return (
     <>
-      {rest.invisible ? '' : (
+      {visible && (
         <span
           {...rest}
           className={

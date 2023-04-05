@@ -7,12 +7,14 @@ import {
   SortingState,
   useReactTable
 } from "@tanstack/react-table";
-import React, {FC, ReactNode, useCallback, useEffect, useMemo, useState} from "react";
+import React, {FC, ReactNode, useEffect, useMemo, useState} from "react";
 import {useTranslation} from "react-i18next";
 import _ from "lodash";
 import {Loader} from "../loader/loader";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import { faRefresh } from "@fortawesome/free-solid-svg-icons";
+import {faRefresh} from "@fortawesome/free-solid-svg-icons";
+import {FetchDataReturns} from "../../../api/hooks/use.load.list";
+import {Order} from "../../../api/model/order";
 
 interface ButtonProps {
   title?: ReactNode;
@@ -20,7 +22,7 @@ interface ButtonProps {
   className?: string;
   handler: (
     payload: any,
-    loadList: () => void,
+    fetchData: () => void,
     setLoading: (state: boolean) => void,
     setRowSelect: (ids: {
       [index: number]: boolean
@@ -35,26 +37,39 @@ interface TableComponentProps {
   buttons?: ButtonProps[];
   selectionButtons?: ButtonProps[];
   loaderLineItems?: number;
-  useLoadList: any;
+  useLoadList: FetchDataReturns<Order>;
   setFilters?: (filters?: any) => void;
   globalSearch?: boolean;
 }
 
 export const TableComponent: FC<TableComponentProps> = ({
-  columns, params, sort, buttons, selectionButtons, loaderLineItems, useLoadList, setFilters,
+  columns, sort, buttons, selectionButtons, loaderLineItems, useLoadList,
   globalSearch
 }) => {
   const {t} = useTranslation();
 
-  const [state, action] = useLoadList;
+  const {
+    fetchData, handlePageChange, handleFilterChange, handleLimitChange, handleSortChange, handleSortModeChange, data,
+    loading
+  } = useLoadList;
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
+  // set initial sorting
   useEffect(() => {
     if (sort) {
       setSorting(sort);
     }
-  }, [sort]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if(sorting.length > 0) {
+      handleSortChange!(sorting[0].id);
+      handleSortModeChange!(sorting[0].desc ? 'desc' : 'asc');
+    }
+  }, [sorting]);
+
   const [{pageIndex, pageSize}, setPagination] =
     React.useState<PaginationState>({
       pageIndex: 0,
@@ -62,33 +77,6 @@ export const TableComponent: FC<TableComponentProps> = ({
     });
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState('');
-
-  const loadList = useCallback(async () => {
-    const newParams = {
-      ...params,
-      limit: pageSize,
-      offset: pageIndex * pageSize,
-    };
-
-    if (sorting.length > 0) {
-      newParams.orderBy = sorting[0].id;
-      newParams.orderMode = sorting[0].desc ? 'desc' : 'asc';
-    }
-
-    if (globalFilter) {
-      newParams.q = globalFilter;
-    }
-
-    if(setFilters){
-      setFilters(newParams);
-    }
-
-    action.loadList(newParams);
-  }, [params, pageSize, pageIndex, sorting, globalFilter]);
-
-  useEffect(() => {
-    loadList();
-  }, [pageSize, pageIndex, sorting, globalFilter]);
 
   const pagination = React.useMemo(
     () => ({
@@ -98,9 +86,21 @@ export const TableComponent: FC<TableComponentProps> = ({
     [pageIndex, pageSize]
   );
 
+  useEffect(() => {
+    handlePageChange!(pageIndex + 1);
+    handleLimitChange!(pageSize);
+  }, [pageIndex, pageSize]);
+
+  useEffect(() => {
+    handleFilterChange!({
+      q: globalFilter
+    });
+
+  }, [globalFilter]);
+
   const table = useReactTable({
-    data: state.list,
-    pageCount: Math.ceil(state.total / pageSize),
+    data: data?.["hydra:member"]||[],
+    pageCount: Math.ceil(data?.["hydra:totalItems"] as number / pageSize),
     columns,
     getCoreRowModel: getCoreRowModel(),
     state: {
@@ -122,17 +122,19 @@ export const TableComponent: FC<TableComponentProps> = ({
   });
 
   const ids = useMemo(() => {
-    return table.getSelectedRowModel().rows.map(item => (item.original as any).uuid)
+    // return table.getSelectedRowModel().rows.map(item => (item.original as any).uuid)
+
+    return [];
   }, [rowSelection]);
 
   const [isLoading, setLoading] = useState(false);
 
   const onClick = async (button: ButtonProps) => {
-    button.handler(ids, loadList, setLoading, setRowSelection);
+    button.handler(ids, fetchData, setLoading, setRowSelection);
   };
 
   const renderButton = (button: ButtonProps) => {
-    if(button.html){
+    if (button.html) {
       return button.html;
     }
 
@@ -141,57 +143,57 @@ export const TableComponent: FC<TableComponentProps> = ({
     );
   };
 
-  const pageSizes: {[key: string|number]: any} = {
-    10  : 10,
-    20  : 20,
-    25  : 25,
-    50  : 50,
-    100 : 100,
-    500 : 500
+  const pageSizes: { [key: string | number]: any } = {
+    10: 10,
+    20: 20,
+    25: 25,
+    50: 50,
+    100: 100
   };
 
   return (
     <>
-      <div className="table-responsive">
-        <div className="grid my-5 grid-cols-12 g-0">
-          {(globalSearch === undefined || globalSearch) && (
-            <div className="col-span-3">
-              <DebouncedInput
-                value={globalFilter ?? ''}
-                onChange={value => setGlobalFilter(String(value))}
-                className="input w-full search-field"
-                placeholder={t('Search in all columns') + '...'}
-                type="search"
-              />
-            </div>
-          )}
-          <div className="col-span-9 flex justify-end">
-            <div className="input-group">
-              <button className="btn btn-secondary" onClick={() => loadList()}>
-                <FontAwesomeIcon icon={faRefresh} />
-              </button>
-              {Object.keys(rowSelection).length > 0 ? (
-                <>
-                  {selectionButtons?.map(button => (
-                    <>{renderButton(button)}</>
-                  ))}
-                </>
-              ) : (
-                <>
-                  {buttons?.map(button => (
-                    <>{renderButton(button)}</>
-                  ))}
-                </>
-              )}
-            </div>
+      <div className="grid my-5 grid-cols-12 g-0">
+        {(globalSearch === undefined || globalSearch) && (
+          <div className="col-span-3">
+            <DebouncedInput
+              value={globalFilter ?? ''}
+              onChange={value => {
+                setGlobalFilter(String(value))
+              }}
+              className="input w-full search-field"
+              placeholder={t('Search in all columns') + '...'}
+              type="search"
+            />
+          </div>
+        )}
+        <div className="col-span-9 flex justify-end">
+          <div className="input-group">
+            <button className="btn btn-secondary" onClick={fetchData}>
+              <FontAwesomeIcon icon={faRefresh}/>
+            </button>
+            {Object.keys(rowSelection).length > 0 && (
+              <>
+                {selectionButtons?.map(button => (
+                  <>{renderButton(button)}</>
+                ))}
+              </>
+            )}
+            <>
+              {buttons?.map(button => (
+                <>{renderButton(button)}</>
+              ))}
+            </>
           </div>
         </div>
+      </div>
 
-        {(state.isLoading || isLoading) ? (
-          <div className="flex justify-center items-center">
-            <Loader lines={1} lineItems={loaderLineItems || 5}/>
-          </div>
-        ) : (
+      {(loading || isLoading) ? (
+        <div className="flex justify-center items-center">
+          <Loader lines={1} lineItems={loaderLineItems || 5}/>
+        </div>
+      ) : (
+        <div className="table-responsive">
           <table className="table table-hover table-background">
             <thead>
             {table.getHeaderGroups().map(headerGroup => (
@@ -232,9 +234,8 @@ export const TableComponent: FC<TableComponentProps> = ({
             ))}
             </tbody>
           </table>
-        )}
-
-      </div>
+        </div>
+      )}
       <div className="flex items-center gap-2 mt-3 flex-wrap">
         <nav className="input-group">
           <button
@@ -279,7 +280,7 @@ export const TableComponent: FC<TableComponentProps> = ({
           <select
             value={table.getState().pagination.pageIndex + 1}
             onChange={e => {
-              table.setPageIndex(Number(e.target.value) - 1)
+              table.setPageIndex(Number(e.target.value) - 1);
             }}
             className="w-auto form-control"
           >
@@ -295,16 +296,16 @@ export const TableComponent: FC<TableComponentProps> = ({
           <select
             value={table.getState().pagination.pageSize}
             onChange={e => {
-              table.setPageSize(Number(e.target.value))
+              table.setPageSize(Number(e.target.value));
             }}
             className="w-auto form-control"
           >
-          {Object.keys(pageSizes).map((pageSize: string|number) => (
+          {Object.keys(pageSizes).map((pageSize: string | number) => (
             <option key={pageSize} value={pageSizes[pageSize]}>
               {t('Show')} {pageSize}
             </option>
           ))}
-          </select> &bull; {t('Total records')} <strong>{state.total}</strong>
+          </select> &bull; {t('Total records')} <strong>{data ? data["hydra:totalItems"] : 0}</strong>
         </span>
       </div>
     </>
@@ -313,11 +314,11 @@ export const TableComponent: FC<TableComponentProps> = ({
 
 // A debounced input react component
 export const DebouncedInput = ({
-                          value: initialValue,
-                          onChange,
-                          debounce = 500,
-                          ...props
-                        }: {
+  value: initialValue,
+  onChange,
+  debounce = 500,
+  ...props
+}: {
   value: string | number
   onChange: (value: string | number) => void
   debounce?: number

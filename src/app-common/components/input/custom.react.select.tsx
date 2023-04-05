@@ -45,6 +45,7 @@ export function ReactSelect<
   >(props: Props<Option, IsMulti, Group>) {
   return (
     <Select
+      closeMenuOnSelect={!props.isMulti}
       {...props}
       theme={themeConfig}
       styles={styleConfig}

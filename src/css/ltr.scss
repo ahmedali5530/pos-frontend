@@ -657,9 +657,11 @@ a{
   }
 }
 .switch{
+  transition: ease-in-out all 150ms;
+
   @apply inline-flex items-center;
   label{
-    @apply font-bold cursor-pointer;
+    @apply cursor-pointer;
   }
   input[type="checkbox"]{
     @apply border-2 border-neutral-300 rounded-full inline-flex relative justify-start items-center align-middle;
@@ -667,7 +669,6 @@ a{
     @apply appearance-none;
     width: 60px;
     height: 40px;
-    transition: ease-in-out all 150ms;
 
     &::before{
       content: '';

@@ -3,7 +3,7 @@ import React, {FC, useEffect, useMemo, useState} from "react";
 import {Modal} from "../../modal";
 import {Button} from "../../button";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPrint, faEnvelope, faFilePdf} from "@fortawesome/free-solid-svg-icons";
+import {faPrint, faEnvelope} from "@fortawesome/free-solid-svg-icons";
 import {Setting, SettingTypes} from "../../../../api/model/setting";
 import localforage from "../../../../lib/localforage/localforage";
 import {DateTime} from "luxon";
@@ -274,7 +274,7 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
                   {item.product.name}
                   {item.variant && (
                     <>
-                      <div className="ml-1">- {item.variant.attributeName}: {item.variant.attributeValue}</div>
+                      <div className="ml-1">- {item.variant.attributeValue}</div>
                     </>
                   )}
                 </td>

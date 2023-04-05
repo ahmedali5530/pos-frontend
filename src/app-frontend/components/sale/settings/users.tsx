@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {useLoadList} from "../../../../api/hooks/use.load.list";
-import {USER_LIST, USER_CREATE, USER_EDIT, STORE_LIST,} from "../../../../api/routing/routes/backend.app";
+import {USER_LIST, USER_CREATE, USER_EDIT, STORE_LIST, STORE_EDIT,} from "../../../../api/routing/routes/backend.app";
 import {Trans, useTranslation} from "react-i18next";
 import {createColumnHelper} from "@tanstack/react-table";
 import {Button} from "../../button";
@@ -17,12 +17,13 @@ import {User} from "../../../../api/model/user";
 import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
 import { Store } from "../../../../api/model/store";
+import {StoresInput} from "../../../../app-common/components/input/stores";
 
 export const Users = () => {
   const [operation, setOperation] = useState('create');
 
   const useLoadHook = useLoadList<User>(USER_LIST);
-  const [state, action] = useLoadHook;
+  const {fetchData} = useLoadHook;
 
   const {t} = useTranslation();
 
@@ -95,23 +96,24 @@ export const Users = () => {
         url = USER_EDIT.replace(':id', values.id);
       } else {
         url = USER_CREATE;
+        delete values.id;
       }
 
       if(values.roles){
         values.roles = values.roles.map((item: ReactSelectOptionProps) => item.value);
       }
       if(values.stores){
-        values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value);
+        values.stores = values.stores.map((item: ReactSelectOptionProps) => STORE_EDIT.replace(':id', item.value));
       }
 
       await fetchJson(url, {
-        method: 'POST',
+        method: values.id ? 'PUT' : 'POST',
         body: JSON.stringify({
           ...values,
         })
       });
 
-      await action.loadList();
+      fetchData!();
 
       resetForm();
       setOperation('create');
@@ -145,31 +147,17 @@ export const Users = () => {
     }
   };
 
-  const [stores, setStores] = useState<Store[]>([]);
-  const loadStores = async () => {
-    try{
-      const res = await fetchJson(STORE_LIST);
-      setStores(res.list);
-    }catch (e){
-      throw e;
-    }
-  };
-
   const resetForm = () => {
     reset({
       displayName: null,
       email: null,
       username: null,
-      password: null,
+      plainPassword: null,
       roles: null,
       id: null,
       stores: null
     });
   };
-
-  useEffect(() => {
-    loadStores();
-  }, []);
 
   return (
     <>
@@ -200,12 +188,12 @@ export const Users = () => {
             )}
           </div>
           <div>
-            <label htmlFor="password">Password</label>
-            <Input {...register('password')} type="password" id="password" className="w-full"/>
-            {errors.password && (
+            <label htmlFor="plainPassword">Password</label>
+            <Input {...register('plainPassword')} type="plainPassword" id="plainPassword" className="w-full"/>
+            {errors.plainPassword && (
               <div className="text-danger-500 text-sm">
                 <Trans>
-                  {errors.password.message}
+                  {errors.plainPassword.message}
                 </Trans>
               </div>
             )}
@@ -250,33 +238,7 @@ export const Users = () => {
               </div>
             )}
           </div>
-          <div>
-            <label htmlFor="stores">Stores</label>
-            <Controller
-              name="stores"
-              control={control}
-              render={(props) => (
-                <ReactSelect
-                  onChange={props.field.onChange}
-                  value={props.field.value}
-                  options={stores.map(item => {
-                    return {
-                      label: item.name,
-                      value: item.id
-                    }
-                  })}
-                  isMulti
-                />
-              )}
-            />
-            {errors.stores && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.stores.message}
-                </Trans>
-              </div>
-            )}
-          </div>
+          <StoresInput control={control} errors={errors} />
           <div>
             <label htmlFor="" className="block w-full">&nbsp;</label>
             <Button variant="primary" type="submit" disabled={creating}>
