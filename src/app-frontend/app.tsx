@@ -27,7 +27,6 @@ export interface AppProps {
   bootstrapError?: Error;
 }
 
-
 const AppComponent: FunctionComponent<AppProps> = (props) => {
 
   const [logoutState, logoutAction] = useLogout();

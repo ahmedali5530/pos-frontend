@@ -1,12 +1,12 @@
 import React, {FC, useState} from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPencilAlt, faTrash, faUsers} from "@fortawesome/free-solid-svg-icons";
-import {Button} from "../button";
-import {Modal} from "../modal";
+import {Button} from "../../../app-common/components/input/button";
+import {Modal} from "../../../app-common/components/modal/modal";
 import {Customer} from "../../../api/model/customer";
 import {fetchJson} from "../../../api/request/request";
 import {useForm} from "react-hook-form";
-import {Input} from "../input";
+import {Input} from "../../../app-common/components/input/input";
 import {faSquare, faSquareCheck} from "@fortawesome/free-regular-svg-icons";
 import {CustomerPayments} from "./customer.payments";
 import {CUSTOMER_CREATE, CUSTOMER_EDIT, CUSTOMER_LIST} from "../../../api/routing/routes/backend.app";
@@ -98,7 +98,7 @@ export const Customers: FC<Props> = ({
                 ...info.row.original,
               });
               setOperation('update');
-            }} tabIndex={-1}>
+            }}>
               <FontAwesomeIcon icon={faPencilAlt}/>
             </Button>
             <span className="mx-2 text-gray-300">|</span>
@@ -179,7 +179,7 @@ export const Customers: FC<Props> = ({
     <>
       <Button variant="primary" type="button" size="lg" onClick={() => {
         setModal(true);
-      }} title="Customers">
+      }} title="Customers" tabIndex={-1}>
         <FontAwesomeIcon icon={faUsers} className="mr-2"/> Customers
         <Shortcut shortcut="ctrl+c" handler={() => setModal(true)}/>
       </Button>

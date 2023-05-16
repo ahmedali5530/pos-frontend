@@ -11,9 +11,9 @@ import {HttpException, UnauthorizedException} from "../../../lib/http/exception/
 import {useNavigate} from "react-router";
 import {FORGOT_PASSWORD, POS} from "../../routes/frontend.routes";
 import {Link} from "react-router-dom";
-import {Modal} from "../../components/modal";
+import {Modal} from "../../../app-common/components/modal/modal";
 import {Store} from "../../../api/model/store";
-import {Button} from "../../components/button";
+import {Button} from "../../../app-common/components/input/button";
 import {User} from "../../../api/model/user";
 import {Terminal} from "../../../api/model/terminal";
 import {storeAction} from "../../../duck/store/store.action";

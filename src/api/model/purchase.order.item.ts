@@ -7,4 +7,5 @@ export interface PurchaseOrderItem extends HydraId, HydraType {
   quantity: string;
   price: string;
   unit?: string;
+  comments?: string;
 }

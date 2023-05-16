@@ -55,7 +55,7 @@ export const EXPENSE_LIST = scopeUrl('/admin/expense/list');
 export const EXPENSE_CREATE = scopeUrl('/admin/expense/create');
 
 export const SUPPLIER_LIST = scopeUrl('/suppliers');
-export const SUPPLIER_CREATE = scopeUrl('/supplier');
+export const SUPPLIER_CREATE = scopeUrl('/suppliers');
 export const SUPPLIER_EDIT = scopeUrl('/suppliers/:id');
 
 export const BRAND_LIST = scopeUrl('/brands');
@@ -87,8 +87,8 @@ export const STORE_CREATE = scopeUrl('/stores');
 export const STORE_EDIT = scopeUrl('/stores/:id');
 
 export const USER_LIST = scopeUrl('/users');
-export const USER_CREATE = scopeUrl('/users');
-export const USER_EDIT = scopeUrl('/users/:id');
+export const USER_CREATE = scopeUrl('/admin/user/create');
+export const USER_EDIT = scopeUrl('/admin/user/:id');
 
 export const CLOSING_EDIT = scopeUrl('/admin/closing/:id');
 export const CLOSING_OPENED = scopeUrl('/admin/closing/opened');
@@ -102,5 +102,6 @@ export const SETTING_GET = scopeUrl('/settings/:id');
 export const SETTING_CREATE = scopeUrl('/settings');
 
 export const TERMINAL_LIST = scopeUrl('/terminals');
-export const TERMINAL_CREATE = scopeUrl('/terminals');
 export const TERMINAL_GET = scopeUrl('/terminals/:id');
+export const TERMINAL_CREATE = scopeUrl('/admin/terminal/create');
+export const TERMINAL_EDIT = scopeUrl('/admin/terminal/:id');

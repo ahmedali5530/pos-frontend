@@ -9,34 +9,34 @@ import {CartItem} from "../../../api/model/cart.item";
 import {Customer} from "../../../api/model/customer";
 import {ProductVariant} from "../../../api/model/product.variant";
 import localforage from "../../../lib/localforage/localforage";
-import SpeechSearch from "../../components/sale/search/speech.search";
-import {Input} from "../../components/input";
-import {SearchTable} from "../../components/sale/search/search.table";
-import {CartContainer} from "../../components/sale/cart/cart.container";
-import {Modal} from "../../components/modal";
-import {SaleHistory} from "../../components/sale/sale/sale.history";
+import SpeechSearch from "../../components/search/speech.search";
+import {Input} from "../../../app-common/components/input/input";
+import {SearchTable} from "../../components/search/search.table";
+import {CartContainer} from "../../components/cart/cart.container";
+import {Modal} from "../../../app-common/components/modal/modal";
+import {SaleHistory} from "../../components/sale/sale.history";
 import {Customers} from "../../components/sale/customers";
 import {Logout} from "../../components/logout";
 import {Expenses} from "../../components/sale/expenses";
-import {More} from "../../components/sale/settings/more";
+import {More} from "../../components/settings/more";
 import {HomeProps, initialData, useLoadData} from "../../../api/hooks/use.load.data";
-import {SaleBrands} from "../../components/sale/search/sale.brands";
+import {SaleBrands} from "../../components/search/sale.brands";
 import {Brand} from "../../../api/model/brand";
 import {Category} from "../../../api/model/category";
-import {SaleCategories} from "../../components/sale/search/sale.categories";
-import {SaleDepartments} from "../../components/sale/search/sale.departments";
+import {SaleCategories} from "../../components/search/sale.categories";
+import {SaleDepartments} from "../../components/search/sale.departments";
 import {useSelector} from "react-redux";
 import {getAuthorizedUser} from "../../../duck/auth/auth.selector";
-import {CloseSaleInline} from "../../components/sale/sale/sale.inline";
-import {SaleClosing} from "../../components/sale/sale/sale.closing";
+import {CloseSaleInline} from "../../components/sale/sale.inline";
+import {SaleClosing} from "../../components/sale/sale.closing";
 import {Department} from "../../../api/model/department";
 import {getStore} from "../../../duck/store/store.selector";
 import {getTerminal} from "../../../duck/terminal/terminal.selector";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCubesStacked, faFlag, faIcons} from "@fortawesome/free-solid-svg-icons";
 import {useAlert} from "react-alert";
-import {CartControls} from "../../components/sale/cart/cart.controls";
-import {PurchaseTabs} from "../../components/sale/purchase/purchase.tabs";
+import {CartControls} from "../../components/cart/cart.controls";
+import {PurchaseTabs} from "../../components/inventory/purchase.tabs";
 
 const Mousetrap = require('mousetrap');
 
@@ -702,7 +702,7 @@ const Pos: FC = () => {
             </div>
           </div>
         </div>
-        <div className="col-span-3 bg-gray-50 p-3 bg-white">
+        <div className="col-span-3 p-3 bg-white">
           <CloseSaleInline
             added={added}
             setAdded={setAdded}

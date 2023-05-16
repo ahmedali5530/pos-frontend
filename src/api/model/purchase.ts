@@ -15,4 +15,6 @@ export interface Purchase extends HydraId, HydraType {
   updatePrice?: boolean;
   purchasedBy?: User;
   purchaseOrder?: PurchaseOrder;
+  purchaseNumber?: number;
+  purchaseMode?: string;
 }

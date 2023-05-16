@@ -5,7 +5,7 @@ import {Store} from "./store";
 
 export interface PurchaseOrder extends HydraId, HydraType {
   id: number;
-  createdAt?: string;
+  createdAt: string;
   supplier?: Supplier;
   items: PurchaseOrderItem[];
   store?: Store;

@@ -20,7 +20,7 @@ interface ButtonProps {
   title?: ReactNode;
   html?: ReactNode;
   className?: string;
-  handler: (
+  handler?: (
     payload: any,
     fetchData: () => void,
     setLoading: (state: boolean) => void,
@@ -37,20 +37,21 @@ interface TableComponentProps {
   buttons?: ButtonProps[];
   selectionButtons?: ButtonProps[];
   loaderLineItems?: number;
-  useLoadList: FetchDataReturns<Order>;
+  loaderLines?: number;
+  useLoadList: FetchDataReturns<any>;
   setFilters?: (filters?: any) => void;
   globalSearch?: boolean;
 }
 
 export const TableComponent: FC<TableComponentProps> = ({
   columns, sort, buttons, selectionButtons, loaderLineItems, useLoadList,
-  globalSearch
+  globalSearch, loaderLines
 }) => {
   const {t} = useTranslation();
 
   const {
     fetchData, handlePageChange, handleFilterChange, handleLimitChange, handleSortChange, handleSortModeChange, data,
-    loading
+    loading, abort
   } = useLoadList;
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -130,7 +131,7 @@ export const TableComponent: FC<TableComponentProps> = ({
   const [isLoading, setLoading] = useState(false);
 
   const onClick = async (button: ButtonProps) => {
-    button.handler(ids, fetchData, setLoading, setRowSelection);
+    button.handler && button.handler(ids, fetchData, setLoading, setRowSelection);
   };
 
   const renderButton = (button: ButtonProps) => {
@@ -190,7 +191,7 @@ export const TableComponent: FC<TableComponentProps> = ({
 
       {(loading || isLoading) ? (
         <div className="flex justify-center items-center">
-          <Loader lines={1} lineItems={loaderLineItems || 5}/>
+          <Loader lines={loaderLines || 1} lineItems={loaderLineItems || 5}/>
         </div>
       ) : (
         <div className="table-responsive">

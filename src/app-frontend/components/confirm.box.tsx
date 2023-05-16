@@ -1,5 +1,5 @@
 import React, {ReactNode, useEffect, useState} from 'react';
-import { Modal } from './modal';
+import { Modal } from '../../app-common/components/modal/modal';
 
 
 interface ConfirmBoxProps {

@@ -8,4 +8,5 @@ export interface PurchaseItem extends HydraId, HydraType {
   purchasePrice: string;
   purchaseUnit?: string;
   barcode?: string;
+  comments?: string;
 }

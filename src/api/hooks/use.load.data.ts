@@ -63,12 +63,8 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
   const [settingList, setSettingList] = useState<HomeProps['settingList']>(initialData);
 
   const loadProducts = async (offset = 1, limit = 100) => {
-    let total: number;
-
     const res = await jsonRequest(`${PRODUCT_LIST}?itemsPerPage=${limit}&page=${offset}`);
     const l = await res.json();
-
-    total = l['hydra:totalItems'];
 
     offset += 1;
 

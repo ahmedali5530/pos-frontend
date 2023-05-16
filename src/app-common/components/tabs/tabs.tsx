@@ -1,5 +1,6 @@
 import {ButtonHTMLAttributes, FunctionComponent, PropsWithChildren, ReactElement, useCallback, useState} from 'react';
 import classNames from "classnames";
+import ScrollContainer from 'react-indiana-drag-scroll';
 
 export interface TabControlState {
   activeTab: string;
@@ -33,24 +34,42 @@ export interface RenderProps extends TabControlState, TabControlActions {
 export interface TabControlProps {
   defaultTab: string;
   render: (props: RenderProps) => ReactElement | null;
+  position?: 'top'|'left'|'right';
 }
 
 export const TabControl: FunctionComponent<TabControlProps> = (props) => {
   const [{ activeTab, isTabActive }, { setActiveTab }] = useTabControl(props);
+  let classes = 'tab-control flex gap-5';
+  if(props.position === 'top'){
+    classes = 'tab-control flex gap-5 flex-col';
+  }
 
   return (
-    <div className="tab-control flex gap-5">
+    <div className={classes}>
       {props.render({ activeTab, setActiveTab, isTabActive })}
     </div>
   );
 };
 
-interface TabNavProps extends PropsWithChildren{}
+interface TabNavProps extends PropsWithChildren{
+  position?: 'top'|'left'|'right';
+}
 export const TabNav = (props: TabNavProps) => {
+  let classes = 'flex flex-col w-[220px] flex-shrink-0 border-r ml-[-20px] p-3 bg-gray-50';
+
+  if(props.position === 'top'){
+    classes = 'flex flex-shrink-0 p-3';
+    return (
+      <div className="bg-gray-50 rounded-full">
+        <ScrollContainer horizontal nativeMobileScroll={true}>
+          <div className={classes}>{props.children}</div>
+        </ScrollContainer>
+      </div>
+    );
+  }
+
   return (
-    // <ScrollContainer horizontal nativeMobileScroll={true}>
-      <div className="flex flex-col w-[220px] flex-shrink-0 border-r ml-[-20px]">{props.children}</div>
-    // </ScrollContainer>
+    <div className={classes}>{props.children}</div>
   );
 };
 
@@ -61,9 +80,9 @@ export const Tab = (props: TabProps) => {
   return (
     <button {...props} className={
       classNames(
-        'p-3 px-5 flex-shrink-0 text-left hover:text-primary-500 hover:bg-primary-100 hover:shadow-[inset_-5px_0_0_0]',
+        'p-3 px-5 flex-shrink-0 text-left rounded-full transition-all',
         props.isActive ?
-          'text-primary-500 bg-primary-100 shadow-[inset_-5px_0_0_0]' : ''
+          'text-white bg-primary-500 shadow-lg' : ''
       )
     }>{props.children}</button>
   );

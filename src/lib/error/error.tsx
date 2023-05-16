@@ -2,12 +2,12 @@ export const hasErrors = (errorElement: any) => {
   return errorElement !== undefined;
 };
 
-export const getErrors = (errorElemnt: any) => {
+export const getErrors = (errorElement: any) => {
   return (
     <>
-      {errorElemnt && (
-        <div className="text-rose-500 text-sm">
-          {errorElemnt.message}
+      {errorElement && (
+        <div className="text-danger-500 text-sm">
+          {errorElement.message}
         </div>
       )}
     </>

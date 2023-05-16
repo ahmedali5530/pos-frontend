@@ -1,10 +1,10 @@
-import {Button} from "../button";
+import {Button} from "../../../app-common/components/input/button";
 import React, {FC, useEffect, useState} from "react";
-import {Input} from "../input";
+import {Input} from "../../../app-common/components/input/input";
 import {DateTime} from "luxon";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPlus, faSearch} from "@fortawesome/free-solid-svg-icons";
-import {Modal} from "../modal";
+import {Modal} from "../../../app-common/components/modal/modal";
 import {fetchJson} from "../../../api/request/request";
 import {useForm} from "react-hook-form";
 import {Expense} from "../../../api/model/expense";
@@ -110,7 +110,7 @@ export const Expenses: FC<ExpensesProps> = (props) => {
     <>
       <Button variant="danger" size="lg" onClick={() => {
         setModal(true);
-      }} title="Expenses" type="button">
+      }} title="Expenses" type="button" tabIndex={-1}>
         Expenses
         <Shortcut shortcut="ctrl+e" handler={() => setModal(true)} />
       </Button>
