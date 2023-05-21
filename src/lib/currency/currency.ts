@@ -1,11 +1,13 @@
 export const withCurrency = (amount: string|number|undefined) => {
-  if(!amount){
+  if(amount === undefined){
     return process.env.REACT_APP_CURRENCY;
   }
 
   return new Intl
-    .NumberFormat('en-US', {
-      style: 'currency', currency: process.env.REACT_APP_CURRENCY
+    .NumberFormat(process.env.REACT_APP_LOCALE, {
+      style: 'currency',
+      currency: process.env.REACT_APP_CURRENCY,
+      compactDisplay: 'short'
     })
     .format(Number(amount))
   ;

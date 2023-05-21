@@ -148,52 +148,9 @@ export const CartControls = ({
     setAdded(JSON.parse(JSON.stringify(newItems)));
   }
 
-  useEffect(() => {
-    Mousetrap.bind(['ctrl+up', 'ctrl+down'], function(e: KeyboardEvent){
-      //update quantity of last added item
-      if(e.code === 'ArrowDown'){
-        let newItems = _.concat(added);
-
-        let checkedItems = [added[added.length - 1]];
-
-        newItems = newItems.map(item => {
-          if(checkedItems.find(checkedItem => checkedItem === item)){
-            item.checked = false;
-            if(item.quantity >= 1){
-              item.quantity = item.quantity - 1;
-            }
-          }
-
-          return item;
-        });
-
-        // set new items with updated quantity
-        setAdded(JSON.parse(JSON.stringify(newItems)));
-      }
-
-      if(e.code === 'ArrowUp'){
-        let newItems = _.concat(added);
-
-        let checkedItems = [added[added.length - 1]];
-
-        newItems = newItems.map(item => {
-          if(checkedItems.find(checkedItem => checkedItem === item)){
-            item.checked = false;
-            item.quantity = item.quantity + 1;
-          }
-
-          return item;
-        });
-
-        // set new items with updated quantity
-        setAdded(JSON.parse(JSON.stringify(newItems)));
-      }
-    });
-  }, [added])
-
   return (
     <>
-      <div className="p-3 block border-b flex gap-3 justify-end">
+      <div className="p-3 border-b flex gap-3 justify-end">
         <button tabIndex={-1} disabled={added.length === 0} type="button" className="btn btn-danger" onClick={voidCartItems}>Void</button>
         <button tabIndex={-1} disabled={added.length === 0} type="button" className="btn btn-secondary" onClick={copyCartItems}>Copy</button>
         {/*<button tabIndex={-1} type="button" className="btn btn-secondary"><FontAwesomeIcon icon={faPencil}/></button>*/}

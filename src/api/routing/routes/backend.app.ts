@@ -42,7 +42,8 @@ export const PAYMENT_TYPE_GET = scopeUrl('/payments/:id');
 export const CUSTOMER_LIST = scopeUrl('/customers');
 export const CUSTOMER_CREATE = scopeUrl('/customers');
 export const CUSTOMER_EDIT = scopeUrl('/customers/:id');
-export const CUSTOMER_PAYMENT_CREATE = scopeUrl('/customer_payments/:id');
+
+export const CUSTOMER_PAYMENT_CREATE = scopeUrl('/customer_payments');
 
 export const CATEGORY_LIST = scopeUrl('/categories');
 export const CATEGORY_CREATE = scopeUrl('/categories');

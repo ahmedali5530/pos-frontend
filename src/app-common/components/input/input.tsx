@@ -1,5 +1,7 @@
 import {createRef, forwardRef, InputHTMLAttributes, Ref, useCallback} from "react";
 import classNames from "classnames";
+import {NumericFormat} from "react-number-format";
+import {hasErrors} from "../../../lib/error/error";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   inputSize?: "lg"
@@ -18,21 +20,43 @@ export const Input = forwardRef((props: InputProps, ref: Ref<any>) => {
     }
   }, [ref, inputRef, props.selectable]);
 
-  return (
-    <input
-      type="text"
-      onClick={onClick}
-      autoComplete="off"
-      {...props}
-      className={
-        classNames(
-          'input',
-          props.inputSize === 'lg' ? 'min-h-[48px]' : '',
-          props.className && props.className,
-          props.hasError && 'error'
-        )
-      }
-      ref={ref || inputRef}
-    />
-  );
+  if(props.type === 'number'){
+
+    return (
+      <NumericFormat
+        name={props.name}
+        value={props.value as any}
+        defaultValue={props.defaultValue as any}
+        onChange={props.onChange}
+        autoComplete="off"
+        className={
+          classNames(
+            'input',
+            props.inputSize === 'lg' && 'lg',
+            props.className && props.className,
+            props.hasError && 'error'
+          )
+        }
+        getInputRef={ref || inputRef}
+      />
+    );
+  }else {
+    return (
+      <input
+        type="text"
+        onClick={onClick}
+        autoComplete="off"
+        {...props}
+        className={
+          classNames(
+            'input',
+            props.inputSize === 'lg' && 'lg',
+            props.className && props.className,
+            props.hasError && 'error'
+          )
+        }
+        ref={ref || inputRef}
+      />
+    );
+  }
 });

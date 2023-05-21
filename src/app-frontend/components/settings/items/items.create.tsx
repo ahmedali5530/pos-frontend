@@ -8,7 +8,7 @@ import {
   SUPPLIER_LIST, TAX_LIST
 } from "../../../../api/routing/routes/backend.app";
 import {fetchJson, jsonRequest} from "../../../../api/request/request";
-import {UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
+import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation} from "../../../../lib/validator/validation.result";
 import {Input} from "../../../../app-common/components/input/input";
 import {Trans} from "react-i18next";
@@ -28,11 +28,11 @@ import {Department} from "../../../../api/model/department";
 import {ProductVariants} from "./products/variants";
 import {CreateVariants} from "./products/create.variants";
 import {Tax} from "../../../../api/model/tax";
-import {useAlert} from "react-alert";
 import {StoresInput} from "../../../../app-common/components/input/stores";
 import {ProductVariant} from "../../../../api/model/product.variant";
 import {Modal} from "../../../../app-common/components/modal/modal";
 import {useLoadList} from "../../../../api/hooks/use.load.list";
+import {notify} from "../../../../app-common/components/confirm/notification";
 
 interface ItemsCreateProps{
   entity?: Product;
@@ -61,7 +61,6 @@ export const CreateItem = ({
   const useFormHook = useForm();
   const {register, handleSubmit, setError, formState: {errors}, reset, getValues, control} = useFormHook;
   const [creating, setCreating] = useState(false);
-  const alert = useAlert();
   const [modal, setModal] = useState(false);
 
   useEffect(() => {
@@ -138,6 +137,13 @@ export const CreateItem = ({
       onModalClose();
 
     } catch (exception: any) {
+      if(exception instanceof HttpException){
+        notify({
+          type: 'error',
+          description: exception.message
+        });
+      }
+
       if (exception instanceof UnprocessableEntityException) {
         const e = await exception.response.json();
         if(e.violations){
@@ -150,7 +156,10 @@ export const CreateItem = ({
         }
 
         if(e.errorMessage){
-          alert.error(e.errorMessage);
+          notify({
+            type: 'error',
+            description: e.errorMessage
+          });
         }
 
         return false;
@@ -332,7 +341,7 @@ export const CreateItem = ({
           <label htmlFor="basePrice">Sale price</label>
           <div className="input-group">
             <span className="input-addon">
-              {withCurrency('')}
+              {withCurrency(undefined)}
             </span>
             <Input {...register('basePrice')} id="basePrice" className={classNames(
               "w-full",
@@ -365,7 +374,7 @@ export const CreateItem = ({
           <label htmlFor="cost">Purchase price</label>
           <div className="input-group">
             <span className="input-addon">
-              {withCurrency('')}
+              {withCurrency(undefined)}
             </span>
             <Input {...register('cost')} id="cost" className={classNames(
               "w-full",

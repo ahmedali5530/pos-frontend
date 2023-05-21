@@ -16,10 +16,19 @@ import {Loader} from "../../../app-common/components/loader/loader";
 import {Shortcut} from "../../../app-common/components/input/shortcut";
 import {useSelector} from "react-redux";
 import {getStore} from "../../../duck/store/store.selector";
+import {hasErrors} from "../../../lib/error/error";
+import {yupResolver} from "@hookform/resolvers/yup";
+import * as yup from 'yup';
+import {ValidationMessage} from "../../../api/model/validation";
 
 interface ExpensesProps{
   onClose?: () => void;
 }
+
+const ValidationSchema = yup.object({
+  description: yup.string().required(ValidationMessage.Required),
+  amount: yup.string().required(ValidationMessage.Required)
+});
 
 export const Expenses: FC<ExpensesProps> = (props) => {
   const [modal, setModal] = useState(false);
@@ -71,7 +80,10 @@ export const Expenses: FC<ExpensesProps> = (props) => {
   }, [modal]);
 
 
-  const {register: createRegister, handleSubmit: createHandleSubmit, reset: createReset, formState: {errors: createErrors}, setError: createSetError} = useForm();
+  const {register: createRegister, handleSubmit: createHandleSubmit, reset: createReset, formState: {errors: createErrors}, setError: createSetError} = useForm({
+    resolver: yupResolver(ValidationSchema)
+  });
+
   const [creating, setCreating] = useState(false);
   const createExpense = async (values: any) => {
     setCreating(true);
@@ -130,6 +142,7 @@ export const Expenses: FC<ExpensesProps> = (props) => {
                      type="text"
                      placeholder="Description"
                      className="w-full"
+                     hasError={hasErrors(createErrors.description)}
               />
               {createErrors.description && (
                 <div className="text-danger-500 text-sm">
@@ -144,6 +157,7 @@ export const Expenses: FC<ExpensesProps> = (props) => {
                      type="number"
                      placeholder="Expense Amount"
                      className="w-full"
+                     hasError={hasErrors(createErrors.amount)}
               />
               {createErrors.amount && (
                 <div className="text-danger-500 text-sm">

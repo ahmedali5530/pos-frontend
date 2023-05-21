@@ -12,7 +12,7 @@ export interface Customer extends HydraId, HydraType {
   lng?: number;
   sale?: number;
   paid?: number;
-  outstanding?: number;
+  outstanding: number;
   cnic?: string;
   payments: CustomerPayment[];
   orders: Omit<Order, "customer">[];

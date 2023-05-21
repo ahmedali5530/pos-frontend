@@ -138,8 +138,6 @@ export const Purchase: FC<PurchaseProps> = ({
     }
   }, [purchase]);
 
-  console.log(purchase?.items)
-
   const savePurchase = async (values: any) => {
     setCreating(true);
     try {

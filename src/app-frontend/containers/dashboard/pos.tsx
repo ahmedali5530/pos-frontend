@@ -12,7 +12,7 @@ import localforage from "../../../lib/localforage/localforage";
 import SpeechSearch from "../../components/search/speech.search";
 import {Input} from "../../../app-common/components/input/input";
 import {SearchTable} from "../../components/search/search.table";
-import {CartContainer} from "../../components/cart/cart.container";
+import {CartContainer, CartItemType} from "../../components/cart/cart.container";
 import {Modal} from "../../../app-common/components/modal/modal";
 import {SaleHistory} from "../../components/sale/sale.history";
 import {Customers} from "../../components/sale/customers";
@@ -34,9 +34,9 @@ import {getStore} from "../../../duck/store/store.selector";
 import {getTerminal} from "../../../duck/terminal/terminal.selector";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCubesStacked, faFlag, faIcons} from "@fortawesome/free-solid-svg-icons";
-import {useAlert} from "react-alert";
 import {CartControls} from "../../components/cart/cart.controls";
 import {PurchaseTabs} from "../../components/inventory/purchase.tabs";
+import {notify} from "../../../app-common/components/confirm/notification";
 
 const Mousetrap = require('mousetrap');
 
@@ -150,7 +150,6 @@ const Pos: FC = () => {
   const terminal = useSelector(getTerminal);
 
   const [state] = useLoadData();
-  const alert = useAlert();
 
   useEffect(() => {
     setList(state.list);
@@ -170,11 +169,13 @@ const Pos: FC = () => {
   const [discountAmount, setDiscountAmount] = useState<number>();
   const [discountRateType, setDiscountRateType] = useState<string>();
   const [tax, setTax] = useState<Tax>();
-  const [coupon, setCoupon] = useState();
+  const [coupon] = useState();
   const [customer, setCustomer] = useState<Customer>();
   const [refundingFrom, setRefundingFrom] = useState<number>();
   const [closeSale, setCloseSale] = useState(false);
   const [adjustment, setAdjustment] = useState(0);
+  const [cartItem, setCartItem] = useState<number>(0);
+  const [cartItemType, setCartItemType] = useState<CartItemType>(CartItemType.quantity);
 
   const subTotal = useMemo(() => {
     return added.reduce((prev, item) => prev + getRowTotal(item), 0);
@@ -408,7 +409,10 @@ const Pos: FC = () => {
     let index = oldItems.findIndex(addItem => addItem.item.id === item.item.id && item.variant === addItem.variant);
     if (index !== -1) {
       if(newQuantity < 0) {
-        alert.error('Quantity cannot be less then 0');
+        notify({
+          type: 'error',
+          description: 'Quantity cannot be less then 0'
+        });
         return false;
       }
 
@@ -460,6 +464,7 @@ const Pos: FC = () => {
       'INPUT', 'SELECT', 'TEXTAREA'
     ];
 
+    // skip input nodes and retain focus in them
     if (inputNodes.includes(event.target.nodeName) && event.target !== element) {
       return;
     }
@@ -589,6 +594,12 @@ const Pos: FC = () => {
     });
   }, [modal, selected, selectedVariant, variants, items, added, quantity]);
 
+  Mousetrap.bind('/', function(){
+    if (searchField.current !== null) {
+      searchField.current.focus();
+    }
+  });
+
   const onCheckAll = (e: any) => {
     const newAdded = [...added];
     newAdded.map(item => item.checked = e.target.checked);
@@ -609,7 +620,7 @@ const Pos: FC = () => {
   return (
     <>
       <div className="grid gap-1 grid-cols-12 max-h-full" onClick={(event) => setFocus(event, searchField)}>
-        <div className="col-span-3 bg-gray-50 p-3 bg-white">
+        <div className="col-span-3 p-3 bg-white">
           <div className="grid grid-cols-3 gap-3 mb-3">
             <SaleBrands brands={brands} setBrands={setBrands}>
               <FontAwesomeIcon icon={faFlag} />
@@ -633,7 +644,7 @@ const Pos: FC = () => {
               autoFocus
               ref={searchField}
               selectable
-              className="search-field relative mousetrap flex-1 lg"
+              className="search-field relative mousetrap flex-1 lg w-full"
               value={q}
               onFocus={() => searchField.current?.select()}
               tabIndex={0}
@@ -658,7 +669,7 @@ const Pos: FC = () => {
             q={q}
           />
         </div>
-        <div className="col-span-6 bg-gray-50 bg-white">
+        <div className="col-span-6 bg-white">
           <CartControls added={added} setAdded={setAdded} containerRef={containerRef.current}/>
           <div className="overflow-auto block h-[calc(100vh_-_250px)]" ref={containerRef}>
             <CartContainer
@@ -670,6 +681,11 @@ const Pos: FC = () => {
               subTotal={subTotal}
               onCheckAll={onCheckAll}
               onCheck={onCheck}
+              setAdded={setAdded}
+              cartItemType={cartItemType}
+              cartItem={cartItem}
+              setCartItem={setCartItem}
+              setCartItemType={setCartItemType}
             />
           </div>
           <div className="bg-gray-100 h-[180px]">

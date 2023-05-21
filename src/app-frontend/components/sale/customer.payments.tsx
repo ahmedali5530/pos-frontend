@@ -18,17 +18,29 @@ import {Trans} from "react-i18next";
 import {ReactSelect} from "../../../app-common/components/input/custom.react.select";
 import {UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
 import {withCurrency} from "../../../lib/currency/currency";
+import * as yup from 'yup';
+import {ValidationMessage} from "../../../api/model/validation";
+import {yupResolver} from "@hookform/resolvers/yup";
+import {getErrors, hasErrors} from "../../../lib/error/error";
 
-interface Props extends PropsWithChildren{
+
+interface Props extends PropsWithChildren {
   customer: Customer;
   onCreate?: () => void;
 }
 
+const ValidationSchema = yup.object({
+  amount: yup.string().required(ValidationMessage.Required),
+  description: yup.string().required(ValidationMessage.Required)
+});
+
 export const CustomerPayments: FC<Props> = ({
-                                              customer: customerProp, onCreate, children
-                                            }) => {
+  customer: customerProp, onCreate, children
+}) => {
   const [modal, setModal] = useState(false);
-  const {register, handleSubmit, setError, formState: {errors}, reset, control} = useForm();
+  const {register, handleSubmit, setError, formState: {errors}, reset, control} = useForm({
+    resolver: yupResolver(ValidationSchema)
+  });
   const [creating, setCreating] = useState(false);
 
   const [customer, setCustomer] = useState<Customer>(customerProp);
@@ -40,11 +52,13 @@ export const CustomerPayments: FC<Props> = ({
   const createPayment = async (values: any) => {
     setCreating(true);
     try {
-      const url = CUSTOMER_PAYMENT_CREATE.replace(':id', customer.id);
+      const url = CUSTOMER_PAYMENT_CREATE;
 
-      if(values.orderId){
+      if (values.orderId) {
         values.orderId = values.orderId.value;
       }
+      delete values.id;
+      values.customer = customer['@id'];
 
       const response = await fetchJson(url, {
         method: 'POST',
@@ -83,7 +97,8 @@ export const CustomerPayments: FC<Props> = ({
   };
 
   const diff = useMemo(() => {
-    return Number(customer?.sale) - Number(customer?.paid);
+    // return Number(customer?.sale) - Number(customer?.paid);
+    return customer.outstanding;
   }, [customer]);
 
   const list = useMemo(() => {
@@ -119,25 +134,13 @@ export const CustomerPayments: FC<Props> = ({
           <div className="grid grid-cols-5 gap-4 mb-3">
             <div className="col-span-1">
               <label htmlFor="amount">Amount</label>
-              <Input {...register('amount')} id="amount" className="w-full"/>
-              {errors.amount && (
-                <div className="text-danger-500 text-sm">
-                  <Trans>
-                    {errors.amount.message}
-                  </Trans>
-                </div>
-              )}
+              <Input {...register('amount')} id="amount" className="w-full" hasError={hasErrors(errors.amount)}/>
+              {getErrors(errors.amount)}
             </div>
             <div className="col-span-2">
               <label htmlFor="description">Description</label>
-              <Input {...register('description')} id="description" className="w-full"/>
-              {errors.description && (
-                <div className="text-danger-500 text-sm">
-                  <Trans>
-                    {errors.description.message}
-                  </Trans>
-                </div>
-              )}
+              <Input {...register('description')} id="description" className="w-full" hasError={hasErrors(errors.description)}/>
+              {getErrors(errors.description)}
             </div>
             <div className="col-span-1">
               <label htmlFor="description">Order#</label>
@@ -176,7 +179,7 @@ export const CustomerPayments: FC<Props> = ({
 
         <div className="grid grid-cols-3 gap-4 mb-5">
           <div className="border border-primary-500 p-5 font-bold text-primary-500 rounded">
-            Total Sale
+            Total Credit Sale
             <span className="float-right">{withCurrency(customer.sale)}</span>
           </div>
           <div className="border border-success-500 p-5 font-bold text-success-500 rounded">

@@ -1,6 +1,5 @@
 import React, {FC, useEffect, useState} from "react";
 import {useForm} from "react-hook-form";
-import {useAlert} from "react-alert";
 import {TAX_CREATE, TAX_GET} from "../../../../api/routing/routes/backend.app";
 import {fetchJson} from "../../../../api/request/request";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
@@ -16,6 +15,7 @@ import * as yup from "yup";
 import {ValidationMessage} from "../../../../api/model/validation";
 import {yupResolver} from "@hookform/resolvers/yup";
 import {hasErrors} from "../../../../lib/error/error";
+import {notify} from "../../../../app-common/components/confirm/notification";
 
 interface CreateTaxProps {
   entity?: Tax;
@@ -37,7 +37,6 @@ export const CreateTax: FC<CreateTaxProps> = ({
     resolver: yupResolver(ValidationSchema)
   });
   const [creating, setCreating] = useState(false);
-  const alert = useAlert();
   const [modal, setModal] = useState(false);
 
   useEffect(() => {
@@ -86,7 +85,10 @@ export const CreateTax: FC<CreateTaxProps> = ({
     } catch (exception: any) {
       if (exception instanceof HttpException) {
         if (exception.message) {
-          alert.error(exception.message);
+          notify({
+            type: 'error',
+            description: exception.message
+          });
         }
       }
 
@@ -100,7 +102,10 @@ export const CreateTax: FC<CreateTaxProps> = ({
         });
 
         if (e.errorMessage) {
-          alert.error(e.errorMessage);
+          notify({
+            type: 'error',
+            description: e.errorMessage
+          });
         }
 
         return false;

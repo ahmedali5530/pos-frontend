@@ -1,34 +1,18 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import {useLoadList} from "../../../../api/hooks/use.load.list";
-import {
-  CATEGORY_LIST, PRODUCT_KEYWORDS,
-  STORE_LIST,
-  TERMINAL_CREATE,
-  TERMINAL_GET,
-  TERMINAL_LIST
-} from "../../../../api/routing/routes/backend.app";
-import {Trans, useTranslation} from "react-i18next";
+import {TERMINAL_LIST} from "../../../../api/routing/routes/backend.app";
+import {useTranslation} from "react-i18next";
 import {createColumnHelper} from "@tanstack/react-table";
 import {Button} from "../../../../app-common/components/input/button";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPencilAlt, faPlus, faTimes, faTrash} from "@fortawesome/free-solid-svg-icons";
-import {Controller, useForm} from "react-hook-form";
-import {useAlert} from "react-alert";
-import {fetchJson} from "../../../../api/request/request";
-import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
-import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
+import {faPencilAlt, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {Input} from "../../../../app-common/components/input/input";
 import {TableComponent} from "../../../../app-common/components/table/table";
-import { Terminal } from '../../../../api/model/terminal';
+import {Terminal} from '../../../../api/model/terminal';
 import {Store} from "../../../../api/model/store";
-import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
-import {ReactSelectOptionProps} from "../../../../api/model/common";
-import {Category} from "../../../../api/model/category";
 import {Modal} from "../../../../app-common/components/modal/modal";
-import {StoresInput} from "../../../../app-common/components/input/stores";
 import {Product} from "../../../../api/model/product";
 import {CreateTerminal} from "./create.terminal";
-import {Tax} from "../../../../api/model/tax";
 
 export const Terminals = () => {
   const [operation, setOperation] = useState('create');
@@ -42,7 +26,7 @@ export const Terminals = () => {
   const [filter, setFilter] = useState<string>();
 
   const terminalProductsFilter = useMemo(() => {
-    if(filter) {
+    if (filter) {
       return terminalProducts.filter(item => item.name.toLowerCase().indexOf(filter.toLowerCase()) !== -1);
     }
 
@@ -121,13 +105,15 @@ export const Terminals = () => {
         setTerminalProducts([]);
       }} title="Terminal products" size="full">
         <div className="w-full mb-3">
-          <Input type="search" placeholder="Filter products" onChange={(e) => setFilter(e.target.value)} value={filter} />
+          <Input type="search" placeholder="Filter products" onChange={(e) => setFilter(e.target.value)}
+                 value={filter}/>
         </div>
 
         {/*TODO: implement removal of products*/}
         <div className="flex flex-wrap gap-3">
           {terminalProductsFilter.map(item => (
-            <span className="pl-3 rounded-full inline-flex justify-center items-center bg-primary-500 text-white h-[40px] pr-3">
+            <span
+              className="pl-3 rounded-full inline-flex justify-center items-center bg-primary-500 text-white h-[40px] pr-3">
               {item.name}
               {/*<button className="ml-3 bg-white text-danger-500 rounded-full h-[40px] w-[40px] border-2" title={`Remove ${item.name}?`}>
                 <FontAwesomeIcon icon={faTimes} />
@@ -142,7 +128,7 @@ export const Terminals = () => {
         setOperation('create');
         setModal(false);
         fetchData();
-      }} entity={terminal} operation={operation} />
+      }} entity={terminal} operation={operation}/>
     </>
   );
 }

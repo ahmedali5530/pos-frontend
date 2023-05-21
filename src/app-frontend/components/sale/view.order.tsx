@@ -19,7 +19,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
 
   const itemsTotal = useMemo(() => {
     return order.items.reduce((prev, item) => (
-      (prev + (item.quantity * item.price)) + item.taxesTotal - item.discount
+      (prev + (Number(item.quantity) * Number(item.price))) + item.taxesTotal - Number(item.discount)
     ), 0);
   }, [order]);
 
@@ -37,21 +37,21 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
       }} title={`Order# ${order.orderId}`}>
         <div className="grid grid-cols-6 gap-3 mb-5">
           <div className="border border-gray-500 p-5 rounded">
-            <div className="text-2xl">+{itemsTotal.toFixed(2)}</div>
+            <div className="text-2xl">+{itemsTotal}</div>
             Items total with tax
           </div>
           <div className="border border-gray-500 p-5 rounded">
-            <div className="text-2xl">+{(order.tax ? order.tax.amount : 0)?.toFixed(2)}</div>
+            <div className="text-2xl">+{(order.tax ? order.tax.amount : 0)}</div>
             Tax
           </div>
           <div className="border border-gray-500 p-5 rounded">
-            <div className="text-2xl">-{(order.discount ? (order.discount.amount) : 0)?.toFixed(2)}</div>
+            <div className="text-2xl">-{(order.discount ? (order.discount.amount) : 0)}</div>
             Discount
           </div>
           <div className="border border-gray-500 p-5 rounded">
             <div className="text-2xl">{order.adjustment && (
               (itemsTotal + (order?.tax?.amount || 0) - (order?.discount?.amount || 0)) % 10 < 5 ? '' : '+'
-            )}{(order.adjustment ? order.adjustment : 0)?.toFixed(2)}</div>
+            )}{(order.adjustment ? order.adjustment : 0)}</div>
             Adjustment
           </div>
           <div className="border border-success-500 p-5 text-success-500 rounded font-bold">
@@ -62,7 +62,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
             <div className="text-2xl">Payments</div>
             <ul className="font-normal">
               {order.payments.map(item => (
-                <li>{item.type?.name}: <span className="float-right">{item.received.toFixed(2)}</span></li>
+                <li>{item.type?.name}: <span className="float-right">{item.received}</span></li>
               ))}
             </ul>
           </div>

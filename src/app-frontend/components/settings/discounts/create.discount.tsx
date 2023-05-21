@@ -1,7 +1,6 @@
 import React, {FC, useEffect, useState} from "react";
 import {Modal} from "../../../../app-common/components/modal/modal";
 import {Controller, useForm} from "react-hook-form";
-import {useAlert} from "react-alert";
 import {DISCOUNT_CREATE, DISCOUNT_GET} from "../../../../api/routing/routes/backend.app";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
 import {fetchJson} from "../../../../api/request/request";
@@ -17,6 +16,7 @@ import * as yup from "yup";
 import {ValidationMessage} from "../../../../api/model/validation";
 import {yupResolver} from "@hookform/resolvers/yup";
 import {hasErrors} from "../../../../lib/error/error";
+import {notify} from "../../../../app-common/components/confirm/notification";
 
 interface CreateDiscountProps {
   entity?: Discount;
@@ -45,7 +45,6 @@ export const CreateDiscount: FC<CreateDiscountProps> = ({
     resolver: yupResolver(ValidationSchema)
   });
   const [creating, setCreating] = useState(false);
-  const alert = useAlert();
   const [modal, setModal] = useState(false);
 
   useEffect(() => {
@@ -113,7 +112,10 @@ export const CreateDiscount: FC<CreateDiscountProps> = ({
     } catch (exception: any) {
       if (exception instanceof HttpException) {
         if (exception.message) {
-          alert.error(exception.message);
+          notify({
+            type: 'error',
+            description: exception.message
+          });
         }
       }
 
@@ -127,7 +129,10 @@ export const CreateDiscount: FC<CreateDiscountProps> = ({
         });
 
         if (e.errorMessage) {
-          alert.error(e.errorMessage);
+          notify({
+            type: 'error',
+            description: e.errorMessage
+          });
         }
 
         return false;

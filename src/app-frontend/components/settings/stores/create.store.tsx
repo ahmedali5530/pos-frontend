@@ -4,7 +4,6 @@ import {Input} from "../../../../app-common/components/input/input";
 import {Trans} from "react-i18next";
 import {Button} from "../../../../app-common/components/input/button";
 import {useForm} from "react-hook-form";
-import {useAlert} from "react-alert";
 import {STORE_CREATE, STORE_EDIT} from "../../../../api/routing/routes/backend.app";
 import {jsonRequest} from "../../../../api/request/request";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
@@ -14,6 +13,7 @@ import {yupResolver} from "@hookform/resolvers/yup";
 import * as yup from 'yup';
 import {ValidationMessage} from "../../../../api/model/validation";
 import {hasErrors} from "../../../../lib/error/error";
+import {notify} from "../../../../app-common/components/confirm/notification";
 
 interface CreateStoreProps {
   entity?: Store;
@@ -34,7 +34,6 @@ export const CreateStore: FC<CreateStoreProps> = ({
   });
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
-  const alert = useAlert();
 
   useEffect(() => {
     setModal(addModal);
@@ -73,7 +72,10 @@ export const CreateStore: FC<CreateStoreProps> = ({
     } catch (exception: any) {
       if (exception instanceof HttpException) {
         if (exception.message) {
-          alert.error(exception.message);
+          notify({
+            type: 'error',
+            description: exception.message
+          });
         }
       }
 
@@ -87,7 +89,10 @@ export const CreateStore: FC<CreateStoreProps> = ({
         });
 
         if (e.errorMessage) {
-          alert.error(e.errorMessage);
+          notify({
+            type: 'error',
+            description: e.errorMessage
+          });
         }
 
         return false;

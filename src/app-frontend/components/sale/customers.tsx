@@ -1,4 +1,4 @@
-import React, {FC, useState} from "react";
+import React, {FC, PropsWithChildren, useState} from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPencilAlt, faTrash, faUsers} from "@fortawesome/free-solid-svg-icons";
 import {Button} from "../../../app-common/components/input/button";
@@ -17,15 +17,26 @@ import {useLoadList} from "../../../api/hooks/use.load.list";
 import {createColumnHelper} from "@tanstack/react-table";
 import {TableComponent} from "../../../app-common/components/table/table";
 import {Shortcut} from "../../../app-common/components/input/shortcut";
+import * as yup from 'yup';
+import {ValidationMessage} from "../../../api/model/validation";
+import {getErrors, hasErrors} from "../../../lib/error/error";
+import {yupResolver} from "@hookform/resolvers/yup";
 
 
-interface Props {
+interface Props extends PropsWithChildren{
   customer?: Customer;
   setCustomer: (customer?: Customer) => void;
+  className?: string;
 }
 
+const ValidationSchema = yup.object({
+  name: yup.string().required(ValidationMessage.Required),
+  phone: yup.string().required(ValidationMessage.Required),
+  openingBalance: yup.string().required(ValidationMessage.Required)
+});
+
 export const Customers: FC<Props> = ({
-  customer, setCustomer
+  customer, setCustomer, children, className
 }) => {
   const [modal, setModal] = useState(false);
   const [operation, setOperation] = useState('create');
@@ -114,7 +125,9 @@ export const Customers: FC<Props> = ({
   ];
   const [params, setParams] = useState<{ [key: string]: any }>();
 
-  const {register, handleSubmit, setError, formState: {errors}, reset} = useForm();
+  const {register, handleSubmit, setError, formState: {errors}, reset} = useForm({
+    resolver: yupResolver(ValidationSchema)
+  });
   const [creating, setCreating] = useState(false);
   const createCustomer = async (values: any, event?: any) => {
     event.stopPropagation();
@@ -122,15 +135,16 @@ export const Customers: FC<Props> = ({
 
     setCreating(true);
     try {
-      let url: string;
+      let url, method = 'POST';
       if (values.id) {
+        method = 'PUT';
         url = CUSTOMER_EDIT.replace(':id', values.id);
       } else {
         url = CUSTOMER_CREATE;
       }
 
       const response = await fetchJson(url, {
-        method: 'POST',
+        method: method,
         body: JSON.stringify(values)
       });
 
@@ -177,61 +191,43 @@ export const Customers: FC<Props> = ({
 
   return (
     <>
-      <Button variant="primary" type="button" size="lg" onClick={() => {
+      <button className={
+        className ? className : 'btn btn-primary lg'
+      } type="button" onClick={() => {
         setModal(true);
       }} title="Customers" tabIndex={-1}>
-        <FontAwesomeIcon icon={faUsers} className="mr-2"/> Customers
+        {children || (
+          <>
+            <FontAwesomeIcon icon={faUsers} className="mr-2"/> Customers
+          </>
+        )}
         <Shortcut shortcut="ctrl+c" handler={() => setModal(true)}/>
-      </Button>
+      </button>
 
       <Modal shouldCloseOnEsc={false} open={modal} onClose={() => {
         setModal(false);
-      }} title="Customers" size="full">
+      }} title="Customers">
         <form className="mb-5" onSubmit={handleSubmit(createCustomer)}>
           <div className="grid lg:grid-cols-5 gap-4 mb-3 md:grid-cols-3 sm:grid-cols-1">
             <div>
               <label htmlFor="name">Name</label>
-              <Input {...register('name')} id="name" className="w-full"/>
-              {errors.name && (
-                <div className="text-danger-500 text-sm">
-                  <Trans>
-                    {errors.name.message}
-                  </Trans>
-                </div>
-              )}
+              <Input {...register('name')} id="name" className="w-full" hasError={hasErrors(errors.name)}/>
+              {getErrors(errors.name)}
             </div>
             <div>
               <label htmlFor="phone">Phone</label>
-              <Input {...register('phone')} id="phone" className="w-full"/>
-              {errors.phone && (
-                <div className="text-danger-500 text-sm">
-                  <Trans>
-                    {errors.phone.message}
-                  </Trans>
-                </div>
-              )}
+              <Input {...register('phone')} id="phone" className="w-full" hasError={hasErrors(errors.phone)}/>
+              {getErrors(errors.phone)}
             </div>
             <div>
               <label htmlFor="cnic">CNIC Number</label>
-              <Input {...register('cnic')} id="cnic" className="w-full"/>
-              {errors.cnic && (
-                <div className="text-danger-500 text-sm">
-                  <Trans>
-                    {errors.cnic.message}
-                  </Trans>
-                </div>
-              )}
+              <Input {...register('cnic')} id="cnic" className="w-full" hasError={hasErrors(errors.cnic)}/>
+              {getErrors(errors.cnic)}
             </div>
             <div>
               <label htmlFor="openingBalance">Opening balance</label>
-              <Input {...register('openingBalance')} id="openingBalance" className="w-full"/>
-              {errors.openingBalance && (
-                <div className="text-danger-500 text-sm">
-                  <Trans>
-                    {errors.openingBalance.message}
-                  </Trans>
-                </div>
-              )}
+              <Input {...register('openingBalance')} id="openingBalance" className="w-full" hasError={hasErrors(errors.openingBalance)}/>
+              {getErrors(errors.openingBalance)}
             </div>
             <div>
               <label className="md:block w-full sm:hidden">&nbsp;</label>
@@ -259,7 +255,7 @@ export const Customers: FC<Props> = ({
         <TableComponent
           columns={columns}
           useLoadList={useLoadHook}
-          setFilters={mergeFilters}
+          // setFilters={mergeFilters}
         />
       </Modal>
     </>

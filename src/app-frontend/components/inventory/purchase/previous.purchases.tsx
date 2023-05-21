@@ -13,6 +13,7 @@ import {Purchase} from "../../../../api/model/purchase";
 import {Purchase as CreatePurchase} from "./purchase";
 import {Popconfirm} from 'antd';
 import {jsonRequest} from "../../../../api/request/request";
+import {ConfirmAlert} from "../../../../app-common/components/confirm/confirm.alert";
 
 export const PreviousPurchases = () => {
   const [operation, setOperation] = useState('create');
@@ -65,21 +66,19 @@ export const PreviousPurchases = () => {
             <FontAwesomeIcon icon={faPencilAlt}/>
           </Button>
           <span className="mx-2 text-gray-300">|</span>
-          <Popconfirm
-            placement="topRight"
-            title="Confirm deletion"
-            description="Are you sure to delete this purchase?"
+          <ConfirmAlert
             onConfirm={() => {
               deletePurchase(info.getValue().toString());
             }}
-            okText="Yes, please"
+            confirmText="Yes, please"
             cancelText="No, wait"
-            okType="danger"
+            title="Confirm deletion"
+            description="Are you sure to delete this purchase?"
           >
             <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
               <FontAwesomeIcon icon={faTrash}/>
             </Button>
-          </Popconfirm>
+          </ConfirmAlert>
         </>
       )
     }

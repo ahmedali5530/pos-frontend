@@ -1,27 +1,25 @@
 import React, {FC, useEffect, useState} from "react";
-import { Modal } from "../../../../app-common/components/modal/modal";
+import {Modal} from "../../../../app-common/components/modal/modal";
 import {Controller, useForm} from "react-hook-form";
-import {useAlert} from "react-alert";
 import {PAYMENT_TYPE_CREATE, PAYMENT_TYPE_GET} from "../../../../api/routing/routes/backend.app";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
 import {fetchJson} from "../../../../api/request/request";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
-import { Trans } from "react-i18next";
-import { ReactSelect } from "../../../../app-common/components/input/custom.react.select";
-import { Switch } from "../../../../app-common/components/input/switch";
-import { StoresInput } from "../../../../app-common/components/input/stores";
+import {Trans} from "react-i18next";
+import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
+import {Switch} from "../../../../app-common/components/input/switch";
+import {StoresInput} from "../../../../app-common/components/input/stores";
 import * as yup from 'yup';
 import {ValidationMessage} from "../../../../api/model/validation";
 import {yupResolver} from "@hookform/resolvers/yup";
-import {hasErrors} from "../../../../lib/error/error";
 import {Button} from "../../../../app-common/components/input/button";
 import {Input} from "../../../../app-common/components/input/input";
-import {User} from "../../../../api/model/user";
 import {PaymentType} from "../../../../api/model/payment.type";
+import {notify} from "../../../../app-common/components/confirm/notification";
 
 
-interface CreatePaymentTypeProps{
+interface CreatePaymentTypeProps {
   entity?: PaymentType;
   operation?: string;
   addModal: boolean;
@@ -44,7 +42,6 @@ export const CreatePaymentType: FC<CreatePaymentTypeProps> = ({
     resolver: yupResolver(ValidationSchema)
   });
   const [creating, setCreating] = useState(false);
-  const alert = useAlert();
   const [modal, setModal] = useState(false);
 
   useEffect(() => {
@@ -101,7 +98,10 @@ export const CreatePaymentType: FC<CreatePaymentTypeProps> = ({
     } catch (exception: any) {
       if (exception instanceof HttpException) {
         if (exception.message) {
-          alert.error(exception.message);
+          notify({
+            type: 'error',
+            description: exception.message
+          });
         }
       }
 
@@ -115,7 +115,10 @@ export const CreatePaymentType: FC<CreatePaymentTypeProps> = ({
         });
 
         if (e.errorMessage) {
-          alert.error(e.errorMessage);
+          notify({
+            type: 'error',
+            description: e.errorMessage
+          });
         }
 
         return false;
@@ -214,7 +217,7 @@ export const CreatePaymentType: FC<CreatePaymentTypeProps> = ({
             )}
           </div>
           {/*{user?.roles?.includes('ROLE_ADMIN') && (*/}
-          <StoresInput control={control} errors={errors} />
+          <StoresInput control={control} errors={errors}/>
           {/*)}*/}
           <div>
             <Button variant="primary" type="submit" disabled={creating}>

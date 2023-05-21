@@ -4,12 +4,10 @@ import {Input} from "../../../../app-common/components/input/input";
 import {Trans} from "react-i18next";
 import {Controller, useForm} from "react-hook-form";
 import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
-import {StoresInput} from "../../../../app-common/components/input/stores";
 import {Button} from "../../../../app-common/components/input/button";
-import {useAlert} from "react-alert";
-import {STORE_EDIT, STORE_LIST, USER_CREATE, USER_EDIT} from "../../../../api/routing/routes/backend.app";
+import {STORE_LIST, USER_CREATE, USER_EDIT} from "../../../../api/routing/routes/backend.app";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
-import {fetchJson, jsonRequest} from "../../../../api/request/request";
+import {jsonRequest} from "../../../../api/request/request";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
 import {User} from "../../../../api/model/user";
@@ -19,6 +17,7 @@ import {yupResolver} from "@hookform/resolvers/yup";
 import {getErrors, hasErrors} from "../../../../lib/error/error";
 import {Store} from "../../../../api/model/store";
 import {useLoadList} from "../../../../api/hooks/use.load.list";
+import {notify} from "../../../../app-common/components/confirm/notification";
 
 interface CreateUserProps {
   entity?: User;
@@ -27,23 +26,28 @@ interface CreateUserProps {
   onClose?: () => void;
 }
 
-const ValidationSchema = yup.object({
-  displayName: yup.string().required(ValidationMessage.Required),
-  username: yup.string().required(ValidationMessage.Required),
-  email: yup.string().required(ValidationMessage).email(ValidationMessage.Email),
-  roles: yup.array().required(ValidationMessage.Required),
-  stores: yup.array().required(ValidationMessage.Required)
-});
-
 export const CreateUser: FC<CreateUserProps> = ({
   entity, onClose, operation, addModal
 }) => {
+  let schema: any = {
+    displayName: yup.string().required(ValidationMessage.Required),
+    username: yup.string().required(ValidationMessage.Required),
+    email: yup.string().required(ValidationMessage.Required).email(ValidationMessage.Email),
+    roles: yup.array().required(ValidationMessage.Required),
+    stores: yup.array().required(ValidationMessage.Required)
+  }
+
+  if(!entity){
+    schema['password'] = yup.string().required(ValidationMessage.Required)
+  }
+
+  const ValidationSchema = yup.object(schema);
+
   const {register, handleSubmit, setError, formState: {errors}, reset, control} = useForm({
     resolver: yupResolver(ValidationSchema)
   });
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
-  const alert = useAlert();
   const {list: stores, fetchData: loadStores} = useLoadList<Store>(STORE_LIST);
 
   useEffect(() => {
@@ -104,7 +108,10 @@ export const CreateUser: FC<CreateUserProps> = ({
     } catch (exception: any) {
       if (exception instanceof HttpException) {
         if (exception.message) {
-          alert.error(exception.message);
+          notify({
+            type: 'error',
+            description: exception.message
+          });
         }
       }
 
@@ -118,7 +125,10 @@ export const CreateUser: FC<CreateUserProps> = ({
         });
 
         if (e.errorMessage) {
-          alert.error(e.errorMessage);
+          notify({
+            type: 'error',
+            description: e.errorMessage
+          });
         }
 
         return false;
@@ -161,7 +171,8 @@ export const CreateUser: FC<CreateUserProps> = ({
         <div className="grid grid-cols-1 gap-4 mb-3">
           <div>
             <label htmlFor="displayName">Name</label>
-            <Input {...register('displayName')} id="displayName" className="w-full" hasError={hasErrors(errors.displayName)}/>
+            <Input {...register('displayName')} id="displayName" className="w-full"
+                   hasError={hasErrors(errors.displayName)}/>
             {errors.displayName && (
               <div className="text-danger-500 text-sm">
                 <Trans>
@@ -183,11 +194,12 @@ export const CreateUser: FC<CreateUserProps> = ({
           </div>
           <div>
             <label htmlFor="plainPassword">Password</label>
-            <Input {...register('password')} type="password" id="plainPassword" className="w-full" hasError={hasErrors(errors.plainPassword)}/>
-            {errors.plainPassword && (
+            <Input {...register('password')} type="password" id="plainPassword" className="w-full"
+                   hasError={hasErrors(errors.password)}/>
+            {errors.password && (
               <div className="text-danger-500 text-sm">
                 <Trans>
-                  {errors.plainPassword.message}
+                  {errors.password.message}
                 </Trans>
               </div>
             )}

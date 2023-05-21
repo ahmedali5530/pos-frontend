@@ -6,7 +6,8 @@ import {StoresInput} from "../../../../app-common/components/input/stores";
 import {Controller, useForm} from "react-hook-form";
 import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
 import {Button} from "../../../../app-common/components/input/button";
-import {useAlert} from "react-alert";
+import { notification } from 'antd';
+
 import {
   CATEGORY_LIST,
   PRODUCT_KEYWORDS, STORE_LIST,
@@ -25,6 +26,7 @@ import {yupResolver} from "@hookform/resolvers/yup";
 import {hasErrors} from "../../../../lib/error/error";
 import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {Store} from "../../../../api/model/store";
+import {notify} from "../../../../app-common/components/confirm/notification";
 
 interface CreateTerminalProps{
   entity?: Terminal;
@@ -48,7 +50,6 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
     resolver: yupResolver(ValidationSchema)
   });
   const [creating, setCreating] = useState(false);
-  const alert = useAlert();
   const [modal, setModal] = useState(false);
   const {list: stores, fetchData: loadStores} = useLoadList<Store>(STORE_LIST);
 
@@ -113,7 +114,11 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
     } catch (exception: any) {
       if(exception instanceof HttpException){
         if(exception.message){
-          alert.error(exception.message);
+          notify({
+            title: 'Error',
+            type: 'error',
+            description: exception.message
+          });
         }
       }
 
@@ -127,7 +132,11 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
         });
 
         if(e.errorMessage){
-          alert.error(e.errorMessage);
+          notify({
+            title: 'Error',
+            type: 'error',
+            description: e.errorMessage
+          });
         }
 
         return false;

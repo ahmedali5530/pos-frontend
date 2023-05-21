@@ -6,28 +6,21 @@ import './css/index.scss';
 import {StoreFactory} from "./store/store.factory";
 import {Provider} from "react-redux";
 import { createRoot } from 'react-dom/client';
-import {positions, Provider as AlertProvider} from "react-alert";
-import AlertTemplate from '../src/app-common/components/alert/src';
 import {I18nextProvider} from "react-i18next";
 import i18n from './i18next';
-import { Provider as RollbarProvider, ErrorBoundary as RollbarErrorBoundary } from '@rollbar/react'; // Provider imports 'rollbar'
+import { Provider as RollbarProvider, ErrorBoundary as RollbarErrorBoundary } from '@rollbar/react';
+import {Configuration} from "rollbar"; // Provider imports 'rollbar'
 
 require('./types.d.ts');
 
-const rollbarConfig = {
+const rollbarConfig: Configuration = {
   accessToken: '1bd06021ac3c46ccb8e2bd1650668d86',
   environment: 'dev',
+  reportLevel: 'critical',
+  logLevel: 'debug'
 };
 
 const store = StoreFactory.createStore();
-
-const options = {
-  timeout: 3000,
-  position: positions.BOTTOM_RIGHT,
-  containerStyle: {
-    paddingRight: '20px'
-  }
-};
 
 const container = document.getElementById('root');
 const root = createRoot(container!); // createRoot(container!) if you use TypeScript
@@ -36,9 +29,7 @@ root.render(
     <RollbarErrorBoundary>
       <Provider store={store}>
         <I18nextProvider i18n={i18n}>
-          <AlertProvider template={AlertTemplate} {...options}>
-            { process.env.REACT_APP_TYPE === 'frontend' ? <Frontend/> : <Admin/> }
-          </AlertProvider>
+          { process.env.REACT_APP_TYPE === 'frontend' ? <Frontend/> : <Admin/> }
         </I18nextProvider>
       </Provider>
     </RollbarErrorBoundary>

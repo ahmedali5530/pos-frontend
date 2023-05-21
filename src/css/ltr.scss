@@ -4,6 +4,23 @@
 :root {
   scroll-behavior: smooth;
 }
+::selection{
+  @apply bg-primary-500 text-white;
+}
+
+::-webkit-scrollbar{
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track{
+  background: transparent;
+}
+::-webkit-scrollbar-thumb{
+  @apply bg-gray-300 rounded;
+}
+::-webkit-scrollbar-thumb:hover{
+  @apply bg-primary-500;
+}
 
 body{
   @apply bg-black;
@@ -174,7 +191,7 @@ a{
     @apply min-h-[48px];
   }
   &.sm{
-    @apply h-[30px] text-sm px-1 py-1;
+    @apply h-[30px] text-[12px] px-1 py-1;
   }
   &:disabled{
     @apply cursor-not-allowed;
@@ -487,6 +504,10 @@ a{
     width: 100%;
   }
   &:checked{
+    box-shadow: 0 0 0 2px theme('colors.primary.500');
+  }
+  &:indeterminate{
+    background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(0,149,255)" viewBox="0 96 960 960" ><path d="M280 606v-60h400v60H280Z"/></svg>');
     box-shadow: 0 0 0 2px theme('colors.primary.500');
   }
 }

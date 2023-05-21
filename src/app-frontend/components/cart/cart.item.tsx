@@ -8,6 +8,7 @@ import {faMinus, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {getRowTotal} from "../../containers/dashboard/pos";
 import {Checkbox} from "../../../app-common/components/input/checkbox";
+import {CartItemType} from "./cart.container";
 
 interface CartItemProps {
   added: CartItemModel[];
@@ -19,23 +20,37 @@ interface CartItemProps {
   item: CartItemModel;
   index: number;
   onCheck: (state: boolean, index: number) => void;
+  cartItemType: string;
+  cartItem?: number;
 }
 
 export const CartItem: FunctionComponent<CartItemProps> = ({
   latest, onQuantityChange, onPriceChange, onDiscountChange, deleteItem, onCheck,
-  item, index
+  item, index, cartItem, cartItemType
 }) => {
   const taxTotal = useMemo(() => {
     return item.taxes.reduce((prev, tax) => prev + (tax.rate * item.price / 100), 0)
   }, [item]);
 
-  let ref = useRef<HTMLInputElement>();
+  let qtyRef = useRef<HTMLInputElement>();
+  let discRef = useRef<HTMLInputElement>();
+  let rateRef = useRef<HTMLInputElement>();
 
   useEffect(() => {
-    console.log(ref)
-    // TODO: control this from shortcuts
-    // ref.current?.select();
-  }, [ref.current]);
+    if(cartItem === index){
+      if(cartItemType === 'quantity'){
+        qtyRef.current?.select();
+      }
+
+      if(cartItemType === 'discount'){
+        discRef.current?.select();
+      }
+
+      if(cartItemType === 'rate'){
+        rateRef.current?.select();
+      }
+    }
+  }, [cartItem, cartItemType, index]);
 
   return (
     <div className={
@@ -50,6 +65,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
           onChange={(event) => onCheck(event.currentTarget.checked, index)}
           id={index.toString()}
           tabIndex={-1}
+          className="align-middle"
         />
       </div>
       <div className="table-cell">
@@ -64,18 +80,19 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
           )}
         </label>
       </div>
-      <div className="table-cell p-2">
+      <div className="table-cell">
         <div className="flex justify-center">
           <div className="input-group">
             <Button tabIndex={-1} size="lg" type="button" variant="primary" onClick={() => onQuantityChange(item, item.quantity - 1)}>
               <FontAwesomeIcon icon={faMinus}/>
             </Button>
             <Input
+              type="number"
               value={item.quantity}
-              className="text-center w-[64px] lg"
+              className={"text-center w-full lg mousetrap"}
               onChange={(event) => onQuantityChange(item, event.currentTarget.value)}
               selectable={true}
-              ref={r => ref.current = r}
+              ref={qtyRef}
             />
             <Button tabIndex={-1} size="lg" type="button" variant="primary" onClick={() => onQuantityChange(item, item.quantity + 1)}>
               <FontAwesomeIcon icon={faPlus}/>
@@ -83,14 +100,16 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
           </div>
         </div>
       </div>
-      <div className="table-cell p-2 text-center">
+      <div className="table-cell text-center">
         <Input
+          type="number"
           value={item.discount}
-          className="text-center w-full lg"
+          className={"text-center w-full lg mousetrap"}
           onChange={(event) => {
             onDiscountChange(item, +event.currentTarget.value)
           }}
           selectable={true}
+          ref={discRef}
         />
       </div>
       <div className="table-cell p-2 text-center">
@@ -101,12 +120,14 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
           )
         }
       </div>
-      <div className="table-cell p-2 text-right">
+      <div className="table-cell text-right">
         <Input
           value={item.price}
-          className="text-center w-full lg"
+          type="number"
+          className={"text-center w-full lg mousetrap"}
           onChange={(event) => onPriceChange(item, +event.currentTarget.value)}
           selectable={true}
+          ref={rateRef}
         />
       </div>
       <div className="table-cell p-2 text-right">{getRowTotal(item)}</div>

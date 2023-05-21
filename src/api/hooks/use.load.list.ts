@@ -103,7 +103,7 @@ export const useLoadList = <L>(url: string, options?: any): FetchDataReturns<L> 
 
   useEffect(() => {
     fetchData();
-  }, [url, state.page, state.limit, state.filter, state.sort, state.sortMode]);
+  }, [state.page, state.limit, state.filter, state.sort, state.sortMode]);
 
   function handlePageChange(page: number) {
     setState((prevState) => ({ ...prevState, page }));

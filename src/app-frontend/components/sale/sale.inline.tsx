@@ -15,7 +15,6 @@ import localforage from "../../../lib/localforage/localforage";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPause, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {OrderPayment} from "../../../api/model/order.payment";
-import {useAlert} from "react-alert";
 import {UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
 import {ValidationResult} from "../../../lib/validator/validation.result";
 import {Shortcut} from "../../../app-common/components/input/shortcut";
@@ -25,6 +24,7 @@ import {PrintOrder} from "./sale.print";
 import {useSelector} from "react-redux";
 import {getStore} from "../../../duck/store/store.selector";
 import {getTerminal} from "../../../duck/terminal/terminal.selector";
+import {notify} from "../../../app-common/components/confirm/notification";
 
 interface Props {
   added: CartItem[];
@@ -73,8 +73,6 @@ export const CloseSaleInline: FC<Props> = ({
 
   const store = useSelector(getStore);
   const terminal = useSelector(getTerminal);
-
-  const alert = useAlert();
 
   const resetFields = () => {
     setAdded([]);
@@ -178,11 +176,17 @@ export const CloseSaleInline: FC<Props> = ({
         });
 
         if (message) {
-          alert.error(message);
+          notify({
+            type: 'error',
+            description: message,
+          });
         }
 
         if (messages.length > 0) {
-          alert.error(messages.join(', '));
+          notify({
+            type: 'error',
+            description: messages.join(', '),
+          });
         }
       }
 
@@ -271,13 +275,19 @@ export const CloseSaleInline: FC<Props> = ({
 
   const addSplitPayment = (amount: number, payment?: PaymentType) => {
     if (amount === 0) {
-      alert.error('Amount cannot be zero');
+      notify({
+        type: 'error',
+        description: 'Amount cannot be zero',
+      });
 
       return false;
     }
 
     if (!payment?.canHaveChangeDue && (amount + received) > finalTotal) {
-      alert.error(`Please add exact amount for ${payment?.name}`);
+      notify({
+        type: 'error',
+        description: `Please add exact amount for ${payment?.name}`
+      })
 
       return false;
     }
