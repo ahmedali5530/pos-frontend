@@ -3,6 +3,12 @@ import {jsonRequest} from "../request/request";
 import {QueryString} from "../../lib/location/query.string";
 import {HydraCollection, HydraError} from "../model/hydra";
 import {get} from 'lodash';
+import {
+  useQuery,
+  useQueryClient,
+  QueryClient,
+  QueryClientProvider,
+} from "react-query";
 
 export interface FetchDataState{
   loading: boolean;
@@ -72,7 +78,6 @@ export const useLoadList = <L>(url: string, options?: any): FetchDataReturns<L> 
       ...state.filter, // filters
       page: state.page,
       itemsPerPage: state.limit,
-
     };
 
     if(state.sort){

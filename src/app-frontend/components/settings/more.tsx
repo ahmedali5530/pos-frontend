@@ -23,11 +23,11 @@ import {touchAction} from "../../../duck/touch/touch.action";
 import {Terminals} from "./terminals/terminals";
 import {Departments} from "./departments/departments";
 import {Items} from "./items/items";
-import {CreateItem} from "./items/items.create";
 import {Categories} from "./categories/categories";
 import {Brands} from "./brands/brands";
-import {Product} from "../../../api/model/product";
 import {useMediaQuery} from "react-responsive";
+import {message as AntMessage} from "antd";
+import {getProgress} from "../../../duck/progress/progress.selector";
 
 interface Props{
   setTax: (data?: Tax) => void;
@@ -39,10 +39,30 @@ export const More: FC<Props> = ({
 }) => {
   const [modal, setModal] = useState(false);
   const [state, action] = useLoadData();
-  const [operation, setOperation] = useState('create');
-  const [row, setRow] = useState<Product>();
+  const [messageApi, contextHolder] = AntMessage.useMessage();
 
   const dispatch = useDispatch();
+
+  const progress = useSelector(getProgress);
+
+  useEffect(() => {
+    if(progress === 'Done'){
+      messageApi.open({
+        key: 'loading',
+        type: 'success',
+        content: `${progress}`,
+      });
+
+      setTimeout(() => messageApi.destroy(), 1000);
+    }else{
+      messageApi.open({
+        key: 'loading',
+        type: 'loading',
+        content: `Loading ${progress}`,
+        duration: 30
+      });
+    }
+  }, [progress]);
 
   const [isLoading, setLoading] = useState(false);
 
@@ -162,6 +182,7 @@ export const More: FC<Props> = ({
 
   return (
     <>
+      {contextHolder}
       <Button variant="secondary" className="w-auto" size="lg" onClick={() => {
         setModal(true);
       }} title="Settings" tabIndex={-1}><FontAwesomeIcon icon={faCog} className="mr-2"/> Settings</Button>

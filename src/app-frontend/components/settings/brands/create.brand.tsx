@@ -4,8 +4,8 @@ import {useForm} from "react-hook-form";
 import {BRAND_CREATE, BRAND_EDIT, STORE_EDIT} from "../../../../api/routing/routes/backend.app";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
 import {fetchJson} from "../../../../api/request/request";
-import {UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
-import {ConstraintViolation} from "../../../../lib/validator/validation.result";
+import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
+import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
 import {Input} from "../../../../app-common/components/input/input";
 import {Trans} from "react-i18next";
 import { StoresInput } from "../../../../app-common/components/input/stores";
@@ -15,6 +15,7 @@ import * as yup from 'yup';
 import {ValidationMessage} from "../../../../api/model/validation";
 import {yupResolver} from "@hookform/resolvers/yup";
 import {hasErrors} from "../../../../lib/error/error";
+import {notify} from "../../../../app-common/components/confirm/notification";
 
 interface CreateBrandProps{
   entity?: Brand;
@@ -82,14 +83,30 @@ export const CreateBrand: FC<CreateBrandProps> = ({
       onModalClose();
 
     } catch (exception: any) {
+      if (exception instanceof HttpException) {
+        if (exception.message) {
+          notify({
+            type: 'error',
+            description: exception.message
+          });
+        }
+      }
+
       if (exception instanceof UnprocessableEntityException) {
-        const e = await exception.response.json();
+        const e: ValidationResult = await exception.response.json();
         e.violations.forEach((item: ConstraintViolation) => {
           setError(item.propertyPath, {
             message: item.message,
             type: 'server'
           });
         });
+
+        if (e.errorMessage) {
+          notify({
+            type: 'error',
+            description: e.errorMessage
+          });
+        }
 
         return false;
       }

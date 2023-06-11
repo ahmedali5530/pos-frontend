@@ -16,7 +16,7 @@ export const PRODUCT_KEYWORDS = scopeUrl('/admin/product/keywords');
 export const PRODUCT_CREATE = scopeUrl('/products');
 export const PRODUCT_GET = scopeUrl('/products/:id');
 export const PRODUCT_UPLOAD = scopeUrl('/products/import');
-export const PRODUCT_DOWNLOAD = scopeUrl('/products/export');
+export const PRODUCT_DOWNLOAD = scopeUrl('/admin/product/export');
 export const PRODUCT_VARIANT = scopeUrl('/product_variants');
 export const PRODUCT_VARIANT_GET = scopeUrl('/product_variants/:id')
 
@@ -58,6 +58,12 @@ export const EXPENSE_CREATE = scopeUrl('/admin/expense/create');
 export const SUPPLIER_LIST = scopeUrl('/suppliers');
 export const SUPPLIER_CREATE = scopeUrl('/suppliers');
 export const SUPPLIER_EDIT = scopeUrl('/suppliers/:id');
+
+export const SUPPLIER_PAYMENT_LIST = scopeUrl('/suppliers/:id/payments');
+export const SUPPLIER_PURCHASE_LIST = scopeUrl('/suppliers/:id/purchases');
+export const SUPPLIER_PURCHASE_ORDER_LIST = scopeUrl('/suppliers/:id/purchase_orders');
+
+export const SUPPLIER_PAYMENT_CREATE = scopeUrl('/supplier_payments');
 
 export const BRAND_LIST = scopeUrl('/brands');
 export const BRAND_CREATE = scopeUrl('/brands');

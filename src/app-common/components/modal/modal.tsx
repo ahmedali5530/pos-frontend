@@ -1,10 +1,10 @@
-import React, {FunctionComponent, PropsWithChildren, ReactNode, useEffect, useRef, useState} from "react";
+import React, {FunctionComponent, PropsWithChildren, ReactNode, useEffect, useState} from "react";
 import ReactModal from 'react-modal';
 import classNames from "classnames";
 import {faTimes} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
-interface ModalProps extends PropsWithChildren{
+interface ModalProps extends PropsWithChildren {
   open?: boolean;
   onClose?: Function;
   title?: string;
@@ -13,7 +13,7 @@ interface ModalProps extends PropsWithChildren{
   hideCloseButton?: boolean;
   transparentContainer?: boolean;
   header?: ReactNode;
-  size?: "full"|"bottom-sheet"|"sm";
+  size?: "full" | "bottom-sheet" | "sm";
 }
 
 export const Modal: FunctionComponent<ModalProps> = (props) => {
@@ -32,10 +32,8 @@ export const Modal: FunctionComponent<ModalProps> = (props) => {
       setOpen(false);
       props.onClose!();
       setCloseClass('');
-    }, 150);
+    }, 100);
   };
-
-  const ref = useRef<HTMLDivElement>(null);
 
   return (
     <>
@@ -72,13 +70,14 @@ export const Modal: FunctionComponent<ModalProps> = (props) => {
             </button>
           )}
 
-          <div className="p-5 border-b-2 border-gray-200" ref={ref}>
+
+          <div className="p-5 border-b-2 border-gray-200">
             <h3 className="text-2xl">{props?.title}</h3>
             {props.header && props.header}
           </div>
           <div className={
             classNames(
-              "pb-12 overflow-y-auto modal-container px-5 py-3",
+              "pb-5 overflow-y-auto modal-container px-5 py-3",
               'bg-white'
             )}>
             {props.children}

@@ -23,7 +23,7 @@ import * as yup from "yup";
 import {ValidationMessage} from "../../../../api/model/validation";
 import {Terminal} from "../../../../api/model/terminal";
 import {yupResolver} from "@hookform/resolvers/yup";
-import {hasErrors} from "../../../../lib/error/error";
+import {getErrorClass, getErrors, hasErrors} from "../../../../lib/error/error";
 import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {Store} from "../../../../api/model/store";
 import {notify} from "../../../../app-common/components/confirm/notification";
@@ -37,10 +37,7 @@ interface CreateTerminalProps{
 
 const ValidationSchema = yup.object({
   code: yup.string().required(ValidationMessage.Required),
-  store: yup.object({
-    label: yup.string(),
-    value: yup.string()
-  }).required(ValidationMessage.Required)
+  store: yup.object().required(ValidationMessage.Required)
 }).required();
 
 export const CreateTerminal: FC<CreateTerminalProps> = ({
@@ -211,13 +208,7 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
           <div>
             <label htmlFor="code">Code</label>
             <Input {...register('code')} id="code" className="w-full" hasError={hasErrors(errors.code)}/>
-            {errors.code && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.code.message}
-                </Trans>
-              </div>
-            )}
+            {getErrors(errors.code)}
           </div>
           <div>
             <label htmlFor="store">Store</label>
@@ -234,17 +225,12 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
                       value: item.id
                     }
                   })}
+                  className={getErrorClass(errors.store)}
                 />
               )}
             />
 
-            {errors.store && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.store.message}
-                </Trans>
-              </div>
-            )}
+            {getErrors(errors.store)}
           </div>
           <div>
             <label htmlFor="categories">Categories</label>
@@ -264,17 +250,12 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
                   isMulti
                   isLoading={isCategoriesLoading}
                   closeMenuOnSelect={false}
+                  className={getErrorClass(errors.categories)}
                 />
               )}
             />
 
-            {errors.categories && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.categories.message}
-                </Trans>
-              </div>
-            )}
+            {getErrors(errors.categories)}
           </div>
           <div>
             <label htmlFor="products">Products</label>
@@ -289,17 +270,12 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
                   isMulti
                   isLoading={isProductsLoading}
                   closeMenuOnSelect={false}
+                  className={getErrorClass(errors.products)}
                 />
               )}
             />
 
-            {errors.products && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.products.message}
-                </Trans>
-              </div>
-            )}
+            {getErrors(errors.products)}
           </div>
           <div>
             <label htmlFor="excludeProducts">All products except these</label>
@@ -314,17 +290,12 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
                   isMulti
                   isLoading={isProductsLoading}
                   closeMenuOnSelect={false}
+                  className={getErrorClass(errors.excludeProducts)}
                 />
               )}
             />
 
-            {errors.excludeProducts && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.excludeProducts.message}
-                </Trans>
-              </div>
-            )}
+            {getErrors(errors.excludeProducts)}
           </div>
           <div>
             <Button variant="primary" type="submit" disabled={creating}>

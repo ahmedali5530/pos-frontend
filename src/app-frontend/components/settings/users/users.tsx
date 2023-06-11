@@ -1,5 +1,4 @@
 import React, {useState} from "react";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {USER_LIST,} from "../../../../api/routing/routes/backend.app";
 import {useTranslation} from "react-i18next";
 import {createColumnHelper} from "@tanstack/react-table";
@@ -9,11 +8,13 @@ import {faPencilAlt, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {TableComponent} from "../../../../app-common/components/table/table";
 import {User} from "../../../../api/model/user";
 import {CreateUser} from "./create.user";
+import useApi from "../../../../api/hooks/use.api";
+import {HydraCollection} from "../../../../api/model/hydra";
 
 export const Users = () => {
   const [operation, setOperation] = useState('create');
 
-  const useLoadHook = useLoadList<User>(USER_LIST);
+  const useLoadHook = useApi<HydraCollection<User>>('users', USER_LIST);
   const {fetchData} = useLoadHook;
   const [user, setUser] = useState<User>();
   const [modal, setModal] = useState(false);

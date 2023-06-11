@@ -10,4 +10,5 @@ export interface PurchaseOrder extends HydraId, HydraType {
   items: PurchaseOrderItem[];
   store?: Store;
   poNumber?: string;
+  isUsed?: boolean;
 }

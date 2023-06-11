@@ -14,10 +14,11 @@ import {User} from "../../../../api/model/user";
 import * as yup from 'yup';
 import {ValidationMessage} from "../../../../api/model/validation";
 import {yupResolver} from "@hookform/resolvers/yup";
-import {getErrors, hasErrors} from "../../../../lib/error/error";
+import {getErrorClass, getErrors, hasErrors} from "../../../../lib/error/error";
 import {Store} from "../../../../api/model/store";
 import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {notify} from "../../../../app-common/components/confirm/notification";
+import {StoresInput} from "../../../../app-common/components/input/stores";
 
 interface CreateUserProps {
   entity?: User;
@@ -34,7 +35,7 @@ export const CreateUser: FC<CreateUserProps> = ({
     username: yup.string().required(ValidationMessage.Required),
     email: yup.string().required(ValidationMessage.Required).email(ValidationMessage.Email),
     roles: yup.array().required(ValidationMessage.Required),
-    stores: yup.array().required(ValidationMessage.Required)
+    stores: yup.array().min(1, 'Please add some stores').required(ValidationMessage.Required)
   }
 
   if(!entity){
@@ -157,8 +158,6 @@ export const CreateUser: FC<CreateUserProps> = ({
     onClose && onClose();
   }
 
-  console.log(errors)
-
   return (
     <Modal
       open={modal}
@@ -173,47 +172,26 @@ export const CreateUser: FC<CreateUserProps> = ({
             <label htmlFor="displayName">Name</label>
             <Input {...register('displayName')} id="displayName" className="w-full"
                    hasError={hasErrors(errors.displayName)}/>
-            {errors.displayName && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.displayName.message}
-                </Trans>
-              </div>
-            )}
+
+            {getErrors(errors.displayName)}
           </div>
           <div>
             <label htmlFor="username">Username</label>
             <Input {...register('username')} id="username" className="w-full" hasError={hasErrors(errors.username)}/>
-            {errors.username && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.username.message}
-                </Trans>
-              </div>
-            )}
+
+            {getErrors(errors.username)}
           </div>
           <div>
             <label htmlFor="plainPassword">Password</label>
             <Input {...register('password')} type="password" id="plainPassword" className="w-full"
                    hasError={hasErrors(errors.password)}/>
-            {errors.password && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.password.message}
-                </Trans>
-              </div>
-            )}
+
+            {getErrors(errors.password)}
           </div>
           <div>
             <label htmlFor="email">Email</label>
             <Input {...register('email')} id="email" className="w-full" hasError={hasErrors(errors.email)}/>
-            {errors.email && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.email.message}
-                </Trans>
-              </div>
-            )}
+            {getErrors(errors.email)}
           </div>
           <div>
             <label htmlFor="roles">Roles</label>
@@ -232,40 +210,16 @@ export const CreateUser: FC<CreateUserProps> = ({
                     value: 'ROLE_ADMIN'
                   }]}
                   isMulti
+                  className={getErrorClass(errors.roles)}
                 />
               )}
             />
 
-            {errors.roles && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.roles.message}
-                </Trans>
-              </div>
-            )}
+            {getErrors(errors.roles)}
           </div>
-          <div>
-            <label htmlFor="stores">Stores</label>
-            <Controller
-              name="stores"
-              control={control}
-              render={(props) => (
-                <ReactSelect
-                  onChange={props.field.onChange}
-                  value={props.field.value}
-                  options={stores.map(item => {
-                    return {
-                      label: item.name,
-                      value: item.id
-                    }
-                  })}
-                  isMulti
-                />
-              )}
-            />
 
-            {getErrors(errors.stores)}
-          </div>
+          <StoresInput control={control} errors={errors} valueAsNumber={true} />
+
           <div>
             <Button variant="primary" type="submit" disabled={creating}>
               {creating ? 'Saving...' : (operation === 'create' ? 'Create new' : 'Update')}

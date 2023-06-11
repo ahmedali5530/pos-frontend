@@ -13,7 +13,8 @@ import {
 import {Trans} from "react-i18next";
 import {ValidationResult} from "../../../lib/validator/validation.result";
 import classNames from "classnames";
-import {getErrorClass, getErrors} from "../../../lib/error/error";
+import {getErrorClass, getErrors, hasErrors} from "../../../lib/error/error";
+import {Input} from "../../../app-common/components/input/input";
 
 export const ResetPassword = () => {
   const params = useParams();
@@ -93,18 +94,13 @@ export const ResetPassword = () => {
                 <Controller
                   name="password"
                   render={(props) => (
-                    <input
+                    <Input
                       onChange={props.field.onChange}
                       value={props.field.value}
                       type="password"
                       id="password"
                       autoFocus
-                      className={
-                        classNames(
-                          'input w-full',
-                          getErrorClass(errors.password)
-                        )
-                      }
+                      hasError={hasErrors(errors.password)}
                     />
                   )}
                   control={control}

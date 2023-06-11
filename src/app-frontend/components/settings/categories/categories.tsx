@@ -1,31 +1,24 @@
-import {Input} from "../../../../app-common/components/input/input";
-import {Trans, useTranslation} from "react-i18next";
+import {useTranslation} from "react-i18next";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPencilAlt, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {Button} from "../../../../app-common/components/input/button";
 import React, {useState} from "react";
 import {Category} from "../../../../api/model/category";
-import {fetchJson} from "../../../../api/request/request";
-import {CATEGORY_CREATE, CATEGORY_GET, CATEGORY_LIST,} from "../../../../api/routing/routes/backend.app";
-import {useForm} from "react-hook-form";
-import {UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
-import {ConstraintViolation} from "../../../../lib/validator/validation.result";
+import {CATEGORY_LIST,} from "../../../../api/routing/routes/backend.app";
 import {TableComponent} from "../../../../app-common/components/table/table";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {createColumnHelper} from "@tanstack/react-table";
 import {useSelector} from "react-redux";
-import {ReactSelectOptionProps} from "../../../../api/model/common";
 import {getStore} from "../../../../duck/store/store.selector";
-import {StoresInput} from "../../../../app-common/components/input/stores";
 import {CreateCategory} from "./create.category";
-import {Brand} from "../../../../api/model/brand";
+import useApi from "../../../../api/hooks/use.api";
+import {HydraCollection} from "../../../../api/model/hydra";
 
 export const Categories = () => {
   const [operation, setOperation] = useState('create');
   const [category, setCategory] = useState<Category>();
   const [modal, setModal] = useState(false);
 
-  const useLoadHook = useLoadList<Category>(CATEGORY_LIST);
+  const useLoadHook = useApi<HydraCollection<Category>>('categories', CATEGORY_LIST);
   const {fetchData} = useLoadHook;
 
   const store = useSelector(getStore);

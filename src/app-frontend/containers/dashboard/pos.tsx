@@ -1,4 +1,4 @@
-import React, {createRef, FC, useEffect, useMemo, useState} from "react";
+import React, {createRef, FC, useCallback, useEffect, useMemo, useState} from "react";
 import classNames from "classnames";
 import {DateTime} from "luxon";
 import {FixedSizeList} from "react-window";
@@ -37,6 +37,11 @@ import {faCubesStacked, faFlag, faIcons} from "@fortawesome/free-solid-svg-icons
 import {CartControls} from "../../components/cart/cart.controls";
 import {PurchaseTabs} from "../../components/inventory/purchase.tabs";
 import {notify} from "../../../app-common/components/confirm/notification";
+import useApi from "../../../api/hooks/use.api";
+import {PRODUCT_KEYWORDS} from "../../../api/routing/routes/backend.app";
+import {jsonRequest} from "../../../api/request/request";
+import {QueryString} from "../../../lib/location/query.string";
+import _ from "lodash";
 
 const Mousetrap = require('mousetrap');
 
@@ -143,7 +148,6 @@ export const scrollToBottom = (container: HTMLDivElement|null) => {
 }
 
 const Pos: FC = () => {
-
   const [list, setList] = useState<HomeProps['list']>(initialData);
   const [paymentTypesList, setPaymentTypesList] = useState<HomeProps['paymentTypesList']>(initialData);
   const store = useSelector(getStore);
@@ -176,6 +180,7 @@ const Pos: FC = () => {
   const [adjustment, setAdjustment] = useState(0);
   const [cartItem, setCartItem] = useState<number>(0);
   const [cartItemType, setCartItemType] = useState<CartItemType>(CartItemType.quantity);
+  const [itemsMeta, setItemsMeta] = useState<Product[]>([]);
 
   const subTotal = useMemo(() => {
     return added.reduce((prev, item) => prev + getRowTotal(item), 0);
@@ -320,7 +325,31 @@ const Pos: FC = () => {
     return filtered;
   }, [list?.list, q, brands, categories, departments, terminal, store]);
 
-  const addItem = (item: Product, quantity: number, price?: number) => {
+  const getItemsMetadata = useCallback(async (itemId: number) => {
+    try{
+      const search = QueryString.stringify({
+        itemId
+      });
+      const response = await jsonRequest(`${PRODUCT_KEYWORDS}?${search}`);
+      const json = await response.json();
+
+      setAdded(newItems => {
+        return newItems.map(item => {
+          if(item.item.id === itemId){
+            item.item.quantity = Number(json.list[0].quantity);
+          }
+          return item;
+        })
+      });
+
+      // set new items with updated info
+      // setAdded(newItems);
+    }catch (e){
+      throw e;
+    }
+  }, [added]);
+
+  const addItem = async (item: Product, quantity: number, price?: number) => {
     let newPrice = 0;
     if (item.basePrice) {
       newPrice = item.basePrice;
@@ -368,9 +397,11 @@ const Pos: FC = () => {
     setQuantity(1);
 
     scrollToBottom(containerRef.current);
+
+    await getItemsMetadata(item.id);
   };
 
-  const addItemVariant = (item: Product, variant: ProductVariant, quantity: number) => {
+  const addItemVariant = async (item: Product, variant: ProductVariant, quantity: number) => {
     const oldItems = [...added];
     let index = oldItems.findIndex(addItem => {
       return addItem.item.id === item.id && addItem.variant === variant
@@ -402,6 +433,8 @@ const Pos: FC = () => {
     setQ('');
 
     scrollToBottom(containerRef.current);
+
+    await getItemsMetadata(item.id);
   };
 
   const onQuantityChange = (item: CartItem, newQuantity: any) => {
@@ -594,7 +627,8 @@ const Pos: FC = () => {
     });
   }, [modal, selected, selectedVariant, variants, items, added, quantity]);
 
-  Mousetrap.bind('/', function(){
+  Mousetrap.bind('f3', function(e: any){
+    e.preventDefault();
     if (searchField.current !== null) {
       searchField.current.focus();
     }

@@ -1,5 +1,4 @@
 import React, {useState} from "react";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {PAYMENT_TYPE_LIST,} from "../../../../api/routing/routes/backend.app";
 import {useTranslation} from "react-i18next";
 import {createColumnHelper} from "@tanstack/react-table";
@@ -12,11 +11,13 @@ import {useSelector} from "react-redux";
 import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
 import {getStore} from "../../../../duck/store/store.selector";
 import {CreatePaymentType} from "./create.payment.type";
+import useApi from "../../../../api/hooks/use.api";
+import { HydraCollection } from "../../../../api/model/hydra";
 
 export const PaymentTypes = () => {
   const [operation, setOperation] = useState('create');
 
-  const useLoadHook = useLoadList<PaymentType>(PAYMENT_TYPE_LIST);
+  const useLoadHook = useApi<HydraCollection<PaymentType>>('paymentTypes', PAYMENT_TYPE_LIST);
   const {fetchData} = useLoadHook;
   const user = useSelector(getAuthorizedUser);
   const store = useSelector(getStore);
@@ -74,7 +75,7 @@ export const PaymentTypes = () => {
         params={{
           store: store?.id
         }}
-        loaderLineItems={4}
+        loaderLineItems={5}
         buttons={[{
           html: <Button variant="primary" onClick={() => {
             setModal(true);

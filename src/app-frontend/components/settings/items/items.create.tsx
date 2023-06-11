@@ -2,18 +2,20 @@ import {Controller, useForm} from "react-hook-form";
 import React, {useEffect, useState} from "react";
 import {
   BRAND_LIST,
-  CATEGORY_LIST, DEPARTMENT_LIST,
+  CATEGORY_LIST,
+  DEPARTMENT_LIST,
   PRODUCT_CREATE,
-  PRODUCT_GET, PRODUCT_VARIANT, PRODUCT_VARIANT_GET,
-  SUPPLIER_LIST, TAX_LIST
+  PRODUCT_GET,
+  PRODUCT_VARIANT,
+  SUPPLIER_LIST,
+  TAX_LIST
 } from "../../../../api/routing/routes/backend.app";
 import {fetchJson, jsonRequest} from "../../../../api/request/request";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation} from "../../../../lib/validator/validation.result";
 import {Input} from "../../../../app-common/components/input/input";
-import {Trans} from "react-i18next";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faRefresh} from "@fortawesome/free-solid-svg-icons";
+import {faPlus, faRefresh} from "@fortawesome/free-solid-svg-icons";
 import {Button} from "../../../../app-common/components/input/button";
 import {Category} from "../../../../api/model/category";
 import {Product} from "../../../../api/model/product";
@@ -23,7 +25,7 @@ import {Supplier} from "../../../../api/model/supplier";
 import {Brand} from "../../../../api/model/brand";
 import {withCurrency} from "../../../../lib/currency/currency";
 import classNames from "classnames";
-import {getErrorClass} from "../../../../lib/error/error";
+import {getErrorClass, getErrors, hasErrors} from "../../../../lib/error/error";
 import {Department} from "../../../../api/model/department";
 import {ProductVariants} from "./products/variants";
 import {CreateVariants} from "./products/create.variants";
@@ -33,8 +35,17 @@ import {ProductVariant} from "../../../../api/model/product.variant";
 import {Modal} from "../../../../app-common/components/modal/modal";
 import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {notify} from "../../../../app-common/components/confirm/notification";
+import * as yup from 'yup';
+import {ValidationMessage} from "../../../../api/model/validation";
+import {yupResolver} from "@hookform/resolvers/yup";
+import {groupBy} from "lodash";
+import {CreateDepartment} from "../departments/create.department";
+import {CreateTax} from "../taxes/create.tax";
+import {CreateCategory} from "../categories/create.category";
+import {CreateSupplier} from "../../inventory/supplier/create.supplier";
+import {CreateBrand} from "../brands/create.brand";
 
-interface ItemsCreateProps{
+interface ItemsCreateProps {
   entity?: Product;
   operation?: string;
   addModal: boolean;
@@ -45,20 +56,37 @@ export const submitProductVariant = async (token: Omit<ProductVariant, 'id'>) =>
   try {
     let response = await jsonRequest(PRODUCT_VARIANT, {
       method: 'POST',
-      body  : JSON.stringify(token)
+      body: JSON.stringify(token)
     });
     return await response.json();
-  }catch(e) {
+  } catch (e) {
     // throw e;
   }
 };
 
-
+const ValidationSchema = yup.object({
+  department: yup.object().required(ValidationMessage.Required),
+  name: yup.string().required(ValidationMessage.Required),
+  barcode: yup.string().required(ValidationMessage.Required),
+  saleUnit: yup.string().required(ValidationMessage.Required),
+  basePrice: yup.string().required(ValidationMessage.Required),
+  purchaseUnit: yup.string().required(ValidationMessage.Required),
+  cost: yup.string().required(ValidationMessage.Required),
+  taxes: yup.array(),
+  stores: yup.array().required(ValidationMessage.Required),
+  categories: yup.array().required(ValidationMessage.Required),
+  suppliers: yup.array().required(ValidationMessage.Required),
+  brands: yup.array().required(ValidationMessage.Required),
+  variants: yup.array(yup.object({})).typeError('Please add valid variants'),
+});
 
 export const CreateItem = ({
   entity, onClose, operation, addModal
 }: ItemsCreateProps) => {
-  const useFormHook = useForm();
+  const useFormHook = useForm({
+    resolver: yupResolver(ValidationSchema)
+  });
+
   const {register, handleSubmit, setError, formState: {errors}, reset, getValues, control} = useFormHook;
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
@@ -79,31 +107,33 @@ export const CreateItem = ({
         delete values.id;
       }
 
-      if(values.categories){
+      if (values.categories) {
         values.categories = values.categories.map((item: ReactSelectOptionProps) => item.value);
       }
-      if(values.suppliers){
+      if (values.suppliers) {
         values.suppliers = values.suppliers.map((item: ReactSelectOptionProps) => item.value);
       }
-      if(values.brands){
+      if (values.brands) {
         values.brands = values.brands.map((item: ReactSelectOptionProps) => item.value);
       }
-      if(values.stores){
+      if (values.stores) {
         values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value);
       }
-      if(values.department){
+      if (values.department) {
         values.department = values.department.value;
       }
-      if(values.taxes){
+      if (values.taxes) {
         values.taxes = values.taxes.map((item: ReactSelectOptionProps) => item.value);
+      } else {
+        values.taxes = [];
       }
-      if(values.barcode){
+      if (values.barcode) {
         values.barcode = values.barcode.toString();
       }
 
       let variants: string[] = [];
       let loopItems: any[] = [];
-      if(values.variants){
+      if (values.variants) {
         values.variants.forEach((token: ProductVariant) => {
           loopItems.push(submitProductVariant(token));
         });
@@ -117,7 +147,7 @@ export const CreateItem = ({
         values.variants = variants;
       });
 
-      if(variants.length === 0){
+      if (variants.length === 0) {
         values.variants = [];
       }
 
@@ -130,14 +160,15 @@ export const CreateItem = ({
           baseQuantity: 1,
           quantity: '1000',
           isAvailable: true,
-          isActive: true
+          isActive: true,
+          prices: []
         })
       });
 
       onModalClose();
 
     } catch (exception: any) {
-      if(exception instanceof HttpException){
+      if (exception instanceof HttpException) {
         notify({
           type: 'error',
           description: exception.message
@@ -146,7 +177,7 @@ export const CreateItem = ({
 
       if (exception instanceof UnprocessableEntityException) {
         const e = await exception.response.json();
-        if(e.violations){
+        if (e.violations) {
           e.violations.forEach((item: ConstraintViolation) => {
             setError(item.propertyPath, {
               message: item.message,
@@ -155,7 +186,7 @@ export const CreateItem = ({
           });
         }
 
-        if(e.errorMessage){
+        if (e.errorMessage) {
           notify({
             type: 'error',
             description: e.errorMessage
@@ -171,22 +202,36 @@ export const CreateItem = ({
     }
   };
 
-  const {list: categories, fetchData: loadCategories} = useLoadList<Category>(CATEGORY_LIST);
-  const {list: suppliers, fetchData: loadSuppliers} = useLoadList<Supplier>(SUPPLIER_LIST);
-  const {list: brands, fetchData: loadBrands} = useLoadList<Brand>(BRAND_LIST);
-  const {list: department, fetchData: loadDepartments} = useLoadList<Department>(DEPARTMENT_LIST);
-  const {list: taxes, fetchData: loadTaxes} = useLoadList<Tax>(TAX_LIST);
+  const {
+    list: categories,
+    fetchData: loadCategories,
+    loading: loadingCategories
+  } = useLoadList<Category>(CATEGORY_LIST);
+  const {list: suppliers, fetchData: loadSuppliers, loading: loadingSuppliers} = useLoadList<Supplier>(SUPPLIER_LIST);
+  const {list: brands, fetchData: loadBrands, loading: loadingBrands} = useLoadList<Brand>(BRAND_LIST);
+  const {
+    list: department,
+    fetchData: loadDepartments,
+    loading: loadingDepartments
+  } = useLoadList<Department>(DEPARTMENT_LIST);
+  const {list: taxes, fetchData: loadTaxes, loading: loadingTaxes} = useLoadList<Tax>(TAX_LIST);
+
+  const [categoryModal, setCategoryModal] = useState(false);
+  const [supplierModal, setSupplierModal] = useState(false);
+  const [brandModal, setBrandModal] = useState(false);
+  const [departmentModal, setDepartmentModal] = useState(false);
+  const [taxModal, setTaxModal] = useState(false);
 
   useEffect(() => {
-    loadCategories();
-    loadSuppliers();
-    loadBrands();
-    loadDepartments();
-    loadTaxes();
+    // loadCategories();
+    // loadSuppliers();
+    // loadBrands();
+    // loadDepartments();
+    // loadTaxes();
   }, []);
 
   useEffect(() => {
-    if(entity) {
+    if (entity) {
       reset({
         ...entity,
         suppliers: entity.suppliers.map(item => ({
@@ -222,14 +267,14 @@ export const CreateItem = ({
       barcode: null,
       basePrice: null,
       baseQuantity: null,
-      categories: null,
+      categories: [],
       cost: null,
       createdAt: null,
       id: null,
       isActive: null,
       isAvailable: null,
       name: null,
-      prices: null,
+      prices: [],
       quantity: null,
       sku: null,
       purchaseUnit: null,
@@ -237,12 +282,12 @@ export const CreateItem = ({
       updatedAt: null,
       uuid: null,
       variants: [],
-      suppliers: null,
-      brands: null,
-      stores: null,
+      suppliers: [],
+      brands: [],
+      stores: [],
       department: null,
       groups: [],
-      taxes: null
+      taxes: []
     });
   };
 
@@ -252,284 +297,310 @@ export const CreateItem = ({
   }
 
   return (
-    <Modal
-      open={modal}
-      onClose={onModalClose}
-      size="full"
-      title={operation === 'create' ? 'Create item' : 'Update item'}
-    >
-      <form onSubmit={handleSubmit(createProduct)} className="mb-5">
-      <input type="hidden" {...register('id')}/>
-      <div className="grid grid-cols-4 gap-3 gap-y-2 mb-4">
-        <div>
-          <label htmlFor="department">Department</label>
-          <Controller
-            name="department"
-            control={control}
-            render={(props) => (
-              <ReactSelect
-                onChange={props.field.onChange}
-                value={props.field.value}
-                options={department.map(item => {
-                  return {
-                    label: item.name,
-                    value: item['@id']
-                  }
-                })}
+    <>
+      <Modal
+        open={modal}
+        onClose={onModalClose}
+        size="full"
+        title={operation === 'create' ? 'Create item' : 'Update item'}
+      >
+        <form onSubmit={handleSubmit(createProduct)} className="mb-5">
+          <input type="hidden" {...register('id')}/>
+          <div className="grid grid-cols-4 gap-3 gap-y-2 mb-4">
+            <div>
+              <label htmlFor="department">Department</label>
+              <Controller
+                name="department"
+                control={control}
+                render={(props) => (
+                  <div className="input-group">
+                    <ReactSelect
+                      onChange={props.field.onChange}
+                      value={props.field.value}
+                      options={department.map(item => {
+                        return {
+                          label: item.name,
+                          value: item['@id']
+                        }
+                      })}
+                      isLoading={loadingDepartments}
+                      className={
+                        classNames(
+                          getErrorClass(errors.department),
+                          'rs-__container flex-grow'
+                        )
+                      }
+                    />
+                    <button className="btn btn-primary" type={"button"} onClick={() => setDepartmentModal(true)}>
+                      <FontAwesomeIcon icon={faPlus}/>
+                    </button>
+                  </div>
+                )}
               />
-            )}
-          />
 
-          {errors.department && (
-            <div className="text-danger-500 text-sm">
-              <Trans>
-                {errors.department.message}
-              </Trans>
+              {getErrors(errors.department)}
             </div>
-          )}
-        </div>
-        <div className="col-span-4"></div>
-        <div>
-          <label htmlFor="name">Name</label>
-          <Input {...register('name')} id="name"
-                 className={classNames(
-                   "w-full",
-                   getErrorClass(errors.name)
-                 )}
-          />
-          {errors.name && (
-            <div className="text-danger-500 text-sm">
-              <Trans>
-                {errors.name.message}
-              </Trans>
-            </div>
-          )}
-        </div>
-        <div>
-          <label htmlFor="barcode">Barcode</label>
-          <div className="input-group">
-            <Input {...register('barcode')} id="barcode"
-                   className={classNames(
-                     "w-full",
-                     getErrorClass(errors.barcode)
-                   )}
-                   disabled={!!entity}
-            />
-            {!entity && (
-              <button onClick={() => {
-                reset({
-                  ...getValues(),
-                  barcode: Math.floor(Math.random() * 10000000000) + 1
-                });
-              }} className="btn btn-primary" type="button"
-                      tabIndex={-1}>
-                <FontAwesomeIcon icon={faRefresh}/>
-              </button>
-            )}
+            <div>
+              <label htmlFor="name">Name</label>
+              <Input {...register('name')} id="name"
+                     className={classNames(
+                       "w-full"
+                     )}
+                     hasError={hasErrors(errors.name)}
+              />
 
-          </div>
-          {errors.barcode && (
-            <div className="text-danger-500 text-sm">
-              <Trans>
-                {errors.barcode.message}
-              </Trans>
+              {getErrors(errors.name)}
             </div>
-          )}
-        </div>
-        <div className="col-span-4"></div>
-        <div>
-          <label htmlFor="basePrice">Sale price</label>
-          <div className="input-group">
+            <div>
+              <label htmlFor="barcode">Barcode</label>
+              <div className="input-group">
+                <Input {...register('barcode')} id="barcode"
+                       className={classNames(
+                         "w-full"
+                       )}
+                       disabled={!!entity}
+                       hasError={hasErrors(errors.barcode)}
+                />
+                {!entity && (
+                  <button onClick={() => {
+                    reset({
+                      ...getValues(),
+                      barcode: Math.floor(Math.random() * 10000000000) + 1
+                    });
+                  }} className="btn btn-primary" type="button"
+                          tabIndex={-1}>
+                    <FontAwesomeIcon icon={faRefresh}/>
+                  </button>
+                )}
+
+              </div>
+
+              {getErrors(errors.barcode)}
+            </div>
+            <div className="col-span-4"></div>
+            <div>
+              <label htmlFor="basePrice">Sale price</label>
+              <div className="input-group">
             <span className="input-addon">
               {withCurrency(undefined)}
             </span>
-            <Input {...register('basePrice')} id="basePrice" className={classNames(
-              "w-full",
-              getErrorClass(errors.name)
-            )}/>
-          </div>
-          {errors.basePrice && (
-            <div className="text-danger-500 text-sm">
-              <Trans>
-                {errors.basePrice.message}
-              </Trans>
+                <Input {...register('basePrice')} id="basePrice" className={classNames(
+                  "w-full"
+                )} hasError={hasErrors(errors.basePrice)}/>
+              </div>
+              {getErrors(errors.basePrice)}
             </div>
-          )}
-        </div>
-        <div>
-          <label htmlFor="basePrice">Sale unit</label>
-          <Input {...register('saleUnit')} id="saleUnit" className={classNames(
-            "w-full",
-            getErrorClass(errors.name)
-          )}/>
-          {errors.saleUnit && (
-            <div className="text-danger-500 text-sm">
-              <Trans>
-                {errors.saleUnit.message}
-              </Trans>
+
+            <div>
+              <label htmlFor="basePrice">Sale unit</label>
+              <Input {...register('saleUnit')} id="saleUnit" className={classNames(
+                "w-full"
+              )} hasError={hasErrors(errors.saleUnit)}/>
+              {getErrors(errors.saleUnit)}
             </div>
-          )}
-        </div>
-        <div>
-          <label htmlFor="cost">Purchase price</label>
-          <div className="input-group">
+            <div className="col-span-4"></div>
+            <div>
+              <label htmlFor="cost">Purchase price</label>
+              <div className="input-group">
             <span className="input-addon">
               {withCurrency(undefined)}
             </span>
-            <Input {...register('cost')} id="cost" className={classNames(
-              "w-full",
-              getErrorClass(errors.name)
-            )}/>
-          </div>
-          {errors.cost && (
-            <div className="text-danger-500 text-sm">
-              <Trans>
-                {errors.cost.message}
-              </Trans>
+                <Input {...register('cost')} id="cost" className={classNames(
+                  "w-full"
+                )} hasError={hasErrors(errors.cost)}/>
+              </div>
+              {getErrors(errors.cost)}
             </div>
-          )}
-        </div>
-        <div>
-          <label htmlFor="purchaseUnit">Purchase unit</label>
-          <Input {...register('purchaseUnit')} id="purchaseUnit" className={classNames(
-            "w-full",
-            getErrorClass(errors.name)
-          )}/>
-          {errors.purchaseUnit && (
-            <div className="text-danger-500 text-sm">
-              <Trans>
-                {errors.purchaseUnit.message}
-              </Trans>
+            <div>
+              <label htmlFor="purchaseUnit">Purchase unit</label>
+              <Input {...register('purchaseUnit')} id="purchaseUnit" className={classNames(
+                "w-full"
+              )} hasError={hasErrors(errors.purchaseUnit)}/>
+
+              {getErrors(errors.purchaseUnit)}
             </div>
-          )}
-        </div>
-        <div className="col-span-4"></div>
-        <div className="col-span-2">
-          <label htmlFor="taxes">Taxes</label>
-          <Controller
-            name="taxes"
-            render={(props) => (
-              <ReactSelect
-                options={taxes.map(item => ({
-                  label: `${item.name} ${item.rate}%`,
-                  value: item['@id']
-                }))}
-                onChange={props.field.onChange}
-                value={props.field.value}
-                isMulti
+            <div className="col-span-4"></div>
+            <div>
+              <label htmlFor="taxes">Taxes</label>
+              <Controller
+                name="taxes"
+                render={(props) => (
+                  <div className="input-group">
+                    <ReactSelect
+                      options={taxes.map(item => ({
+                        label: `${item.name} ${item.rate}%`,
+                        value: item['@id']
+                      }))}
+                      onChange={props.field.onChange}
+                      value={props.field.value}
+                      isMulti
+                      className={
+                        classNames(
+                          getErrorClass(errors.taxes),
+                          'flex-grow rs-__container'
+                        )
+                      }
+                      isLoading={loadingTaxes}
+                    />
+                    <button className="btn btn-primary" type={"button"} onClick={() => setTaxModal(true)}>
+                      <FontAwesomeIcon icon={faPlus} />
+                    </button>
+                  </div>
+                )}
+                control={control}
               />
-            )}
-            control={control}
-          />
-          {errors.taxes && (
-            <div className="text-danger-500 text-sm">
-              <Trans>
-                {errors.taxes.message}
-              </Trans>
+              {getErrors(errors.taxes)}
+
             </div>
-          )}
-        </div>
 
-        <StoresInput control={control} errors={errors} />
+            <StoresInput control={control} errors={errors}/>
 
-        <div className="col-span-4 grid grid-cols-3 gap-3 gap-y-2">
-          <div>
-            <label htmlFor="categories">Categories</label>
-            <Controller
-              name="categories"
-              render={(props) => (
-                <ReactSelect
-                  options={categories.map(item => ({
-                    label: item.name,
-                    value: item['@id']
-                  }))}
-                  onChange={props.field.onChange}
-                  value={props.field.value}
-                  isMulti
+            <div className="col-span-4 grid grid-cols-4 gap-3 gap-y-2">
+              <div>
+                <label htmlFor="categories">Categories</label>
+                <Controller
+                  name="categories"
+                  render={(props) => (
+                    <div className="input-group">
+                      <ReactSelect
+                        options={categories.map(item => ({
+                          label: item.name,
+                          value: item['@id']
+                        }))}
+                        onChange={props.field.onChange}
+                        value={props.field.value}
+                        isMulti
+                        className={
+                          classNames(
+                            getErrorClass(errors.categories),
+                            'flex-grow rs-__container'
+                          )
+                        }
+                        isLoading={loadingCategories}
+                      />
+                      <button className="btn btn-primary" type={"button"} onClick={() => setCategoryModal(true)}>
+                        <FontAwesomeIcon icon={faPlus}/>
+                      </button>
+                    </div>
+                  )}
+                  control={control}
                 />
-              )}
-              control={control}
-            />
-            {errors.categories && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.categories.message}
-                </Trans>
-              </div>
-            )}
-          </div>
-          <div>
-            <label htmlFor="suppliers">Suppliers</label>
-            <Controller
-              name="suppliers"
-              render={(props) => (
-                <ReactSelect
-                  options={suppliers.map(item => ({
-                    label: item.name,
-                    value: item['@id']
-                  }))}
-                  onChange={props.field.onChange}
-                  value={props.field.value}
-                  isMulti
-                />
-              )}
-              control={control}
-            />
-            {errors.suppliers && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.suppliers.message}
-                </Trans>
-              </div>
-            )}
-          </div>
-          <div>
-            <label htmlFor="brands">Brands</label>
-            <Controller
-              name="brands"
-              render={(props) => (
-                <ReactSelect
-                  options={brands.map(item => ({
-                    label: item.name,
-                    value: item['@id']
-                  }))}
-                  onChange={props.field.onChange}
-                  value={props.field.value}
-                  isMulti
-                />
-              )}
-              control={control}
-            />
-            {errors.brands && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.brands.message}
-                </Trans>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="col-span-4">
-          <h4 className="text-lg">Variants</h4>
-        </div>
-        <div className="col-span-4">
-          {entity ? (
-            <ProductVariants useForm={useFormHook}/>
-          ) : (
-            <CreateVariants useForm={useFormHook} />
-          )}
-        </div>
+                {getErrors(errors.categories)}
 
-        {/*TODO: add conditional prices*/}
-        {/*<div className="col-span-4">*/}
-        {/*  <h4 className="text-lg">Conditional prices</h4>*/}
-        {/*</div>*/}
-        {/*<div className="col-span-4"></div>*/}
-      </div>
+              </div>
+              <div>
+                <label htmlFor="suppliers">Suppliers</label>
+                <Controller
+                  name="suppliers"
+                  render={(props) => (
+                    <div className="input-group">
+                      <ReactSelect
+                        options={suppliers.map(item => ({
+                          label: item.name,
+                          value: item['@id']
+                        }))}
+                        onChange={props.field.onChange}
+                        value={props.field.value}
+                        isMulti
+                        className={
+                          classNames(
+                            getErrorClass(errors.suppliers),
+                            'flex-grow rs-__container'
+                          )
+                        }
+                        isLoading={loadingSuppliers}
+                      />
+                      <button className="btn btn-primary" type={"button"} onClick={() => setSupplierModal(true)}>
+                        <FontAwesomeIcon icon={faPlus}/>
+                      </button>
+                    </div>
+                  )}
+                  control={control}
+                />
+                {getErrors(errors.suppliers)}
 
-      <Button variant="primary" type="submit"
-              disabled={creating}>{creating ? 'Saving...' : (operation === 'create' ? 'Create new' : 'Update')}</Button>
-    </form>
-    </Modal>
+              </div>
+              <div>
+                <label htmlFor="brands">Brands</label>
+                <Controller
+                  name="brands"
+                  render={(props) => (
+                    <div className="input-group">
+                      <ReactSelect
+                        options={brands.map(item => ({
+                          label: item.name,
+                          value: item['@id']
+                        }))}
+                        onChange={props.field.onChange}
+                        value={props.field.value}
+                        isMulti
+                        className={
+                          classNames(
+                            getErrorClass(errors.brands),
+                            'flex-grow rs-__container'
+                          )
+                        }
+                        isLoading={loadingBrands}
+                      />
+                      <button className="btn btn-primary" type={"button"} onClick={() => setBrandModal(true)}>
+                        <FontAwesomeIcon icon={faPlus}/>
+                      </button>
+                    </div>
+                  )}
+                  control={control}
+                />
+                {getErrors(errors.brands)}
+
+              </div>
+            </div>
+            <div className="col-span-4">
+              <h4 className="text-lg">Variants</h4>
+            </div>
+            {getErrors(errors.variants)}
+            <div className="col-span-4">
+              {entity ? (
+                <ProductVariants useForm={useFormHook}/>
+              ) : (
+                <CreateVariants useForm={useFormHook}/>
+              )}
+            </div>
+
+            {/*TODO: add conditional prices*/}
+            {/*<div className="col-span-4">*/}
+            {/*  <h4 className="text-lg">Conditional prices</h4>*/}
+            {/*</div>*/}
+            {/*<div className="col-span-4"></div>*/}
+          </div>
+
+          <Button variant="primary" type="submit"
+                  disabled={creating}>{creating ? 'Saving...' : (operation === 'create' ? 'Create new' : 'Update')}</Button>
+        </form>
+      </Modal>
+
+      <CreateDepartment addModal={departmentModal} operation="create" onClose={() => {
+        setDepartmentModal(false);
+        loadDepartments();
+      }} />
+
+      <CreateTax addModal={taxModal} operation="create" onClose={() => {
+        setTaxModal(false);
+        loadTaxes();
+      }} />
+
+      <CreateCategory addModal={categoryModal} operation="create" onClose={() => {
+        setCategoryModal(false);
+        loadCategories();
+      }} />
+
+      <CreateSupplier operation="create" showModal={supplierModal} onClose={() => {
+        setSupplierModal(false);
+        loadSuppliers();
+      }} />
+
+      <CreateBrand addModal={brandModal} operation="create" onClose={() => {
+        setBrandModal(false);
+        loadBrands();
+      }} />
+    </>
   );
 };

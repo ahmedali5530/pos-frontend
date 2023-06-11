@@ -68,8 +68,8 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
           className="align-middle"
         />
       </div>
-      <div className="table-cell">
-        <label htmlFor={index.toString()} className="">
+      <div className="table-cell p-1">
+        <label htmlFor={index.toString()}>
           <div>{item.item.name}</div>
           {item.variant && (
             <div className="text-sm">
@@ -80,7 +80,8 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
           )}
         </label>
       </div>
-      <div className="table-cell">
+      <div className="table-cell p-1 text-center">{Number(item.item.quantity)}</div>
+      <div className="table-cell p-1">
         <div className="flex justify-center">
           <div className="input-group">
             <Button tabIndex={-1} size="lg" type="button" variant="primary" onClick={() => onQuantityChange(item, item.quantity - 1)}>
@@ -91,7 +92,6 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
               value={item.quantity}
               className={"text-center w-full lg mousetrap"}
               onChange={(event) => onQuantityChange(item, event.currentTarget.value)}
-              selectable={true}
               ref={qtyRef}
             />
             <Button tabIndex={-1} size="lg" type="button" variant="primary" onClick={() => onQuantityChange(item, item.quantity + 1)}>
@@ -100,7 +100,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
           </div>
         </div>
       </div>
-      <div className="table-cell text-center">
+      <div className="table-cell text-center p-1">
         <Input
           type="number"
           value={item.discount}
@@ -108,7 +108,6 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
           onChange={(event) => {
             onDiscountChange(item, +event.currentTarget.value)
           }}
-          selectable={true}
           ref={discRef}
         />
       </div>
@@ -120,22 +119,16 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
           )
         }
       </div>
-      <div className="table-cell text-right">
+      <div className="table-cell text-right p-1">
         <Input
           value={item.price}
           type="number"
           className={"text-center w-full lg mousetrap"}
           onChange={(event) => onPriceChange(item, +event.currentTarget.value)}
-          selectable={true}
           ref={rateRef}
         />
       </div>
       <div className="table-cell p-2 text-right">{getRowTotal(item)}</div>
-      {/*<div className="table-cell p-2 text-center">
-        <Button variant="danger" className="text-danger-500" onClick={() => deleteItem(index)}>
-          <FontAwesomeIcon icon={faTrash}/>
-        </Button>
-      </div>*/}
     </div>
   );
 };

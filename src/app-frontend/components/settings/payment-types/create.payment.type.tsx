@@ -17,6 +17,7 @@ import {Button} from "../../../../app-common/components/input/button";
 import {Input} from "../../../../app-common/components/input/input";
 import {PaymentType} from "../../../../api/model/payment.type";
 import {notify} from "../../../../app-common/components/confirm/notification";
+import {getErrorClass, getErrors, hasErrors} from "../../../../lib/error/error";
 
 
 interface CreatePaymentTypeProps {
@@ -28,10 +29,7 @@ interface CreatePaymentTypeProps {
 
 const ValidationSchema = yup.object({
   name: yup.string().required(ValidationMessage.Required),
-  type: yup.object({
-    label: yup.string(),
-    value: yup.string()
-  }).required(ValidationMessage.Required),
+  type: yup.object().required(ValidationMessage.Required),
   stores: yup.array().required(ValidationMessage.Required)
 });
 
@@ -155,14 +153,8 @@ export const CreatePaymentType: FC<CreatePaymentTypeProps> = ({
         <div className="grid grid-cols-1 gap-4 mb-3">
           <div>
             <label htmlFor="name">Name</label>
-            <Input {...register('name')} id="name" className="w-full"/>
-            {errors.name && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.name.message}
-                </Trans>
-              </div>
-            )}
+            <Input {...register('name')} id="name" className="w-full" hasError={hasErrors(errors.name)}/>
+            {getErrors(errors.name)}
           </div>
           <div>
             <label htmlFor="type">Type</label>
@@ -183,16 +175,11 @@ export const CreatePaymentType: FC<CreatePaymentTypeProps> = ({
                     label: 'credit',
                     value: 'credit'
                   }]}
+                  className={getErrorClass(errors.type)}
                 />
               )}
             />
-            {errors.type && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.type.message}
-                </Trans>
-              </div>
-            )}
+            {getErrors(errors.type)}
           </div>
           <div>
             <label className="w-full block">&nbsp;</label>
@@ -208,17 +195,10 @@ export const CreatePaymentType: FC<CreatePaymentTypeProps> = ({
                 </Switch>
               )}
             />
-            {errors.type && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.type.message}
-                </Trans>
-              </div>
-            )}
+            {getErrors(errors.canHaveChangeDue)}
           </div>
-          {/*{user?.roles?.includes('ROLE_ADMIN') && (*/}
           <StoresInput control={control} errors={errors}/>
-          {/*)}*/}
+
           <div>
             <Button variant="primary" type="submit" disabled={creating}>
               {creating ? 'Saving...' : (operation === 'create' ? 'Create new' : 'Update')}

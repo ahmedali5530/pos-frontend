@@ -58,9 +58,9 @@ export const TabNav = (props: TabNavProps) => {
   let classes = 'flex flex-col w-[220px] flex-shrink-0 border-r ml-[-20px] p-3 bg-gray-50';
 
   if(props.position === 'top'){
-    classes = 'flex flex-shrink-0 p-3';
+    classes = 'flex flex-shrink-0 p-1';
     return (
-      <div className="bg-gray-50 rounded-full">
+      <div className="bg-gray-100 rounded-full">
         <ScrollContainer horizontal nativeMobileScroll={true}>
           <div className={classes}>{props.children}</div>
         </ScrollContainer>
@@ -80,9 +80,9 @@ export const Tab = (props: TabProps) => {
   return (
     <button {...props} className={
       classNames(
-        'p-3 px-5 flex-shrink-0 text-left rounded-full transition-all',
+        'p-3 px-5 flex-shrink-0 text-left rounded-full transition-all uppercase',
         props.isActive ?
-          'text-white bg-primary-500 shadow-lg' : ''
+          'text-white bg-primary-500' : ''
       )
     }>{props.children}</button>
   );

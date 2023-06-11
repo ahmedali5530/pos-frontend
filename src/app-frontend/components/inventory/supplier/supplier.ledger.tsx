@@ -1,33 +1,35 @@
 import React, {FC, PropsWithChildren, useEffect, useMemo, useState} from "react";
-import {Button} from "../../../app-common/components/input/button";
+import {Modal} from "../../../../app-common/components/modal/modal";
+import {Button} from "../../../../app-common/components/input/button";
+import {Controller, useForm} from "react-hook-form";
+import {yupResolver} from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import {ConstraintViolation, ValidationMessage} from "../../../../api/model/validation";
+import {Supplier} from "../../../../api/model/supplier";
+import {
+  SUPPLIER_PAYMENT_CREATE,
+  SUPPLIER_PAYMENT_LIST,
+  SUPPLIER_PURCHASE_LIST
+} from "../../../../api/routing/routes/backend.app";
+import {fetchJson} from "../../../../api/request/request";
+import {UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
+import * as _ from "lodash";
+import {Input} from "../../../../app-common/components/input/input";
+import {getErrors, hasErrors} from "../../../../lib/error/error";
+import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
+import {DateTime} from "luxon";
+import {Trans} from "react-i18next";
+import {withCurrency} from "../../../../lib/currency/currency";
+import classNames from "classnames";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faEye} from "@fortawesome/free-solid-svg-icons";
-import {Modal} from "../../../app-common/components/modal/modal";
-import {Customer} from "../../../api/model/customer";
-import {DateTime} from "luxon";
-import {Input} from "../../../app-common/components/input/input";
-import {Controller, useForm} from "react-hook-form";
-import {fetchJson} from "../../../api/request/request";
-import classNames from "classnames";
-import * as _ from 'lodash';
-import {OrderPayment} from "../../../api/model/order.payment";
-import {ViewOrder} from "./view.order";
-import {CUSTOMER_PAYMENT_CREATE} from "../../../api/routing/routes/backend.app";
-import {ConstraintViolation, ValidationResult} from "../../../lib/validator/validation.result";
-import {Trans} from "react-i18next";
-import {ReactSelect} from "../../../app-common/components/input/custom.react.select";
-import {HttpException, UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
-import {withCurrency} from "../../../lib/currency/currency";
-import * as yup from 'yup';
-import {ValidationMessage} from "../../../api/model/validation";
-import {yupResolver} from "@hookform/resolvers/yup";
-import {getErrors, hasErrors} from "../../../lib/error/error";
-import {notify} from "../../../app-common/components/confirm/notification";
+import {ViewPurchase} from "../purchase/view.purchase";
+import {useLoadList} from "../../../../api/hooks/use.load.list";
+import {SupplierPayment} from "../../../../api/model/supplier.payment";
+import {Purchase} from "../../../../api/model/purchase";
 
-
-interface Props extends PropsWithChildren {
-  customer: Customer;
-  onCreate?: () => void;
+interface SupplierLedgerProps extends PropsWithChildren {
+  supplier: Supplier;
 }
 
 const ValidationSchema = yup.object({
@@ -35,31 +37,42 @@ const ValidationSchema = yup.object({
   description: yup.string().required(ValidationMessage.Required)
 });
 
-export const CustomerPayments: FC<Props> = ({
-  customer: customerProp, onCreate, children
+export const SupplierLedger: FC<SupplierLedgerProps> = ({
+  children, supplier: supplierProp
 }) => {
   const [modal, setModal] = useState(false);
   const {register, handleSubmit, setError, formState: {errors}, reset, control} = useForm({
     resolver: yupResolver(ValidationSchema)
   });
   const [creating, setCreating] = useState(false);
+  const [supplier, setSupplier] = useState<Supplier>(supplierProp);
+  const {
+    list: payments,
+    fetchData: loadPayments
+  } = useLoadList<SupplierPayment>(SUPPLIER_PAYMENT_LIST.replace(':id', supplier.id), {
+    limit: 9999999
+  });
 
-  const [customer, setCustomer] = useState<Customer>(customerProp);
+  const {
+    list: purchases
+  } = useLoadList<Purchase>(SUPPLIER_PURCHASE_LIST.replace(':id', supplier.id), {
+    limit: 9999999
+  });
 
   useEffect(() => {
-    setCustomer(customerProp);
-  }, [customerProp]);
+    setSupplier(supplierProp);
+  }, [supplierProp]);
 
   const createPayment = async (values: any) => {
     setCreating(true);
     try {
-      const url = CUSTOMER_PAYMENT_CREATE;
+      const url = SUPPLIER_PAYMENT_CREATE;
 
-      if (values.orderId) {
-        values.orderId = values.orderId.value;
+      if (values.purchase) {
+        values.purchase = values.purchase.value;
       }
       delete values.id;
-      values.customer = customer['@id'];
+      values.supplier = supplier['@id'];
       values.amount = values.amount.toString();
 
       const response = await fetchJson(url, {
@@ -69,48 +82,22 @@ export const CustomerPayments: FC<Props> = ({
         })
       });
 
-      // setModal(false);
-      setCustomer({
-        ...customer,
-        payments: [
-          response,
-          ...customer.payments
-        ]
-      });
+      await loadPayments();
+
       reset({
         amount: null,
         description: null,
-        order: null
+        purchase: null
       });
-
-      if (onCreate) {
-        onCreate!();
-      }
     } catch (exception: any) {
-      if (exception instanceof HttpException) {
-        if (exception.message) {
-          notify({
-            type: 'error',
-            description: exception.message
-          });
-        }
-      }
-
       if (exception instanceof UnprocessableEntityException) {
-        const e: ValidationResult = await exception.response.json();
+        const e = await exception.response.json();
         e.violations.forEach((item: ConstraintViolation) => {
           setError(item.propertyPath, {
             message: item.message,
             type: 'server'
           });
         });
-
-        if (e.errorMessage) {
-          notify({
-            type: 'error',
-            description: e.errorMessage
-          });
-        }
 
         return false;
       }
@@ -121,17 +108,28 @@ export const CustomerPayments: FC<Props> = ({
     }
   };
 
+  const purchaseTotal = useMemo(() => {
+    return purchases.reduce((prev, item) => {
+      if(item.paymentType && item.paymentType.type === 'credit'){
+        return prev + item.total;
+      }
+      return prev;
+    }, 0);
+  }, [purchases]);
+  const paymentTotal = useMemo(() => {
+    return payments.reduce((prev, item) => prev + Number(item.amount), 0);
+  }, [payments]);
+
   const diff = useMemo(() => {
-    // return Number(customer?.sale) - Number(customer?.paid);
-    return customer.outstanding;
-  }, [customer]);
+    return purchaseTotal - paymentTotal + Number(supplier.openingBalance);
+  }, [purchaseTotal, paymentTotal, supplier]);
 
   const list = useMemo(() => {
     let list: any = [];
-    customer.payments.forEach(item => {
+    payments.forEach(item => {
       list.push(item);
     });
-    customer.orders.forEach(item => {
+    purchases.forEach(item => {
       list.push(item);
     });
 
@@ -141,19 +139,22 @@ export const CustomerPayments: FC<Props> = ({
 
 
     return list;
-  }, [customer]);
+  }, [purchases, payments]);
 
   return (
     <>
       <Button variant="primary" onClick={() => {
         setModal(true);
       }}>
-        {children || 'History'}
+        {children || 'Ledger'}
       </Button>
-
-      <Modal open={modal} onClose={() => {
-        setModal(false);
-      }} title={`Payment history of ${customer.name}`}>
+      <Modal
+        open={modal}
+        title={`${supplier.name}'s Ledger`}
+        onClose={() => {
+          setModal(false);
+        }}
+      >
         <form onSubmit={handleSubmit(createPayment)} className="mb-5">
           <input type="hidden" {...register('id')}/>
           <div className="grid grid-cols-5 gap-4 mb-3">
@@ -164,19 +165,20 @@ export const CustomerPayments: FC<Props> = ({
             </div>
             <div className="col-span-2">
               <label htmlFor="description">Description</label>
-              <Input {...register('description')} id="description" className="w-full" hasError={hasErrors(errors.description)}/>
+              <Input {...register('description')} id="description" className="w-full"
+                     hasError={hasErrors(errors.description)}/>
               {getErrors(errors.description)}
             </div>
             <div className="col-span-1">
-              <label htmlFor="description">Order#</label>
+              <label htmlFor="purchase">Purchase no.</label>
               <Controller
                 control={control}
-                name="orderId"
+                name="purchase"
                 render={(props) => (
                   <ReactSelect
-                    options={customer.orders.reverse().map(item => {
+                    options={purchases.reverse().map(item => {
                       return {
-                        label: `${item.orderId} (${DateTime.fromISO(item.createdAt).toFormat('ff')})`,
+                        label: `${item.purchaseNumber} (${DateTime.fromISO(item.createdAt).toFormat('ff')})`,
                         value: item['@id']
                       };
                     })}
@@ -186,10 +188,10 @@ export const CustomerPayments: FC<Props> = ({
                   />
                 )}
               />
-              {errors.orderId && (
+              {errors.purchase && (
                 <div className="text-danger-500 text-sm">
                   <Trans>
-                    {errors.orderId.message}
+                    {errors.purchase.message}
                   </Trans>
                 </div>
               )}
@@ -197,19 +199,23 @@ export const CustomerPayments: FC<Props> = ({
             <div>
               <label className="block">&nbsp;</label>
               <Button variant="primary" type="submit" className="w-full"
-                      disabled={creating}>{creating ? 'Receiving...' : 'Receive Payment'}</Button>
+                      disabled={creating}>{creating ? 'Adding...' : 'Add Payment'}</Button>
             </div>
           </div>
         </form>
 
-        <div className="grid grid-cols-3 gap-4 mb-5">
+        <div className="grid grid-cols-4 gap-4 mb-5">
           <div className="border border-primary-500 p-5 font-bold text-primary-500 rounded">
-            Total Credit Sale
-            <span className="float-right">{withCurrency(customer.sale)}</span>
+            Opening Balance
+            <span className="float-right">{withCurrency(supplier.openingBalance)}</span>
+          </div>
+          <div className="border border-primary-500 p-5 font-bold text-primary-500 rounded">
+            Total Credit Purchase
+            <span className="float-right">{withCurrency(purchaseTotal)}</span>
           </div>
           <div className="border border-success-500 p-5 font-bold text-success-500 rounded">
             Total Payments
-            <span className="float-right">{withCurrency(customer.paid)}</span>
+            <span className="float-right">{withCurrency(paymentTotal)}</span>
           </div>
           <div className={
             classNames(
@@ -217,7 +223,7 @@ export const CustomerPayments: FC<Props> = ({
               diff > 0 ? 'border-danger-500 text-danger-500' : 'border-success-500 text-success-500'
             )
           }>
-            Outstanding
+            Outstanding payments
             <span className="float-right">{withCurrency(diff)}</span>
           </div>
         </div>
@@ -228,7 +234,7 @@ export const CustomerPayments: FC<Props> = ({
             <th>Time</th>
             <th>Amount</th>
             <th>Description</th>
-            <th>Order#</th>
+            <th>Purchase no.</th>
           </tr>
           </thead>
           <tbody>
@@ -241,13 +247,9 @@ export const CustomerPayments: FC<Props> = ({
                     Payment {withCurrency(item.amount)}
                   </>
                 )}
-                {item.orderId && (
+                {item.purchaseNumber && (
                   <>
-                    {item.payments.map((p: OrderPayment) => (
-                      <div>
-                        {p?.type?.name} Sale: {withCurrency(p.received)}
-                      </div>
-                    ))}
+                    {item?.paymentType?.name} Sale: {withCurrency(item.total)}
                   </>
                 )}
               </td>
@@ -255,18 +257,18 @@ export const CustomerPayments: FC<Props> = ({
                 {item.description && (
                   <>Receiving: {item.description}</>
                 )}
-                {item.orderId && 'Sale'}
+                {item.purchaseNumber && 'Sale'}
               </td>
               <td>
-                {item.orderId && (
-                  <ViewOrder order={item}>
-                    <FontAwesomeIcon icon={faEye} className="mr-2"/> {item.orderId}
-                  </ViewOrder>
+                {item.purchaseNumber && (
+                  <ViewPurchase purchase={item}>
+                    <FontAwesomeIcon icon={faEye} className="mr-2"/> {item.purchaseNumber}
+                  </ViewPurchase>
                 )}
-                {item.order && (
-                  <ViewOrder order={item.order}>
-                    <FontAwesomeIcon icon={faEye} className="mr-2"/> {item.order.orderId}
-                  </ViewOrder>
+                {item.purchase && (
+                  <ViewPurchase purchase={item.purchase}>
+                    <FontAwesomeIcon icon={faEye} className="mr-2"/> {item.purchase.purchaseNumber}
+                  </ViewPurchase>
                 )}
               </td>
             </tr>
@@ -276,4 +278,4 @@ export const CustomerPayments: FC<Props> = ({
       </Modal>
     </>
   );
-};
+}

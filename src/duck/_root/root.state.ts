@@ -5,6 +5,7 @@ import {StoreState} from "../store/store.state";
 import {DisplayShortcutState, ShortcutState} from "../shortcuts/shortcut.state";
 import {TouchState} from "../touch/touch.state";
 import {TerminalState} from "../terminal/terminal.state";
+import {ProgressState} from "../progress/progress.state";
 
 export interface WithAuthState {
   auth: AuthState;
@@ -20,5 +21,6 @@ export interface RootState extends WithAuthState, WithEntityState {
   shortcut: ShortcutState,
   displayShortcut: DisplayShortcutState,
   touch: TouchState,
-  terminal: TerminalState
+  terminal: TerminalState,
+  progress: ProgressState
 }

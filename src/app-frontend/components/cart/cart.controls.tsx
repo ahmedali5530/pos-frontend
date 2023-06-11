@@ -87,6 +87,14 @@ export const CartControls = ({
     });
   }
 
+  const openDiscount = () => {
+    setDiscModal(true);
+
+    resetDiscount({
+      discount: 0,
+      discountType: {label: DiscountRate['RATE_FIXED'], value: DiscountRate['RATE_FIXED']}
+    })
+  }
   const [discModal, setDiscModal] = useState(false);
   const {handleSubmit: handleSubmitDiscount, control: controlDiscount, reset: resetDiscount} = useForm();
   const updateDiscount = (values: any) => {
@@ -118,12 +126,6 @@ export const CartControls = ({
 
     // close the modal
     setDiscModal(false);
-
-    //reset discount inputs
-    resetDiscount({
-      discount: 0,
-      discountType: {label: DiscountRate['RATE_FIXED'], value: DiscountRate['RATE_FIXED']}
-    })
   }
 
   const toggleTax = () => {
@@ -155,7 +157,7 @@ export const CartControls = ({
         <button tabIndex={-1} disabled={added.length === 0} type="button" className="btn btn-secondary" onClick={copyCartItems}>Copy</button>
         {/*<button tabIndex={-1} type="button" className="btn btn-secondary"><FontAwesomeIcon icon={faPencil}/></button>*/}
         <button tabIndex={-1} disabled={added.length === 0} type="button" className="btn btn-secondary" onClick={() => setQtyModal(true) }>QTY</button>
-        <button tabIndex={-1} disabled={added.length === 0} type="button" className="btn btn-secondary" onClick={() => setDiscModal(true)}>Disc.</button>
+        <button tabIndex={-1} disabled={added.length === 0} type="button" className="btn btn-secondary" onClick={openDiscount}>Disc.</button>
         <button tabIndex={-1} disabled={added.length === 0} type="button" className="btn btn-secondary" onClick={toggleTax}>Toggle Tax</button>
       </div>
 
@@ -185,7 +187,7 @@ export const CartControls = ({
       </Modal>
 
       <Modal open={discModal} title="Update discount" size="sm" onClose={() => setDiscModal(false)}>
-        <form onSubmit={handleSubmitDiscount(updateDiscount)}>
+        <form onSubmit={handleSubmitDiscount(updateDiscount)} className="h-48">
           <div className="mb-3">
             <label htmlFor="discount">Discount</label>
             <div className="input-group">
@@ -193,7 +195,7 @@ export const CartControls = ({
                 name="discountType"
                 render={(props) => (
                   <ReactSelect
-                    className="w-full"
+                    className="w-full rs-__container"
                     value={props.field.value}
                     onChange={props.field.onChange}
                     options={[
@@ -218,6 +220,7 @@ export const CartControls = ({
                   />
                 )}
                 control={controlDiscount}
+                rules={{required: true}}
               />
             </div>
           </div>

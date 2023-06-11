@@ -1,5 +1,4 @@
 import React, {useMemo, useState} from 'react';
-import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {TERMINAL_LIST} from "../../../../api/routing/routes/backend.app";
 import {useTranslation} from "react-i18next";
 import {createColumnHelper} from "@tanstack/react-table";
@@ -13,13 +12,15 @@ import {Store} from "../../../../api/model/store";
 import {Modal} from "../../../../app-common/components/modal/modal";
 import {Product} from "../../../../api/model/product";
 import {CreateTerminal} from "./create.terminal";
+import {HydraCollection} from "../../../../api/model/hydra";
+import useApi from "../../../../api/hooks/use.api";
 
 export const Terminals = () => {
   const [operation, setOperation] = useState('create');
   const [terminal, setTerminal] = useState<Terminal>();
   const [modal, setModal] = useState(false);
 
-  const useLoadHook = useLoadList<Terminal>(TERMINAL_LIST);
+  const useLoadHook = useApi<HydraCollection<Terminal>>('terminals', TERMINAL_LIST);
   const {fetchData} = useLoadHook;
 
   const [terminalProducts, setTerminalProducts] = useState<Product[]>([]);

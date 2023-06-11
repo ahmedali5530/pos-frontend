@@ -1,7 +1,15 @@
-import {createRef, forwardRef, InputHTMLAttributes, Ref, useCallback} from "react";
+import {
+  createRef,
+  forwardRef,
+  InputHTMLAttributes,
+  MouseEventHandler,
+  Ref,
+  useCallback,
+  useImperativeHandle,
+  useRef
+} from "react";
 import classNames from "classnames";
 import {NumericFormat} from "react-number-format";
-import {hasErrors} from "../../../lib/error/error";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   inputSize?: "lg"
@@ -11,17 +19,13 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 // eslint-disable-next-line react/display-name
 export const Input = forwardRef((props: InputProps, ref: Ref<any>) => {
-  const inputRef = createRef<HTMLInputElement>();
-
-
-  const onClick = useCallback(() => {
-    if (!ref && inputRef.current && props.selectable) {
-      inputRef.current.select();
+  const onClick = useCallback((event: any) => {
+    if(props.selectable !== false){
+      event.currentTarget.select();
     }
-  }, [ref, inputRef, props.selectable]);
+  }, [props.selectable]);
 
   if(props.type === 'number'){
-
     return (
       <NumericFormat
         name={props.name}
@@ -37,7 +41,8 @@ export const Input = forwardRef((props: InputProps, ref: Ref<any>) => {
             props.hasError && 'error'
           )
         }
-        getInputRef={ref || inputRef}
+        getInputRef={ref}
+        onClick={onClick}
       />
     );
   }else {
@@ -55,7 +60,7 @@ export const Input = forwardRef((props: InputProps, ref: Ref<any>) => {
             props.hasError && 'error'
           )
         }
-        ref={ref || inputRef}
+        ref={ref}
       />
     );
   }

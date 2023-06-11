@@ -3,21 +3,22 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPencilAlt, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {Button} from "../../../../app-common/components/input/button";
 import React, {useState} from "react";
-import {BRAND_LIST} from "../../../../api/routing/routes/backend.app";
+import {BRAND_LIST, CUSTOMER_LIST} from "../../../../api/routing/routes/backend.app";
 import {Brand} from "../../../../api/model/brand";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {createColumnHelper} from "@tanstack/react-table";
 import {TableComponent} from "../../../../app-common/components/table/table";
 import {useSelector} from "react-redux";
 import {getStore} from "../../../../duck/store/store.selector";
 import {CreateBrand} from "./create.brand";
+import useApi from "../../../../api/hooks/use.api";
+import {HydraCollection} from "../../../../api/model/hydra";
 
 export const Brands = () => {
   const [operation, setOperation] = useState('create');
   const [brand, setBrand] = useState<Brand>();
   const [modal, setModal] = useState(false);
 
-  const useLoadHook = useLoadList<Brand>(BRAND_LIST);
+  const useLoadHook = useApi<HydraCollection<Brand>>('brands', BRAND_LIST);
   const {fetchData} = useLoadHook;
   const store = useSelector(getStore);
 
@@ -66,7 +67,7 @@ export const Brands = () => {
         params={{
           store: store?.id
         }}
-        loaderLineItems={2}
+        loaderLineItems={3}
         buttons={[{
           html: <Button variant="primary" onClick={() => {
             setModal(true);

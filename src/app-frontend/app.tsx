@@ -1,9 +1,6 @@
 import Login from './containers/login/login';
 import {BrowserRouter as Router, Route, useLocation} from "react-router-dom";
-import {
-  FORGOT_PASSWORD,
-  LOGIN, POS, RESET_PASSWORD,
-} from "./routes/frontend.routes";
+import {FORGOT_PASSWORD, LOGIN, POS, RESET_PASSWORD,} from "./routes/frontend.routes";
 import {connect, useSelector} from "react-redux";
 import {RootState} from "../duck/_root/root.state";
 import {isUserLoggedIn} from "../duck/auth/auth.selector";
@@ -35,7 +32,7 @@ const AppComponent: FunctionComponent<AppProps> = (props) => {
     props.bootstrap();
 
     function handleException(e: any) {
-      if(e.reason.code === 401) {
+      if (e.reason.code === 401) {
         logoutAction();
       }
     }
@@ -80,7 +77,7 @@ const AppComponent: FunctionComponent<AppProps> = (props) => {
         <Route path={POS} element={<RequireAuth><Pos/></RequireAuth>}/>
 
         {/*if nothing matches show 404*/}
-        <Route path="*" element={<Error404 />} />
+        <Route path="*" element={<Error404/>}/>
       </Routes>
     </Router>
   );
@@ -102,14 +99,14 @@ export const App = connect(
     )
 )(AppComponent);
 
-export const RequireAuth = ({children }: { children: JSX.Element }) => {
+export const RequireAuth = ({children}: { children: JSX.Element }) => {
   let location = useLocation();
   const userLoggedIn = useSelector(isUserLoggedIn);
 
   if (!userLoggedIn) {
     return <Navigate
       to={LOGIN}
-      state={{ from: location }}
+      state={{from: location}}
       replace
     />;
   }

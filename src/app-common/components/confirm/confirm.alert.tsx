@@ -16,7 +16,7 @@ export const ConfirmAlert = (params: ConfirmAlertProps) => {
   return (
     <Popover
       placement="topRight"
-      title={title}
+      title={<h4 className="text-lg mb-3">{title}</h4>}
       content={
         <ConfirmAlertButtons
           onConfirm={onConfirm}

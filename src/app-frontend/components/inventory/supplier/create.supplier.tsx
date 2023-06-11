@@ -7,14 +7,15 @@ import {useForm} from "react-hook-form";
 import {SUPPLIER_CREATE, SUPPLIER_EDIT} from "../../../../api/routing/routes/backend.app";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
 import {jsonRequest} from "../../../../api/request/request";
-import {UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
-import {ConstraintViolation} from "../../../../lib/validator/validation.result";
+import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
+import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
 import {Modal} from "../../../../app-common/components/modal/modal";
 import {Supplier} from "../../../../api/model/supplier";
 import {hasErrors} from "../../../../lib/error/error";
 import * as yup from "yup";
 import {ValidationMessage} from "../../../../api/model/validation";
 import { yupResolver } from '@hookform/resolvers/yup';
+import {notify} from "../../../../app-common/components/confirm/notification";
 
 interface CreateSupplierProps{
   operation: string;
@@ -25,10 +26,10 @@ interface CreateSupplierProps{
 
 const ValidationSchema = yup.object({
   name: yup.string().trim().required(ValidationMessage.Required),
-  phone: yup.number().required(ValidationMessage.Required).positive(ValidationMessage.Positive),
+  phone: yup.string().required(ValidationMessage.Required),
   email: yup.string().required(ValidationMessage.Required).email(ValidationMessage.Email),
-  openingBalance: yup.number(),
-  stores: yup.array().min(1)
+  openingBalance: yup.number().typeError(ValidationMessage.Number).required(ValidationMessage.Required),
+  stores: yup.array().min(1).required(ValidationMessage.Required)
 }).required();
 
 export const CreateSupplier: FC<CreateSupplierProps> = ({
@@ -74,6 +75,10 @@ export const CreateSupplier: FC<CreateSupplierProps> = ({
         values.stores = values.stores.map((item: ReactSelectOptionProps) => item?.value);
       }
 
+      if(values.openingBalance){
+        values.openingBalance = values.openingBalance.toString();
+      }
+
       await jsonRequest(url, {
         method: method,
         body: JSON.stringify({
@@ -84,14 +89,30 @@ export const CreateSupplier: FC<CreateSupplierProps> = ({
       onModalClose();
 
     } catch (exception: any) {
+      if (exception instanceof HttpException) {
+        if (exception.message) {
+          notify({
+            type: 'error',
+            description: exception.message
+          });
+        }
+      }
+
       if (exception instanceof UnprocessableEntityException) {
-        const e = await exception.response.json();
+        const e: ValidationResult = await exception.response.json();
         e.violations.forEach((item: ConstraintViolation) => {
           setError(item.propertyPath, {
             message: item.message,
             type: 'server'
           });
         });
+
+        if (e.errorMessage) {
+          notify({
+            type: 'error',
+            description: e.errorMessage
+          });
+        }
 
         return false;
       }
@@ -124,10 +145,11 @@ export const CreateSupplier: FC<CreateSupplierProps> = ({
       open={modal}
       onClose={onModalClose}
       title="Create Supplier"
+      size="sm"
     >
       <form onSubmit={handleSubmit(createSupplier)} className="mb-5">
         <input type="hidden" {...register('id')}/>
-        <div className="grid lg:grid-cols-5 gap-4 mb-3 md:grid-cols-3 sm:grid-cols-1">
+        <div className="grid lg:grid-cols-1 gap-4 mb-3 md:grid-cols-3 sm:grid-cols-1">
           <div>
             <label htmlFor="name">Name</label>
             <Input {...register('name')} id="name" className="w-full" hasError={hasErrors(errors.name)}/>
@@ -141,7 +163,7 @@ export const CreateSupplier: FC<CreateSupplierProps> = ({
           </div>
           <div>
             <label htmlFor="phone">Phone</label>
-            <Input {...register('phone', {valueAsNumber: true})} id="phone" className="w-full" hasError={hasErrors(errors.phone)}/>
+            <Input {...register('phone')} id="phone" className="w-full" hasError={hasErrors(errors.phone)}/>
             {errors.phone && (
               <div className="text-danger-500 text-sm">
                 <Trans>
@@ -176,7 +198,6 @@ export const CreateSupplier: FC<CreateSupplierProps> = ({
           <StoresInput control={control} errors={errors}/>
 
           <div>
-            <label htmlFor="" className="md:block w-full sm:hidden">&nbsp;</label>
             <Button variant="primary" type="submit" disabled={creating}>
               {creating ? 'Saving...' : (operation === 'create' ? 'Create new' : 'Update')}
             </Button>

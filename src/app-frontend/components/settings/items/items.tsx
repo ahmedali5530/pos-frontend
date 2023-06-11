@@ -5,7 +5,6 @@ import React, {useState} from "react";
 import {Product} from "../../../../api/model/product";
 import {PRODUCT_LIST} from "../../../../api/routing/routes/backend.app";
 import {TableComponent} from "../../../../app-common/components/table/table";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
 import { useTranslation } from "react-i18next";
 import { createColumnHelper} from "@tanstack/react-table";
 import {ImportItems} from "./import.items";
@@ -14,9 +13,11 @@ import {useSelector} from "react-redux";
 import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
 import {getStore} from "../../../../duck/store/store.selector";
 import {CreateItem} from "./items.create";
+import useApi from "../../../../api/hooks/use.api";
+import {HydraCollection} from "../../../../api/model/hydra";
 
 export const Items = () => {
-  const useLoadHook = useLoadList<Product>(PRODUCT_LIST);
+  const useLoadHook = useApi<HydraCollection<Product>>('products', PRODUCT_LIST);
   const [entity, setEntity] = useState<Product>();
   const user = useSelector(getAuthorizedUser);
   const store = useSelector(getStore);

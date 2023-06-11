@@ -13,12 +13,11 @@ import _ from "lodash";
 import {Loader} from "../loader/loader";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faRefresh} from "@fortawesome/free-solid-svg-icons";
-import {FetchDataReturns} from "../../../api/hooks/use.load.list";
-import {Order} from "../../../api/model/order";
+import {UseApiResult} from "../../../api/hooks/use.api";
 
 interface ButtonProps {
   title?: ReactNode;
-  html?: ReactNode;
+  html: ReactNode;
   className?: string;
   handler?: (
     payload: any,
@@ -38,7 +37,7 @@ interface TableComponentProps {
   selectionButtons?: ButtonProps[];
   loaderLineItems?: number;
   loaderLines?: number;
-  useLoadList: FetchDataReturns<any>;
+  useLoadList: UseApiResult;
   setFilters?: (filters?: any) => void;
   globalSearch?: boolean;
 }
@@ -50,8 +49,13 @@ export const TableComponent: FC<TableComponentProps> = ({
   const {t} = useTranslation();
 
   const {
-    fetchData, handlePageChange, handleFilterChange, handleLimitChange, handleSortChange, handleSortModeChange, data,
-    loading, abort
+    handlePageChange,
+    handleFilterChange,
+    handlePageSizeChange: handleLimitChange,
+    handleSortChange, handleSortModeChange,
+    data,
+    isFetching: loading,
+    fetchData, fetch
   } = useLoadList;
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -130,18 +134,10 @@ export const TableComponent: FC<TableComponentProps> = ({
 
   const [isLoading, setLoading] = useState(false);
 
-  const onClick = async (button: ButtonProps) => {
-    button.handler && button.handler(ids, fetchData, setLoading, setRowSelection);
-  };
-
   const renderButton = (button: ButtonProps) => {
     if (button.html) {
       return button.html;
     }
-
-    return (
-      <button disabled={isLoading} className={button.className} onClick={() => onClick(button)}>{button.title}</button>
-    );
   };
 
   const pageSizes: { [key: string | number]: any } = {

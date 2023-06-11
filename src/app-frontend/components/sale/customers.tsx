@@ -10,9 +10,9 @@ import {Input} from "../../../app-common/components/input/input";
 import {faSquare, faSquareCheck} from "@fortawesome/free-regular-svg-icons";
 import {CustomerPayments} from "./customer.payments";
 import {CUSTOMER_CREATE, CUSTOMER_EDIT, CUSTOMER_LIST} from "../../../api/routing/routes/backend.app";
-import {ConstraintViolation} from "../../../lib/validator/validation.result";
+import {ConstraintViolation, ValidationResult} from "../../../lib/validator/validation.result";
 import {Trans, useTranslation} from "react-i18next";
-import {UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
+import {HttpException, UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
 import {useLoadList} from "../../../api/hooks/use.load.list";
 import {createColumnHelper} from "@tanstack/react-table";
 import {TableComponent} from "../../../app-common/components/table/table";
@@ -21,6 +21,9 @@ import * as yup from 'yup';
 import {ValidationMessage} from "../../../api/model/validation";
 import {getErrors, hasErrors} from "../../../lib/error/error";
 import {yupResolver} from "@hookform/resolvers/yup";
+import useApi from "../../../api/hooks/use.api";
+import { HydraCollection } from "../../../api/model/hydra";
+import {notify} from "../../../app-common/components/confirm/notification";
 
 
 interface Props extends PropsWithChildren{
@@ -32,7 +35,7 @@ interface Props extends PropsWithChildren{
 const ValidationSchema = yup.object({
   name: yup.string().required(ValidationMessage.Required),
   phone: yup.string().required(ValidationMessage.Required),
-  openingBalance: yup.string().required(ValidationMessage.Required)
+  openingBalance: yup.number().typeError(ValidationMessage.Number).required(ValidationMessage.Required)
 });
 
 export const Customers: FC<Props> = ({
@@ -41,7 +44,7 @@ export const Customers: FC<Props> = ({
   const [modal, setModal] = useState(false);
   const [operation, setOperation] = useState('create');
 
-  const useLoadHook = useLoadList<Customer>(CUSTOMER_LIST);
+  const useLoadHook = useApi<HydraCollection<Customer>>('customers', CUSTOMER_LIST);
   const {fetchData} = useLoadHook;
 
   const {t} = useTranslation();
@@ -77,6 +80,7 @@ export const Customers: FC<Props> = ({
       enableSorting: false,
     }),
     columnHelper.accessor('id', {
+      id: 'customerSelector',
       header: () => t('Select'),
       cell: info => (
         <>
@@ -87,7 +91,10 @@ export const Customers: FC<Props> = ({
             </Button>
           ) : (
             <Button
-              onClick={() => setCustomer(info.row.original)}
+              onClick={() => {
+                setCustomer(info.row.original);
+                setModal(false); // close modal when selecting customer
+              }}
               disabled={customer?.id === info.getValue()}
               className="w-[40px]"
             >
@@ -143,6 +150,8 @@ export const Customers: FC<Props> = ({
         url = CUSTOMER_CREATE;
       }
 
+      values.openingBalance = values.openingBalance.toString();
+
       const response = await fetchJson(url, {
         method: method,
         body: JSON.stringify(values)
@@ -155,14 +164,30 @@ export const Customers: FC<Props> = ({
       resetForm();
       setOperation('create');
     } catch (exception: any) {
+      if (exception instanceof HttpException) {
+        if (exception.message) {
+          notify({
+            type: 'error',
+            description: exception.message
+          });
+        }
+      }
+
       if (exception instanceof UnprocessableEntityException) {
-        const e = await exception.response.json();
+        const e: ValidationResult = await exception.response.json();
         e.violations.forEach((item: ConstraintViolation) => {
           setError(item.propertyPath, {
             message: item.message,
             type: 'server'
           });
         });
+
+        if (e.errorMessage) {
+          notify({
+            type: 'error',
+            description: e.errorMessage
+          });
+        }
 
         return false;
       }

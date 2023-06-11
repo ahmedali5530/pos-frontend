@@ -117,7 +117,7 @@ export const SaleHistory: FC<Props> = ({
                 {info.getValue()?.name}
               </CustomerPayments>
               {customer?.id === info.getValue()?.id && (
-                <span className="ml-3">
+                <span className="ml-3 btn btn-success">
                   <FontAwesomeIcon icon={faCheck}/>
                 </span>
               )}

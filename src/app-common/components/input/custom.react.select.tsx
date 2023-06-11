@@ -1,6 +1,7 @@
 import React from "react";
-import Select, {GroupBase, Props} from "react-select";
+import Select, {GroupBase, Props, LoadingIndicatorProps} from "react-select";
 import {Theme} from "react-select/dist/declarations/src/";
+import Spinner from '../../../assets/images/spinner.svg';
 
 const primaryColor = 'rgb(0 149 255 / 1)';
 
@@ -38,6 +39,12 @@ export const styleConfig = {
 
 export const classNamePrefix = 'rs-';
 
+const LoadingIndicator = (props: any) => {
+  return (
+    <img alt="loading..." src={Spinner} className="w-[18px] mr-2" />
+  );
+};
+
 export function ReactSelect<
   Option,
   IsMulti extends boolean = false,
@@ -50,6 +57,9 @@ export function ReactSelect<
       theme={themeConfig}
       styles={styleConfig}
       classNamePrefix={classNamePrefix}
+      components={{
+        LoadingIndicator: LoadingIndicator
+      }}
     />
   );
 }

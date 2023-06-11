@@ -4,19 +4,20 @@ import React, {useState} from "react";
 import {SUPPLIER_LIST} from "../../../../api/routing/routes/backend.app";
 import {Supplier} from "../../../../api/model/supplier";
 import {TableComponent} from "../../../../app-common/components/table/table";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {createColumnHelper} from "@tanstack/react-table";
 import {useSelector} from "react-redux";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPencilAlt, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {getStore} from "../../../../duck/store/store.selector";
 import {CreateSupplier} from "./create.supplier";
+import {SupplierLedger} from "./supplier.ledger";
+import useApi from "../../../../api/hooks/use.api";
+import {HydraCollection} from "../../../../api/model/hydra";
 
 export const Suppliers = () => {
   const [operation, setOperation] = useState('create');
 
-  const useLoadHook = useLoadList<Supplier>(SUPPLIER_LIST);
-  const {fetchData} = useLoadHook;
+  const useLoadHook = useApi<HydraCollection<Supplier>>('suppliers', SUPPLIER_LIST)
   const [supplier, setSupplier] = useState<Supplier>();
   const [modal, setModal] = useState(false);
 
@@ -38,39 +39,36 @@ export const Suppliers = () => {
     }),
     columnHelper.accessor('openingBalance', {
       header: () => t('Opening balance'),
+    }),
+    columnHelper.accessor('stores', {
+      header: () => t('Stores'),
+      enableSorting: false,
+      cell: (info) => info.getValue().map(item => item.name).join(', ')
+    }),
+    columnHelper.accessor('id', {
+      header: () => t('Actions'),
+      enableSorting: false,
+      cell: (info) => {
+        return (
+          <>
+            <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
+              setSupplier(info.row.original);
+              setOperation('update');
+              setModal(true);
+            }} tabIndex={-1}>
+              <FontAwesomeIcon icon={faPencilAlt}/>
+            </Button>
+            <span className="mx-2 text-gray-300">|</span>
+            <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
+              <FontAwesomeIcon icon={faTrash}/>
+            </Button>
+            <span className="mx-2 text-gray-300">|</span>
+            <SupplierLedger supplier={info.row.original}/>
+          </>
+        )
+      }
     })
   ];
-
-  columns.push(columnHelper.accessor('stores', {
-    header: () => t('Stores'),
-    enableSorting: false,
-    cell: (info) => info.getValue().map(item => item.name).join(', ')
-  }));
-
-  columns.push(columnHelper.accessor('id', {
-    header: () => t('Actions'),
-    enableSorting: false,
-    cell: (info) => {
-      return (
-        <>
-          <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
-            setSupplier(info.row.original);
-            setOperation('update');
-            setModal(true);
-          }} tabIndex={-1}>
-            <FontAwesomeIcon icon={faPencilAlt}/>
-          </Button>
-          <span className="mx-2 text-gray-300">|</span>
-          <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
-            <FontAwesomeIcon icon={faTrash}/>
-          </Button>
-          <span className="mx-2 text-gray-300">|</span>
-          <Button variant="secondary" type="button">Ledger</Button>
-        </>
-      )
-    }
-  }));
-
 
   return (
     <>

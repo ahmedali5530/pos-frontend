@@ -6,16 +6,17 @@ import React, {useState} from "react";
 import {Department} from "../../../../api/model/department";
 import {DEPARTMENT_LIST,} from "../../../../api/routing/routes/backend.app";
 import {TableComponent} from "../../../../app-common/components/table/table";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {createColumnHelper} from "@tanstack/react-table";
 import {useSelector} from "react-redux";
 import {getStore} from "../../../../duck/store/store.selector";
 import {CreateDepartment} from "./create.department";
+import useApi from "../../../../api/hooks/use.api";
+import {HydraCollection} from "../../../../api/model/hydra";
 
 export const Departments = () => {
   const [operation, setOperation] = useState('create');
 
-  const useLoadHook = useLoadList<Department>(DEPARTMENT_LIST);
+  const useLoadHook = useApi<HydraCollection<Department>>('departments', DEPARTMENT_LIST);
   const {fetchData} = useLoadHook;
   const [department, setDepartment] = useState<Department>();
   const [modal, setModal] = useState(false);

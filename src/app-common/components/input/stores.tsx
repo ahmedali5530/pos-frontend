@@ -5,14 +5,16 @@ import {STORE_LIST} from "../../../api/routing/routes/backend.app";
 import {Controller, UseFormReturn} from "react-hook-form";
 import {ReactSelect} from "./custom.react.select";
 import {Trans} from "react-i18next";
+import {getErrorClass, getErrors, hasErrors} from "../../../lib/error/error";
 
 interface StoresInputProps{
   control: UseFormReturn['control'];
   errors: UseFormReturn['formState']['errors'];
+  valueAsNumber?: boolean;
 }
 
 export const StoresInput: FC<StoresInputProps> = ({
-  control, errors
+  control, errors, valueAsNumber
 }) => {
   const [stores, setStores] = useState<Store[]>([]);
   const loadStores = async () => {
@@ -41,21 +43,16 @@ export const StoresInput: FC<StoresInputProps> = ({
             options={stores.map(item => {
               return {
                 label: item.name,
-                value: item['@id']
+                value: valueAsNumber ? item.id : item['@id']
               }
             })}
             isMulti
+            className={getErrorClass(errors.stores)}
           />
         )}
       />
 
-      {errors.stores && (
-        <div className="text-danger-500 text-sm">
-          <Trans>
-            {errors.stores.message}
-          </Trans>
-        </div>
-      )}
+      {getErrors(errors.stores)}
     </div>
   );
 }

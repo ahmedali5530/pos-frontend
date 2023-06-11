@@ -1,5 +1,4 @@
 import React, {useState} from "react";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {PURCHASE_ORDER_LIST} from "../../../../api/routing/routes/backend.app";
 import {useSelector} from "react-redux";
 import {getStore} from "../../../../duck/store/store.selector";
@@ -11,12 +10,14 @@ import {faPencilAlt, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {TableComponent} from "../../../../app-common/components/table/table";
 import {PurchaseOrder} from "../../../../api/model/purchase.order";
 import {CreatePurchaseOrder} from "./create.purchase.order";
+import useApi from "../../../../api/hooks/use.api";
+import {HydraCollection} from "../../../../api/model/hydra";
 
 export const PurchaseOrders = () => {
   const [operation, setOperation] = useState('create');
 
-  const useLoadHook = useLoadList<PurchaseOrder>(PURCHASE_ORDER_LIST);
-  const [purchaseOrder, setPurchaseOrder] = useState<PurchaseOrder|undefined>();
+  const useLoadHook = useApi<HydraCollection<PurchaseOrder>>('purchaseOrders', PURCHASE_ORDER_LIST);
+  const [purchaseOrder, setPurchaseOrder] = useState<PurchaseOrder | undefined>();
 
   const store = useSelector(getStore);
 
@@ -31,8 +32,12 @@ export const PurchaseOrders = () => {
     columnHelper.accessor('poNumber', {
       header: () => t('PO Number'),
     }),
+    columnHelper.accessor('supplier', {
+      header: () => t('Supplier'),
+      cell: info => info.getValue()?.name
+    }),
     columnHelper.accessor('createdAt', {
-      header: () => t('Phone'),
+      header: () => t('Created at'),
     }),
     columnHelper.accessor('store', {
       header: () => t('Store'),

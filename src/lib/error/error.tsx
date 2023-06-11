@@ -15,5 +15,6 @@ export const getErrors = (errorElement: any) => {
 };
 
 export const getErrorClass = (errorElement: any) => {
-  return hasErrors(errorElement) ? 'with-feedback error' : '';
+  return hasErrors(errorElement) ? 'rs-__error' : '';
 };
+

@@ -5,19 +5,20 @@ import {DEPARTMENT_CREATE, DEPARTMENT_GET, STORE_LIST} from "../../../../api/rou
 import {Input} from "../../../../app-common/components/input/input";
 import {Trans} from "react-i18next";
 import {Button} from "../../../../app-common/components/input/button";
-import {UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
-import {ConstraintViolation} from "../../../../lib/validator/validation.result";
+import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
+import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
 import {Department} from "../../../../api/model/department";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
 import {fetchJson, jsonRequest} from "../../../../api/request/request";
 import { StoresInput } from "../../../../app-common/components/input/stores";
-import {hasErrors} from "../../../../lib/error/error";
+import {getErrorClass, getErrors, hasErrors} from "../../../../lib/error/error";
 import * as yup from "yup";
 import {ValidationMessage} from "../../../../api/model/validation";
 import {yupResolver} from "@hookform/resolvers/yup";
 import { ReactSelect } from "../../../../app-common/components/input/custom.react.select";
 import {Store} from "../../../../api/model/store";
 import {useLoadList} from "../../../../api/hooks/use.load.list";
+import {notify} from "../../../../app-common/components/confirm/notification";
 
 interface CreateDepartmentProps {
   entity?: Department;
@@ -28,11 +29,8 @@ interface CreateDepartmentProps {
 
 const ValidationSchema = yup.object({
   name: yup.string().required(ValidationMessage.Required),
-  description: yup.string(),
-  store: yup.object({
-    label: yup.string(),
-    value: yup.string()
-  }).required(ValidationMessage.Required)
+  description: yup.string().required(ValidationMessage.Required),
+  store: yup.object().required(ValidationMessage.Required)
 }).required();
 
 export const CreateDepartment: FC<CreateDepartmentProps> = ({
@@ -93,14 +91,30 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
       onModalClose();
 
     } catch (exception: any) {
+      if (exception instanceof HttpException) {
+        if (exception.message) {
+          notify({
+            type: 'error',
+            description: exception.message
+          });
+        }
+      }
+
       if (exception instanceof UnprocessableEntityException) {
-        const e = await exception.response.json();
+        const e: ValidationResult = await exception.response.json();
         e.violations.forEach((item: ConstraintViolation) => {
           setError(item.propertyPath, {
             message: item.message,
             type: 'server'
           });
         });
+
+        if (e.errorMessage) {
+          notify({
+            type: 'error',
+            description: e.errorMessage
+          });
+        }
 
         return false;
       }
@@ -138,25 +152,13 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
           <div>
             <label htmlFor="name">Name</label>
             <Input {...register('name')} id="name" className="w-full" tabIndex={0} hasError={hasErrors(errors.name)}/>
-            {errors.name && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.name.message}
-                </Trans>
-              </div>
-            )}
+            {getErrors(errors.name)}
           </div>
 
           <div>
             <label htmlFor="description">Description</label>
             <Input {...register('description')} id="description" className="w-full" tabIndex={0} hasError={hasErrors(errors.description)}/>
-            {errors.description && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.description.message}
-                </Trans>
-              </div>
-            )}
+            {getErrors(errors.description)}
           </div>
 
           <div>
@@ -174,17 +176,12 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
                       value: item['@id']
                     }
                   })}
+                  className={getErrorClass(errors.store)}
                 />
               )}
             />
 
-            {errors.store && (
-              <div className="text-danger-500 text-sm">
-                <Trans>
-                  {errors.store.message}
-                </Trans>
-              </div>
-            )}
+            {getErrors(errors.store)}
           </div>
 
           <div>

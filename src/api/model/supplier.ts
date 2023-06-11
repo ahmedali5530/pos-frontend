@@ -1,5 +1,8 @@
 import {Store} from "./store";
 import {HydraId, HydraType} from "./hydra";
+import {Purchase} from "./purchase";
+import {PurchaseOrder} from "./purchase.order";
+import {SupplierPayment} from "./supplier.payment";
 
 export interface Supplier extends HydraId, HydraType{
   id: string;
@@ -11,4 +14,10 @@ export interface Supplier extends HydraId, HydraType{
   address?: string;
   stores: Store[];
   openingBalance?: number;
+  payments: SupplierPayment[];
+  purchases: Purchase[];
+  purchaseOrder: PurchaseOrder[];
+  outstanding: number;
+  purchaseTotal: number;
+  paid: number;
 }

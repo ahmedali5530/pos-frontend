@@ -1,5 +1,4 @@
 import React, {useState} from "react";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {DISCOUNT_LIST,} from "../../../../api/routing/routes/backend.app";
 import {useTranslation} from "react-i18next";
 import {createColumnHelper} from "@tanstack/react-table";
@@ -11,11 +10,13 @@ import {Discount} from "../../../../api/model/discount";
 import {useSelector} from "react-redux";
 import {getStore} from "../../../../duck/store/store.selector";
 import {CreateDiscount} from "./create.discount";
+import useApi from "../../../../api/hooks/use.api";
+import {HydraCollection} from "../../../../api/model/hydra";
 
 export const DiscountTypes = () => {
   const [operation, setOperation] = useState('create');
 
-  const useLoadHook = useLoadList<Discount>(DISCOUNT_LIST);
+  const useLoadHook = useApi<HydraCollection<Discount>>('discounts', DISCOUNT_LIST);
   const {fetchData} = useLoadHook;
   const store = useSelector(getStore);
   const [discount, setDiscount] = useState<Discount>();

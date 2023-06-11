@@ -15,6 +15,9 @@ import {Tax} from "../model/tax";
 import {PaymentType} from "../model/payment.type";
 import {Device} from "../model/device";
 import {Setting} from "../model/setting";
+import { message as AntMessage} from 'antd';
+import {useDispatch} from "react-redux";
+import {progressAction} from "../../duck/progress/progress.action";
 
 interface ReturnAction{
   load: () => void;
@@ -61,6 +64,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
   const [paymentTypesList, setPaymentTypesList] = useState<HomeProps['paymentTypesList']>(initialData);
   const [deviceList, setDeviceList] = useState<HomeProps['deviceList']>(initialData);
   const [settingList, setSettingList] = useState<HomeProps['settingList']>(initialData);
+  const dispatch = useDispatch();
 
   const loadProducts = async (offset = 1, limit = 100) => {
     const res = await jsonRequest(`${PRODUCT_LIST}?itemsPerPage=${limit}&page=${offset}`);
@@ -87,6 +91,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
   const loadData = async () => {
     const localList: HomeProps['list'] | null = await localforage.getItem('list');
     if (localList === null) {
+      dispatch(progressAction('Products'))
       try {
         await loadProducts();
       }catch (e) {
@@ -98,6 +103,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
 
     const localDiscountList: HomeProps['discountList'] | null = await localforage.getItem('discountList');
     if (localDiscountList === null) {
+      dispatch(progressAction('Discounts'))
       try {
         const discount = await jsonRequest(DISCOUNT_LIST);
         const discountList = await discount.json();
@@ -116,6 +122,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
 
     const localTaxList: HomeProps['taxList'] | null = await localforage.getItem('taxList');
     if (localTaxList === null) {
+      dispatch(progressAction('Taxes'))
       try {
         const taxList = await jsonRequest(TAX_LIST);
         const json = await taxList.json();
@@ -134,6 +141,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
 
     const localPaymentTypesList: HomeProps['paymentTypesList'] | null = await localforage.getItem('paymentTypesList');
     if (localPaymentTypesList === null) {
+      dispatch(progressAction('Payment types'))
       try {
         const paymentTypesList = await jsonRequest(PAYMENT_TYPE_LIST);
         const json = await paymentTypesList.json();
@@ -152,6 +160,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
 
     const localDeviceList: HomeProps['deviceList']|null = await localforage.getItem('deviceList');
     if (localDeviceList === null) {
+      dispatch(progressAction('Devices'))
       try {
         const deviceList = await jsonRequest(DEVICE_LIST);
         const json = await deviceList.json();
@@ -170,6 +179,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
 
     const localSettingList: HomeProps['settingList']|null = await localforage.getItem('settingList');
     if (localSettingList === null) {
+      dispatch(progressAction('Settings'))
       try {
         const settingList = await jsonRequest(SETTING_LIST);
         const json = await settingList.json();
@@ -185,6 +195,8 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
     } else {
       setSettingList(localSettingList);
     }
+
+    dispatch(progressAction('Done'))
   };
 
   useEffect(() => {

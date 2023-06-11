@@ -18,7 +18,6 @@ export const Checkbox = (props: InputProps) => {
     }
   }, [props.indeterminate, props.checked]);
 
-
   return (
     <input
       {...props}

@@ -33,6 +33,7 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
   added, latest, onQuantityChange, onPriceChange, onDiscountChange, deleteItem, subTotal,
   onCheckAll, onCheck, setAdded, cartItem, setCartItem, setCartItemType, cartItemType
 }) => {
+  const [q, setQ] = useState();
   const allChecked = useMemo(() => {
     return added.length > 0 && added.length === added.filter(item => item.checked).length
   }, [added]);
@@ -41,7 +42,7 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
     const checked = added.filter(item => item.checked).length;
     const nonChecked = added.filter(item => !item.checked).length;
 
-    return added.length > 0 && checked > 0 && nonChecked > 0 && checked !== nonChecked
+    return added.length > 0 && checked > 0 && nonChecked > 0 && added.length !== checked
   }, [added]);
 
   const updateCartItemType = useCallback((direction: 'left'|'right') => {
@@ -83,9 +84,6 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
   }, [cartItem, added]);
 
   Mousetrap.bind(['ctrl+up', 'ctrl+down', 'ctrl+left', 'ctrl+right'], function(e: KeyboardEvent){
-    e.preventDefault();
-    e.stopPropagation();
-
     //update quantity of last added item
     if(e.code === 'ArrowLeft' || e.code === 'ArrowRight'){
       updateCartItemType(e.code === 'ArrowLeft' ? 'left' : 'right');
@@ -97,8 +95,7 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
   });
 
   return (
-    <>
-      <div className="table w-full">
+    <div className="table w-full">
         <div className="table-header-group sticky top-0 z-10 bg-gray-200">
           <div className="table-row">
             <div className="table-cell p-2 w-[30px]">
@@ -111,6 +108,7 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
               />
             </div>
             <div className="table-cell p-2 text-left font-bold">Item</div>
+            <div className="table-cell p-2 text-center font-bold w-[80px]">Stock</div>
             <div className="table-cell p-2 text-center font-bold w-[180px]">QTY</div>
             <div className="table-cell p-2 text-center font-bold w-[90px]">Disc.</div>
             <div className="table-cell p-2 text-center font-bold w-[90px]">Taxes</div>
@@ -143,6 +141,7 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
               {added.length}
             </div>
             <div className="table-cell">items</div>
+            <div className="table-cell"></div>
             <div className="table-cell text-center p-2">
               {added.reduce((previous, item) => {
                 return parseFloat(item.quantity as unknown as string) + previous
@@ -157,6 +156,5 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
           </div>
         </div>
       </div>
-    </>
   );
 };

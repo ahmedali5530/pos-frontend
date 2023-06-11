@@ -18,6 +18,9 @@ import classNames from "classnames";
 import {KeyboardInput} from "../../../app-common/components/input/keyboard.input";
 import {getStore} from "../../../duck/store/store.selector";
 import {getTerminal} from "../../../duck/terminal/terminal.selector";
+import {HttpException, UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
+import {notify} from "../../../app-common/components/confirm/notification";
+import {ConstraintViolation, ValidationResult} from "../../../lib/validator/validation.result";
 
 interface TaxProps extends PropsWithChildren {
 
@@ -142,8 +145,28 @@ export const SaleClosing: FC<TaxProps> = (props) => {
       setHideCloseButton(false);
       setModal(false);
 
-    }catch (e){
-      throw e;
+    }catch (exception){
+      if (exception instanceof HttpException) {
+        if (exception.message) {
+          notify({
+            type: 'error',
+            description: exception.message
+          });
+        }
+      }
+
+      if (exception instanceof UnprocessableEntityException) {
+        const e: ValidationResult = await exception.response.json();
+        if (e.errorMessage) {
+          notify({
+            type: 'error',
+            description: e.errorMessage
+          });
+        }
+
+        return false;
+      }
+      throw exception;
     }finally {
       setSaving(false);
     }
@@ -175,7 +198,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
   };
 
   const cashInHand = useMemo(() => {
-    let cash = payments['cash'];
+    let cash = payments['cash'] ?? 0;
 
     return Number(watch('openingBalance')) + Number(watch('cashAdded')) - Number(watch('cashWithdrawn')) - expenses + cash;
   }, [payments, expenses, watch('openingBalance'), watch('cashAdded'), watch('cashWithdrawn')]);
@@ -296,30 +319,34 @@ export const SaleClosing: FC<TaxProps> = (props) => {
                   {cashInHand}
                 </td>
               </tr>
-              <tr>
-                <td colSpan={2}>
-                  {closing?.openingBalance !== null && (
-                    <div className="alert alert-warning">
-                      Click on Update button if you are only saving the closing.
-                    </div>
-                  )}
-                  <div className="flex gap-3 items-center justify-center">
-                    <Button onClick={() => {
-                      reset({
-                        ...getValues(),
-                        updateOnly: true
-                      });
-                    }} type="submit" variant="primary" tabIndex={0} disabled={saving}>
-                      {saving ? '...' : (closing?.openingBalance === null ? 'Start day' : 'Update')}
-                    </Button>
-                    {closing?.openingBalance !== null && (
-                      <Button type="submit" variant="primary" tabIndex={0} disabled={saving}>
-                        {saving ? '...' : 'Close day'}
-                      </Button>
-                    )}
+            </tbody>
+          </table>
+          <table className="table table-borderless table-fixed">
+            <tbody>
+            <tr>
+              <td colSpan={2}>
+                {closing?.openingBalance !== null && (
+                  <div className="alert alert-info">
+                    Click on Update button if you are only saving the closing.
                   </div>
-                </td>
-              </tr>
+                )}
+                <div className="flex gap-3 items-center justify-center">
+                  <Button onClick={() => {
+                    reset({
+                      ...getValues(),
+                      updateOnly: true
+                    });
+                  }} type="submit" variant="primary" tabIndex={0} disabled={saving}>
+                    {saving ? '...' : (closing?.openingBalance === null ? 'Start day' : 'Update')}
+                  </Button>
+                  {closing?.openingBalance !== null && (
+                    <Button type="submit" variant="primary" tabIndex={0} disabled={saving}>
+                      {saving ? '...' : 'Close day'}
+                    </Button>
+                  )}
+                </div>
+              </td>
+            </tr>
             </tbody>
           </table>
         </form>

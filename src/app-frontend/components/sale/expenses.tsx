@@ -9,9 +9,9 @@ import {fetchJson} from "../../../api/request/request";
 import {useForm} from "react-hook-form";
 import {Expense} from "../../../api/model/expense";
 import {EXPENSE_CREATE, EXPENSE_LIST} from "../../../api/routing/routes/backend.app";
-import {ConstraintViolation} from "../../../lib/validator/validation.result";
+import {ConstraintViolation, ValidationResult} from "../../../lib/validator/validation.result";
 import {Trans} from "react-i18next";
-import {UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
+import {HttpException, UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
 import {Loader} from "../../../app-common/components/loader/loader";
 import {Shortcut} from "../../../app-common/components/input/shortcut";
 import {useSelector} from "react-redux";
@@ -20,6 +20,7 @@ import {hasErrors} from "../../../lib/error/error";
 import {yupResolver} from "@hookform/resolvers/yup";
 import * as yup from 'yup';
 import {ValidationMessage} from "../../../api/model/validation";
+import {notify} from "../../../app-common/components/confirm/notification";
 
 interface ExpensesProps{
   onClose?: () => void;
@@ -100,14 +101,30 @@ export const Expenses: FC<ExpensesProps> = (props) => {
       loadExpenses(filters);
       createReset();
     } catch (exception: any) {
+      if (exception instanceof HttpException) {
+        if (exception.message) {
+          notify({
+            type: 'error',
+            description: exception.message
+          });
+        }
+      }
+
       if (exception instanceof UnprocessableEntityException) {
-        const e = await exception.response.json();
+        const e: ValidationResult = await exception.response.json();
         e.violations.forEach((item: ConstraintViolation) => {
           createSetError(item.propertyPath, {
             message: item.message,
             type: 'server'
           });
         });
+
+        if (e.errorMessage) {
+          notify({
+            type: 'error',
+            description: e.errorMessage
+          });
+        }
 
         return false;
       }

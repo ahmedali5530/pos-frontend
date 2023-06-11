@@ -1,4 +1,4 @@
-import { notification } from 'antd';
+import { notification} from 'antd';
 import {ReactNode} from "react";
 import {IconType} from "antd/es/notification/interface";
 
@@ -17,6 +17,7 @@ export const notify = ({
     description: description,
     type: type,
     onClick,
-    placement: 'bottomRight'
+    placement: 'bottomRight',
+    key: 'persistent'
   });
 };

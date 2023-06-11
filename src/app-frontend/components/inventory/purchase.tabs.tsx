@@ -4,7 +4,7 @@ import {Modal} from "../../../app-common/components/modal/modal";
 import {Tab, TabContent, TabControl, TabNav} from "../../../app-common/components/tabs/tabs";
 import {Suppliers} from "./supplier/suppliers";
 import {PurchaseOrders} from "./purchase-orders/purchase.orders";
-import {PreviousPurchases} from "./purchase/previous.purchases";
+import {Purchases} from "./purchase/purchases";
 
 interface Props extends PropsWithChildren{
 }
@@ -36,7 +36,7 @@ export const PurchaseTabs: FC<Props> = ({
                 <Tab isActive={isTabActive('suppliers')} onClick={() => setActiveTab('suppliers')}>Suppliers</Tab>
               </TabNav>
               <TabContent isActive={isTabActive('purchases')}>
-                <PreviousPurchases  />
+                <Purchases  />
               </TabContent>
               <TabContent isActive={isTabActive('purchase_orders')}>
                 <PurchaseOrders />

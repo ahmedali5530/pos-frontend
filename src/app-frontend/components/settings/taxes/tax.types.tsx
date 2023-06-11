@@ -1,5 +1,4 @@
 import React, {useState} from "react";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {TAX_LIST,} from "../../../../api/routing/routes/backend.app";
 import {useTranslation} from "react-i18next";
 import {createColumnHelper} from "@tanstack/react-table";
@@ -12,13 +11,15 @@ import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
 import {useSelector} from "react-redux";
 import {getStore} from "../../../../duck/store/store.selector";
 import {CreateTax} from "./create.tax";
+import useApi from "../../../../api/hooks/use.api";
+import {HydraCollection} from "../../../../api/model/hydra";
 
 export const TaxTypes = () => {
   const [operation, setOperation] = useState('create');
   const [tax, setTax] = useState<Tax>();
   const [modal, setModal] = useState(false);
 
-  const useLoadHook = useLoadList<Tax>(TAX_LIST);
+  const useLoadHook = useApi<HydraCollection<Tax>>('taxes', TAX_LIST);
   const {fetchData} = useLoadHook;
   const user = useSelector(getAuthorizedUser);
   const store = useSelector(getStore);

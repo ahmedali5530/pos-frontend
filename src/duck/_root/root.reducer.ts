@@ -7,6 +7,7 @@ import {storeReducer} from "../store/store.reducer";
 import {displayShortcutReducer, shortcutReducer} from "../shortcuts/shortcut.reducer";
 import {touchReducer} from "../touch/touch.reducer";
 import {terminalReducer} from "../terminal/terminal.reducer";
+import {progressReducer} from "../progress/progress.reducer";
 
 export const rootReducer = combineReducers<RootState>({
   auth: authReducer,
@@ -16,5 +17,6 @@ export const rootReducer = combineReducers<RootState>({
   shortcut: shortcutReducer,
   displayShortcut: displayShortcutReducer,
   touch: touchReducer,
-  terminal: terminalReducer
+  terminal: terminalReducer,
+  progress: progressReducer
 });

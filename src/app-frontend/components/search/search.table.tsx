@@ -121,7 +121,6 @@ export const SearchTable = (props: SearchTableProps) => {
     }
   }, []);
 
-
   return (
     <>
       <div {...getTableProps()} className="table">

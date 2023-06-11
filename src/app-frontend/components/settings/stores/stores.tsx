@@ -1,5 +1,4 @@
 import React, {useState} from "react";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {STORE_LIST,} from "../../../../api/routing/routes/backend.app";
 import {useTranslation} from "react-i18next";
 import {createColumnHelper} from "@tanstack/react-table";
@@ -9,13 +8,15 @@ import {faPencilAlt, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {TableComponent} from "../../../../app-common/components/table/table";
 import {Store} from "../../../../api/model/store";
 import {CreateStore} from "./create.store";
+import useApi from "../../../../api/hooks/use.api";
+import {HydraCollection} from "../../../../api/model/hydra";
 
 export const Stores = () => {
   const [operation, setOperation] = useState('create');
   const [store, setStore] = useState<Store>();
   const [modal, setModal] = useState(false);
 
-  const useLoadHook = useLoadList<Store>(STORE_LIST);
+  const useLoadHook = useApi<HydraCollection<Store>>('stores', STORE_LIST);
   const {fetchData} = useLoadHook;
 
   const {t} = useTranslation();

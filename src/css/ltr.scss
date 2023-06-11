@@ -196,9 +196,16 @@ a{
   &:disabled{
     @apply cursor-not-allowed;
   }
+  &.btn-flat{
+    border: none;
+    background: transparent;
+    &:disabled{
+      @apply bg-gray-100;
+    }
+  }
   &.btn-primary{
     @apply border-primary-500 text-primary-500 focus:outline-none
-    active:bg-primary-500 active:text-white focus:border-primary-500 hover:bg-primary-100;
+    active:bg-primary-500 active:text-white focus:border-primary-500 hover:bg-primary-100 focus:bg-primary-50;
     &:disabled{
       @apply bg-primary-100;
     }
@@ -208,7 +215,7 @@ a{
   }
   &.btn-danger{
     @apply border-danger-500 text-danger-500 focus:outline-none focus:border-danger-500
-    active:bg-danger-500 active:text-white hover:bg-danger-50;
+    active:bg-danger-500 active:text-white hover:bg-danger-50 focus:bg-danger-50;
     &:disabled{
       @apply bg-danger-100;
     }
@@ -218,7 +225,7 @@ a{
   }
   &.btn-secondary{
     @apply border-gray-500 text-gray-500 focus:outline-none focus:border-gray-500
-    active:bg-gray-500 active:text-white hover:bg-gray-50;
+    active:bg-gray-500 active:text-white hover:bg-gray-50 focus:bg-gray-50;
     &:disabled{
       @apply bg-gray-100;
     }
@@ -228,7 +235,7 @@ a{
   }
   &.btn-warning{
     @apply disabled:bg-warning-200 border-warning-500 text-warning-500 focus:outline-none
-    focus:border-warning-500 active:bg-warning-500 active:text-white hover:bg-warning-50;
+    focus:border-warning-500 active:bg-warning-500 active:text-white hover:bg-warning-50 focus:bg-warning-50;
     &:disabled{
       @apply bg-warning-100;
     }
@@ -238,7 +245,7 @@ a{
   }
   &.btn-success{
     @apply border-success-500 text-success-500 focus:outline-none
-    focus:border-success-500 active:bg-success-500 active:text-white hover:bg-success-50;
+    focus:border-success-500 active:bg-success-500 active:text-white hover:bg-success-50 focus:bg-success-50;
     &:disabled{
       @apply bg-success-100;
     }
@@ -304,6 +311,21 @@ a{
 .form-control:read-only{
   @apply bg-white-50;
 }
+
+.rs-__error{
+  .rs-__control{
+    @apply border-danger-500;
+
+    &:hover{
+      @apply border-danger-500;
+    }
+
+    &.rs-__control--is-focused{
+      @apply ring-danger-200;
+    }
+  }
+}
+
 .ReactModal__Body--open{
   overflow: hidden;
 }
@@ -313,7 +335,7 @@ a{
   overflow: auto;
 }
 .ReactModal__Content{
-  @apply relative bg-white w-[80%] m-auto rounded-lg shadow-2xl shadow-black/20 border border-gray-200;
+  @apply relative bg-white w-[80%] m-auto rounded-lg shadow-2xl shadow-black/20;
   transition: linear all 150ms;
 
   background-color: rgba(255, 255, 255, 0.1);
@@ -497,6 +519,9 @@ a{
   @apply inline-flex h-[32px] w-[32px] relative cursor-pointer rounded-lg focus:outline-none border-none
   appearance-none bg-white;
   box-shadow: 0 0 0 2px theme('colors.gray.300');
+  &:hover, &:focus{
+    box-shadow: 0 0 0 2px theme('colors.primary.500');
+  }
   &:checked:after{
     content: '';
     background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(0,149,255)" viewBox="0 0 40 40"><path d="m15.792 29.833-9.375-9.375 2-2 7.375 7.417 15.791-15.792 1.959 2Z"/></svg>');
@@ -575,7 +600,7 @@ a{
   background-color: rgba(255, 255, 255, 0.6);
 }
 .alert{
-  @apply p-3 border-4 border-t-0 border-b-0 border-r-0 mb-3 rounded-xl relative;
+  @apply p-3 border-2 mb-3 rounded-xl relative;
   padding-left: 38px;
 
   &:before{
@@ -589,33 +614,35 @@ a{
   }
 
   &.alert-danger{
-    @apply border-danger-500 bg-danger-50 text-danger-500;
+    @apply border-danger-500 text-danger-500;
     &:before{
       background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(244,63,94)" viewBox="0 0 512 512"><path d="M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0S0 114.6 0 256S114.6 512 256 512zm0-384c13.3 0 24 10.7 24 24V264c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24zm32 224c0 17.7-14.3 32-32 32s-32-14.3-32-32s14.3-32 32-32s32 14.3 32 32z"/></svg>');
     }
   }
   &.alert-success{
-    @apply border-success-500 bg-success-50 text-success-500;
+    @apply border-success-500 text-success-500;
     &:before{
       background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(16,185,129)" viewBox="0 0 512 512"><path d="M470.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L192 338.7 425.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>');
     }
   }
   &.alert-warning{
-    @apply border-warning-500 bg-warning-50 text-warning-500;
+    @apply border-warning-500 text-warning-500;
     &:before{
       background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(245,158,11)" viewBox="0 0 512 512"><path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24V296c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224c0-17.7-14.3-32-32-32s-32 14.3-32 32s14.3 32 32 32s32-14.3 32-32z"/></svg>');
     }
   }
   &.alert-primary{
-    @apply border-primary-500 bg-primary-50 text-primary-500;
+    @apply border-primary-500 text-primary-500;
     &:before {
       background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(0,149,255)" viewBox="0 0 512 512"><path d="M470.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L192 338.7 425.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>');
     }
   }
   &.alert-info{
-    @apply border-primary-500 bg-primary-50 text-primary-500;
+    @apply border-primary-500 text-primary-500;
     &:before{
-      background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(14,165,233)"><path d="M18 13v-2h4v2Zm1.2 7L16 17.6l1.2-1.6 3.2 2.4Zm-2-12L16 6.4 19.2 4l1.2 1.6ZM5 19v-4H4q-.825 0-1.412-.588Q2 13.825 2 13v-2q0-.825.588-1.413Q3.175 9 4 9h4l5-3v12l-5-3H7v4Zm9-3.65v-6.7q.675.6 1.088 1.463.412.862.412 1.887t-.412 1.887q-.413.863-1.088 1.463ZM4 11v2h4.55L11 14.45v-4.9L8.55 11Zm3.5 1Z"/></svg>');
+      background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(0, 149, 255)" viewBox="0 -960 960 960"><path d="M730-450v-60h150v60H730Zm50 290-121-90 36-48 121 90-36 48Zm-82-503-36-48 118-89 36 48-118 89ZM210-200v-160h-70q-24.75 0-42.375-17.625T80-420v-120q0-24.75 17.625-42.375T140-600h180l200-120v480L320-360h-50v160h-60Zm90-280Zm260 134v-268q27 24 43.5 58.5T620-480q0 41-16.5 75.5T560-346ZM140-540v120h196l124 74v-268l-124 74H140Z"/></svg>');
+      width: 20px;
+      height: 20px;
     }
   }
 }
@@ -653,26 +680,30 @@ a{
   @apply inline-flex justify-center items-center leading-5 rounded-lg px-3 py-2 align-middle h-[40px]
   bg-white border-2 border-primary-500 min-w-[40px] text-primary-500;
 }
-
 .input-group{
-  @apply flex;
-  > *, > .rs-__container > .rs-__control{
-    border-radius: 0;
+  position: relative;
+  display: flex;
+  //width: 100%;
+
+  >:not(:last-child), > .rs-__container:not(:last-child) > .rs-__control{
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
   }
-  > :first-child, > .rs-__container:first-child > .rs-__control{
-    @apply rounded-bl-lg rounded-tl-lg;
+  >:not(:first-child), >.rs-__container:not(:first-child) > .rs-__control{
+    margin-left: calc(2px * -1);
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
   }
-  > :last-child, > .rs-__container:last-child > .rs-__control{
-    @apply rounded-br-lg rounded-tr-lg;
+  .btn{
+    position: relative;
   }
-  //remove border-right except last element
-  > :not(:last-child), > .rs-__container .rs-__control:last-child{
-    border-right: none;
+  .input:focus,.form-control:focus, .rs-__control--is-focused{
+    z-index: 1;
   }
 }
+
 .switch{
   transition: ease-in-out all 150ms;
-
   @apply inline-flex items-center;
   label{
     @apply cursor-pointer;
@@ -683,6 +714,10 @@ a{
     @apply appearance-none;
     width: 60px;
     height: 40px;
+
+    &:hover, &:focus{
+      border: 2px solid theme('colors.primary.500');
+    }
 
     &::before{
       content: '';
