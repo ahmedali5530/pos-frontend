@@ -25,14 +25,15 @@ export const Stores = () => {
 
   const columns = [
     columnHelper.accessor('name', {
-      header: () => t('Name'),
+      header: ('Name'),
     }),
     columnHelper.accessor('location', {
-      header: () => t('Location'),
+      header: ('Location'),
     }),
     columnHelper.accessor('id', {
-      header: () => t('Actions'),
+      header: ('Actions'),
       enableSorting: false,
+      enableColumnFilter: false,
       cell: (info) => {
         return (
           <>

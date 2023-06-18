@@ -30,23 +30,26 @@ export const PaymentTypes = () => {
 
   const columns: any = [
     columnHelper.accessor('name', {
-      header: () => t('Name'),
+      header: ('Name'),
     }),
     columnHelper.accessor('type', {
-      header: () => t('Type'),
+      header: ('Type'),
     }),
     columnHelper.accessor('canHaveChangeDue', {
-      header: () => t('Can accept amount greater then total?'),
-      cell: info => info.getValue() ? 'Yes' : 'No'
+      header: ('Can accept amount greater then total?'),
+      cell: info => info.getValue() ? 'Yes' : 'No',
+      enableColumnFilter: false,
     }),
     columnHelper.accessor('stores', {
-      header: () => t('Stores'),
+      header: ('Stores'),
       enableSorting: false,
+      enableColumnFilter: false,
       cell: (info) => info.getValue().map(item => item.name).join(', ')
     }),
     columnHelper.accessor('id', {
-      header: () => t('Actions'),
+      header: ('Actions'),
       enableSorting: false,
+      enableColumnFilter: false,
       cell: (info) => {
         return (
           <>

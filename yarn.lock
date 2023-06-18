@@ -2172,17 +2172,17 @@
     "@tanstack/query-core" "4.29.7"
     use-sync-external-store "^1.2.0"
 
-"@tanstack/react-table@^8.5.5":
-  version "8.5.5"
-  resolved "https://registry.yarnpkg.com/@tanstack/react-table/-/react-table-8.5.5.tgz#061ec485f96e678aaf544d6ebac96b96e2902b92"
-  integrity sha512-3uE150rvw1ibx5veC69MA4eaeiDgGh1bIqAY4gp9SR5THNzGqM8KSGPLlgPjcr31jlHdXkU0NpzMeVwWC0NAxQ==
+"@tanstack/react-table@^8.9.2":
+  version "8.9.2"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-table/-/react-table-8.9.2.tgz#31b9e72387b888fca200d3397d11cc1baf7fa841"
+  integrity sha512-Irvw4wqVF9hhuYzmNrlae4IKdlmgSyoRWnApSLebvYzqHoi5tEsYzBj6YPd0hX78aB/L+4w/jgK2eBQVpGfThQ==
   dependencies:
-    "@tanstack/table-core" "8.5.5"
+    "@tanstack/table-core" "8.9.2"
 
-"@tanstack/table-core@8.5.5":
-  version "8.5.5"
-  resolved "https://registry.yarnpkg.com/@tanstack/table-core/-/table-core-8.5.5.tgz#ffb334244a8d7efa696b321661c5892cc2a69502"
-  integrity sha512-p5YBvhw+R3CIj/Wg4sZxe3Lsp1Fk1PATRFWTdKaADldG9XWiGDhr3e0IeyVkUoBwcJzf6paXzZK6gSb3++lSKA==
+"@tanstack/table-core@8.9.2":
+  version "8.9.2"
+  resolved "https://registry.yarnpkg.com/@tanstack/table-core/-/table-core-8.9.2.tgz#0402364a2a9692edf04e05ee6f385dfa27271da5"
+  integrity sha512-ajc0OF+karBAdaSz7OK09rCoAHB1XI1+wEhu+tDNMPc+XcO+dTlXXN/Vc0a8vym4kElvEjXEDd9c8Zfgt4bekA==
 
 "@testing-library/dom@^8.5.0":
   version "8.16.0"
@@ -2544,10 +2544,10 @@
   resolved "https://registry.yarnpkg.com/@types/react-speech-recognition/-/react-speech-recognition-3.9.0.tgz#645e5de99c0837cc928b607979cc6c66a01e64c3"
   integrity sha512-GstxYfAs4kFPPTQ3p2RU2NmRni5CnxUCHPioq4UytitootYa7iA4aEvXEXHH7S330kMcBY1MuhJ6CV696++0PQ==
 
-"@types/react-table@^7.7.12":
-  version "7.7.12"
-  resolved "https://registry.yarnpkg.com/@types/react-table/-/react-table-7.7.12.tgz#628011d3cb695b07c678704a61f2f1d5b8e567fd"
-  integrity sha512-bRUent+NR/WwtDGwI/BqhZ8XnHghwHw0HUKeohzB5xN3K2qKWYE5w19e7GCuOkL1CXD9Gi1HFy7TIm2AvgWUHg==
+"@types/react-table@^7.7.14":
+  version "7.7.14"
+  resolved "https://registry.yarnpkg.com/@types/react-table/-/react-table-7.7.14.tgz#b880f1ae140ed065bca2e21b3008ca1ebe71595a"
+  integrity sha512-TYrv7onCiakaG1uAu/UpQ9FojNEt/4/ht87EgJQaEGFoWV606ZLWUZAcUHzMxgc3v1mywP1cDyz3qB4ho3hWOw==
   dependencies:
     "@types/react" "*"
 

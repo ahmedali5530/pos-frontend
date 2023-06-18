@@ -25,25 +25,28 @@ export const Users = () => {
 
   const columns = [
     columnHelper.accessor('displayName', {
-      header: () => t('Name'),
+      header: ('Name'),
     }),
     columnHelper.accessor('username', {
-      header: () => t('Username'),
+      header: ('Username'),
     }),
     columnHelper.accessor('email', {
-      header: () => t('Email'),
+      header: ('Email'),
     }),
     columnHelper.accessor('roles', {
-      header: () => t('Roles'),
-      cell: info => info.getValue().join(', ')
+      header: ('Roles'),
+      cell: info => info.getValue().join(', '),
+      enableColumnFilter: false,
     }),
     columnHelper.accessor('stores', {
-      header: () => t('Stores'),
-      cell: info => info.getValue().map(item => item.name).join(', ')
+      header: ('Stores'),
+      cell: info => info.getValue().map(item => item.name).join(', '),
+      enableColumnFilter: false,
     }),
     columnHelper.accessor('id', {
-      header: () => t('Actions'),
+      header: ('Actions'),
       enableSorting: false,
+      enableColumnFilter: false,
       cell: (info) => {
         return (
           <>

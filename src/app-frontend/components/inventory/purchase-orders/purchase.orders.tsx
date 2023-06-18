@@ -12,6 +12,7 @@ import {PurchaseOrder} from "../../../../api/model/purchase.order";
 import {CreatePurchaseOrder} from "./create.purchase.order";
 import useApi from "../../../../api/hooks/use.api";
 import {HydraCollection} from "../../../../api/model/hydra";
+import { DateTime } from "luxon";
 
 export const PurchaseOrders = () => {
   const [operation, setOperation] = useState('create');
@@ -26,29 +27,28 @@ export const PurchaseOrders = () => {
   const columnHelper = createColumnHelper<PurchaseOrder>();
 
   const columns: any = [
-    columnHelper.accessor('id', {
-      header: () => t('ID'),
-    }),
     columnHelper.accessor('poNumber', {
-      header: () => t('PO Number'),
+      header: ('PO Number'),
     }),
-    columnHelper.accessor('supplier', {
-      header: () => t('Supplier'),
-      cell: info => info.getValue()?.name
+    columnHelper.accessor('supplier.name', {
+      header: ('Supplier'),
     }),
     columnHelper.accessor('createdAt', {
-      header: () => t('Created at'),
+      header: ('Created at'),
+      cell: info => DateTime.fromISO(info.getValue()).toFormat("yyyy-MM-dd")
     }),
     columnHelper.accessor('store', {
-      header: () => t('Store'),
+      header: ('Store'),
       enableSorting: false,
+      enableColumnFilter: false,
       cell: (info) => info.getValue()?.name
     })
   ];
 
   columns.push(columnHelper.accessor('id', {
-    header: () => t('Actions'),
+    header: ('Actions'),
     enableSorting: false,
+    enableColumnFilter: false,
     cell: (info) => {
       return (
         <>

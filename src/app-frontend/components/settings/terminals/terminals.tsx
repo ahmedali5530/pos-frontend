@@ -41,10 +41,11 @@ export const Terminals = () => {
 
   const columns = [
     columnHelper.accessor('code', {
-      header: () => t('Code'),
+      header: ('Code'),
     }),
     columnHelper.accessor('products', {
-      header: () => t('Products'),
+      header: ('Products'),
+      enableColumnFilter: false,
       cell: info => (
         <>
           {info.getValue().slice(0, 7).map(p => p.name).join(', ')}{' '}
@@ -60,11 +61,13 @@ export const Terminals = () => {
       )
     }),
     columnHelper.accessor('store', {
-      header: () => t('Store'),
+      header: ('Store'),
+      enableColumnFilter: false,
       cell: info => info.getValue()?.name
     }),
     columnHelper.accessor('id', {
-      header: () => t('Actions'),
+      header: ('Actions'),
+      enableColumnFilter: false,
       enableSorting: false,
       cell: (info) => {
         return (

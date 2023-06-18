@@ -29,50 +29,56 @@ export const Items = () => {
   const columnHelper = createColumnHelper<Product>();
 
   const columns: any[] = [
-    columnHelper.accessor('department', {
-      header: () => t('Department'),
-      cell: info => info.getValue()?.name
+    columnHelper.accessor('department.name', {
+      header: ('Department'),
     }),
     columnHelper.accessor('name', {
-      header: () => t('Name'),
+      header: ('Name'),
     }),
     columnHelper.accessor('barcode', {
-      header: () => t('Barcode'),
+      header: ('Barcode'),
     }),
     columnHelper.accessor('basePrice', {
-      header: () => t('Sale Price'),
+      header: ('Sale Price'),
     }),
     columnHelper.accessor('cost', {
-      header: () => t('Purchase Price'),
+      header: ('Purchase Price'),
     }),
     columnHelper.accessor('categories', {
-      header: () => t('Categories'),
+      id: 'categories.name',
+      header: ('Categories'),
       cell: info => info.getValue().map(item => item.name).join(', ')
     }),
     columnHelper.accessor('suppliers', {
-      header: () => t('Suppliers'),
+      id: 'suppliers.name',
+      header: ('Suppliers'),
       cell: info => info.getValue().map(item => item.name).join(', ')
     }),
     columnHelper.accessor('brands', {
-      header: () => t('Brands'),
+      id: 'brands.name',
+      header: ('Brands'),
       cell: info => info.getValue().map(item => item.name).join(', ')
     }),
     columnHelper.accessor('variants', {
-      header: () => t('Variants'),
+      header: ('Variants'),
       cell: info => `${info.getValue().length} variants`,
-      enableSorting: false
+      enableSorting: false,
+      enableColumnFilter: false,
     }),
     columnHelper.accessor('taxes', {
-      header: () => t('Taxes'),
+      id: 'taxes.name',
+      header: ('Taxes'),
       cell: info => info.getValue().map(item => `${item.name} ${item.rate}%`).join(', ')
     }),
     columnHelper.accessor('stores', {
-      header: () => t('Stores'),
-      cell: info => info.getValue().map(item => item.name).join(', ')
+      header: ('Stores'),
+      cell: info => info.getValue().map(item => item.name).join(', '),
+      enableColumnFilter: false,
     }),
     columnHelper.accessor('id', {
-      header: () => t('Actions'),
+      header: ('Actions'),
       enableSorting: false,
+      enableColumnFilter: false,
       cell: (info) => {
         return (
           <>
@@ -104,10 +110,8 @@ export const Items = () => {
         buttons={[
           {
             html: <ImportItems/>,
-            handler: () => {}
           },{
             html: <ExportItems/>,
-            handler: () => {}
           },
           {
             html: <Button variant="primary" onClick={() => {

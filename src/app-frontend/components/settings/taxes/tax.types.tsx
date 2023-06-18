@@ -30,19 +30,21 @@ export const TaxTypes = () => {
 
   const columns: any = [
     columnHelper.accessor('name', {
-      header: () => t('Name'),
+      header: ('Name'),
     }),
     columnHelper.accessor('rate', {
-      header: () => t('Rate'),
+      header: ('Rate'),
     }),
     columnHelper.accessor('stores', {
-      header: () => t('Stores'),
+      header: ('Stores'),
       enableSorting: false,
+      enableColumnFilter: false,
       cell: (info) => info.getValue().map(item => item.name).join(', ')
     }),
     columnHelper.accessor('id', {
-      header: () => t('Actions'),
+      header: ('Actions'),
       enableSorting: false,
+      enableColumnFilter: false,
       cell: (info) => {
         return (
           <>

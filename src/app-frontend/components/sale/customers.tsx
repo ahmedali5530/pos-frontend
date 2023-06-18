@@ -53,35 +53,35 @@ export const Customers: FC<Props> = ({
 
   const columns = [
     columnHelper.accessor('name', {
-      header: () => t('Name'),
-      enableSorting: false,
+      header: ('Name'),
     }),
     columnHelper.accessor('phone', {
-      header: () => t('Phone'),
-      enableSorting: false,
+      header: ('Phone'),
     }),
     columnHelper.accessor('cnic', {
-      header: () => t('CNIC Number'),
-      enableSorting: false,
+      header: ('CNIC Number'),
     }),
     columnHelper.accessor('openingBalance', {
-      header: () => t('Opening balance'),
+      header: ('Opening balance'),
     }),
     columnHelper.accessor('sale', {
-      header: () => t('Credit Sale'),
+      header: ('Credit Sale'),
       enableSorting: false,
+      enableColumnFilter: false
     }),
     columnHelper.accessor('paid', {
-      header: () => t('Payments'),
+      header: ('Payments'),
       enableSorting: false,
+      enableColumnFilter: false
     }),
     columnHelper.accessor('outstanding', {
-      header: () => t('Balance'),
+      header: ('Balance'),
       enableSorting: false,
+      enableColumnFilter: false
     }),
     columnHelper.accessor('id', {
       id: 'customerSelector',
-      header: () => t('Select'),
+      header: ('Select'),
       cell: info => (
         <>
           {customer?.id === info.getValue() ? (
@@ -104,10 +104,13 @@ export const Customers: FC<Props> = ({
         </>
       ),
       enableSorting: false,
+      enableColumnFilter: false
     }),
     columnHelper.accessor('id', {
-      header: () => t('Actions'),
+      id: 'actions',
+      header: ('Actions'),
       enableSorting: false,
+      enableColumnFilter: false,
       cell: (info) => {
         return (
           <>

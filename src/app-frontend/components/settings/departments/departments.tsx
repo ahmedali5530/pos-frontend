@@ -29,18 +29,20 @@ export const Departments = () => {
 
   const columns: any[] = [
     columnHelper.accessor('name', {
-      header: () => t('Name'),
+      header: ('Name'),
     }),
     columnHelper.accessor('description', {
-      header: () => t('Description'),
+      header: ('Description'),
     }),
     columnHelper.accessor('store', {
-      header: () => t('Store'),
-      cell: info => info.getValue()?.name
+      header: ('Store'),
+      cell: info => info.getValue()?.name,
+      enableColumnFilter: false,
     }),
     columnHelper.accessor('id', {
-      header: () => t('Actions'),
+      header: ('Actions'),
       enableSorting: false,
+      enableColumnFilter: false,
       cell: (info) => {
         return (
           <>

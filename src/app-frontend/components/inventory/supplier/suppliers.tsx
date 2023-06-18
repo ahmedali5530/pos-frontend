@@ -29,25 +29,27 @@ export const Suppliers = () => {
 
   const columns: any = [
     columnHelper.accessor('name', {
-      header: () => t('Name'),
+      header: ('Name'),
     }),
     columnHelper.accessor('phone', {
-      header: () => t('Phone'),
+      header: ('Phone'),
     }),
     columnHelper.accessor('email', {
-      header: () => t('Email'),
+      header: ('Email'),
     }),
     columnHelper.accessor('openingBalance', {
-      header: () => t('Opening balance'),
+      header: ('Opening balance'),
     }),
     columnHelper.accessor('stores', {
-      header: () => t('Stores'),
+      header: ('Stores'),
       enableSorting: false,
+      enableColumnFilter: false,
       cell: (info) => info.getValue().map(item => item.name).join(', ')
     }),
     columnHelper.accessor('id', {
-      header: () => t('Actions'),
+      header: ('Actions'),
       enableSorting: false,
+      enableColumnFilter: false,
       cell: (info) => {
         return (
           <>

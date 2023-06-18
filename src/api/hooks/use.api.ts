@@ -26,6 +26,7 @@ export interface UseApiResult<T = any> {
   handlePageSizeChange: (newPageSize: number) => void;
   fetchData: () => void;
   fetch: () => void;
+  resetFilters: () => void;
 }
 
 function useApi<T>(
@@ -88,6 +89,10 @@ function useApi<T>(
     ...useApiOptions,
   });
 
+  const resetFilters = () => {
+    setFilters({});
+    setPage(1);
+  }
 
   const handleFilterChange = (newFilters: Filters): void => {
     setFilters({...filters, ...newFilters});
@@ -128,7 +133,8 @@ function useApi<T>(
     handleSortChange, handleSortModeChange,
     handlePageChange, handlePageSizeChange,
     fetchData: refetch,
-    fetch: manualFetch
+    fetch: manualFetch,
+    resetFilters
   };
 }
 

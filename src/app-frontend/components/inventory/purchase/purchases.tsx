@@ -33,43 +33,44 @@ export const Purchases = () => {
 
   const columns: any = [
     columnHelper.accessor('purchaseNumber', {
-      header: () => t('Purchase number'),
+      header: ('Purchase number'),
       cell: info => <ViewPurchase purchase={info.row.original}>
         <FontAwesomeIcon icon={faEye} className="mr-2" />
         {info.getValue()}
       </ViewPurchase>
     }),
-    columnHelper.accessor('purchaseOrder', {
-      header: () => t('Purchase order'),
-      cell: (info) => info.getValue()?.poNumber
+    columnHelper.accessor('purchaseOrder.poNumber', {
+      header: ('Purchase order'),
     }),
-    columnHelper.accessor('supplier', {
-      header: () => t('Supplier'),
-      cell: (info) => info.getValue()?.name
+    columnHelper.accessor('supplier.name', {
+      header: ('Supplier'),
     }),
     columnHelper.accessor('purchaseMode', {
-      header: () => t('Purchase mode')
+      header: ('Purchase mode'),
+      enableColumnFilter: false,
     }),
     columnHelper.accessor('total', {
-      header: () => t('Purchase total'),
-      cell: info => withCurrency(info.getValue())
+      header: ('Purchase total'),
+      cell: info => withCurrency(info.getValue()),
+      enableColumnFilter: false,
     }),
-    columnHelper.accessor('paymentType', {
-      header: () => t('Payment type'),
-      cell: info => info.getValue()?.name
+    columnHelper.accessor('paymentType.name', {
+      header: ('Payment type'),
     }),
     columnHelper.accessor('createdAt', {
-      header: () => t('Created at'),
+      header: ('Created at'),
       cell: info => DateTime.fromISO(info.getValue()).toFormat("yyyy-MM-dd")
     }),
     columnHelper.accessor('store', {
-      header: () => t('Store'),
+      header: ('Store'),
       enableSorting: false,
+      enableColumnFilter: false,
       cell: (info) => info.getValue()?.name
     }),
     columnHelper.accessor('id', {
-      header: () => t('Actions'),
+      header: ('Actions'),
       enableSorting: false,
+      enableColumnFilter: false,
       cell: (info) => {
         return (
           <>

@@ -1,4 +1,5 @@
 import {
+  ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -7,26 +8,26 @@ import {
   SortingState,
   useReactTable
 } from "@tanstack/react-table";
-import React, {FC, ReactNode, useEffect, useMemo, useState} from "react";
-import {useTranslation} from "react-i18next";
+import React, { ChangeEventHandler, FC, ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import _ from "lodash";
 import {Loader} from "../loader/loader";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faRefresh} from "@fortawesome/free-solid-svg-icons";
+import { faClose, faRefresh, faSearch } from "@fortawesome/free-solid-svg-icons";
 import {UseApiResult} from "../../../api/hooks/use.api";
+import { Input } from "../input/input";
+import { ReactSelect } from "../input/custom.react.select";
+import { Controller, useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from 'yup'
+import { getErrorClass, hasErrors } from "../../../lib/error/error";
+import classNames from "classnames";
+import Highlighter from "react-highlight-words";
+
 
 interface ButtonProps {
   title?: ReactNode;
   html: ReactNode;
-  className?: string;
-  handler?: (
-    payload: any,
-    fetchData: () => void,
-    setLoading: (state: boolean) => void,
-    setRowSelect: (ids: {
-      [index: number]: boolean
-    }) => void
-  ) => void;
 }
 
 interface TableComponentProps {
@@ -42,6 +43,11 @@ interface TableComponentProps {
   globalSearch?: boolean;
 }
 
+interface ColumnFilter {
+  column: string;
+  value: any;
+}
+
 export const TableComponent: FC<TableComponentProps> = ({
   columns, sort, buttons, selectionButtons, loaderLineItems, useLoadList,
   globalSearch, loaderLines
@@ -50,15 +56,16 @@ export const TableComponent: FC<TableComponentProps> = ({
 
   const {
     handlePageChange,
-    handleFilterChange,
+    handleFilterChange, filters,
     handlePageSizeChange: handleLimitChange,
     handleSortChange, handleSortModeChange,
     data,
     isFetching: loading,
-    fetchData, fetch
+    fetchData, fetch,
+    resetFilters
   } = useLoadList;
 
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   // set initial sorting
   useEffect(() => {
@@ -81,7 +88,6 @@ export const TableComponent: FC<TableComponentProps> = ({
       pageSize: 10,
     });
   const [rowSelection, setRowSelection] = React.useState({});
-  const [globalFilter, setGlobalFilter] = React.useState('');
 
   const pagination = React.useMemo(
     () => ({
@@ -96,13 +102,6 @@ export const TableComponent: FC<TableComponentProps> = ({
     handleLimitChange!(pageSize);
   }, [pageIndex, pageSize]);
 
-  useEffect(() => {
-    handleFilterChange!({
-      q: globalFilter
-    });
-
-  }, [globalFilter]);
-
   const table = useReactTable({
     data: data?.["hydra:member"]||[],
     pageCount: Math.ceil(data?.["hydra:totalItems"] as number / pageSize),
@@ -111,10 +110,8 @@ export const TableComponent: FC<TableComponentProps> = ({
     state: {
       sorting,
       pagination,
-      rowSelection,
-      globalFilter
+      rowSelection
     },
-    onGlobalFilterChange: setGlobalFilter,
     onRowSelectionChange: setRowSelection,
     onPaginationChange: setPagination,
     onSortingChange: setSorting,
@@ -148,25 +145,99 @@ export const TableComponent: FC<TableComponentProps> = ({
     100: 100
   };
 
+  const [columnFilter, setColumnFilter] = useState({
+    column: '',
+    orgColumn: '',
+    value: ''
+  });
+
+  const {handleSubmit, control, setValue, formState: {errors}} = useForm({
+    resolver: yupResolver(yup.object({
+      column: yup.object({
+        label: yup.string(),
+        value: yup.string()
+      }).required(),
+      // value: yup.string().required()
+    }))
+  });
+  const filterOptions = table.getAllColumns().filter(column => column.getCanFilter()).map(column => ({label: column.columnDef.header, value: column.id}));
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if(!loaded) {
+      setValue('column', filterOptions[0]) // set first column as default
+      setLoaded(true)
+    }
+  }, [table.getAllColumns()])
+
+  const handleColumnFilter = (values: any) => {
+    if(filters[values.column.value] === values.value){
+      fetchData();
+    }else {
+      handleFilterChange({
+        ...filters,
+        [columnFilter.column]: undefined, // remove previous filter
+        [(values.column.value).replace('_', '.')]: values.value // replace _ with . to match the filters with API Platform
+      });
+
+      setColumnFilter({
+        column: values.column.value.replace('_', '.'),
+        orgColumn: values.column.value,
+        value: values.value
+      });
+    }
+  }
+
   return (
     <>
-      <div className="grid my-5 grid-cols-12 g-0">
-        {(globalSearch === undefined || globalSearch) && (
-          <div className="col-span-3">
-            <DebouncedInput
-              value={globalFilter ?? ''}
-              onChange={value => {
-                setGlobalFilter(String(value))
-              }}
-              className="input w-full search-field"
-              placeholder={t('Search in all columns') + '...'}
-              type="search"
+      <div className="my-5 flex justify-between">
+        <div className="inline-flex justify-start">
+          <form className="input-group" onSubmit={handleSubmit(handleColumnFilter)}>
+            <Controller
+              render={({field}) => (
+                <Input
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Search..."
+                  hasError={hasErrors(_.get(errors.value, 'message'))}
+                  type="search"
+                  className="w-72"
+                />
+              )}
+              name="value"
+              control={control}
             />
-          </div>
-        )}
-        <div className="col-span-9 flex justify-end">
+
+            <Controller
+              name="column"
+              render={({field}) => (
+                <ReactSelect
+                  onChange={field.onChange}
+                  options={filterOptions}
+                  className={
+                    classNames(
+                      "rs-__container w-36",
+                      getErrorClass(_.get(errors.column, 'message'))
+                    )
+                  }
+                  value={field.value}
+                />
+              )}
+              control={control}
+            />
+            <button className="btn btn-primary w-12" type="submit">
+              <FontAwesomeIcon icon={faSearch} />
+            </button>
+            {Object.keys(filters).length > 0 && (
+              <button className="btn btn-danger w-12" type="button" onClick={resetFilters}>
+                <FontAwesomeIcon icon={faClose} />
+              </button>
+            )}
+          </form>
+        </div>
+        <div className="inline-flex justify-end">
           <div className="input-group">
-            <button className="btn btn-secondary" onClick={fetchData}>
+            <button className="btn btn-secondary w-12" onClick={fetchData}>
               <FontAwesomeIcon icon={faRefresh}/>
             </button>
             {Object.keys(rowSelection).length > 0 && (
@@ -308,33 +379,3 @@ export const TableComponent: FC<TableComponentProps> = ({
     </>
   );
 };
-
-// A debounced input react component
-export const DebouncedInput = ({
-  value: initialValue,
-  onChange,
-  debounce = 500,
-  ...props
-}: {
-  value: string | number
-  onChange: (value: string | number) => void
-  debounce?: number
-} & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'>) => {
-  const [value, setValue] = React.useState(initialValue)
-
-  React.useEffect(() => {
-    setValue(initialValue)
-  }, [initialValue])
-
-  React.useEffect(() => {
-    const timeout = setTimeout(() => {
-      onChange(value)
-    }, debounce)
-
-    return () => clearTimeout(timeout)
-  }, [value])
-
-  return (
-    <input {...props} value={value} onChange={e => setValue(e.target.value)}/>
-  )
-}

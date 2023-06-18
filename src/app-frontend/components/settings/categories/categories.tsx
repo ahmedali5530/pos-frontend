@@ -29,38 +29,36 @@ export const Categories = () => {
 
   const columns: any[] = [
     columnHelper.accessor('name', {
-      header: () => t('Name'),
+      header: ('Name'),
+    }),
+    columnHelper.accessor('stores', {
+      header: ('Stores'),
+      cell: info => info.getValue().map(item => item.name).join(', '),
+      enableColumnFilter: false,
+    }),
+    columnHelper.accessor('id', {
+      header: ('Actions'),
+      enableSorting: false,
+      enableColumnFilter: false,
+      cell: (info) => {
+        return (
+          <>
+            <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
+              setCategory(info.row.original);
+              setOperation('update');
+              setModal(true);
+            }} tabIndex={-1}>
+              <FontAwesomeIcon icon={faPencilAlt}/>
+            </Button>
+            <span className="mx-2 text-gray-300">|</span>
+            <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
+              <FontAwesomeIcon icon={faTrash}/>
+            </Button>
+          </>
+        )
+      }
     })
   ];
-
-  // if(user?.roles.includes('ROLE_ADMIN')) {
-  columns.push(columnHelper.accessor('stores', {
-    header: () => t('Stores'),
-    cell: info => info.getValue().map(item => item.name).join(', ')
-  }));
-  // }
-
-  columns.push(columnHelper.accessor('id', {
-    header: () => t('Actions'),
-    enableSorting: false,
-    cell: (info) => {
-      return (
-        <>
-          <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
-            setCategory(info.row.original);
-            setOperation('update');
-            setModal(true);
-          }} tabIndex={-1}>
-            <FontAwesomeIcon icon={faPencilAlt}/>
-          </Button>
-          <span className="mx-2 text-gray-300">|</span>
-          <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
-            <FontAwesomeIcon icon={faTrash}/>
-          </Button>
-        </>
-      )
-    }
-  }));
 
   return (
     <>
