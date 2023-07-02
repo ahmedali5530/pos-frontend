@@ -72,6 +72,7 @@ export const Users = () => {
       <TableComponent
         columns={columns}
         useLoadList={useLoadHook}
+        loaderLineItems={6}
         buttons={[{
           html: <Button variant="primary" onClick={() => {
             setModal(true);

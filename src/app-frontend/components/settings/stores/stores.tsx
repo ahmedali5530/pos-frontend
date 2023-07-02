@@ -59,7 +59,7 @@ export const Stores = () => {
       <TableComponent
         columns={columns}
         useLoadList={useLoadHook}
-        loaderLineItems={6}
+        loaderLineItems={3}
         buttons={[{
           html: <Button variant="primary" onClick={() => {
             setModal(true);

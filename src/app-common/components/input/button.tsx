@@ -4,7 +4,7 @@ import classNames from "classnames";
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: "lg" | "xl" | "sm"
   active?: boolean;
-  variant?: string;
+  variant?: 'primary'|'secondary'|'danger'|'warning'|'success';
 }
 
 export const Button = (props: ButtonProps) => {

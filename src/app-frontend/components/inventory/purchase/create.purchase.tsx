@@ -173,7 +173,6 @@ export const CreatePurchase: FC<PurchaseProps> = ({
             cost: purchaseItem.purchasePrice,
             comments: purchaseItem.comments,
             variants: purchaseItem.variants.map(variant => ({
-              attributeName: variant.variant.attributeName,
               attributeValue: variant.variant.attributeValue,
               id: variant['@id'],
               cost: variant.purchasePrice,
@@ -201,14 +200,16 @@ export const CreatePurchase: FC<PurchaseProps> = ({
         }
 
         if (values.items) {
-          values.items = values.items.map((item: SelectedItem) => {
+          values.items = values.items.map((item: any) => {
             return {
               item: item.item["@id"],
               quantity: item.quantity,
+              quantityRequested: Number(item.quantityRequested).toString(),
               purchasePrice: item.cost.toString(),
               comments: item.comments,
               purchaseUnit: item.item.purchaseUnit,
-              variants: item.variants.map(variant => ({
+              variants: item.variants.map((variant: any) => ({
+                ...variant,
                 variant: variant['@id'],
                 quantity: variant.quantity,
                 purchasePrice: variant.cost.toString(),
@@ -223,16 +224,17 @@ export const CreatePurchase: FC<PurchaseProps> = ({
         values.store = `/api/stores/${store?.id}`;
 
         if (values.items) {
-          values.items = values.items.map((item: SelectedItem) => {
+          values.items = values.items.map((item: any) => {
             return {
               item: item.item["@id"],
               quantity: item.quantity,
+              quantityRequested: Number(item.quantityRequested).toString(),
               purchasePrice: item.cost.toString(),
               comments: item.comments,
               purchaseUnit: item.item.purchaseUnit,
-              variants: item.variants.map(variant => ({
-                variant: variant['@id'],
-                quantity: variant.quantity,
+              variants: item.variants.map((variant: any) => ({
+                ...variant,
+                quantity: variant.quantity.toString(),
                 purchasePrice: variant.cost.toString(),
               }))
             };
@@ -328,19 +330,30 @@ export const CreatePurchase: FC<PurchaseProps> = ({
 
   const onPurchaseOrderChange = useCallback((purchaseOrder: PurchaseOrder | null) => {
     if (purchaseOrder !== null) {
-      // clear items before adding new
+      // clear items before adding new from purchase order
       setValue('items', []);
 
       purchaseOrder.items.forEach((item: PurchaseOrderItem) => {
-        append({
+        const data = {
           item: item.item,
+          purchaseUnit: item.unit,
           quantityRequested: item.quantity,
           quantity: item.quantity,
           comments: item.comments,
           cost: item?.price || 0,
           createdAt: null,
-          variants: []
-        })
+          variants: item.variants.map(variant => ({
+            '@id': variant['@id'],
+            attributeValue: variant.variant.attributeValue,
+            quantity: variant.quantity,
+            cost: variant.purchasePrice,
+            purchaseUnit: variant.purchaseUnit,
+            variant: variant.variant['@id'],
+            quantityRequested: variant.quantity,
+          }))
+        };
+
+        append(data)
       });
     } else {
       // clear items if purchase order is not selected
@@ -360,7 +373,8 @@ export const CreatePurchase: FC<PurchaseProps> = ({
           comments: '',
           cost: item?.cost || 0,
           createdAt: null,
-          variants: item?.variants
+          variants: item?.variants,
+          purchaseUnit: item.purchaseUnit
         });
       })
   }
@@ -628,7 +642,8 @@ export const CreatePurchase: FC<PurchaseProps> = ({
               <ItemRow
                 item={item}
                 register={register}
-                index={index} po={po}
+                index={index}
+                po={po}
                 remove={remove}
                 lineTotal={lineTotal}
                 variantTotal={variantTotal}
@@ -642,9 +657,7 @@ export const CreatePurchase: FC<PurchaseProps> = ({
               )
             }>
               <div className="p-3 bg-gray-200 font-bold">{fields.length}</div>
-              {po && (
-                <div className="p-3 bg-gray-200 font-bold">{totalQuantityRequested}</div>
-              )}
+              {po && <div className="p-3 bg-gray-200 font-bold">{totalQuantityRequested}</div>}
               <div className="p-3 bg-gray-200 font-bold">{totalQuantity}</div>
               <div></div>
               <div className="p-3 bg-gray-200 font-bold">{totalCost}</div>
@@ -749,16 +762,26 @@ const ItemRow: FC<ItemRowProps> = ({
           {item.item.name}
         </div>
         {po && (
-          <div className="inline-flex items-center">{item.quantityRequested}</div>
-        )}
-        <div>
           <Input
             type="number"
             className="form-control w-full"
-            {...register(`items.${index}.quantity`)}
-            defaultValue={item.quantity}
-            selectable={true}
+            {...register(`items.${index}.quantityRequested`)}
+            defaultValue={item.quantityRequested}
+            readOnly={true}
           />
+        )}
+        <div>
+          <div className="input-group">
+            <Input
+              type="number"
+              className="form-control w-full"
+              {...register(`items.${index}.quantity`)}
+              defaultValue={item.quantity}
+              selectable={true}
+            />
+            <span className="input-addon">{item.purchaseUnit}</span>
+          </div>
+
         </div>
         <div>
           <Input
@@ -801,7 +824,7 @@ const ItemRow: FC<ItemRowProps> = ({
               <div className="font-bold">Remove variant?</div>
             </div>
           )}
-          {item.variants.map((variant: ProductVariant, variantIndex: number) => (
+          {item.variants.map((variant: any, variantIndex: number) => (
             <div className="grid grid-cols-5 gap-3 mb-1 px-5 hover:bg-gray-200">
               <div className="inline-flex items-center">{variant.attributeValue}</div>
               <div>
@@ -810,19 +833,22 @@ const ItemRow: FC<ItemRowProps> = ({
                 <Input
                   type="number"
                   className="form-control w-full"
-                  {...register(`items.${index}.variants.${variantIndex}.cost`, {valueAsNumber: true})}
+                  {...register(`items.${index}.variants.${variantIndex}.cost`)}
                   defaultValue={variant.price || 0}
                   selectable={true}
                 />
               </div>
               <div>
-                <Input
-                  type="number"
-                  className="form-control w-full"
-                  {...register(`items.${index}.variants.${variantIndex}.quantity`)}
-                  defaultValue={1}
-                  selectable={true}
-                />
+                <div className="input-group">
+                  <Input
+                    type="number"
+                    className="form-control w-full"
+                    {...register(`items.${index}.variants.${variantIndex}.quantity`)}
+                    defaultValue={variant.quantity || 1}
+                    selectable={true}
+                  />
+                  <span className="input-addon">{variant.purchaseUnit}</span>
+                </div>
               </div>
               <div className="inline-flex items-center">
                 {variantTotal(index, variantIndex)}
@@ -830,7 +856,7 @@ const ItemRow: FC<ItemRowProps> = ({
               <div className="inline-flex items-center">
                 <ConfirmAlert
                   onConfirm={() => removeVariant(index, variantIndex)}
-                  title={`Remove ${item.item.name} > ${variant.attributeName}?`}
+                  title={`Remove ${item.item.name} > ${variant.attributeValue}?`}
                   confirmText="Remove"
                 >
                   <button className="btn btn-danger" type="button">

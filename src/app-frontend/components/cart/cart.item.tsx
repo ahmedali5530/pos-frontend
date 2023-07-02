@@ -80,7 +80,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
           )}
         </label>
       </div>
-      <div className="table-cell p-1 text-center">{Number(item.item.quantity)}</div>
+      <div className="table-cell p-1 text-center">{Number(item.stock)}</div>
       <div className="table-cell p-1">
         <div className="flex justify-center">
           <div className="input-group">

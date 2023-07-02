@@ -78,7 +78,7 @@ export const PurchaseOrders = () => {
         params={{
           store: store?.id
         }}
-        loaderLineItems={4}
+        loaderLineItems={5}
         buttons={[{
           html: <Button variant="primary" onClick={() => {
             setAddModal(true);

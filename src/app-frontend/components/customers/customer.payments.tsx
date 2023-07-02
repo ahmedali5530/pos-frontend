@@ -11,7 +11,7 @@ import {fetchJson} from "../../../api/request/request";
 import classNames from "classnames";
 import * as _ from 'lodash';
 import {OrderPayment} from "../../../api/model/order.payment";
-import {ViewOrder} from "./view.order";
+import {ViewOrder} from "../sale/view.order";
 import {CUSTOMER_PAYMENT_CREATE} from "../../../api/routing/routes/backend.app";
 import {ConstraintViolation, ValidationResult} from "../../../lib/validator/validation.result";
 import {Trans} from "react-i18next";

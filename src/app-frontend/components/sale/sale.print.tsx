@@ -55,7 +55,7 @@ export const SalePrint: FC<SalePrintProps> = (props) => {
             <form className="mt-3">
               <div className="input-group w-full">
                 <Input placeholder="Enter comma separated emails"/>
-                <Button variant="primary">Send</Button>
+                <Button variant="primary" type="button">Send</Button>
               </div>
             </form>
           )}

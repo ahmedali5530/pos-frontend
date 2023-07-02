@@ -81,6 +81,8 @@ export const Customers: FC<Props> = ({
     }),
     columnHelper.accessor('id', {
       id: 'customerSelector',
+      enableSorting: false,
+      enableColumnFilter: false,
       header: ('Select'),
       cell: info => (
         <>
@@ -102,9 +104,7 @@ export const Customers: FC<Props> = ({
             </Button>
           )}
         </>
-      ),
-      enableSorting: false,
-      enableColumnFilter: false
+      )
     }),
     columnHelper.accessor('id', {
       id: 'actions',
@@ -283,6 +283,7 @@ export const Customers: FC<Props> = ({
         <TableComponent
           columns={columns}
           useLoadList={useLoadHook}
+          loaderLineItems={9}
           // setFilters={mergeFilters}
         />
       </Modal>

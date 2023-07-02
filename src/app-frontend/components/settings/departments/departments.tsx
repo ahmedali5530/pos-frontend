@@ -71,7 +71,7 @@ export const Departments = () => {
         params={{
           store: store?.id
         }}
-        loaderLineItems={3}
+        loaderLineItems={4}
         buttons={[{
           html: <Button variant="primary" onClick={() => {
             setModal(true);

@@ -44,6 +44,7 @@ import {CreateTax} from "../taxes/create.tax";
 import {CreateCategory} from "../categories/create.category";
 import {CreateSupplier} from "../../inventory/supplier/create.supplier";
 import {CreateBrand} from "../brands/create.brand";
+import { Switch } from "../../../../app-common/components/input/switch";
 
 interface ItemsCreateProps {
   entity?: Product;
@@ -51,18 +52,6 @@ interface ItemsCreateProps {
   addModal: boolean;
   onClose?: () => void;
 }
-
-export const submitProductVariant = async (token: Omit<ProductVariant, 'id'>) => {
-  try {
-    let response = await jsonRequest(PRODUCT_VARIANT, {
-      method: 'POST',
-      body: JSON.stringify(token)
-    });
-    return await response.json();
-  } catch (e) {
-    // throw e;
-  }
-};
 
 const ValidationSchema = yup.object({
   department: yup.object().required(ValidationMessage.Required),
@@ -87,7 +76,7 @@ export const CreateItem = ({
     resolver: yupResolver(ValidationSchema)
   });
 
-  const {register, handleSubmit, setError, formState: {errors}, reset, getValues, control} = useFormHook;
+  const {register, handleSubmit, setError, formState: {errors}, reset, getValues, control, watch} = useFormHook;
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
 
@@ -103,8 +92,18 @@ export const CreateItem = ({
       if (values.id) {
         method = 'PUT';
         url = PRODUCT_GET.replace(':id', values.id);
+        if (values.variants) {
+          values.variants = values.variants.map((variant: any) => ({
+            ...variant
+          }));
+        }
       } else {
         delete values.id;
+        if (values.variants) {
+          values.variants = values.variants.map((variant: any) => ({
+            ...variant
+          }));
+        }
       }
 
       if (values.categories) {
@@ -131,37 +130,14 @@ export const CreateItem = ({
         values.barcode = values.barcode.toString();
       }
 
-      let variants: string[] = [];
-      let loopItems: any[] = [];
-      if (values.variants) {
-        values.variants.forEach((token: ProductVariant) => {
-          loopItems.push(submitProductVariant(token));
-        });
-      }
-
-      await Promise.all(loopItems).then(tValues => {
-        tValues.forEach((item: ProductVariant) => {
-          variants.push(item['@id'] as string);
-        });
-
-        values.variants = variants;
-      });
-
-      if (variants.length === 0) {
-        values.variants = [];
-      }
-
       await fetchJson(url, {
         method: method,
         body: JSON.stringify({
           ...values,
-          purchaseUnit: 'Unit',
-          saleUnit: 'Unit',
           baseQuantity: 1,
-          quantity: '1000',
           isAvailable: true,
           isActive: true,
-          prices: []
+          prices: [],
         })
       });
 
@@ -223,14 +199,6 @@ export const CreateItem = ({
   const [taxModal, setTaxModal] = useState(false);
 
   useEffect(() => {
-    // loadCategories();
-    // loadSuppliers();
-    // loadBrands();
-    // loadDepartments();
-    // loadTaxes();
-  }, []);
-
-  useEffect(() => {
     if (entity) {
       reset({
         ...entity,
@@ -252,7 +220,7 @@ export const CreateItem = ({
         })),
         department: {
           label: entity?.department?.name,
-          value: entity?.department?.id
+          value: entity?.department?.['@id']
         },
         taxes: entity.taxes.map(item => ({
           label: `${item.name} ${item.rate}%`,
@@ -287,7 +255,8 @@ export const CreateItem = ({
       stores: [],
       department: null,
       groups: [],
-      taxes: []
+      taxes: [],
+      manageInventory: false
     });
   };
 
@@ -402,9 +371,9 @@ export const CreateItem = ({
             <div>
               <label htmlFor="cost">Purchase price</label>
               <div className="input-group">
-            <span className="input-addon">
-              {withCurrency(undefined)}
-            </span>
+              <span className="input-addon">
+                {withCurrency(undefined)}
+              </span>
                 <Input {...register('cost')} id="cost" className={classNames(
                   "w-full"
                 )} hasError={hasErrors(errors.cost)}/>
@@ -418,6 +387,30 @@ export const CreateItem = ({
               )} hasError={hasErrors(errors.purchaseUnit)}/>
 
               {getErrors(errors.purchaseUnit)}
+            </div>
+            <div className="col-span-4"></div>
+            <div>
+              <label className="w-full block">&nbsp;</label>
+              <Controller
+                control={control}
+                name="manageInventory"
+                render={(props) => (
+                  <Switch
+                    checked={props.field.value}
+                    onChange={props.field.onChange}
+                  >
+                    Manage inventory?
+                  </Switch>
+                )}
+              />
+              {getErrors(errors.manageInventory)}
+            </div>
+            <div>
+              <label htmlFor="quantity">Opening Quantity</label>
+              <Input {...register('quantity')} id="quantity" className={classNames(
+                "w-full"
+              )} hasError={hasErrors(errors.quantity)} disabled={!watch('manageInventory')}/>
+              {getErrors(errors.quantity)}
             </div>
             <div className="col-span-4"></div>
             <div>

@@ -45,7 +45,7 @@ export const ProductVariant = ({
   id, useForm, index, remove
 }: ProductVariantProps) => {
   return (
-    <div className="grid grid-cols-4 my-5 gap-3" key={id}>
+    <div className="grid grid-cols-5 my-5 gap-3" key={id}>
       <div>
         <label>Variant</label>
         <Controller
@@ -64,6 +64,16 @@ export const ProductVariant = ({
           )}
           control={useForm.control}
           name={`variants.${index}.price`}
+        />
+      </div>
+      <div>
+        <label>Quantity</label>
+        <Controller
+          render={(props) => (
+            <Input onChange={props.field.onChange} value={props.field.value} className="w-full"/>
+          )}
+          control={useForm.control}
+          name={`variants.${index}.quantity`}
         />
       </div>
       <div>

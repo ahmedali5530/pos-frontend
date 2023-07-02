@@ -151,7 +151,7 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
             <div className="table-cell"></div>
             <div className="table-cell"></div>
             <div className="table-cell text-right p-2">
-              {subTotal}
+              {Number(subTotal).toFixed(2)}
             </div>
           </div>
         </div>

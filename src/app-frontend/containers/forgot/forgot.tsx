@@ -112,7 +112,7 @@ export const ForgotPassword = () => {
               <div className="flex flex-row justify-between">
                 <button type="submit" disabled={isLoading}
                         className="w-100 btn btn-primary">{('Reset')}</button>
-                <Link to={LOGIN}>{('Login')}</Link>
+                <Link to={LOGIN} className="text-white">{('Login')}</Link>
               </div>
             </form>
           </div>

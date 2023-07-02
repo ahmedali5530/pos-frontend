@@ -141,7 +141,7 @@ const Login = () => {
               <h5 className="card-title text-center pb-0 fs-4">{t('Login to Your Account')}</h5>
             </div>
             {errorMessage !== undefined && (
-              <div className="alert alert-danger mb-3">{errorMessage}</div>
+              <div className="alert alert-danger mb-3 bg-danger-50">{errorMessage}</div>
             )}
             <form onSubmit={handleSubmit(submitForm)} className="flex flex-col gap-5">
               <div>
@@ -183,7 +183,7 @@ const Login = () => {
                 <button type="submit" disabled={isLoading} className="w-full btn btn-primary">Login</button>
               </div>
               <div className="col-12 mt-3 d-flex justify-content-between">
-                <Link to={FORGOT_PASSWORD}>{t('Forgot Password')}?</Link>
+                <Link to={FORGOT_PASSWORD} className="text-white">{t('Forgot Password')}?</Link>
               </div>
             </form>
           </div>

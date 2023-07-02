@@ -1,7 +1,7 @@
 import React, {FC, PropsWithChildren, useMemo} from "react";
 import {Tax} from "../../../api/model/tax";
 import {Discount, DiscountRate} from "../../../api/model/discount";
-import {Customers} from "../sale/customers";
+import {Customers} from "../customers/customers";
 import {Customer} from "../../../api/model/customer";
 import {ApplyDiscount} from "../sale/apply.discount";
 import {CartItem} from "../../../api/model/cart.item";

@@ -13,6 +13,7 @@ import {CreateSupplier} from "./create.supplier";
 import {SupplierLedger} from "./supplier.ledger";
 import useApi from "../../../../api/hooks/use.api";
 import {HydraCollection} from "../../../../api/model/hydra";
+import { withCurrency } from "../../../../lib/currency/currency";
 
 export const Suppliers = () => {
   const [operation, setOperation] = useState('create');
@@ -39,6 +40,7 @@ export const Suppliers = () => {
     }),
     columnHelper.accessor('openingBalance', {
       header: ('Opening balance'),
+      cell: info => withCurrency(info.getValue())
     }),
     columnHelper.accessor('stores', {
       header: ('Stores'),
@@ -80,7 +82,7 @@ export const Suppliers = () => {
         params={{
           store: store?.id
         }}
-        loaderLineItems={4}
+        loaderLineItems={6}
         buttons={[{
           html: <Button variant="primary" onClick={() => {
             setModal(true);

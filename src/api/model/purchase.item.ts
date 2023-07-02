@@ -6,6 +6,7 @@ export interface PurchaseItem extends HydraId, HydraType {
   id: number;
   item: Product;
   quantity: string;
+  quantityRequested?: string;
   purchasePrice: string;
   purchaseUnit?: string;
   barcode?: string;
@@ -17,6 +18,7 @@ export interface PurchaseItemVariant extends HydraId, HydraType{
   id: number;
   variant: ProductVariant;
   quantity: string;
+  quantityRequested?: string;
   purchasePrice: string;
   purchaseUnit?: string;
   barcode?: string;

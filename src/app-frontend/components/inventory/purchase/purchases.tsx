@@ -48,11 +48,13 @@ export const Purchases = () => {
     columnHelper.accessor('purchaseMode', {
       header: ('Purchase mode'),
       enableColumnFilter: false,
+      enableSorting: false
     }),
     columnHelper.accessor('total', {
       header: ('Purchase total'),
       cell: info => withCurrency(info.getValue()),
       enableColumnFilter: false,
+      enableSorting: false
     }),
     columnHelper.accessor('paymentType.name', {
       header: ('Payment type'),

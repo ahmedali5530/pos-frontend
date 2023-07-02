@@ -14,4 +14,5 @@ export interface CartItem extends HydraId, HydraType{
   void?: boolean;
   taxIncluded?: boolean;
   discountIncluded?: boolean;
+  stock?: number;
 }

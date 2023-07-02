@@ -562,16 +562,16 @@ a{
   }
 }
 .login-bg{
-  background-image: url(../assets/images/1120171.jpg);
+  background-image: url(../assets/images/background.svg);
   background-size: cover;
 }
 .card {
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(5px);
   margin-bottom: 30px;
   border: none;
   border-radius: 5px;
-  @apply shadow-2xl;
+  color: white;
 }
 
 .card-header, .card-footer {

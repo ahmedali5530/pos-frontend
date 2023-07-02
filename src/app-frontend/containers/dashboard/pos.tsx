@@ -1,111 +1,109 @@
-import React, {createRef, FC, useCallback, useEffect, useMemo, useState} from "react";
+import React, { createRef, FC, useCallback, useEffect, useMemo, useState } from "react";
 import classNames from "classnames";
-import {DateTime} from "luxon";
-import {FixedSizeList} from "react-window";
-import {Product} from "../../../api/model/product";
-import {Discount, DiscountRate, DiscountScope} from "../../../api/model/discount";
-import {Tax} from "../../../api/model/tax";
-import {CartItem} from "../../../api/model/cart.item";
-import {Customer} from "../../../api/model/customer";
-import {ProductVariant} from "../../../api/model/product.variant";
+import { DateTime } from "luxon";
+import { FixedSizeList } from "react-window";
+import { Product } from "../../../api/model/product";
+import { Discount, DiscountRate, DiscountScope } from "../../../api/model/discount";
+import { Tax } from "../../../api/model/tax";
+import { CartItem } from "../../../api/model/cart.item";
+import { Customer } from "../../../api/model/customer";
+import { ProductVariant } from "../../../api/model/product.variant";
 import localforage from "../../../lib/localforage/localforage";
 import SpeechSearch from "../../components/search/speech.search";
-import {Input} from "../../../app-common/components/input/input";
-import {SearchTable} from "../../components/search/search.table";
-import {CartContainer, CartItemType} from "../../components/cart/cart.container";
-import {Modal} from "../../../app-common/components/modal/modal";
-import {SaleHistory} from "../../components/sale/sale.history";
-import {Customers} from "../../components/sale/customers";
-import {Logout} from "../../components/logout";
-import {Expenses} from "../../components/sale/expenses";
-import {More} from "../../components/settings/more";
-import {HomeProps, initialData, useLoadData} from "../../../api/hooks/use.load.data";
-import {SaleBrands} from "../../components/search/sale.brands";
-import {Brand} from "../../../api/model/brand";
-import {Category} from "../../../api/model/category";
-import {SaleCategories} from "../../components/search/sale.categories";
-import {SaleDepartments} from "../../components/search/sale.departments";
-import {useSelector} from "react-redux";
-import {getAuthorizedUser} from "../../../duck/auth/auth.selector";
-import {CloseSaleInline} from "../../components/sale/sale.inline";
-import {SaleClosing} from "../../components/sale/sale.closing";
-import {Department} from "../../../api/model/department";
-import {getStore} from "../../../duck/store/store.selector";
-import {getTerminal} from "../../../duck/terminal/terminal.selector";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCubesStacked, faFlag, faIcons} from "@fortawesome/free-solid-svg-icons";
-import {CartControls} from "../../components/cart/cart.controls";
-import {PurchaseTabs} from "../../components/inventory/purchase.tabs";
-import {notify} from "../../../app-common/components/confirm/notification";
-import useApi from "../../../api/hooks/use.api";
-import {PRODUCT_KEYWORDS} from "../../../api/routing/routes/backend.app";
-import {jsonRequest} from "../../../api/request/request";
-import {QueryString} from "../../../lib/location/query.string";
-import _ from "lodash";
+import { Input } from "../../../app-common/components/input/input";
+import { SearchTable } from "../../components/search/search.table";
+import { CartContainer, CartItemType } from "../../components/cart/cart.container";
+import { Modal } from "../../../app-common/components/modal/modal";
+import { SaleHistory } from "../../components/sale/sale.history";
+import { Customers } from "../../components/customers/customers";
+import { Logout } from "../../components/logout";
+import { Expenses } from "../../components/sale/expenses";
+import { More } from "../../components/settings/more";
+import { HomeProps, initialData, useLoadData } from "../../../api/hooks/use.load.data";
+import { SaleBrands } from "../../components/search/sale.brands";
+import { Brand } from "../../../api/model/brand";
+import { Category } from "../../../api/model/category";
+import { SaleCategories } from "../../components/search/sale.categories";
+import { SaleDepartments } from "../../components/search/sale.departments";
+import { useSelector } from "react-redux";
+import { getAuthorizedUser } from "../../../duck/auth/auth.selector";
+import { CloseSaleInline } from "../../components/sale/sale.inline";
+import { SaleClosing } from "../../components/sale/sale.closing";
+import { Department } from "../../../api/model/department";
+import { getStore } from "../../../duck/store/store.selector";
+import { getTerminal } from "../../../duck/terminal/terminal.selector";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCubesStacked, faFlag, faIcons } from "@fortawesome/free-solid-svg-icons";
+import { CartControls } from "../../components/cart/cart.controls";
+import { PurchaseTabs } from "../../components/inventory/purchase.tabs";
+import { notify } from "../../../app-common/components/confirm/notification";
+import { PRODUCT_KEYWORDS } from "../../../api/routing/routes/backend.app";
+import { jsonRequest } from "../../../api/request/request";
+import { QueryString } from "../../../lib/location/query.string";
 
 const Mousetrap = require('mousetrap');
 
 export const getRealProductPrice = (item: Product) => {
   let price = 0;
 
-  if (!item) return price;
+  if( !item ) return price;
 
-  if (item.basePrice) {
+  if( item.basePrice ) {
     price = item.basePrice;
   }
 
-  if (item.prices.length > 0) {
-    for (let index in item.prices) {
+  if( item.prices.length > 0 ) {
+    for ( let index in item.prices ) {
       const itemPrice = item.prices[index];
 
-      if (!itemPrice.basePrice) {
+      if( !itemPrice.basePrice ) {
         continue;
       }
 
       //based on date
-      if (itemPrice.date) {
-        if (DateTime.fromISO(itemPrice.date).toFormat('d') === DateTime.now().toFormat('d')) {
+      if( itemPrice.date ) {
+        if( DateTime.fromISO(itemPrice.date).toFormat('d') === DateTime.now().toFormat('d') ) {
           price = itemPrice.basePrice;
           break;
         }
       }
 
       //based on time
-      if (itemPrice.time && itemPrice.timeTo) {
-        if (DateTime.fromISO(itemPrice.time).toFormat('HH:mm') >= DateTime.now().toFormat('HH:mm') &&
-          DateTime.fromISO(itemPrice.timeTo).toFormat('HH:mm') <= DateTime.now().toFormat('HH:mm')) {
+      if( itemPrice.time && itemPrice.timeTo ) {
+        if( DateTime.fromISO(itemPrice.time).toFormat('HH:mm') >= DateTime.now().toFormat('HH:mm') &&
+          DateTime.fromISO(itemPrice.timeTo).toFormat('HH:mm') <= DateTime.now().toFormat('HH:mm') ) {
           price = itemPrice.basePrice;
           break;
         }
       }
 
       //based on day
-      if (itemPrice.day) {
-        if (itemPrice.day === DateTime.now().toFormat('cccc')) {
+      if( itemPrice.day ) {
+        if( itemPrice.day === DateTime.now().toFormat('cccc') ) {
           price = itemPrice.basePrice;
           break;
         }
       }
 
       //based on week
-      if (itemPrice.week) {
-        if (itemPrice.week === +DateTime.now().toFormat('W')) {
+      if( itemPrice.week ) {
+        if( itemPrice.week === +DateTime.now().toFormat('W') ) {
           price = itemPrice.basePrice;
           break;
         }
       }
 
       //based on month
-      if (itemPrice.month) {
-        if (itemPrice.month === +DateTime.now().toFormat('L')) {
+      if( itemPrice.month ) {
+        if( itemPrice.month === +DateTime.now().toFormat('L') ) {
           price = itemPrice.basePrice;
           break;
         }
       }
 
       //based on quarter
-      if (itemPrice.quarter) {
-        if (itemPrice.quarter === +DateTime.now().toFormat('q')) {
+      if( itemPrice.quarter ) {
+        if( itemPrice.quarter === +DateTime.now().toFormat('q') ) {
           price = itemPrice.basePrice;
           break;
         }
@@ -120,7 +118,7 @@ export const getExclusiveRowTotal = (item: CartItem) => {
   const quantity = parseFloat(item.quantity as unknown as string);
 
   let total = item.price * quantity;
-  if (item.discount) {
+  if( item.discount ) {
     total -= item.discount;
   }
 
@@ -131,19 +129,19 @@ export const getRowTotal = (item: CartItem) => {
   const quantity = parseFloat(item.quantity as unknown as string);
 
   let total = item.price * quantity;
-  if (item.discount) {
+  if( item.discount ) {
     total -= item.discount;
   }
 
   //add taxes
-  if(item.taxIncluded) {
+  if( item.taxIncluded ) {
     total += item.taxes.reduce((prev, tax) => prev + (tax.rate * (item.price * quantity) / 100), 0);
   }
 
   return total;
 };
 
-export const scrollToBottom = (container: HTMLDivElement|null) => {
+export const scrollToBottom = (container: HTMLDivElement | null) => {
   container?.scrollTo(0, container?.scrollHeight * 1.5);
 }
 
@@ -191,17 +189,17 @@ const Pos: FC = () => {
   }, [added])
 
   const taxTotal = useMemo(() => {
-    if (!tax) return 0;
+    if( !tax ) return 0;
 
     return tax.rate * exclusiveSubTotal / 100;
   }, [tax, exclusiveSubTotal]);
 
   const discountTotal = useMemo(() => {
-    if (discountAmount) {
+    if( discountAmount ) {
 
       //calculate based on open discount
-      if (discountRateType) {
-        if (discountRateType === 'fixed') {
+      if( discountRateType ) {
+        if( discountRateType === 'fixed' ) {
           return discountAmount;
         } else {
           return (subTotal + taxTotal) * discountAmount / 100;
@@ -210,14 +208,14 @@ const Pos: FC = () => {
       return discountAmount
     }
 
-    if (!discount) return 0;
+    if( !discount ) return 0;
 
-    if (discount.rateType === DiscountRate.RATE_FIXED && discount.rate) {
+    if( discount.rateType === DiscountRate.RATE_FIXED && discount.rate ) {
       return discount.rate;
-    } else if (discount.rateType === DiscountRate.RATE_PERCENT && discount.rate) {
+    } else if( discount.rateType === DiscountRate.RATE_PERCENT && discount.rate ) {
       return (subTotal + taxTotal) * discount?.rate / 100;
     } else {
-      if (discount.scope === DiscountScope.SCOPE_EXACT && discount.rate) {
+      if( discount.scope === DiscountScope.SCOPE_EXACT && discount.rate ) {
         return discount.rate || 0;
       } else {
         //ask for discount
@@ -242,14 +240,14 @@ const Pos: FC = () => {
   const items = useMemo(() => {
     let filtered = list?.list;
 
-    if (!filtered) {
+    if( !filtered ) {
       return [];
     }
 
     // filter products by store
-    if (store) {
+    if( store ) {
       filtered = filtered?.filter(item => {
-        if (item?.stores?.length > 0) {
+        if( item?.stores?.length > 0 ) {
           const stores = item.stores.map(item => item.id);
 
           return stores.includes(store?.id);
@@ -260,9 +258,9 @@ const Pos: FC = () => {
     }
 
     //filter products by terminal
-    if (terminal) {
+    if( terminal ) {
       filtered = filtered?.filter(item => {
-        if (item?.terminals?.length > 0) {
+        if( item?.terminals?.length > 0 ) {
           const terminals = item.terminals.map(item => item.id);
 
           return terminals.includes(terminal?.id);
@@ -274,9 +272,9 @@ const Pos: FC = () => {
 
 
     const brandIds = Object.keys(brands);
-    if (brandIds.length > 0) {
+    if( brandIds.length > 0 ) {
       filtered = filtered.filter(item => {
-        if (item?.brands?.length > 0) {
+        if( item?.brands?.length > 0 ) {
           const brandsFilter = item.brands.filter(b => {
             return brandIds.includes(b.id.toString())
           });
@@ -289,9 +287,9 @@ const Pos: FC = () => {
     }
 
     const categoryIds = Object.keys(categories);
-    if (categoryIds.length > 0) {
+    if( categoryIds.length > 0 ) {
       filtered = filtered.filter(item => {
-        if (item?.categories?.length > 0) {
+        if( item?.categories?.length > 0 ) {
           const categoriesFilter = item.categories.filter(c => {
             return categoryIds.includes(c.id.toString())
           });
@@ -304,9 +302,9 @@ const Pos: FC = () => {
     }
 
     const departmentIds = Object.keys(departments);
-    if (departmentIds.length > 0) {
+    if( departmentIds.length > 0 ) {
       filtered = filtered.filter(item => {
-        if (item?.department) {
+        if( item?.department ) {
           return departmentIds.includes(item?.department?.id?.toString());
         }
 
@@ -315,7 +313,7 @@ const Pos: FC = () => {
     }
 
     filtered = filtered?.filter(item => {
-      if (item?.barcode && item?.barcode.toLowerCase().startsWith(q.toLowerCase())) {
+      if( item?.barcode && item?.barcode.toLowerCase().startsWith(q.toLowerCase()) ) {
         return true;
       }
 
@@ -325,47 +323,55 @@ const Pos: FC = () => {
     return filtered;
   }, [list?.list, q, brands, categories, departments, terminal, store]);
 
-  const getItemsMetadata = useCallback(async (itemId: number) => {
-    try{
+  const getItemsMetadata = useCallback(async (itemId: number, variantId?: number) => {
+    try {
       const search = QueryString.stringify({
         itemId
       });
       const response = await jsonRequest(`${PRODUCT_KEYWORDS}?${search}`);
       const json = await response.json();
 
-      setAdded(newItems => {
-        return newItems.map(item => {
-          if(item.item.id === itemId){
-            item.item.quantity = Number(json.list[0].quantity);
+      setAdded(newItems => (
+        newItems.map(item => {
+          if( item.item.id === itemId ) {
+            if( !variantId ) {
+              item.stock = Number(json.list[0].quantity);
+            } else {
+              const variant = json.list[0].variants.find((variant: ProductVariant) => variantId === item.variant?.id && variantId === variant.id);
+
+              if(variant && variantId === item.variant?.id && variantId === variant.id){
+                item.stock = Number(variant.quantity);
+              }
+            }
           }
           return item;
         })
-      });
+      ));
 
       // set new items with updated info
       // setAdded(newItems);
-    }catch (e){
+    } catch ( e ) {
       throw e;
     }
   }, [added]);
 
   const addItem = async (item: Product, quantity: number, price?: number) => {
     let newPrice = 0;
-    if (item.basePrice) {
+    if( item.basePrice ) {
       newPrice = item.basePrice;
     }
 
-    if (price) {
+    if( price ) {
       newPrice = price;
     }
 
-    if (rate) {
+    if( rate ) {
       newPrice = rate;
     }
 
     setLatest(item);
 
-    if (item.variants.length > 0) {
+    if( item.variants.length > 0 ) {
       //choose from variants
       setModal(true);
       setModalTitle(`Choose a variant for ${item.name}`);
@@ -377,7 +383,7 @@ const Pos: FC = () => {
 
     const oldItems = [...added];
     let index = oldItems.findIndex(addItem => addItem.item.id === item.id);
-    if (index !== -1) {
+    if( index !== -1 ) {
       oldItems[index].quantity += quantity;
     } else {
       oldItems.push({
@@ -386,7 +392,8 @@ const Pos: FC = () => {
         price: newPrice,
         discount: 0,
         taxes: item.taxes,
-        taxIncluded: true
+        taxIncluded: true,
+        stock: 0
       });
     }
 
@@ -407,7 +414,7 @@ const Pos: FC = () => {
       return addItem.item.id === item.id && addItem.variant === variant
     });
 
-    if (index !== -1) {
+    if( index !== -1 ) {
       oldItems[index].quantity += quantity;
     } else {
       oldItems.push({
@@ -417,7 +424,8 @@ const Pos: FC = () => {
         variant: variant,
         discount: 0,
         taxes: item.taxes,
-        taxIncluded: true
+        taxIncluded: true,
+        stock: 0
       });
     }
 
@@ -434,14 +442,14 @@ const Pos: FC = () => {
 
     scrollToBottom(containerRef.current);
 
-    await getItemsMetadata(item.id);
+    await getItemsMetadata(item.id, variant.id);
   };
 
   const onQuantityChange = (item: CartItem, newQuantity: any) => {
     const oldItems = [...added];
     let index = oldItems.findIndex(addItem => addItem.item.id === item.item.id && item.variant === addItem.variant);
-    if (index !== -1) {
-      if(newQuantity < 0) {
+    if( index !== -1 ) {
+      if( newQuantity < 0 ) {
         notify({
           type: 'error',
           description: 'Quantity cannot be less then 0'
@@ -458,7 +466,7 @@ const Pos: FC = () => {
   const onPriceChange = (item: CartItem, newPrice: number) => {
     const oldItems = [...added];
     let index = oldItems.findIndex(addItem => addItem.item.id === item.item.id && item.variant === addItem.variant);
-    if (index !== -1) {
+    if( index !== -1 ) {
       oldItems[index].price = newPrice;
     }
 
@@ -472,11 +480,11 @@ const Pos: FC = () => {
     //discount cannot exceed price
     const quantity = parseFloat(oldItems[index].quantity as unknown as string);
 
-    if (newDiscount >= oldItems[index].price * quantity) {
+    if( newDiscount >= oldItems[index].price * quantity ) {
       newDiscount = oldItems[index].price * quantity;
     }
 
-    if (index !== -1) {
+    if( index !== -1 ) {
       oldItems[index].discount = newDiscount;
     }
 
@@ -491,18 +499,18 @@ const Pos: FC = () => {
   };
 
   const setFocus = (event: any, element: any) => {
-    if (document.body.classList.contains('ReactModal__Body--open')) return;
+    if( document.body.classList.contains('ReactModal__Body--open') ) return;
 
     const inputNodes = [
       'INPUT', 'SELECT', 'TEXTAREA'
     ];
 
     // skip input nodes and retain focus in them
-    if (inputNodes.includes(event.target.nodeName) && event.target !== element) {
+    if( inputNodes.includes(event.target.nodeName) && event.target !== element ) {
       return;
     }
 
-    if (element.current !== null) {
+    if( element.current !== null ) {
       element.current.focus();
     }
   };
@@ -511,9 +519,9 @@ const Pos: FC = () => {
 
   const moveCursor = (event: any) => {
     const itemsLength = items.length;
-    if (event.key === 'ArrowDown') {
+    if( event.key === 'ArrowDown' ) {
       let newSelected = selected + 1;
-      if ((newSelected) === itemsLength) {
+      if( (newSelected) === itemsLength ) {
         newSelected = 0;
         setSelected(newSelected);
       }
@@ -521,16 +529,16 @@ const Pos: FC = () => {
 
       moveSearchList(newSelected);
       setRate(getRealProductPrice(items[newSelected]));
-    } else if (event.key === 'ArrowUp') {
+    } else if( event.key === 'ArrowUp' ) {
       let newSelected = selected - 1;
-      if ((newSelected) === -1) {
+      if( (newSelected) === -1 ) {
         newSelected = itemsLength - 1;
       }
       setSelected(newSelected);
 
       moveSearchList(newSelected);
       setRate(getRealProductPrice(items[newSelected]));
-    } else if (event.key === 'Enter') {
+    } else if( event.key === 'Enter' ) {
       setRate(getRealProductPrice(items[selected]));
       addItem(items[selected], quantity);
     }
@@ -538,32 +546,32 @@ const Pos: FC = () => {
 
   const moveVariantsCursor = (event: any) => {
     const itemsLength = variants.length;
-    if (event.key === 'ArrowDown') {
+    if( event.key === 'ArrowDown' ) {
       let newSelected = selectedVariant + 1;
-      if ((newSelected) === itemsLength) {
+      if( (newSelected) === itemsLength ) {
         newSelected = 0;
         setSelectedVariant(newSelected);
       }
       setSelectedVariant(newSelected);
-    } else if (event.key === 'ArrowUp') {
+    } else if( event.key === 'ArrowUp' ) {
       let newSelected = selectedVariant - 1;
-      if ((newSelected) === -1) {
+      if( (newSelected) === -1 ) {
         newSelected = itemsLength - 1;
       }
       setSelectedVariant(newSelected);
-    } else if (event.key === 'Enter') {
+    } else if( event.key === 'Enter' ) {
       addItemVariant(items[selected], items[selected].variants[selectedVariant], 1);
     }
   };
 
   const moveSearchList = (index: number) => {
-    if (searchScrollContainer && searchScrollContainer.current) {
+    if( searchScrollContainer && searchScrollContainer.current ) {
       searchScrollContainer.current.scrollToItem(index, 'center');
     }
   };
 
   useEffect(() => {
-    if (searchField && searchField.current) {
+    if( searchField && searchField.current ) {
       // searchField.current.focus();
     }
   }, [searchField]);
@@ -571,7 +579,7 @@ const Pos: FC = () => {
   useEffect(() => {
     localforage.setItem('data', added);
 
-    if(added.length === 0){
+    if( added.length === 0 ) {
       setAdjustment(0);
     }
   }, [added]);
@@ -593,7 +601,7 @@ const Pos: FC = () => {
     setDefaultOptions();
 
     localforage.getItem('data').then((data: any) => {
-      if (data) {
+      if( data ) {
         setAdded(data);
       }
     });
@@ -614,12 +622,12 @@ const Pos: FC = () => {
   useEffect(() => {
     Mousetrap.bind(['up', 'down', 'enter'], function (e: Event) {
       e.preventDefault();
-      if (modal) {
+      if( modal ) {
         //move cursor in variant chooser modal
         moveVariantsCursor(e);
       } else {
         //skip if some other modal is open
-        if (!document.body.classList.contains('ReactModal__Body--open')) {
+        if( !document.body.classList.contains('ReactModal__Body--open') ) {
           //move cursor in items
           moveCursor(e);
         }
@@ -627,9 +635,9 @@ const Pos: FC = () => {
     });
   }, [modal, selected, selectedVariant, variants, items, added, quantity]);
 
-  Mousetrap.bind('f3', function(e: any){
+  Mousetrap.bind('f3', function (e: any) {
     e.preventDefault();
-    if (searchField.current !== null) {
+    if( searchField.current !== null ) {
       searchField.current.focus();
     }
   });
@@ -657,13 +665,13 @@ const Pos: FC = () => {
         <div className="col-span-3 p-3 bg-white">
           <div className="grid grid-cols-3 gap-3 mb-3">
             <SaleBrands brands={brands} setBrands={setBrands}>
-              <FontAwesomeIcon icon={faFlag} />
+              <FontAwesomeIcon icon={faFlag}/>
             </SaleBrands>
             <SaleCategories categories={categories} setCategories={setCategories}>
-              <FontAwesomeIcon icon={faCubesStacked} />
+              <FontAwesomeIcon icon={faCubesStacked}/>
             </SaleCategories>
             <SaleDepartments departments={departments} setDepartments={setDepartment}>
-              <FontAwesomeIcon icon={faIcons} />
+              <FontAwesomeIcon icon={faIcons}/>
             </SaleDepartments>
           </div>
           <div className="mb-1 input-group">
@@ -741,7 +749,7 @@ const Pos: FC = () => {
                 />
                 <Customers customer={customer} setCustomer={setCustomer}/>
                 <Expenses/>
-                <PurchaseTabs />
+                <PurchaseTabs/>
                 <More
                   setTax={setTax}
                   setDiscount={setDiscount}

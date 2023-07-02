@@ -36,7 +36,7 @@ import {IconProp} from "@fortawesome/fontawesome-svg-core";
 import {Controller, useForm} from "react-hook-form";
 import {Expense} from "../../../api/model/expense";
 import {ViewOrder} from "./view.order";
-import {CustomerPayments} from "./customer.payments";
+import {CustomerPayments} from "../customers/customer.payments";
 import {ResponsivePie as Pie} from "@nivo/pie";
 import {ResponsiveBar as Bar} from "@nivo/bar";
 import {Loader} from "../../../app-common/components/loader/loader";

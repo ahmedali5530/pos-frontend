@@ -56,7 +56,8 @@ export const CreateVariants = ({
     replace(sets.map(item => ({
       price: null,
       attributeValue: item.join('-'),
-      barcode: ''
+      barcode: '',
+      quantity: 1000
     })));
   }
 
@@ -94,7 +95,7 @@ export const CreateVariants = ({
       </div>
       <div>
         {variants.map((item: any, index) => (
-          <div className="grid grid-cols-4 mb-5 gap-3" key={index}>
+          <div className="grid grid-cols-5 mb-5 gap-3" key={index}>
             <div>
               <label>Variant</label>
               <Controller
@@ -114,6 +115,17 @@ export const CreateVariants = ({
                 control={useForm.control}
                 name={`variants.${index}.price`}
                 defaultValue={item.price}
+              />
+            </div>
+            <div>
+              <label>Quantity</label>
+              <Controller
+                render={(props) => (
+                  <Input onChange={props.field.onChange} value={props.field.value} className="w-full"/>
+                )}
+                control={useForm.control}
+                name={`variants.${index}.quantity`}
+                defaultValue={item.quantity}
               />
             </div>
             <div>
