@@ -22,7 +22,6 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from 'yup'
 import { getErrorClass, hasErrors } from "../../../lib/error/error";
 import classNames from "classnames";
-import Highlighter from "react-highlight-words";
 
 
 interface ButtonProps {
@@ -32,25 +31,21 @@ interface ButtonProps {
 
 interface TableComponentProps {
   columns: any;
-  params?: any;
-  sort?: any;
+  sort?: SortingState;
   buttons?: ButtonProps[];
   selectionButtons?: ButtonProps[];
   loaderLineItems?: number;
   loaderLines?: number;
   useLoadList: UseApiResult;
-  setFilters?: (filters?: any) => void;
-  globalSearch?: boolean;
+  dataKey?: string;
+  totalKey?: string;
+  enableSearch?: boolean;
 }
 
-interface ColumnFilter {
-  column: string;
-  value: any;
-}
 
 export const TableComponent: FC<TableComponentProps> = ({
   columns, sort, buttons, selectionButtons, loaderLineItems, useLoadList,
-  globalSearch, loaderLines
+  loaderLines, dataKey, totalKey, enableSearch
 }) => {
   const {t} = useTranslation();
 
@@ -103,8 +98,8 @@ export const TableComponent: FC<TableComponentProps> = ({
   }, [pageIndex, pageSize]);
 
   const table = useReactTable({
-    data: data?.["hydra:member"]||[],
-    pageCount: Math.ceil(data?.["hydra:totalItems"] as number / pageSize),
+    data: data?.[dataKey || "hydra:member"]||[],
+    pageCount: Math.ceil(data?.[totalKey || "hydra:totalItems"] as number / pageSize),
     columns,
     getCoreRowModel: getCoreRowModel(),
     state: {
@@ -192,48 +187,50 @@ export const TableComponent: FC<TableComponentProps> = ({
     <>
       <div className="my-5 flex justify-between">
         <div className="inline-flex justify-start">
-          <form className="input-group" onSubmit={handleSubmit(handleColumnFilter)}>
-            <Controller
-              render={({field}) => (
-                <Input
-                  value={field.value}
-                  onChange={field.onChange}
-                  placeholder="Search..."
-                  hasError={hasErrors(_.get(errors.value, 'message'))}
-                  type="search"
-                  className="w-72"
+          {enableSearch !== false && (
+            <form className="input-group" onSubmit={handleSubmit(handleColumnFilter)}>
+                <Controller
+                  render={({field}) => (
+                    <Input
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Search..."
+                      hasError={hasErrors(_.get(errors.value, 'message'))}
+                      type="search"
+                      className="w-72"
+                    />
+                  )}
+                  name="value"
+                  control={control}
                 />
-              )}
-              name="value"
-              control={control}
-            />
 
-            <Controller
-              name="column"
-              render={({field}) => (
-                <ReactSelect
-                  onChange={field.onChange}
-                  options={filterOptions}
-                  className={
-                    classNames(
-                      "rs-__container w-36",
-                      getErrorClass(_.get(errors.column, 'message'))
-                    )
-                  }
-                  value={field.value}
+                <Controller
+                  name="column"
+                  render={({field}) => (
+                    <ReactSelect
+                      onChange={field.onChange}
+                      options={filterOptions}
+                      className={
+                        classNames(
+                          "rs-__container w-36",
+                          getErrorClass(_.get(errors.column, 'message'))
+                        )
+                      }
+                      value={field.value}
+                    />
+                  )}
+                  control={control}
                 />
-              )}
-              control={control}
-            />
-            <button className="btn btn-primary w-12" type="submit">
-              <FontAwesomeIcon icon={faSearch} />
-            </button>
-            {Object.keys(filters).length > 0 && (
-              <button className="btn btn-danger w-12" type="button" onClick={resetFilters}>
-                <FontAwesomeIcon icon={faClose} />
-              </button>
-            )}
-          </form>
+                <button className="btn btn-primary w-12" type="submit">
+                  <FontAwesomeIcon icon={faSearch} />
+                </button>
+                {Object.keys(filters).length > 0 && (
+                  <button className="btn btn-danger w-12" type="button" onClick={resetFilters}>
+                    <FontAwesomeIcon icon={faClose} />
+                  </button>
+                )}
+              </form>
+          )}
         </div>
         <div className="inline-flex justify-end">
           <div className="input-group">

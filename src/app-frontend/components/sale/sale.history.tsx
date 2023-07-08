@@ -18,6 +18,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import {fetchJson} from "../../../api/request/request";
 import {
+  CUSTOMER_LIST,
   EXPENSE_LIST,
   ORDER_GET,
   ORDER_LIST,
@@ -57,6 +58,9 @@ import {Shortcut} from "../../../app-common/components/input/shortcut";
 import {SalePrint} from "./sale.print";
 import {useSelector} from "react-redux";
 import {getStore} from "../../../duck/store/store.selector";
+import { TableComponent } from "../../../app-common/components/table/table";
+import useApi from "../../../api/hooks/use.api";
+import { HydraCollection } from "../../../api/model/hydra";
 
 interface Props {
   setAdded: (item: CartItem[]) => void;
@@ -82,8 +86,11 @@ export const SaleHistory: FC<Props> = ({
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [payments, setPayments] = useState<{ [key: string]: number }>({});
 
-  const useLoadHook = useLoadList<Order>(ORDER_LIST);
-  const {data, handleFilterChange, loading, handleSortChange, handleSortModeChange, handleLimitChange, handlePageChange} = useLoadHook;
+  const useLoadHook = useApi<any>('orders', ORDER_LIST);
+  const {
+    fetchData: loadList, data, handleFilterChange, filters, isFetching, resetFilters
+  } = useLoadHook;
+
   const store = useSelector(getStore);
 
   const {t} = useTranslation();
@@ -92,7 +99,7 @@ export const SaleHistory: FC<Props> = ({
 
   const columns = [
     columnHelper.accessor('orderId', {
-      header: () => t('Order#'),
+      header: 'Order#',
       cell: info => (
         <ViewOrder order={info.row.original}>
           <FontAwesomeIcon icon={faEye} className="mr-2"/> {info.getValue()}
@@ -100,11 +107,11 @@ export const SaleHistory: FC<Props> = ({
       )
     }),
     columnHelper.accessor('createdAt', {
-      header: () => t('Time'),
+      header: 'Time',
       cell: info => DateTime.fromISO(info.getValue()).toRelative({base: DateTime.now()})
     }),
     columnHelper.accessor('customer', {
-      header: () => t('Customer'),
+      header: 'Customer',
       cell: info => (
         <>
           {!!info.getValue() ? (
@@ -127,7 +134,7 @@ export const SaleHistory: FC<Props> = ({
       )
     }),
     columnHelper.accessor('tax', {
-      header: () => t('Order Tax'),
+      header: 'Order Tax',
       cell: info => (
         <>
           +{(info.getValue()?.amount || 0).toFixed(2)}
@@ -135,40 +142,41 @@ export const SaleHistory: FC<Props> = ({
       )
     }),
     columnHelper.accessor('itemTaxes', {
-      header: () => t('Items Tax'),
+      header: 'Items Tax',
       cell: info => `+${info.getValue().toFixed(2)}`
     }),
     columnHelper.accessor('discount', {
-      header: () => t('Discount'),
+      header: 'Discount',
       cell: info => '-' + (info.getValue()?.amount || 0).toFixed(2)
     }),
     columnHelper.accessor('items', {
-      header: () => t('Rate'),
+      header: 'Rate',
       cell: info => '+' + info.getValue().reduce((prev, item) => {
         return (item.price * item.quantity) + prev
       }, 0),
       enableSorting: false,
     }),
     columnHelper.accessor('items', {
-      header: () => t('Cost'),
+      id: 'cost',
+      header: 'Cost',
       cell: info => info.getValue().reduce((prev, item) => {
         return ((item.product?.cost || 0) * item.quantity) + prev
       }, 0),
       enableSorting: false,
     }),
     columnHelper.accessor('adjustment', {
-      header: () => t('Adjustment'),
+      header: 'Adjustment',
       enableSorting: false,
     }),
     columnHelper.accessor('payments', {
-      header: () => t('Total'),
+      header: 'Total',
       cell: info => '=' + info.getValue().reduce((prev, payment) => {
         return payment.received + prev
       }, 0),
       enableSorting: false,
     }),
     columnHelper.accessor('status', {
-      header: () => t('Status'),
+      header: 'Status',
       cell: info => (
         <span className={
           classNames(
@@ -182,7 +190,8 @@ export const SaleHistory: FC<Props> = ({
       )
     }),
     columnHelper.accessor('id', {
-      header: '',
+      id: 'actions',
+      header: 'Actions',
       enableSorting: false,
       cell: info => (
         <div className="flex gap-3">
@@ -549,78 +558,9 @@ export const SaleHistory: FC<Props> = ({
 
   const [areChartsOpen, setChartsOpen] = useState(false);
 
-  //FIXME: isolate table component and move in separate file
-
-  const mergeFilters = (filters: any) => {
-    setParams(prev => {
-      return {...prev, ...filters};
-    });
-  };
-
-  const [sorting, setSorting] = React.useState<SortingState>([{
-    id: 'id',
-    desc: true,
-  }]);
-
-  const [{pageIndex, pageSize}, setPagination] =
-    React.useState<PaginationState>({
-      pageIndex: 0,
-      pageSize: 10,
-    });
-  const [rowSelection, setRowSelection] = React.useState({});
-  const [globalFilter, setGlobalFilter] = React.useState('');
-
-  const loadList = async () => {
-    handlePageChange!(pageIndex * pageSize);
-    handleLimitChange!(pageSize);
-
-    if (sorting.length > 0) {
-      handleSortChange!(sorting[0].id);
-      handleSortModeChange!(sorting[0].desc ? 'desc' : 'asc');
-    }
-
-    if (globalFilter) {
-      handleFilterChange!({
-        q: globalFilter
-      });
-    }
-  };
-
-  useEffect(() => {
-    loadList();
-    loadExpenses(params);
-  }, [pageSize, pageIndex, sorting, globalFilter, params, modal]);
-
-  const pagination = React.useMemo(
-    () => ({
-      pageIndex,
-      pageSize,
-    }),
-    [pageIndex, pageSize]
-  );
-
-  const table = useReactTable({
-    data: data?.list,
-    pageCount: Math.ceil(data?.total / pageSize),
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    state: {
-      sorting,
-      pagination,
-      rowSelection,
-      globalFilter
-    },
-    onGlobalFilterChange: setGlobalFilter,
-    onRowSelectionChange: setRowSelection,
-    onPaginationChange: setPagination,
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    manualPagination: true,
-    enableMultiSort: false,
-    manualSorting: true,
-    manualFiltering: true
-  });
+  const searchSale = async (values: any) => {
+    handleFilterChange(values);
+  }
 
   return (
     <>
@@ -634,7 +574,7 @@ export const SaleHistory: FC<Props> = ({
       <Modal open={modal} onClose={() => {
         setModal(false);
       }} title="Sale history" size="full">
-        <form onSubmit={handleSubmit(mergeFilters)}>
+        <form onSubmit={handleSubmit(searchSale)}>
           <div className="grid grid-cols-6 gap-4 mb-5">
             <div className="col-span-3">
               <Input type="search"
@@ -672,8 +612,8 @@ export const SaleHistory: FC<Props> = ({
               />
             </div>
             <div>
-              <Button variant="primary" className="w-full" type="submit" disabled={loading}>
-                {loading ? 'Searching...' : (
+              <Button variant="primary" className="w-full" type="submit" disabled={isFetching}>
+                {isFetching ? 'Searching...' : (
                   <>
                     <FontAwesomeIcon icon={faSearch} className="mr-2"/> Search sale
                   </>
@@ -683,7 +623,7 @@ export const SaleHistory: FC<Props> = ({
           </div>
         </form>
 
-        {!loading && (
+        {!isFetching && (
           <>
             <h3 className="mb-3 text-lg cursor-pointer" onClick={() => setChartsOpen(!areChartsOpen)}>
               Charts {areChartsOpen ? <FontAwesomeIcon icon={faChevronDown}/> :
@@ -798,130 +738,21 @@ export const SaleHistory: FC<Props> = ({
             </div>
           </>
         )}
-        <>
-          <div className="table-responsive">
-            {(loading) ? (
-              <div className="flex justify-center items-center">
-                <Loader lines={pageSize} lineItems={8 || 5}/>
-              </div>
-            ) : (
-              <>
-                <table className="table table-hover">
-                  <thead>
-                  {table.getHeaderGroups().map(headerGroup => (
-                    <tr key={Math.random() + headerGroup.id} id={Math.random() + headerGroup.id}>
-                      {headerGroup.headers.map(header => (
-                        <th key={header.id}>
-                          <div
-                            {...{
-                              className: header.column.getCanSort()
-                                ? 'cursor-pointer select-none'
-                                : '',
-                              onClick: header.column.getToggleSortingHandler(),
-                            }}
-                          >
-                            {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                            {{
-                              asc: ' ▲',
-                              desc: ' ▼',
-                            }[header.column.getIsSorted() as string] ?? null}
-                          </div>
-                        </th>
-                      ))}
-                    </tr>
-                  ))}
-                  </thead>
-                  <tbody>
-                  {table.getRowModel().rows.map(row => (
-                    <tr key={row.id}>
-                      {row.getVisibleCells().map(cell => (
-                        <td key={Math.random() + cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                  </tbody>
-                </table>
-                <div className="flex items-center gap-2 mt-3 flex-wrap">
-                  <nav className="input-group">
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => table.setPageIndex(0)}
-                      disabled={!table.getCanPreviousPage()}
-                    >
-                      {'<<'}
-                    </button>
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => table.previousPage()}
-                      disabled={!table.getCanPreviousPage()}
-                    >
-                      {'<'}
-                    </button>
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => table.nextPage()}
-                      disabled={!table.getCanNextPage()}
-                    >
-                      {'>'}
-                    </button>
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                      disabled={!table.getCanNextPage()}
-                    >
-                      {'>>'}
-                    </button>
-                  </nav>
-                  &bull;
-                  <span className="flex items-center gap-1">
-              <div>{t('Page')}</div>
-              <strong>
-                {table.getState().pagination.pageIndex + 1} {t('of')}{' '}{table.getPageCount()}
-              </strong>
-            </span>
-                  &bull;{' '}
-                  {t('Go to page')}
-                  <span className="flex items-center gap-2">
-              <select
-                value={table.getState().pagination.pageIndex + 1}
-                onChange={e => {
-                  table.setPageIndex(Number(e.target.value) - 1)
-                }}
-                className="w-auto form-control"
-              >
-              {_.range(0, table.getPageCount()).map(pageSize => (
-                <option key={pageSize} value={pageSize + 1}>
-                  {pageSize + 1}
-                </option>
-              ))}
-              </select>
-            </span>
-                  &bull;
-                  <span className="flex items-center gap-2">
-              <select
-                value={table.getState().pagination.pageSize}
-                onChange={e => {
-                  table.setPageSize(Number(e.target.value))
-                }}
-                className="w-auto form-control"
-              >
-              {[10, 20, 25, 50, 100, 500].map(pageSize => (
-                <option key={pageSize} value={pageSize}>
-                  {t('Show')} {pageSize}
-                </option>
-              ))}
-              </select> &bull; {t('Total records')} <strong>{data?.total}</strong>
-            </span>
-                </div>
-              </>
-            )}
-          </div>
-        </>
+
+        <TableComponent
+          columns={columns}
+          useLoadList={useLoadHook}
+          loaderLineItems={11}
+          dataKey="list"
+          totalKey="total"
+          enableSearch={false}
+          sort={[
+            {
+              id: 'orderId',
+              desc: true
+            }
+          ]}
+        />
       </Modal>
     </>
   );
