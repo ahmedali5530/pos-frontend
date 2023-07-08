@@ -199,7 +199,7 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
               clear: "both"
             }}
           >
-            Date: {DateTime.fromISO(order.createdAt).toFormat(process.env.REACT_APP_DATE_TIME_FORMAT as string)}
+            Date: {DateTime.fromISO(order.createdAt).toFormat(import.meta.env.VITE_DATE_TIME_FORMAT as string)}
           </h4>
         </div>
         {order.customer && (

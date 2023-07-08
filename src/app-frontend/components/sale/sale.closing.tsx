@@ -233,7 +233,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
               </tr>
               <tr>
                 <th className="text-right">Day started at</th>
-                <td>{closing?.createdAt?.datetime && DateTime.fromISO(closing?.createdAt?.datetime).toFormat(process.env.REACT_APP_DATE_TIME_FORMAT as string)}</td>
+                <td>{closing?.createdAt?.datetime && DateTime.fromISO(closing?.createdAt?.datetime).toFormat(import.meta.env.VITE_DATE_TIME_FORMAT as string)}</td>
               </tr>
               <tr>
                 <th className="text-right">Previous closing</th>

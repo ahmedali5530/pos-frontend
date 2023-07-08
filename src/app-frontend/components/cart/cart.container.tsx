@@ -1,10 +1,10 @@
-import React, {createRef, FunctionComponent, useCallback, useEffect, useMemo, useState} from "react";
-import {CartItem as CartItemModel} from "../../../api/model/cart.item";
-import {Product} from "../../../api/model/product";
-import {CartItem} from "./cart.item";
-import {Checkbox} from "../../../app-common/components/input/checkbox";
-import _ from "lodash";
-const Mousetrap = require('mousetrap');
+import React, { FunctionComponent, useCallback, useMemo, useState } from "react";
+import { CartItem as CartItemModel } from "../../../api/model/cart.item";
+import { Product } from "../../../api/model/product";
+import { CartItem } from "./cart.item";
+import { Checkbox } from "../../../app-common/components/input/checkbox";
+import Mousetrap from 'mousetrap';
+
 
 interface CartContainerProps {
   added: CartItemModel[];
@@ -45,116 +45,116 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
     return added.length > 0 && checked > 0 && nonChecked > 0 && added.length !== checked
   }, [added]);
 
-  const updateCartItemType = useCallback((direction: 'left'|'right') => {
-    if(cartItemType === CartItemType.quantity){
-      if(direction === 'right'){
+  const updateCartItemType = useCallback((direction: 'left' | 'right') => {
+    if( cartItemType === CartItemType.quantity ) {
+      if( direction === 'right' ) {
         setCartItemType(CartItemType.discount);
       }
     }
-    if(cartItemType === CartItemType.discount){
-      if(direction === 'right'){
+    if( cartItemType === CartItemType.discount ) {
+      if( direction === 'right' ) {
         setCartItemType(CartItemType.rate);
-      }else{
+      } else {
         setCartItemType(CartItemType.quantity);
       }
     }
-    if(cartItemType === CartItemType.rate){
-      if(direction === 'left'){
+    if( cartItemType === CartItemType.rate ) {
+      if( direction === 'left' ) {
         setCartItemType(CartItemType.discount);
       }
     }
   }, [cartItemType]);
 
-  const updateCartItem = useCallback((direction: 'up'|'down') => {
+  const updateCartItem = useCallback((direction: 'up' | 'down') => {
     const addedItems = added.length;
-    if(direction === 'up'){
-      if(cartItem !== 0){
+    if( direction === 'up' ) {
+      if( cartItem !== 0 ) {
         setCartItem(cartItem - 1);
-      }else if(cartItem === 0){
+      } else if( cartItem === 0 ) {
         setCartItem(addedItems - 1);
       }
     }
-    if(direction === 'down'){
-      if(cartItem+1 < addedItems){
+    if( direction === 'down' ) {
+      if( cartItem + 1 < addedItems ) {
         setCartItem(cartItem + 1);
-      }else if(cartItem+1 === addedItems){
+      } else if( cartItem + 1 === addedItems ) {
         setCartItem(0);
       }
     }
   }, [cartItem, added]);
 
-  Mousetrap.bind(['ctrl+up', 'ctrl+down', 'ctrl+left', 'ctrl+right'], function(e: KeyboardEvent){
+  Mousetrap.bind(['ctrl+up', 'ctrl+down', 'ctrl+left', 'ctrl+right'], function (e: KeyboardEvent) {
     //update quantity of last added item
-    if(e.code === 'ArrowLeft' || e.code === 'ArrowRight'){
+    if( e.code === 'ArrowLeft' || e.code === 'ArrowRight' ) {
       updateCartItemType(e.code === 'ArrowLeft' ? 'left' : 'right');
     }
 
-    if(e.code === 'ArrowDown' || e.code === 'ArrowUp'){
+    if( e.code === 'ArrowDown' || e.code === 'ArrowUp' ) {
       updateCartItem(e.code === 'ArrowDown' ? 'down' : 'up');
     }
   });
 
   return (
     <div className="table w-full">
-        <div className="table-header-group sticky top-0 z-10 bg-gray-200">
-          <div className="table-row">
-            <div className="table-cell p-2 w-[30px]">
-              <Checkbox
-                indeterminate={indeterminate}
-                checked={allChecked}
-                onChange={onCheckAll}
-                tabIndex={-1}
-                className="align-middle"
-              />
-            </div>
-            <div className="table-cell p-2 text-left font-bold">Item</div>
-            <div className="table-cell p-2 text-center font-bold w-[80px]">Stock</div>
-            <div className="table-cell p-2 text-center font-bold w-[180px]">QTY</div>
-            <div className="table-cell p-2 text-center font-bold w-[90px]">Disc.</div>
-            <div className="table-cell p-2 text-center font-bold w-[90px]">Taxes</div>
-            <div className="table-cell p-2 text-center font-bold w-[100px]">Rate</div>
-            <div className="table-cell p-2 text-right font-bold w-[100px]">Total</div>
-            {/*<div className="table-cell w-[80px]"/>*/}
-          </div>
-        </div>
-        <div className="table-row-group">
-          {added.map((item, index) => (
-            <CartItem
-              key={index}
-              added={added}
-              onQuantityChange={onQuantityChange}
-              onDiscountChange={onDiscountChange}
-              onPriceChange={onPriceChange}
-              deleteItem={deleteItem}
-              item={item}
-              index={index}
-              onCheck={onCheck}
-              latest={latest}
-              cartItemType={cartItemType}
-              cartItem={cartItem}
+      <div className="table-header-group sticky top-0 z-10 bg-gray-200">
+        <div className="table-row">
+          <div className="table-cell p-2 w-[30px]">
+            <Checkbox
+              indeterminate={indeterminate}
+              checked={allChecked}
+              onChange={onCheckAll}
+              tabIndex={-1}
+              className="align-middle"
             />
-          ))}
+          </div>
+          <div className="table-cell p-2 text-left font-bold">Item</div>
+          <div className="table-cell p-2 text-center font-bold w-[80px]">Stock</div>
+          <div className="table-cell p-2 text-center font-bold w-[180px]">QTY</div>
+          <div className="table-cell p-2 text-center font-bold w-[90px]">Disc.</div>
+          <div className="table-cell p-2 text-center font-bold w-[90px]">Taxes</div>
+          <div className="table-cell p-2 text-center font-bold w-[100px]">Rate</div>
+          <div className="table-cell p-2 text-right font-bold w-[100px]">Total</div>
+          {/*<div className="table-cell w-[80px]"/>*/}
         </div>
-        <div className="table-footer-group">
-          <div className="table-row font-bold">
-            <div className="table-cell p-2">
-              {added.length}
-            </div>
-            <div className="table-cell">items</div>
-            <div className="table-cell"></div>
-            <div className="table-cell text-center p-2">
-              {added.reduce((previous, item) => {
-                return parseFloat(item.quantity as unknown as string) + previous
-              }, 0)}
-            </div>
-            <div className="table-cell"></div>
-            <div className="table-cell"></div>
-            <div className="table-cell"></div>
-            <div className="table-cell text-right p-2">
-              {Number(subTotal).toFixed(2)}
-            </div>
+      </div>
+      <div className="table-row-group">
+        {added.map((item, index) => (
+          <CartItem
+            key={index}
+            added={added}
+            onQuantityChange={onQuantityChange}
+            onDiscountChange={onDiscountChange}
+            onPriceChange={onPriceChange}
+            deleteItem={deleteItem}
+            item={item}
+            index={index}
+            onCheck={onCheck}
+            latest={latest}
+            cartItemType={cartItemType}
+            cartItem={cartItem}
+          />
+        ))}
+      </div>
+      <div className="table-footer-group">
+        <div className="table-row font-bold">
+          <div className="table-cell p-2">
+            {added.length}
+          </div>
+          <div className="table-cell">items</div>
+          <div className="table-cell"></div>
+          <div className="table-cell text-center p-2">
+            {added.reduce((previous, item) => {
+              return parseFloat(item.quantity as unknown as string) + previous
+            }, 0)}
+          </div>
+          <div className="table-cell"></div>
+          <div className="table-cell"></div>
+          <div className="table-cell"></div>
+          <div className="table-cell text-right p-2">
+            {Number(subTotal).toFixed(2)}
           </div>
         </div>
       </div>
+    </div>
   );
 };

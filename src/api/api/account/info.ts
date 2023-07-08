@@ -23,7 +23,7 @@ export async function getAuthInfo(role?: string): Promise<AuthInfoResponse> {
   if (role) {
     url += '?role=' + role;
   } else {
-    url += '?role=' + (process.env.REACT_APP_TYPE === 'frontend' ? 'ROLE_USER' : 'ROLE_ADMIN')
+    url += '?role=' + (import.meta.env.VITE_APP_TYPE === 'frontend' ? 'ROLE_USER' : 'ROLE_ADMIN')
   }
 
   let response: Response;

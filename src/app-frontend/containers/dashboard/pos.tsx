@@ -40,8 +40,7 @@ import { notify } from "../../../app-common/components/confirm/notification";
 import { PRODUCT_KEYWORDS } from "../../../api/routing/routes/backend.app";
 import { jsonRequest } from "../../../api/request/request";
 import { QueryString } from "../../../lib/location/query.string";
-
-const Mousetrap = require('mousetrap');
+import Mousetrap from 'mousetrap';
 
 export const getRealProductPrice = (item: Product) => {
   let price = 0;

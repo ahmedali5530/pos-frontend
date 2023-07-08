@@ -2,14 +2,13 @@ import {FC, InputHTMLAttributes, PropsWithChildren, useEffect, useState} from "r
 import classNames from "classnames";
 import {useSelector} from "react-redux";
 import {displayShortcut, getShortcut} from "../../../duck/shortcuts/shortcut.selector";
+import Mousetrap from 'mousetrap';
 
 interface Props extends PropsWithChildren, InputHTMLAttributes<HTMLSpanElement>{
   shortcut: string;
   handler: (e: Event) => void;
   invisible?: boolean;
 }
-
-const Mousetrap = require('mousetrap');
 
 export const Shortcut: FC<Props> = ({children, ...rest}) => {
   const state = useSelector(getShortcut);

@@ -7,7 +7,6 @@ import {Controller, useForm} from "react-hook-form";
 import {Input} from "../../../app-common/components/input/input";
 import {DiscountRate} from "../../../api/model/discount";
 import {ReactSelect} from "../../../app-common/components/input/custom.react.select";
-const Mousetrap = require('mousetrap');
 
 interface CartControlsProps{
   added: CartItem[];

@@ -9,8 +9,7 @@ import {createRoot} from 'react-dom/client';
 import {I18nextProvider} from "react-i18next";
 import i18n from './i18next';
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
-
-require('./types.d.ts');
+import './types.d.ts';
 
 const queryClient = new QueryClient();
 
@@ -22,7 +21,7 @@ root.render(
   <QueryClientProvider client={queryClient}>
     <Provider store={store}>
       <I18nextProvider i18n={i18n}>
-        {process.env.REACT_APP_TYPE === 'frontend' ? <Frontend/> : <Admin/>}
+        {import.meta.env.VITE_APP_TYPE === 'frontend' ? <Frontend/> : <Admin/>}
       </I18nextProvider>
     </Provider>
   </QueryClientProvider>

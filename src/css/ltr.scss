@@ -386,11 +386,11 @@ a{
 }
 
 .ReactModal__Content--after-open{
-  animation: ease-in-out zoomIn 150ms;
+  //animation: ease-in-out zoomIn 150ms;
 }
 
 .ReactModal__Content--after-close{
-  animation: ease-in-out zoomOut 150ms;
+  //animation: ease-in-out zoomOut 150ms;
 }
 
 @keyframes zoomOut {

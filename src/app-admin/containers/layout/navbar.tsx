@@ -78,7 +78,7 @@ const Navigation = () => {
       <div className="d-flex align-items-center justify-content-between">
         <a href="/" className="logo d-flex align-items-center">
           <img src="https://via.placeholder.com/350x150" alt=""/>
-          <span className="d-none d-lg-block">{process.env.REACT_APP_WEBSITE_NAME}</span>
+          <span className="d-none d-lg-block">{import.meta.env.VITE_WEBSITE_NAME}</span>
         </a>
         <i className="bi bi-list toggle-sidebar-btn" onClick={toggleSidebar}></i>
       </div>
