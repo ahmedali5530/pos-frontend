@@ -8,15 +8,16 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export const Button = (props: ButtonProps) => {
+  const {active, variant, size, ...rest} = props;
   return (
     <button
       // tabIndex={-1}
-      {...props}
+      {...rest}
       className={
         classNames(
-          'btn border-2', props.variant && 'btn-' + props.variant,
+          'btn border-2', variant && 'btn-' + variant,
           props.active ? 'active' : '',
-          props.size && props.size,
+          size && size,
           props.className && props.className
         )
       }

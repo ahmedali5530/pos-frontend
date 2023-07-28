@@ -87,12 +87,12 @@ export const OrderTotals :FC<OrderTotalsProps> = ({
             Discount <FontAwesomeIcon icon={faPencil} className="ml-2" />
             {discount && (
               <span className="float-right bg-danger-500 text-white py-1 px-2 rounded-lg text-sm">
-                {discount.rate}{discount.rateType === DiscountRate.RATE_PERCENT && '%'}
+                {discountTotal}
               </span>
             )}
           </ApplyDiscount>
         </th>
-        <td className="border border-gray-300 p-2 text-right">{discountTotal.toFixed(2)}</td>
+        <td className="border border-gray-300 p-2 text-right">{Number(discountTotal).toFixed(2)}</td>
       </tr>
       <tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left">

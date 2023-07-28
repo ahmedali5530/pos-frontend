@@ -62,7 +62,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
             <div className="text-2xl">Payments</div>
             <ul className="font-normal">
               {order.payments.map(item => (
-                <li>{item.type?.name}: <span className="float-right">{item.received}</span></li>
+                <li key={item["@id"]}>{item.type?.name}: <span className="float-right">{item.received}</span></li>
               ))}
             </ul>
           </div>

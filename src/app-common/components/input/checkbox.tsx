@@ -8,19 +8,20 @@ interface InputProps extends HTMLProps<HTMLInputElement>{
 
 export const Checkbox = (props: InputProps) => {
   let ref = useRef<HTMLInputElement>(null);
+  const {indeterminate, ...rest} = props;
 
   useEffect(() => {
     if(ref.current !== null){
       ref.current.indeterminate = false;
-      if(_.isBoolean(props.indeterminate)) {
-        ref.current.indeterminate = props.indeterminate;
+      if(_.isBoolean(indeterminate)) {
+        ref.current.indeterminate = indeterminate;
       }
     }
-  }, [props.indeterminate, props.checked]);
+  }, [indeterminate, props.checked]);
 
   return (
     <input
-      {...props}
+      {...rest}
       ref={ref}
       type="checkbox"
       className={

@@ -84,6 +84,7 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
   }, [cartItem, added]);
 
   Mousetrap.bind(['ctrl+up', 'ctrl+down', 'ctrl+left', 'ctrl+right'], function (e: KeyboardEvent) {
+    e.preventDefault();
     //update quantity of last added item
     if( e.code === 'ArrowLeft' || e.code === 'ArrowRight' ) {
       updateCartItemType(e.code === 'ArrowLeft' ? 'left' : 'right');

@@ -39,14 +39,17 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
   useEffect(() => {
     if(cartItem === index){
       if(cartItemType === 'quantity'){
+        qtyRef.current?.focus();
         qtyRef.current?.select();
       }
 
       if(cartItemType === 'discount'){
+        discRef.current?.focus();
         discRef.current?.select();
       }
 
       if(cartItemType === 'rate'){
+        rateRef.current?.focus();
         rateRef.current?.select();
       }
     }
@@ -80,7 +83,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
           )}
         </label>
       </div>
-      <div className="table-cell p-1 text-center">{Number(item.stock)}</div>
+      <div className="table-cell p-1 text-center">{item.item.manageInventory && Number(item.stock)}</div>
       <div className="table-cell p-1">
         <div className="flex justify-center">
           <div className="input-group">

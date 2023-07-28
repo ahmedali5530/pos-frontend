@@ -63,6 +63,8 @@ export const CloseSaleInline: FC<Props> = ({
   setRefundingFrom, discountRateType, setDiscountRateType, isInline, saleModal,
   setSaleModal, adjustment, setAdjustment
 }) => {
+  console.log(discount)
+  console.log(discountTotal);
   const {register, handleSubmit, watch, reset, control, getValues} = useForm();
   const [isSaleClosing, setSaleClosing] = useState(false);
   const [payment, setPayment] = useState<PaymentType>();

@@ -32,4 +32,5 @@ export interface Product extends HydraId, HydraType{
   department?: Department;
   terminals: Terminal[];
   taxes: Tax[];
+  manageInventory?: boolean
 }

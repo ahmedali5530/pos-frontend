@@ -19,11 +19,12 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 // eslint-disable-next-line react/display-name
 export const Input = forwardRef((props: InputProps, ref: Ref<any>) => {
+  const {selectable, inputSize, hasError, ...rest} = props;
   const onClick = useCallback((event: any) => {
-    if(props.selectable !== false){
+    if(selectable !== false){
       event.currentTarget.select();
     }
-  }, [props.selectable]);
+  }, [selectable]);
 
   if(props.type === 'number'){
     return (
@@ -36,9 +37,9 @@ export const Input = forwardRef((props: InputProps, ref: Ref<any>) => {
         className={
           classNames(
             'input',
-            props.inputSize === 'lg' && 'lg',
+            inputSize === 'lg' && 'lg',
             props.className && props.className,
-            props.hasError && 'error'
+            hasError && 'error'
           )
         }
         getInputRef={ref}
@@ -53,13 +54,13 @@ export const Input = forwardRef((props: InputProps, ref: Ref<any>) => {
         type="text"
         onClick={onClick}
         autoComplete="off"
-        {...props}
+        {...rest}
         className={
           classNames(
             'input',
-            props.inputSize === 'lg' && 'lg',
+            inputSize === 'lg' && 'lg',
             props.className && props.className,
-            props.hasError && 'error'
+            hasError && 'error'
           )
         }
         ref={ref}

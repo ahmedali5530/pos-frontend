@@ -1,7 +1,7 @@
-import React, {FC, useEffect, useMemo, useState} from "react";
-import {Button} from "../../../app-common/components/input/button";
-import {Modal} from "../../../app-common/components/modal/modal";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import React, { FC, useEffect, useMemo, useState } from "react";
+import { Button } from "../../../app-common/components/input/button";
+import { Modal } from "../../../app-common/components/modal/modal";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBackward,
   faCheck,
@@ -16,51 +16,37 @@ import {
   faTrashRestoreAlt,
   faTruck
 } from "@fortawesome/free-solid-svg-icons";
-import {fetchJson} from "../../../api/request/request";
+import { fetchJson } from "../../../api/request/request";
 import {
-  CUSTOMER_LIST,
   EXPENSE_LIST,
   ORDER_GET,
   ORDER_LIST,
   ORDER_REFUND,
   ORDER_RESTORE
 } from "../../../api/routing/routes/backend.app";
-import {Order, OrderStatus} from "../../../api/model/order";
-import {DateTime} from "luxon";
+import { Order, OrderStatus } from "../../../api/model/order";
+import { DateTime } from "luxon";
 import classNames from "classnames";
-import {CartItem} from "../../../api/model/cart.item";
-import {Discount} from "../../../api/model/discount";
-import {Tax} from "../../../api/model/tax";
-import {Customer} from "../../../api/model/customer";
-import {Input} from "../../../app-common/components/input/input";
-import {IconProp} from "@fortawesome/fontawesome-svg-core";
-import {Controller, useForm} from "react-hook-form";
-import {Expense} from "../../../api/model/expense";
-import {ViewOrder} from "./view.order";
-import {CustomerPayments} from "../customers/customer.payments";
-import {ResponsivePie as Pie} from "@nivo/pie";
-import {ResponsiveBar as Bar} from "@nivo/bar";
-import {Loader} from "../../../app-common/components/loader/loader";
-import {useLoadList} from "../../../api/hooks/use.load.list";
-import {useTranslation} from "react-i18next";
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
-  PaginationState,
-  SortingState,
-  useReactTable
-} from "@tanstack/react-table";
-import _ from "lodash";
-import {Shortcut} from "../../../app-common/components/input/shortcut";
-import {SalePrint} from "./sale.print";
-import {useSelector} from "react-redux";
-import {getStore} from "../../../duck/store/store.selector";
+import { CartItem } from "../../../api/model/cart.item";
+import { Discount } from "../../../api/model/discount";
+import { Tax } from "../../../api/model/tax";
+import { Customer } from "../../../api/model/customer";
+import { Input } from "../../../app-common/components/input/input";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { Controller, useForm } from "react-hook-form";
+import { Expense } from "../../../api/model/expense";
+import { ViewOrder } from "./view.order";
+import { CustomerPayments } from "../customers/customer.payments";
+import { ResponsivePie as Pie } from "@nivo/pie";
+import { ResponsiveBar as Bar } from "@nivo/bar";
+import { useTranslation } from "react-i18next";
+import { createColumnHelper } from "@tanstack/react-table";
+import { Shortcut } from "../../../app-common/components/input/shortcut";
+import { SalePrint } from "./sale.print";
+import { useSelector } from "react-redux";
+import { getStore } from "../../../duck/store/store.selector";
 import { TableComponent } from "../../../app-common/components/table/table";
 import useApi from "../../../api/hooks/use.api";
-import { HydraCollection } from "../../../api/model/hydra";
 
 interface Props {
   setAdded: (item: CartItem[]) => void;
@@ -93,8 +79,6 @@ export const SaleHistory: FC<Props> = ({
 
   const store = useSelector(getStore);
 
-  const {t} = useTranslation();
-
   const columnHelper = createColumnHelper<Order>();
 
   const columns = [
@@ -108,7 +92,7 @@ export const SaleHistory: FC<Props> = ({
     }),
     columnHelper.accessor('createdAt', {
       header: 'Time',
-      cell: info => DateTime.fromISO(info.getValue()).toRelative({base: DateTime.now()})
+      cell: info => DateTime.fromISO(info.getValue()).toRelative({ base: DateTime.now() })
     }),
     columnHelper.accessor('customer', {
       header: 'Customer',
@@ -247,14 +231,12 @@ export const SaleHistory: FC<Props> = ({
     })
   ];
 
-  const [params, setParams] = useState<{ [key: string]: any }>();
-
   useEffect(() => {
-    if (data?.list) {
+    if( data?.list ) {
       setList(data?.list);
     }
 
-    if(data?.payments){
+    if( data?.payments ) {
       setPayments(data?.payments);
     }
   }, [data?.list, data?.payments]);
@@ -273,7 +255,7 @@ export const SaleHistory: FC<Props> = ({
       const json = await fetchJson(url.toString());
 
       setExpenses(json.list);
-    } catch (e) {
+    } catch ( e ) {
 
       throw e;
     }
@@ -285,7 +267,7 @@ export const SaleHistory: FC<Props> = ({
 
   const getOrderStatusClasses = (status: string) => {
     let classes: string;
-    switch (status) {
+    switch ( status ) {
       case('Deleted'):
         classes = 'border-danger-500 text-danger-500';
         break;
@@ -316,7 +298,7 @@ export const SaleHistory: FC<Props> = ({
 
   const getOrderStatusIcon = (status: string): IconProp => {
     let icon: IconProp;
-    switch (status) {
+    switch ( status ) {
       case('Deleted'):
         icon = faTrash;
         break;
@@ -347,7 +329,7 @@ export const SaleHistory: FC<Props> = ({
 
   const [unsuspending, setUnsuspending] = useState(false);
   const unsuspendOrder = async (order: Order) => {
-    if (!window.confirm('Unsuspend order?')) return false;
+    if( !window.confirm('Unsuspend order?') ) return false;
     setUnsuspending(true);
     try {
       await fetchJson(ORDER_GET.replace(':id', order.id), {
@@ -373,7 +355,7 @@ export const SaleHistory: FC<Props> = ({
       setCustomer(order?.customer);
 
       setModal(false);
-    } catch (e) {
+    } catch ( e ) {
       throw e;
     } finally {
       setUnsuspending(false);
@@ -382,7 +364,7 @@ export const SaleHistory: FC<Props> = ({
 
   const [refunding, setRefunding] = useState(false);
   const refundOrder = async (order: Order) => {
-    if (!window.confirm('Refund order?')) return false;
+    if( !window.confirm('Refund order?') ) return false;
     setRefunding(true);
     try {
       await fetchJson(ORDER_REFUND.replace(':id', order.id), {
@@ -409,7 +391,7 @@ export const SaleHistory: FC<Props> = ({
       setRefundingFrom!(Number(order.id));
 
       setModal(false);
-    } catch (e) {
+    } catch ( e ) {
       throw e;
     } finally {
       setRefunding(false);
@@ -437,7 +419,7 @@ export const SaleHistory: FC<Props> = ({
 
   const [deleting, setDeleting] = useState(false);
   const deleteOrder = async (order: Order) => {
-    if (!window.confirm('Delete order?')) return false;
+    if( !window.confirm('Delete order?') ) return false;
     setDeleting(true);
     try {
       await fetchJson(ORDER_GET.replace(':id', order.id), {
@@ -445,7 +427,7 @@ export const SaleHistory: FC<Props> = ({
       });
 
       loadList();
-    } catch (e) {
+    } catch ( e ) {
       throw e;
     } finally {
       setDeleting(false);
@@ -454,14 +436,14 @@ export const SaleHistory: FC<Props> = ({
 
   const [restoring, setRestoring] = useState(false);
   const restoreOrder = async (order: Order) => {
-    if (!window.confirm('Restore order?')) return false;
+    if( !window.confirm('Restore order?') ) return false;
     setRestoring(true);
     try {
       await fetchJson(ORDER_RESTORE.replace(':id', order.id), {
         method: 'POST'
       });
       loadList();
-    } catch (e) {
+    } catch ( e ) {
       throw e;
     } finally {
       setRestoring(false);
@@ -470,7 +452,7 @@ export const SaleHistory: FC<Props> = ({
 
   const discountTotal = useMemo(() => {
     return list.reduce((prev, order) => {
-      if (order?.discount && order?.discount?.amount) {
+      if( order?.discount && order?.discount?.amount ) {
         return order?.discount?.amount + prev;
       }
 
@@ -480,7 +462,7 @@ export const SaleHistory: FC<Props> = ({
 
   const taxTotal = useMemo(() => {
     return list.reduce((prev, order) => {
-      if (order?.tax && order?.tax?.amount) {
+      if( order?.tax && order?.tax?.amount ) {
         return order?.tax?.amount + prev;
       }
 
@@ -490,7 +472,7 @@ export const SaleHistory: FC<Props> = ({
 
   const totalAmount = useMemo(() => {
     return list.reduce((prev, order) => {
-      if (order.status !== 'Deleted') {
+      if( order.status !== 'Deleted' ) {
         return prev + order.payments.reduce((p, payment) => p + payment.received, 0)
       }
 
@@ -500,9 +482,9 @@ export const SaleHistory: FC<Props> = ({
 
   const totalCost = useMemo(() => {
     return list.reduce((prev, order) => {
-      if (order.status !== 'Deleted') {
+      if( order.status !== 'Deleted' ) {
         return prev + order.items.reduce((p, item) => {
-          if (item.product.cost) {
+          if( item.product.cost ) {
             return p + item.product.cost;
           }
 
@@ -520,15 +502,15 @@ export const SaleHistory: FC<Props> = ({
   const customerChartData = useMemo(() => {
     const customers: { [name: string]: number } = {};
     list.forEach(order => {
-      if (order?.customer) {
-        if (!customers[order?.customer?.name]) {
+      if( order?.customer ) {
+        if( !customers[order?.customer?.name] ) {
           customers[order?.customer?.name] = 0;
         }
 
         customers[order?.customer?.name] += order.payments.reduce((p, payment) => p + payment.total, 0);
       } else {
         const cash = 'Cash';
-        if (!customers[cash]) {
+        if( !customers[cash] ) {
           customers[cash] = 0;
         }
 
@@ -547,11 +529,11 @@ export const SaleHistory: FC<Props> = ({
     return data;
   }, [list]);
 
-  const {register, handleSubmit, reset, control} = useForm();
+  const { register, handleSubmit, reset, control } = useForm();
 
   useEffect(() => {
     reset({
-      dateTimeFrom: DateTime.now().minus({day: 1}).startOf('day').toFormat("yyyy-MM-dd'T'HH:mm"),
+      dateTimeFrom: DateTime.now().minus({ day: 1 }).startOf('day').toFormat("yyyy-MM-dd'T'HH:mm"),
       dateTimeTo: DateTime.now().endOf('day').toFormat("yyyy-MM-dd'T'HH:mm")
     });
   }, [modal, reset]);
@@ -615,7 +597,7 @@ export const SaleHistory: FC<Props> = ({
               <Button variant="primary" className="w-full" type="submit" disabled={isFetching}>
                 {isFetching ? 'Searching...' : (
                   <>
-                    <FontAwesomeIcon icon={faSearch} className="mr-2"/> Search sale
+                    <FontAwesomeIcon icon={faSearch} className="mr-2"/> Search
                   </>
                 )}
               </Button>
@@ -637,7 +619,7 @@ export const SaleHistory: FC<Props> = ({
                     {payments && (
                       <Pie
                         data={Object.keys(payments).map((item) => {
-                          return {id: item, value: payments[item]};
+                          return { id: item, value: payments[item] };
                         })}
                         innerRadius={0.6}
                         padAngle={0.5}
@@ -645,7 +627,7 @@ export const SaleHistory: FC<Props> = ({
                         arcLinkLabel={d => `${d.id}: ${d.value}`}
                         enableArcLabels={false}
                         enableArcLinkLabels={false}
-                        colors={{scheme: 'purpleRed_green'}}
+                        colors={{ scheme: 'purpleRed_green' }}
                         margin={{
                           top: 20,
                           bottom: 20
@@ -660,11 +642,11 @@ export const SaleHistory: FC<Props> = ({
                   <div className="h-[300px]">
                     <Bar
                       data={[
-                        {id: 'Sale', value: totalAmount.toFixed(2)},
-                        {id: 'Cost', value: totalCost.toFixed(2)},
-                        {id: 'Discount', value: discountTotal.toFixed(2)},
-                        {id: 'Tax', value: taxTotal.toFixed(2)},
-                        {id: 'Expense', value: totalExpenses.toFixed(2)}
+                        { id: 'Sale', value: totalAmount.toFixed(2) },
+                        { id: 'Cost', value: totalCost.toFixed(2) },
+                        { id: 'Discount', value: discountTotal.toFixed(2) },
+                        { id: 'Tax', value: taxTotal.toFixed(2) },
+                        { id: 'Expense', value: totalExpenses.toFixed(2) }
                       ]}
                       // keys={['value']}
                       margin={{
@@ -672,8 +654,8 @@ export const SaleHistory: FC<Props> = ({
                         left: 50,
                         top: 20
                       }}
-                      valueScale={{type: 'linear'}}
-                      tooltip={({indexValue, value}) => {
+                      valueScale={{ type: 'linear' }}
+                      tooltip={({ indexValue, value }) => {
                         return (
                           <span className="bg-white rounded p-1 text-sm shadow">
                             {indexValue}: {value}
@@ -695,8 +677,8 @@ export const SaleHistory: FC<Props> = ({
                         left: 50,
                         top: 20
                       }}
-                      valueScale={{type: 'linear'}}
-                      tooltip={({indexValue, value}) => {
+                      valueScale={{ type: 'linear' }}
+                      tooltip={({ indexValue, value }) => {
                         return (
                           <span className="bg-white rounded p-1 text-sm shadow">
                             {indexValue}: {value}

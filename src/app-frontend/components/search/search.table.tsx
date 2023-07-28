@@ -5,7 +5,7 @@ import {FixedSizeList} from 'react-window'
 import Highlighter from "react-highlight-words";
 import classNames from "classnames";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faBarcode, faLayerGroup} from "@fortawesome/free-solid-svg-icons";
+import {faBarcode} from "@fortawesome/free-solid-svg-icons";
 import {getRealProductPrice} from "../../containers/dashboard/pos";
 
 interface SearchTableProps {
@@ -18,7 +18,6 @@ interface SearchTableProps {
   quantity: number;
   q: string;
 }
-
 
 export const SearchTable = (props: SearchTableProps) => {
   const {searchScrollContainer, items, selected, addItem, quantity, q} = props;

@@ -7,7 +7,10 @@ import envCompatible from 'vite-plugin-env-compatible';
 process.env = {...process.env, ...loadEnv('dev', process.cwd())};
 
 export default defineConfig({
-    resolve: {
+  server: {
+    port: 3000
+  },
+  resolve: {
     alias: [
       {
         find: "common",

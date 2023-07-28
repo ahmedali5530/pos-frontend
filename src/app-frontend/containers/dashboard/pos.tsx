@@ -332,7 +332,8 @@ const Pos: FC = () => {
 
       setAdded(newItems => (
         newItems.map(item => {
-          if( item.item.id === itemId ) {
+          console.log(item)
+          if( item.item.id === itemId && item.item.manageInventory ) {
             if( !variantId ) {
               item.stock = Number(json.list[0].quantity);
             } else {
@@ -684,7 +685,7 @@ const Pos: FC = () => {
               }}
               autoFocus
               ref={searchField}
-              selectable
+              selectable={true}
               className="search-field relative mousetrap flex-1 lg w-full"
               value={q}
               onFocus={() => searchField.current?.select()}
