@@ -104,9 +104,6 @@ export const Items = () => {
       <TableComponent
         columns={columns}
         useLoadList={useLoadHook}
-        params={{
-          store: store?.id
-        }}
         buttons={[
           {
             html: <ImportItems/>,

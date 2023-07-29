@@ -34,3 +34,9 @@ export interface Product extends HydraId, HydraType{
   taxes: Tax[];
   manageInventory?: boolean
 }
+
+export interface SearchableProduct {
+  isVariant?: boolean;
+  variant?: ProductVariant;
+  item: Product
+}

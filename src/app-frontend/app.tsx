@@ -1,6 +1,6 @@
 import Login from './containers/login/login';
 import {BrowserRouter as Router, Route, useLocation} from "react-router-dom";
-import {FORGOT_PASSWORD, LOGIN, POS, RESET_PASSWORD,} from "./routes/frontend.routes";
+import {FORGOT_PASSWORD, LOGIN, POS, RESET_PASSWORD, POS_V2 } from "./routes/frontend.routes";
 import {connect, useSelector} from "react-redux";
 import {RootState} from "../duck/_root/root.state";
 import {isUserLoggedIn} from "../duck/auth/auth.selector";
@@ -15,6 +15,7 @@ import {Error404} from "../app-common/components/error/404";
 import {ForgotPassword} from "./containers/forgot/forgot";
 import Pos from "./containers/dashboard/pos";
 import {ResetPassword} from "./containers/forgot/reset";
+import { PosV2 } from "./containers/dashboard/pos.v2";
 
 export interface AppProps {
   bootstrap: () => void;
@@ -75,6 +76,7 @@ const AppComponent: FunctionComponent<AppProps> = (props) => {
         }/>
 
         <Route path={POS} element={<RequireAuth><Pos/></RequireAuth>}/>
+        <Route path={POS_V2} element={<RequireAuth><PosV2 /></RequireAuth>}/>
 
         {/*if nothing matches show 404*/}
         <Route path="*" element={<Error404/>}/>

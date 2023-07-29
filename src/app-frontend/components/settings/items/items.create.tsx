@@ -45,6 +45,7 @@ import {CreateCategory} from "../categories/create.category";
 import {CreateSupplier} from "../../inventory/supplier/create.supplier";
 import {CreateBrand} from "../brands/create.brand";
 import { Switch } from "../../../../app-common/components/input/switch";
+import { Terminal } from "../../../../api/model/terminal";
 
 interface ItemsCreateProps {
   entity?: Product;
@@ -128,6 +129,9 @@ export const CreateItem = ({
       }
       if (values.barcode) {
         values.barcode = values.barcode.toString();
+      }
+      if(values.terminals){
+        values.terminals = values.terminals.map((t: Terminal) => t['@id'])
       }
 
       await fetchJson(url, {
