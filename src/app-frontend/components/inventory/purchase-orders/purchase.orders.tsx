@@ -1,5 +1,9 @@
 import React, {useState} from "react";
-import {PURCHASE_ORDER_LIST} from "../../../../api/routing/routes/backend.app";
+import {
+  PURCHASE_DELETE,
+  PURCHASE_ORDER_DELETE,
+  PURCHASE_ORDER_LIST
+} from "../../../../api/routing/routes/backend.app";
 import {useSelector} from "react-redux";
 import {getStore} from "../../../../duck/store/store.selector";
 import {useTranslation} from "react-i18next";
@@ -13,14 +17,19 @@ import {CreatePurchaseOrder} from "./create.purchase.order";
 import useApi from "../../../../api/hooks/use.api";
 import {HydraCollection} from "../../../../api/model/hydra";
 import { DateTime } from "luxon";
+import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
+import { jsonRequest } from "../../../../api/request/request";
 
 export const PurchaseOrders = () => {
   const [operation, setOperation] = useState('create');
+  const store = useSelector(getStore);
 
-  const useLoadHook = useApi<HydraCollection<PurchaseOrder>>('purchaseOrders', PURCHASE_ORDER_LIST);
+
+  const useLoadHook = useApi<HydraCollection<PurchaseOrder>>('purchaseOrders', PURCHASE_ORDER_LIST, {
+    store: store?.id
+  });
   const [purchaseOrder, setPurchaseOrder] = useState<PurchaseOrder | undefined>();
 
-  const store = useSelector(getStore);
 
   const {t} = useTranslation();
 
@@ -32,6 +41,10 @@ export const PurchaseOrders = () => {
     }),
     columnHelper.accessor('supplier.name', {
       header: ('Supplier'),
+    }),
+    columnHelper.accessor('isUsed', {
+      header: 'Status',
+      cell: info => info.getValue() ? 'Used' : 'Open',
     }),
     columnHelper.accessor('createdAt', {
       header: ('Created at'),
@@ -52,21 +65,43 @@ export const PurchaseOrders = () => {
     cell: (info) => {
       return (
         <>
-          <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
-            setOperation('update');
-            setPurchaseOrder(info.row.original);
-            setAddModal(true);
-          }} tabIndex={-1}>
-            <FontAwesomeIcon icon={faPencilAlt}/>
-          </Button>
-          <span className="mx-2 text-gray-300">|</span>
-          <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
-            <FontAwesomeIcon icon={faTrash}/>
-          </Button>
+          {!info.row.original.isUsed && (
+            <>
+              <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
+                setOperation('update');
+                setPurchaseOrder(info.row.original);
+                setAddModal(true);
+              }} tabIndex={-1}>
+                <FontAwesomeIcon icon={faPencilAlt}/>
+              </Button>
+              <span className="mx-2 text-gray-300">|</span>
+              <ConfirmAlert
+                onConfirm={() => {
+                  deletePurchaseOrder(info.getValue().toString());
+                }}
+                confirmText="Yes, please"
+                cancelText="No, wait"
+                title="Confirm deletion"
+                description="Are you sure to delete this purchase order?"
+              >
+                <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
+                  <FontAwesomeIcon icon={faTrash}/>
+                </Button>
+              </ConfirmAlert>
+            </>
+          )}
         </>
       )
     }
   }));
+
+  async function deletePurchaseOrder(id: string) {
+    await jsonRequest(PURCHASE_ORDER_DELETE.replace(':id', id), {
+      method: 'DELETE'
+    });
+
+    await useLoadHook.fetchData();
+  }
 
   const [addModal, setAddModal] = useState(false);
 
@@ -75,9 +110,6 @@ export const PurchaseOrders = () => {
       <TableComponent
         columns={columns}
         useLoadList={useLoadHook}
-        params={{
-          store: store?.id
-        }}
         loaderLineItems={5}
         buttons={[{
           html: <Button variant="primary" onClick={() => {

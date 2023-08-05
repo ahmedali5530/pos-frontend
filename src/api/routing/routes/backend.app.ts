@@ -18,7 +18,11 @@ export const PRODUCT_GET = scopeUrl('/products/:id');
 export const PRODUCT_UPLOAD = scopeUrl('/products/import');
 export const PRODUCT_DOWNLOAD = scopeUrl('/admin/product/export');
 export const PRODUCT_VARIANT = scopeUrl('/product_variants');
-export const PRODUCT_VARIANT_GET = scopeUrl('/product_variants/:id')
+export const PRODUCT_VARIANT_GET = scopeUrl('/product_variants/:id');
+
+export const BARCODE_LIST = scopeUrl('/barcodes');
+export const BARCODE_CREATE = scopeUrl('/barcodes');
+export const BARCODE_GET = scopeUrl('/barcodes/:id');
 
 export const ORDER_LIST = scopeUrl('/admin/order/list');
 export const ORDER_CREATE = scopeUrl('/admin/order/create');
@@ -94,6 +98,7 @@ export const STORE_CREATE = scopeUrl('/stores');
 export const STORE_EDIT = scopeUrl('/stores/:id');
 
 export const USER_LIST = scopeUrl('/users');
+export const USER_GET = scopeUrl('/users/:id');
 export const USER_CREATE = scopeUrl('/admin/user/create');
 export const USER_EDIT = scopeUrl('/admin/user/:id');
 

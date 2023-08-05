@@ -4,7 +4,7 @@ import {faPencilAlt, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {Button} from "../../../../app-common/components/input/button";
 import React, {useState} from "react";
 import {Category} from "../../../../api/model/category";
-import {CATEGORY_LIST,} from "../../../../api/routing/routes/backend.app";
+import { CATEGORY_GET, CATEGORY_LIST, } from "../../../../api/routing/routes/backend.app";
 import {TableComponent} from "../../../../app-common/components/table/table";
 import {createColumnHelper} from "@tanstack/react-table";
 import {useSelector} from "react-redux";
@@ -12,16 +12,20 @@ import {getStore} from "../../../../duck/store/store.selector";
 import {CreateCategory} from "./create.category";
 import useApi from "../../../../api/hooks/use.api";
 import {HydraCollection} from "../../../../api/model/hydra";
+import { jsonRequest } from "../../../../api/request/request";
+import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
+import { Switch } from "../../../../app-common/components/input/switch";
 
 export const Categories = () => {
   const [operation, setOperation] = useState('create');
   const [category, setCategory] = useState<Category>();
   const [modal, setModal] = useState(false);
-
-  const useLoadHook = useApi<HydraCollection<Category>>('categories', CATEGORY_LIST);
-  const {fetchData} = useLoadHook;
-
   const store = useSelector(getStore);
+
+  const useLoadHook = useApi<HydraCollection<Category>>('categories', CATEGORY_LIST, {
+    store: store?.id
+  });
+  const {fetchData} = useLoadHook;
 
   const {t} = useTranslation();
 
@@ -51,23 +55,39 @@ export const Categories = () => {
               <FontAwesomeIcon icon={faPencilAlt}/>
             </Button>
             <span className="mx-2 text-gray-300">|</span>
-            <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
-              <FontAwesomeIcon icon={faTrash}/>
-            </Button>
+            <ConfirmAlert
+              onConfirm={() => {
+                deleteCategory(info.getValue().toString(), !info.row.original.isActive);
+              }}
+              confirmText="Yes, please"
+              cancelText="No, wait"
+              title="Confirm deletion"
+              description="Are you sure to delete this category?"
+            >
+              <Switch checked={info.row.original.isActive} readOnly />
+            </ConfirmAlert>
           </>
         )
       }
     })
   ];
 
+  async function deleteCategory(id: string, status: boolean) {
+    await jsonRequest(CATEGORY_GET.replace(':id', id), {
+      method: 'PUT',
+      body: JSON.stringify({
+        isActive: status
+      })
+    });
+
+    await useLoadHook.fetchData();
+  }
+
   return (
     <>
       <TableComponent
         columns={columns}
         useLoadList={useLoadHook}
-        params={{
-          store: store?.id
-        }}
         loaderLineItems={3}
         buttons={[{
           html: <Button variant="primary" onClick={() => {

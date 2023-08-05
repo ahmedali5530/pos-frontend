@@ -54,6 +54,7 @@ interface Props {
   setSaleModal?: (state: boolean) => void;
   adjustment: number;
   setAdjustment: (adj: number) => void;
+  onSale?: () => void;
 }
 
 export const CloseSaleInline: FC<Props> = ({
@@ -61,7 +62,7 @@ export const CloseSaleInline: FC<Props> = ({
   setTax, setDiscountAmount, paymentTypesList, subTotal, taxTotal, couponTotal,
   discountTotal, customer, setCustomer, discountAmount, refundingFrom,
   setRefundingFrom, discountRateType, setDiscountRateType, isInline, saleModal,
-  setSaleModal, adjustment, setAdjustment
+  setSaleModal, adjustment, setAdjustment, onSale
 }) => {
   const {register, handleSubmit, watch, reset, control, getValues} = useForm();
   const [isSaleClosing, setSaleClosing] = useState(false);
@@ -162,6 +163,7 @@ export const CloseSaleInline: FC<Props> = ({
       setPayments([]);
 
       if (!hold) {
+        onSale && onSale();
         //print the order
         PrintOrder(json.order);
       }
@@ -540,7 +542,7 @@ export const CloseSaleInline: FC<Props> = ({
 
             <div className="mb-3">
               <label htmlFor="notes">Notes</label>
-              <Textarea {...register('notes')} className="w-full" id="notes" tabIndex={-1}/>
+              <Textarea {...register('notes')} className="w-full" id="notes" tabIndex={-1} />
             </div>
 
             <div className="flex gap-3 flex-wrap">

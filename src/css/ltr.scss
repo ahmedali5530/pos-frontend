@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css');
 
 :root {
@@ -24,7 +24,7 @@
 
 body{
   @apply bg-black;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Barlow', sans-serif;
   background-color: #f3f3f3;
 }
 
@@ -97,6 +97,13 @@ a{
   align-items: center;
   background-color: rgba(255, 255, 255, 0.5);
   border-radius: 50%;
+}
+
+.btn-square{
+  width: 40px;
+  &.lg{
+    width: 48px;
+  }
 }
 
 .sidebar-open .dashboard-sidebar{
@@ -225,9 +232,9 @@ a{
   }
   &.btn-secondary{
     @apply border-gray-500 text-gray-500 focus:outline-none focus:border-gray-500
-    active:bg-gray-500 active:text-white hover:bg-gray-50 focus:bg-gray-50;
+    active:bg-gray-500 active:text-white hover:bg-gray-200 focus:bg-gray-200;
     &:disabled{
-      @apply bg-gray-100;
+      @apply bg-gray-200;
     }
     &.active{
       @apply bg-gray-500 text-white shadow-none;
@@ -303,6 +310,9 @@ a{
   &.secondary{
     @apply border-gray-500 focus:ring-gray-200 focus:border-gray-500 disabled:bg-gray-100 read-only:bg-gray-100;
   }
+}
+textarea.form-control, textarea.input{
+  height: auto;
 }
 
 .form-control:disabled{

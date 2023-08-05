@@ -10,8 +10,6 @@ import {Controller, useForm} from "react-hook-form";
 import {DateTime} from "luxon";
 import {Expenses} from "./expenses";
 import {Expense} from "../../../api/model/expense";
-import {useLoadList} from "../../../api/hooks/use.load.list";
-import {Order} from "../../../api/model/order";
 import {useSelector} from "react-redux";
 import {getAuthorizedUser} from "../../../duck/auth/auth.selector";
 import classNames from "classnames";
@@ -21,6 +19,12 @@ import {getTerminal} from "../../../duck/terminal/terminal.selector";
 import {HttpException, UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
 import {notify} from "../../../app-common/components/confirm/notification";
 import {ConstraintViolation, ValidationResult} from "../../../lib/validator/validation.result";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faShopLock } from "@fortawesome/free-solid-svg-icons";
+import { Tooltip } from "antd";
+import { HydraCollection } from "../../../api/model/hydra";
+import useApi from "../../../api/hooks/use.api";
+import { Order } from "../../../api/model/order";
 
 interface TaxProps extends PropsWithChildren {
 
@@ -33,8 +37,8 @@ export const SaleClosing: FC<TaxProps> = (props) => {
 
   const [payments, setPayments] = useState<{ [key: string]: number }>({});
 
-  const useLoadHook = useLoadList<Order>(ORDER_LIST);
-  const {handleFilterChange, data} = useLoadHook;
+  const useLoadHook = useApi<{count: number, list: Order[], payments: {[name: string]: number}, total: number}>('orders', ORDER_LIST);
+  const {handleFilterChange, data, fetchData: fetchOrders} = useLoadHook;
 
   //check for day closing
   const [closing, setClosing] = useState<Closing>();
@@ -96,6 +100,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
 
   useEffect(() => {
     if(modal) {
+      fetchOrders();
       checkDayOpening();
     }
   }, [modal]);
@@ -107,8 +112,8 @@ export const SaleClosing: FC<TaxProps> = (props) => {
   const user = useSelector(getAuthorizedUser);
 
   useEffect(() => {
-    if(data?.data?.payments) {
-      setPayments(data?.data?.payments);
+    if(data?.payments) {
+      setPayments(data?.payments);
     }
   }, [data]);
 
@@ -205,13 +210,15 @@ export const SaleClosing: FC<TaxProps> = (props) => {
 
   return (
     <>
-      <Button variant="primary" size="lg" onClick={() => {
-        setModal(true);
-        setTitle('Close day');
-        setHideCloseButton(false);
-      }} title="Day closing" tabIndex={-1}>
-        Day closing
-      </Button>
+      <Tooltip title="Day closing">
+        <Button variant="primary" size="lg" onClick={() => {
+          setModal(true);
+          setTitle('Close day');
+          setHideCloseButton(false);
+        }} tabIndex={-1}>
+          <FontAwesomeIcon icon={faShopLock} />
+        </Button>
+      </Tooltip>
 
       <Modal open={modal} onClose={() => {
         setModal(false);

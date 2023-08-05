@@ -54,8 +54,8 @@ const ConfirmAlertButtons = ({
         <p className="mb-3">{description}</p>
       )}
       <div className="flex justify-end gap-2">
-        <button onClick={onCancel} className="btn btn-secondary sm">{cancelText||'Cancel'}</button>
-        <button onClick={onConfirm} className="btn btn-danger sm">{confirmText||'Delete'}</button>
+        <button onClick={onCancel} className="btn btn-secondary btn-flat" autoFocus={true}>{cancelText||'Cancel'}</button>
+        <button onClick={onConfirm} className="btn btn-danger btn-flat">{confirmText||'Delete'}</button>
       </div>
     </>
   )

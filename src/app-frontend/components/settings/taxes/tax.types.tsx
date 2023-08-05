@@ -1,30 +1,35 @@
-import React, {useState} from "react";
-import {TAX_LIST,} from "../../../../api/routing/routes/backend.app";
-import {useTranslation} from "react-i18next";
-import {createColumnHelper} from "@tanstack/react-table";
-import {Button} from "../../../../app-common/components/input/button";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPencilAlt, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
-import {TableComponent} from "../../../../app-common/components/table/table";
-import {Tax} from "../../../../api/model/tax";
-import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
-import {useSelector} from "react-redux";
-import {getStore} from "../../../../duck/store/store.selector";
-import {CreateTax} from "./create.tax";
+import React, { useState } from "react";
+import { TAX_GET, TAX_LIST, } from "../../../../api/routing/routes/backend.app";
+import { useTranslation } from "react-i18next";
+import { createColumnHelper } from "@tanstack/react-table";
+import { Button } from "../../../../app-common/components/input/button";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPencilAlt, faPlus } from "@fortawesome/free-solid-svg-icons";
+import { TableComponent } from "../../../../app-common/components/table/table";
+import { Tax } from "../../../../api/model/tax";
+import { getAuthorizedUser } from "../../../../duck/auth/auth.selector";
+import { useSelector } from "react-redux";
+import { getStore } from "../../../../duck/store/store.selector";
+import { CreateTax } from "./create.tax";
 import useApi from "../../../../api/hooks/use.api";
-import {HydraCollection} from "../../../../api/model/hydra";
+import { HydraCollection } from "../../../../api/model/hydra";
+import { jsonRequest } from "../../../../api/request/request";
+import { Switch } from "../../../../app-common/components/input/switch";
+import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
 
 export const TaxTypes = () => {
   const [operation, setOperation] = useState('create');
   const [tax, setTax] = useState<Tax>();
   const [modal, setModal] = useState(false);
-
-  const useLoadHook = useApi<HydraCollection<Tax>>('taxes', TAX_LIST);
-  const {fetchData} = useLoadHook;
   const user = useSelector(getAuthorizedUser);
   const store = useSelector(getStore);
 
-  const {t} = useTranslation();
+  const useLoadHook = useApi<HydraCollection<Tax>>('taxes', TAX_LIST, {
+    store: store?.id
+  });
+  const { fetchData } = useLoadHook;
+
+  const { t } = useTranslation();
 
   const columnHelper = createColumnHelper<Tax>();
 
@@ -56,14 +61,33 @@ export const TaxTypes = () => {
               <FontAwesomeIcon icon={faPencilAlt}/>
             </Button>
             <span className="mx-2 text-gray-300">|</span>
-            <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
-              <FontAwesomeIcon icon={faTrash}/>
-            </Button>
+            <ConfirmAlert
+              onConfirm={() => {
+                deleteTax(info.getValue().toString(), !info.row.original.isActive);
+              }}
+              confirmText="Yes, please"
+              cancelText="No, wait"
+              title="Confirm deletion"
+              description={`Are you sure to ${info.row.original.isActive ? 'de-' : ''}activate this tax?`}
+            >
+              <Switch checked={info.row.original.isActive} readOnly/>
+            </ConfirmAlert>
           </>
         )
       }
     })
   ];
+
+  async function deleteTax(id: string, status: boolean) {
+    await jsonRequest(TAX_GET.replace(':id', id), {
+      method: 'PUT',
+      body: JSON.stringify({
+        isActive: status
+      })
+    });
+
+    await useLoadHook.fetchData();
+  }
 
 
   return (
@@ -71,9 +95,6 @@ export const TaxTypes = () => {
       <TableComponent
         columns={columns}
         useLoadList={useLoadHook}
-        params={{
-          store: store?.id
-        }}
         loaderLineItems={4}
         buttons={[{
           html: <Button variant="primary" onClick={() => {

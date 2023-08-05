@@ -8,4 +8,5 @@ export interface User extends HydraId, HydraType {
   email: string;
   roles: string[];
   stores: Store[];
+  isActive: boolean
 }

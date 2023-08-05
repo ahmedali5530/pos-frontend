@@ -1,6 +1,6 @@
 import { notification} from 'antd';
 import {ReactNode} from "react";
-import {IconType} from "antd/es/notification/interface";
+import {IconType, NotificationPlacement} from "antd/es/notification/interface";
 
 interface NotifyProps{
   title?: string;
@@ -8,16 +8,19 @@ interface NotifyProps{
   onClick?: () => void;
   icon?: ReactNode;
   type?: IconType;
+  placement?: NotificationPlacement;
+  duration?: number;
 }
 export const notify = ({
-  title, description, onClick, type
+  title, description, onClick, type, placement, duration
 }: NotifyProps) => {
   notification.open({
     message: title || type?.toUpperCase(),
     description: description,
     type: type,
     onClick,
-    placement: 'bottomRight',
-    key: 'persistent'
+    placement: placement || 'bottomRight',
+    key: 'persistent',
+    duration: duration || 2,
   });
 };

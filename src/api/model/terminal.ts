@@ -12,4 +12,5 @@ export interface Terminal extends HydraId, HydraType {
   createdAt: {datetime: string};
   updatedAt: {datetime: string};
   products: Product[];
+  isActive: boolean
 }

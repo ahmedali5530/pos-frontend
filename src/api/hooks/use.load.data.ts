@@ -67,7 +67,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
   const dispatch = useDispatch();
 
   const loadProducts = async (offset = 1, limit = 100) => {
-    const res = await jsonRequest(`${PRODUCT_LIST}?itemsPerPage=${limit}&page=${offset}`);
+    const res = await jsonRequest(`${PRODUCT_LIST}?itemsPerPage=${limit}&page=${offset}&isActive=true`);
     const l = await res.json();
 
     offset += 1;
@@ -105,7 +105,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
     if (localDiscountList === null) {
       dispatch(progressAction('Discounts'))
       try {
-        const discount = await jsonRequest(DISCOUNT_LIST);
+        const discount = await jsonRequest(`${DISCOUNT_LIST}?isActive=true`);
         const discountList = await discount.json();
 
         discountList.list = discountList['hydra:member'];
@@ -124,7 +124,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
     if (localTaxList === null) {
       dispatch(progressAction('Taxes'))
       try {
-        const taxList = await jsonRequest(TAX_LIST);
+        const taxList = await jsonRequest(`${TAX_LIST}?isActive=true`);
         const json = await taxList.json();
 
         json.list = json['hydra:member'];
@@ -143,7 +143,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
     if (localPaymentTypesList === null) {
       dispatch(progressAction('Payment types'))
       try {
-        const paymentTypesList = await jsonRequest(PAYMENT_TYPE_LIST);
+        const paymentTypesList = await jsonRequest(`${PAYMENT_TYPE_LIST}?isActive=true`);
         const json = await paymentTypesList.json();
 
         json.list = json['hydra:member'];
@@ -162,7 +162,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
     if (localDeviceList === null) {
       dispatch(progressAction('Devices'))
       try {
-        const deviceList = await jsonRequest(DEVICE_LIST);
+        const deviceList = await jsonRequest(`${DEVICE_LIST}?isActive=true`);
         const json = await deviceList.json();
 
         json.list = json['hydra:member'];

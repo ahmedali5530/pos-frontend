@@ -24,9 +24,10 @@ import classNames from "classnames";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faEye} from "@fortawesome/free-solid-svg-icons";
 import {ViewPurchase} from "../purchase/view.purchase";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {SupplierPayment} from "../../../../api/model/supplier.payment";
 import {Purchase} from "../../../../api/model/purchase";
+import useApi from "../../../../api/hooks/use.api";
+import { HydraCollection } from "../../../../api/model/hydra";
 
 interface SupplierLedgerProps extends PropsWithChildren {
   supplier: Supplier;
@@ -47,21 +48,29 @@ export const SupplierLedger: FC<SupplierLedgerProps> = ({
   const [creating, setCreating] = useState(false);
   const [supplier, setSupplier] = useState<Supplier>(supplierProp);
   const {
-    list: payments,
+    data: payments,
     fetchData: loadPayments
-  } = useLoadList<SupplierPayment>(SUPPLIER_PAYMENT_LIST.replace(':id', supplier.id), {
+  } = useApi<HydraCollection<SupplierPayment>>('supplierPayments', SUPPLIER_PAYMENT_LIST.replace(':id', supplier.id), {
     limit: 9999999
   });
 
   const {
-    list: purchases
-  } = useLoadList<Purchase>(SUPPLIER_PURCHASE_LIST.replace(':id', supplier.id), {
+    data: purchases,
+    fetchData: loadPurchases,
+  } = useApi<HydraCollection<Purchase>>('supplierPurchases', SUPPLIER_PURCHASE_LIST.replace(':id', supplier.id), {
     limit: 9999999
   });
 
   useEffect(() => {
     setSupplier(supplierProp);
   }, [supplierProp]);
+
+  useEffect(() => {
+    if(modal){
+      loadPayments();
+      loadPurchases();
+    }
+  }, [modal])
 
   const createPayment = async (values: any) => {
     setCreating(true);
@@ -109,7 +118,7 @@ export const SupplierLedger: FC<SupplierLedgerProps> = ({
   };
 
   const purchaseTotal = useMemo(() => {
-    return purchases.reduce((prev, item) => {
+    return purchases?.['hydra:member']?.reduce((prev, item) => {
       if(item.paymentType && item.paymentType.type === 'credit'){
         return prev + item.total;
       }
@@ -117,19 +126,19 @@ export const SupplierLedger: FC<SupplierLedgerProps> = ({
     }, 0);
   }, [purchases]);
   const paymentTotal = useMemo(() => {
-    return payments.reduce((prev, item) => prev + Number(item.amount), 0);
+    return payments?.['hydra:member']?.reduce((prev, item) => prev + Number(item.amount), 0);
   }, [payments]);
 
   const diff = useMemo(() => {
-    return purchaseTotal - paymentTotal + Number(supplier.openingBalance);
+    return Number(purchaseTotal) - Number(paymentTotal) + Number(supplier.openingBalance);
   }, [purchaseTotal, paymentTotal, supplier]);
 
   const list = useMemo(() => {
     let list: any = [];
-    payments.forEach(item => {
+    payments?.['hydra:member']?.forEach(item => {
       list.push(item);
     });
-    purchases.forEach(item => {
+    purchases?.['hydra:member']?.forEach(item => {
       list.push(item);
     });
 
@@ -176,7 +185,7 @@ export const SupplierLedger: FC<SupplierLedgerProps> = ({
                 name="purchase"
                 render={(props) => (
                   <ReactSelect
-                    options={purchases.reverse().map(item => {
+                    options={purchases?.['hydra:member']?.reverse().map(item => {
                       return {
                         label: `${item.purchaseNumber} (${DateTime.fromISO(item.createdAt).toFormat('ff')})`,
                         value: item['@id']

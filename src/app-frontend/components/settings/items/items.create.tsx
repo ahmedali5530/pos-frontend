@@ -1,51 +1,49 @@
-import {Controller, useForm} from "react-hook-form";
-import React, {useEffect, useState} from "react";
+import { Controller, useForm } from "react-hook-form";
+import React, { useEffect, useState } from "react";
 import {
   BRAND_LIST,
   CATEGORY_LIST,
   DEPARTMENT_LIST,
   PRODUCT_CREATE,
   PRODUCT_GET,
-  PRODUCT_VARIANT,
   SUPPLIER_LIST,
   TAX_LIST
 } from "../../../../api/routing/routes/backend.app";
-import {fetchJson, jsonRequest} from "../../../../api/request/request";
-import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
-import {ConstraintViolation} from "../../../../lib/validator/validation.result";
-import {Input} from "../../../../app-common/components/input/input";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPlus, faRefresh} from "@fortawesome/free-solid-svg-icons";
-import {Button} from "../../../../app-common/components/input/button";
-import {Category} from "../../../../api/model/category";
-import {Product} from "../../../../api/model/product";
-import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
-import {ReactSelectOptionProps} from "../../../../api/model/common";
-import {Supplier} from "../../../../api/model/supplier";
-import {Brand} from "../../../../api/model/brand";
-import {withCurrency} from "../../../../lib/currency/currency";
+import { fetchJson } from "../../../../api/request/request";
+import { HttpException, UnprocessableEntityException } from "../../../../lib/http/exception/http.exception";
+import { ConstraintViolation } from "../../../../lib/validator/validation.result";
+import { Input } from "../../../../app-common/components/input/input";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlus, faRefresh } from "@fortawesome/free-solid-svg-icons";
+import { Button } from "../../../../app-common/components/input/button";
+import { Category } from "../../../../api/model/category";
+import { Product } from "../../../../api/model/product";
+import { ReactSelect } from "../../../../app-common/components/input/custom.react.select";
+import { ReactSelectOptionProps } from "../../../../api/model/common";
+import { Supplier } from "../../../../api/model/supplier";
+import { Brand } from "../../../../api/model/brand";
+import { withCurrency } from "../../../../lib/currency/currency";
 import classNames from "classnames";
-import {getErrorClass, getErrors, hasErrors} from "../../../../lib/error/error";
-import {Department} from "../../../../api/model/department";
-import {ProductVariants} from "./products/variants";
-import {CreateVariants} from "./products/create.variants";
-import {Tax} from "../../../../api/model/tax";
-import {StoresInput} from "../../../../app-common/components/input/stores";
-import {ProductVariant} from "../../../../api/model/product.variant";
-import {Modal} from "../../../../app-common/components/modal/modal";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
-import {notify} from "../../../../app-common/components/confirm/notification";
+import { getErrorClass, getErrors, hasErrors } from "../../../../lib/error/error";
+import { Department } from "../../../../api/model/department";
+import { ProductVariants } from "./products/variants";
+import { CreateVariants } from "./products/create.variants";
+import { Tax } from "../../../../api/model/tax";
+import { StoresInput } from "../../../../app-common/components/input/stores";
+import { Modal } from "../../../../app-common/components/modal/modal";
+import { notify } from "../../../../app-common/components/confirm/notification";
 import * as yup from 'yup';
-import {ValidationMessage} from "../../../../api/model/validation";
-import {yupResolver} from "@hookform/resolvers/yup";
-import {groupBy} from "lodash";
-import {CreateDepartment} from "../departments/create.department";
-import {CreateTax} from "../taxes/create.tax";
-import {CreateCategory} from "../categories/create.category";
-import {CreateSupplier} from "../../inventory/supplier/create.supplier";
-import {CreateBrand} from "../brands/create.brand";
+import { ValidationMessage } from "../../../../api/model/validation";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { CreateDepartment } from "../departments/create.department";
+import { CreateTax } from "../taxes/create.tax";
+import { CreateCategory } from "../categories/create.category";
+import { CreateSupplier } from "../../inventory/supplier/create.supplier";
+import { CreateBrand } from "../brands/create.brand";
 import { Switch } from "../../../../app-common/components/input/switch";
 import { Terminal } from "../../../../api/model/terminal";
+import useApi from "../../../../api/hooks/use.api";
+import { HydraCollection } from "../../../../api/model/hydra";
 
 interface ItemsCreateProps {
   entity?: Product;
@@ -77,7 +75,7 @@ export const CreateItem = ({
     resolver: yupResolver(ValidationSchema)
   });
 
-  const {register, handleSubmit, setError, formState: {errors}, reset, getValues, control, watch} = useFormHook;
+  const { register, handleSubmit, setError, formState: { errors }, reset, getValues, control, watch } = useFormHook;
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
 
@@ -90,47 +88,47 @@ export const CreateItem = ({
     try {
       let url = PRODUCT_CREATE;
       let method = 'POST';
-      if (values.id) {
+      if( values.id ) {
         method = 'PUT';
         url = PRODUCT_GET.replace(':id', values.id);
-        if (values.variants) {
+        if( values.variants ) {
           values.variants = values.variants.map((variant: any) => ({
             ...variant
           }));
         }
       } else {
         delete values.id;
-        if (values.variants) {
+        if( values.variants ) {
           values.variants = values.variants.map((variant: any) => ({
             ...variant
           }));
         }
       }
 
-      if (values.categories) {
+      if( values.categories ) {
         values.categories = values.categories.map((item: ReactSelectOptionProps) => item.value);
       }
-      if (values.suppliers) {
+      if( values.suppliers ) {
         values.suppliers = values.suppliers.map((item: ReactSelectOptionProps) => item.value);
       }
-      if (values.brands) {
+      if( values.brands ) {
         values.brands = values.brands.map((item: ReactSelectOptionProps) => item.value);
       }
-      if (values.stores) {
+      if( values.stores ) {
         values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value);
       }
-      if (values.department) {
+      if( values.department ) {
         values.department = values.department.value;
       }
-      if (values.taxes) {
+      if( values.taxes ) {
         values.taxes = values.taxes.map((item: ReactSelectOptionProps) => item.value);
       } else {
         values.taxes = [];
       }
-      if (values.barcode) {
+      if( values.barcode ) {
         values.barcode = values.barcode.toString();
       }
-      if(values.terminals){
+      if( values.terminals ) {
         values.terminals = values.terminals.map((t: Terminal) => t['@id'])
       }
 
@@ -147,17 +145,17 @@ export const CreateItem = ({
 
       onModalClose();
 
-    } catch (exception: any) {
-      if (exception instanceof HttpException) {
+    } catch ( exception: any ) {
+      if( exception instanceof HttpException ) {
         notify({
           type: 'error',
           description: exception.message
         });
       }
 
-      if (exception instanceof UnprocessableEntityException) {
+      if( exception instanceof UnprocessableEntityException ) {
         const e = await exception.response.json();
-        if (e.violations) {
+        if( e.violations ) {
           e.violations.forEach((item: ConstraintViolation) => {
             setError(item.propertyPath, {
               message: item.message,
@@ -166,7 +164,7 @@ export const CreateItem = ({
           });
         }
 
-        if (e.errorMessage) {
+        if( e.errorMessage ) {
           notify({
             type: 'error',
             description: e.errorMessage
@@ -183,18 +181,40 @@ export const CreateItem = ({
   };
 
   const {
-    list: categories,
+    data: categories,
     fetchData: loadCategories,
-    loading: loadingCategories
-  } = useLoadList<Category>(CATEGORY_LIST);
-  const {list: suppliers, fetchData: loadSuppliers, loading: loadingSuppliers} = useLoadList<Supplier>(SUPPLIER_LIST);
-  const {list: brands, fetchData: loadBrands, loading: loadingBrands} = useLoadList<Brand>(BRAND_LIST);
+    isLoading: loadingCategories
+  } = useApi<HydraCollection<Category>>('categories', CATEGORY_LIST, {
+    isActive: true
+  });
   const {
-    list: department,
+    data: suppliers,
+    fetchData: loadSuppliers,
+    isLoading: loadingSuppliers
+  } = useApi<HydraCollection<Supplier>>('suppliers', SUPPLIER_LIST, {
+    isActive: true
+  });
+  const {
+    data: brands,
+    fetchData: loadBrands,
+    isLoading: loadingBrands
+  } = useApi<HydraCollection<Brand>>('brands', BRAND_LIST, {
+    isActive: true
+  });
+  const {
+    data: departments,
     fetchData: loadDepartments,
-    loading: loadingDepartments
-  } = useLoadList<Department>(DEPARTMENT_LIST);
-  const {list: taxes, fetchData: loadTaxes, loading: loadingTaxes} = useLoadList<Tax>(TAX_LIST);
+    isLoading: loadingDepartments
+  } = useApi<HydraCollection<Department>>('departments', DEPARTMENT_LIST, {
+    isActive: true
+  });
+  const {
+    data: taxes,
+    fetchData: loadTaxes,
+    isLoading: loadingTaxes
+  } = useApi<HydraCollection<Tax>>('taxes', TAX_LIST, {
+    isActive: true
+  });
 
   const [categoryModal, setCategoryModal] = useState(false);
   const [supplierModal, setSupplierModal] = useState(false);
@@ -203,7 +223,7 @@ export const CreateItem = ({
   const [taxModal, setTaxModal] = useState(false);
 
   useEffect(() => {
-    if (entity) {
+    if( entity ) {
       reset({
         ...entity,
         suppliers: entity.suppliers.map(item => ({
@@ -290,7 +310,7 @@ export const CreateItem = ({
                     <ReactSelect
                       onChange={props.field.onChange}
                       value={props.field.value}
-                      options={department.map(item => {
+                      options={departments?.['hydra:member']?.map(item => {
                         return {
                           label: item.name,
                           value: item['@id']
@@ -424,7 +444,7 @@ export const CreateItem = ({
                 render={(props) => (
                   <div className="input-group">
                     <ReactSelect
-                      options={taxes.map(item => ({
+                      options={taxes?.['hydra:member']?.map(item => ({
                         label: `${item.name} ${item.rate}%`,
                         value: item['@id']
                       }))}
@@ -440,7 +460,7 @@ export const CreateItem = ({
                       isLoading={loadingTaxes}
                     />
                     <button className="btn btn-primary" type={"button"} onClick={() => setTaxModal(true)}>
-                      <FontAwesomeIcon icon={faPlus} />
+                      <FontAwesomeIcon icon={faPlus}/>
                     </button>
                   </div>
                 )}
@@ -460,7 +480,7 @@ export const CreateItem = ({
                   render={(props) => (
                     <div className="input-group">
                       <ReactSelect
-                        options={categories.map(item => ({
+                        options={categories?.['hydra:member']?.map(item => ({
                           label: item.name,
                           value: item['@id']
                         }))}
@@ -492,7 +512,7 @@ export const CreateItem = ({
                   render={(props) => (
                     <div className="input-group">
                       <ReactSelect
-                        options={suppliers.map(item => ({
+                        options={suppliers?.['hydra:member']?.map(item => ({
                           label: item.name,
                           value: item['@id']
                         }))}
@@ -524,7 +544,7 @@ export const CreateItem = ({
                   render={(props) => (
                     <div className="input-group">
                       <ReactSelect
-                        options={brands.map(item => ({
+                        options={brands?.['hydra:member']?.map(item => ({
                           label: item.name,
                           value: item['@id']
                         }))}
@@ -577,27 +597,27 @@ export const CreateItem = ({
       <CreateDepartment addModal={departmentModal} operation="create" onClose={() => {
         setDepartmentModal(false);
         loadDepartments();
-      }} />
+      }}/>
 
       <CreateTax addModal={taxModal} operation="create" onClose={() => {
         setTaxModal(false);
         loadTaxes();
-      }} />
+      }}/>
 
       <CreateCategory addModal={categoryModal} operation="create" onClose={() => {
         setCategoryModal(false);
         loadCategories();
-      }} />
+      }}/>
 
       <CreateSupplier operation="create" showModal={supplierModal} onClose={() => {
         setSupplierModal(false);
         loadSuppliers();
-      }} />
+      }}/>
 
       <CreateBrand addModal={brandModal} operation="create" onClose={() => {
         setBrandModal(false);
         loadBrands();
-      }} />
+      }}/>
     </>
   );
 };

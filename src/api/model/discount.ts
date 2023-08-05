@@ -8,6 +8,7 @@ export interface Discount extends HydraId, HydraType {
   rateType?: string;
   scope?: string;
   stores: Store[];
+  isActive: boolean;
 }
 
 export enum DiscountRate {

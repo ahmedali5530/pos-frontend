@@ -24,9 +24,11 @@ import {ValidationMessage} from "../../../../api/model/validation";
 import {Terminal} from "../../../../api/model/terminal";
 import {yupResolver} from "@hookform/resolvers/yup";
 import {getErrorClass, getErrors, hasErrors} from "../../../../lib/error/error";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
 import {Store} from "../../../../api/model/store";
 import {notify} from "../../../../app-common/components/confirm/notification";
+import useApi from "../../../../api/hooks/use.api";
+import { HydraCollection } from "../../../../api/model/hydra";
+import { Product } from "../../../../api/model/product";
 
 interface CreateTerminalProps{
   entity?: Terminal;
@@ -48,7 +50,7 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
   });
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
-  const {list: stores, fetchData: loadStores} = useLoadList<Store>(STORE_LIST);
+  const {data: stores, fetchData: loadStores} = useApi<HydraCollection<Store>>('stores', STORE_LIST);
 
   useEffect(() => {
     setModal(addModal);
@@ -151,8 +153,11 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
     setProductsLoading(true);
 
     try{
-      const res = await fetchJson(PRODUCT_KEYWORDS);
-      setProducts(res.list);
+      const res: {list: Product[]} = await fetchJson(PRODUCT_KEYWORDS);
+      setProducts(res.list.map(item => ({
+        label: item.name,
+        value: item["@id"]!
+      })));
     }catch (e){
       throw e;
     }finally {
@@ -160,20 +165,13 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
     }
   };
 
-  const [isCategoriesLoading, setCategoriesLoading] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const loadCategories = async () => {
-    setCategoriesLoading(true);
-
-    try{
-      const res = await fetchJson(CATEGORY_LIST);
-      setCategories(res['hydra:member']);
-    }catch (e){
-      throw e;
-    }finally {
-      setCategoriesLoading(false);
-    }
-  };
+  const {
+    data: categories,
+    fetchData: loadCategories,
+    isLoading: isCategoriesLoading
+  } = useApi<HydraCollection<Category>>('categories', CATEGORY_LIST, {
+    isActive: true
+  })
 
   useEffect(() => {
     loadProducts();
@@ -219,7 +217,7 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
                 <ReactSelect
                   onChange={props.field.onChange}
                   value={props.field.value}
-                  options={stores.map(item => {
+                  options={stores?.['hydra:member']?.map(item => {
                     return {
                       label: item.name,
                       value: item.id
@@ -241,7 +239,7 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
                 <ReactSelect
                   onChange={props.field.onChange}
                   value={props.field.value}
-                  options={categories.map(item => {
+                  options={categories?.['hydra:member']?.map(item => {
                     return {
                       label: item.name,
                       value: item.id

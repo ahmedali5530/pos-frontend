@@ -6,6 +6,7 @@ import localforage from "localforage";
 import {Brand} from "../../../api/model/brand";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCheckCircle} from "@fortawesome/free-solid-svg-icons";
+import { Tooltip } from "antd";
 
 interface SaleBrandsProps extends PropsWithChildren{
   brands:  {[key: string]: Brand} ;
@@ -50,19 +51,21 @@ export const SaleBrands: FC<SaleBrandsProps> = ({
 
   return (
     <>
-      <Button
-        className="block w-full" variant="primary"
-        onClick={() => {
-          setModal(true);
-        }}
-        type="button"
-        title="Filter by Brands"
-      >
-        {children || 'Brands'}
-        {Object.values(brands).length > 0 && (
-          <span className="shrink-0 ml-1 bg-primary-500 text-white h-5 w-5 rounded-full text-sm font-bold">{Object.values(brands).length}</span>
-        )}
-      </Button>
+      <Tooltip title="Filter by Brands">
+        <Button
+          className="block min-w-[48px]" variant="primary"
+          onClick={() => {
+            setModal(true);
+          }}
+          type="button"
+          size="lg"
+        >
+          {children || 'Brands'}
+          {Object.values(brands).length > 0 && (
+            <span className="shrink-0 ml-1 bg-primary-500 text-white h-5 w-5 rounded-full text-sm font-bold">{Object.values(brands).length}</span>
+          )}
+        </Button>
+      </Tooltip>
       <Modal open={modal} onClose={() => {
         setModal(false);
       }} title="Filter by brands">

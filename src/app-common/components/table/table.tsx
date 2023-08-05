@@ -370,7 +370,7 @@ export const TableComponent: FC<TableComponentProps> = ({
               {t('Show')} {pageSize}
             </option>
           ))}
-          </select> &bull; {t('Total records')} <strong>{data ? data["hydra:totalItems"] : 0}</strong>
+          </select> &bull; {t('Total records')} <strong>{data ? data[totalKey || "hydra:totalItems"] : 0}</strong>
         </span>
       </div>
     </>

@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {DISCOUNT_LIST,} from "../../../../api/routing/routes/backend.app";
+import { DISCOUNT_GET, DISCOUNT_LIST, } from "../../../../api/routing/routes/backend.app";
 import {useTranslation} from "react-i18next";
 import {createColumnHelper} from "@tanstack/react-table";
 import {Button} from "../../../../app-common/components/input/button";
@@ -12,13 +12,18 @@ import {getStore} from "../../../../duck/store/store.selector";
 import {CreateDiscount} from "./create.discount";
 import useApi from "../../../../api/hooks/use.api";
 import {HydraCollection} from "../../../../api/model/hydra";
+import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
+import { jsonRequest } from "../../../../api/request/request";
+import { Switch } from "../../../../app-common/components/input/switch";
 
 export const DiscountTypes = () => {
   const [operation, setOperation] = useState('create');
 
-  const useLoadHook = useApi<HydraCollection<Discount>>('discounts', DISCOUNT_LIST);
-  const {fetchData} = useLoadHook;
   const store = useSelector(getStore);
+  const useLoadHook = useApi<HydraCollection<Discount>>('discounts', DISCOUNT_LIST, {
+    store: store?.id
+  });
+  const {fetchData} = useLoadHook;
   const [discount, setDiscount] = useState<Discount>();
   const [modal, setModal] = useState(false);
 
@@ -60,23 +65,39 @@ export const DiscountTypes = () => {
               <FontAwesomeIcon icon={faPencilAlt}/>
             </Button>
             <span className="mx-2 text-gray-300">|</span>
-            <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
-              <FontAwesomeIcon icon={faTrash}/>
-            </Button>
+            <ConfirmAlert
+              onConfirm={() => {
+                deleteDiscount(info.getValue().toString(), !info.row.original.isActive);
+              }}
+              confirmText="Yes, please"
+              cancelText="No, wait"
+              title="Confirm deletion"
+              description="Are you sure to delete this purchase?"
+            >
+              <Switch checked={info.row.original.isActive} readOnly />
+            </ConfirmAlert>
           </>
         )
       }
     })
   ];
 
+  async function deleteDiscount(id: string, status: boolean) {
+    await jsonRequest(DISCOUNT_GET.replace(':id', id), {
+      method: 'PUT',
+      body: JSON.stringify({
+        isActive: status
+      })
+    });
+
+    await useLoadHook.fetchData();
+  }
+
   return (
     <>
       <TableComponent
         columns={columns}
         useLoadList={useLoadHook}
-        params={{
-          store: store?.id
-        }}
         loaderLineItems={6}
         buttons={[{
           html: <Button variant="primary" onClick={() => {

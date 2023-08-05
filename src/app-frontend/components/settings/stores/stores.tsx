@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {STORE_LIST,} from "../../../../api/routing/routes/backend.app";
+import { PAYMENT_TYPE_GET, STORE_EDIT, STORE_LIST, } from "../../../../api/routing/routes/backend.app";
 import {useTranslation} from "react-i18next";
 import {createColumnHelper} from "@tanstack/react-table";
 import {Button} from "../../../../app-common/components/input/button";
@@ -10,6 +10,9 @@ import {Store} from "../../../../api/model/store";
 import {CreateStore} from "./create.store";
 import useApi from "../../../../api/hooks/use.api";
 import {HydraCollection} from "../../../../api/model/hydra";
+import { Switch } from "../../../../app-common/components/input/switch";
+import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
+import { jsonRequest } from "../../../../api/request/request";
 
 export const Stores = () => {
   const [operation, setOperation] = useState('create');
@@ -45,14 +48,33 @@ export const Stores = () => {
               <FontAwesomeIcon icon={faPencilAlt}/>
             </Button>
             <span className="mx-2 text-gray-300">|</span>
-            <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
-              <FontAwesomeIcon icon={faTrash}/>
-            </Button>
+            <ConfirmAlert
+              onConfirm={() => {
+                deleteStore(info.getValue().toString(), !info.row.original.isActive);
+              }}
+              confirmText="Yes, please"
+              cancelText="No, wait"
+              title="Confirm deletion"
+              description={`Are you sure to ${info.row.original.isActive ? 'de-' : ''}activate this store?`}
+            >
+              <Switch checked={info.row.original.isActive} readOnly />
+            </ConfirmAlert>
           </>
         )
       }
     })
   ];
+
+  async function deleteStore(id: string, status: boolean) {
+    await jsonRequest(STORE_EDIT.replace(':id', id), {
+      method: 'PUT',
+      body: JSON.stringify({
+        isActive: status
+      })
+    });
+
+    await useLoadHook.fetchData();
+  }
 
   return (
     <>

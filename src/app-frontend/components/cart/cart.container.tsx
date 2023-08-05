@@ -17,8 +17,8 @@ interface CartContainerProps {
   onCheckAll: (event: any) => void;
   onCheck: (state: boolean, index: number) => void;
   setAdded: (items: CartItemModel[]) => void;
-  cartItem: number;
-  setCartItem: (number: number) => void;
+  cartItem?: number;
+  setCartItem: (number?: number) => void;
   cartItemType: string;
   setCartItemType: (type: CartItemType) => void;
 }
@@ -33,7 +33,6 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
   added, latest, onQuantityChange, onPriceChange, onDiscountChange, deleteItem, subTotal,
   onCheckAll, onCheck, setAdded, cartItem, setCartItem, setCartItemType, cartItemType
 }) => {
-  const [q, setQ] = useState();
   const allChecked = useMemo(() => {
     return added.length > 0 && added.length === added.filter(item => item.checked).length
   }, [added]);
@@ -49,35 +48,42 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
     if( cartItemType === CartItemType.quantity ) {
       if( direction === 'right' ) {
         setCartItemType(CartItemType.discount);
+      }else{
+        setCartItemType(CartItemType.discount);
       }
     }
     if( cartItemType === CartItemType.discount ) {
       if( direction === 'right' ) {
-        setCartItemType(CartItemType.rate);
+        setCartItemType(CartItemType.quantity);
       } else {
         setCartItemType(CartItemType.quantity);
       }
     }
-    if( cartItemType === CartItemType.rate ) {
-      if( direction === 'left' ) {
-        setCartItemType(CartItemType.discount);
-      }
-    }
+    // if( cartItemType === CartItemType.rate ) {
+    //   if( direction === 'left' ) {
+    //     setCartItemType(CartItemType.discount);
+    //   }
+    // }
   }, [cartItemType]);
 
   const updateCartItem = useCallback((direction: 'up' | 'down') => {
     const addedItems = added.length;
+    let newCartItem = cartItem;
+    if(!newCartItem){
+      newCartItem = 0;
+    }
+
     if( direction === 'up' ) {
       if( cartItem !== 0 ) {
-        setCartItem(cartItem - 1);
+        setCartItem(newCartItem - 1);
       } else if( cartItem === 0 ) {
         setCartItem(addedItems - 1);
       }
     }
     if( direction === 'down' ) {
-      if( cartItem + 1 < addedItems ) {
-        setCartItem(cartItem + 1);
-      } else if( cartItem + 1 === addedItems ) {
+      if( newCartItem + 1 < addedItems ) {
+        setCartItem(newCartItem + 1);
+      } else if( newCartItem + 1 === addedItems ) {
         setCartItem(0);
       }
     }
@@ -85,6 +91,9 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
 
   Mousetrap.bind(['ctrl+up', 'ctrl+down', 'ctrl+left', 'ctrl+right'], function (e: KeyboardEvent) {
     e.preventDefault();
+    if(!cartItem){
+      setCartItem(0);
+    }
     //update quantity of last added item
     if( e.code === 'ArrowLeft' || e.code === 'ArrowRight' ) {
       updateCartItemType(e.code === 'ArrowLeft' ? 'left' : 'right');

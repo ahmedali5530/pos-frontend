@@ -7,4 +7,5 @@ export interface PaymentType extends HydraId, HydraType {
   type: string;
   canHaveChangeDue?: boolean;
   stores: Store[];
+  isActive: boolean;
 }

@@ -1,30 +1,36 @@
-import React, {useState} from "react";
-import {PAYMENT_TYPE_LIST,} from "../../../../api/routing/routes/backend.app";
-import {useTranslation} from "react-i18next";
-import {createColumnHelper} from "@tanstack/react-table";
-import {Button} from "../../../../app-common/components/input/button";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPencilAlt, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
-import {TableComponent} from "../../../../app-common/components/table/table";
-import {PaymentType} from "../../../../api/model/payment.type";
-import {useSelector} from "react-redux";
-import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
-import {getStore} from "../../../../duck/store/store.selector";
-import {CreatePaymentType} from "./create.payment.type";
+import React, { useState } from "react";
+import { PAYMENT_TYPE_GET, PAYMENT_TYPE_LIST, } from "../../../../api/routing/routes/backend.app";
+import { useTranslation } from "react-i18next";
+import { createColumnHelper } from "@tanstack/react-table";
+import { Button } from "../../../../app-common/components/input/button";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPencilAlt, faPlus } from "@fortawesome/free-solid-svg-icons";
+import { TableComponent } from "../../../../app-common/components/table/table";
+import { PaymentType } from "../../../../api/model/payment.type";
+import { useSelector } from "react-redux";
+import { getAuthorizedUser } from "../../../../duck/auth/auth.selector";
+import { getStore } from "../../../../duck/store/store.selector";
+import { CreatePaymentType } from "./create.payment.type";
 import useApi from "../../../../api/hooks/use.api";
 import { HydraCollection } from "../../../../api/model/hydra";
+import { Switch } from "../../../../app-common/components/input/switch";
+import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
+import { jsonRequest } from "../../../../api/request/request";
 
 export const PaymentTypes = () => {
   const [operation, setOperation] = useState('create');
 
-  const useLoadHook = useApi<HydraCollection<PaymentType>>('paymentTypes', PAYMENT_TYPE_LIST);
-  const {fetchData} = useLoadHook;
   const user = useSelector(getAuthorizedUser);
   const store = useSelector(getStore);
+
+  const useLoadHook = useApi<HydraCollection<PaymentType>>('paymentTypes', PAYMENT_TYPE_LIST, {
+    store: store?.id
+  });
+  const { fetchData } = useLoadHook;
   const [paymentType, setPaymentType] = useState<PaymentType>();
   const [modal, setModal] = useState(false);
 
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
   const columnHelper = createColumnHelper<PaymentType>();
 
@@ -61,23 +67,39 @@ export const PaymentTypes = () => {
               <FontAwesomeIcon icon={faPencilAlt}/>
             </Button>
             <span className="mx-2 text-gray-300">|</span>
-            <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
-              <FontAwesomeIcon icon={faTrash}/>
-            </Button>
+            <ConfirmAlert
+              onConfirm={() => {
+                deletePaymentType(info.getValue().toString(), !info.row.original.isActive);
+              }}
+              confirmText="Yes, please"
+              cancelText="No, wait"
+              title="Confirm deletion"
+              description={`Are you sure to ${info.row.original.isActive ? 'de-' : ''}activate this payment type?`}
+            >
+              <Switch checked={info.row.original.isActive} readOnly/>
+            </ConfirmAlert>
           </>
         )
       }
     })
   ];
 
+  async function deletePaymentType(id: string, status: boolean) {
+    await jsonRequest(PAYMENT_TYPE_GET.replace(':id', id), {
+      method: 'PUT',
+      body: JSON.stringify({
+        isActive: status
+      })
+    });
+
+    await useLoadHook.fetchData();
+  }
+
   return (
     <>
       <TableComponent
         columns={columns}
         useLoadList={useLoadHook}
-        params={{
-          store: store?.id
-        }}
         loaderLineItems={5}
         buttons={[{
           html: <Button variant="primary" onClick={() => {

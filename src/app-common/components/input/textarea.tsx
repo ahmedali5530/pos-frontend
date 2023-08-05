@@ -10,7 +10,7 @@ export const Textarea = forwardRef((props: InputProps, ref: Ref<HTMLTextAreaElem
       {...props}
       className={
         classNames(
-          'input',
+          'form-control',
           props.className && props.className
         )
       }

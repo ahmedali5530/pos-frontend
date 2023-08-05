@@ -1,24 +1,22 @@
-import React, {FC, useEffect, useState} from "react";
-import {Modal} from "../../../../app-common/components/modal/modal";
-import {Controller, useForm} from "react-hook-form";
-import {DEPARTMENT_CREATE, DEPARTMENT_GET, STORE_LIST} from "../../../../api/routing/routes/backend.app";
-import {Input} from "../../../../app-common/components/input/input";
-import {Trans} from "react-i18next";
-import {Button} from "../../../../app-common/components/input/button";
-import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
-import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
-import {Department} from "../../../../api/model/department";
-import {ReactSelectOptionProps} from "../../../../api/model/common";
-import {fetchJson, jsonRequest} from "../../../../api/request/request";
-import { StoresInput } from "../../../../app-common/components/input/stores";
-import {getErrorClass, getErrors, hasErrors} from "../../../../lib/error/error";
+import React, { FC, useEffect, useState } from "react";
+import { Modal } from "../../../../app-common/components/modal/modal";
+import { Controller, useForm } from "react-hook-form";
+import { DEPARTMENT_CREATE, DEPARTMENT_GET, STORE_LIST } from "../../../../api/routing/routes/backend.app";
+import { Input } from "../../../../app-common/components/input/input";
+import { Button } from "../../../../app-common/components/input/button";
+import { HttpException, UnprocessableEntityException } from "../../../../lib/http/exception/http.exception";
+import { ConstraintViolation, ValidationResult } from "../../../../lib/validator/validation.result";
+import { Department } from "../../../../api/model/department";
+import { jsonRequest } from "../../../../api/request/request";
+import { getErrorClass, getErrors, hasErrors } from "../../../../lib/error/error";
 import * as yup from "yup";
-import {ValidationMessage} from "../../../../api/model/validation";
-import {yupResolver} from "@hookform/resolvers/yup";
+import { ValidationMessage } from "../../../../api/model/validation";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { ReactSelect } from "../../../../app-common/components/input/custom.react.select";
-import {Store} from "../../../../api/model/store";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
-import {notify} from "../../../../app-common/components/confirm/notification";
+import { Store } from "../../../../api/model/store";
+import { notify } from "../../../../app-common/components/confirm/notification";
+import useApi from "../../../../api/hooks/use.api";
+import { HydraCollection } from "../../../../api/model/hydra";
 
 interface CreateDepartmentProps {
   entity?: Department;
@@ -37,12 +35,12 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
   entity, operation, addModal, onClose
 
 }) => {
-  const {register, handleSubmit, setError, formState: {errors}, reset, control} = useForm({
+  const { register, handleSubmit, setError, formState: { errors }, reset, control } = useForm({
     resolver: yupResolver(ValidationSchema)
   });
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
-  const {list: stores, fetchData: loadStores} = useLoadList<Store>(STORE_LIST);
+  const { data: stores, fetchData: loadStores } = useApi<HydraCollection<Store>>('stores', STORE_LIST);
 
   useEffect(() => {
     loadStores();
@@ -53,7 +51,7 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
   }, [addModal]);
 
   useEffect(() => {
-    if (entity) {
+    if( entity ) {
       reset({
         ...entity,
         store: {
@@ -68,7 +66,7 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
     setCreating(true);
     try {
       let url, method = 'POST';
-      if (values.id) {
+      if( values.id ) {
         method = 'PUT';
         url = DEPARTMENT_GET.replace(':id', values.id);
       } else {
@@ -76,7 +74,7 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
         delete values.id;
       }
 
-      if (values.store) {
+      if( values.store ) {
         values.store = values.store.value;
       }
 
@@ -90,9 +88,9 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
 
       onModalClose();
 
-    } catch (exception: any) {
-      if (exception instanceof HttpException) {
-        if (exception.message) {
+    } catch ( exception: any ) {
+      if( exception instanceof HttpException ) {
+        if( exception.message ) {
           notify({
             type: 'error',
             description: exception.message
@@ -100,7 +98,7 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
         }
       }
 
-      if (exception instanceof UnprocessableEntityException) {
+      if( exception instanceof UnprocessableEntityException ) {
         const e: ValidationResult = await exception.response.json();
         e.violations.forEach((item: ConstraintViolation) => {
           setError(item.propertyPath, {
@@ -109,7 +107,7 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
           });
         });
 
-        if (e.errorMessage) {
+        if( e.errorMessage ) {
           notify({
             type: 'error',
             description: e.errorMessage
@@ -157,7 +155,8 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
 
           <div>
             <label htmlFor="description">Description</label>
-            <Input {...register('description')} id="description" className="w-full" tabIndex={0} hasError={hasErrors(errors.description)}/>
+            <Input {...register('description')} id="description" className="w-full" tabIndex={0}
+                   hasError={hasErrors(errors.description)}/>
             {getErrors(errors.description)}
           </div>
 
@@ -170,7 +169,7 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
                 <ReactSelect
                   onChange={props.field.onChange}
                   value={props.field.value}
-                  options={stores.map(item => {
+                  options={stores?.['hydra:member']?.map(item => {
                     return {
                       label: item.name,
                       value: item['@id']

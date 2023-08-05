@@ -9,6 +9,7 @@ import localforage from "../../../lib/localforage/localforage";
 import {DateTime} from "luxon";
 import ReactDOM from "react-dom";
 import {Input} from "../../../app-common/components/input/input";
+import { createRoot } from "react-dom/client";
 
 interface SalePrintProps {
   order: Order;
@@ -17,12 +18,22 @@ interface SalePrintProps {
 export const PrintOrder = (order: Order) => {
   //open print window
   const myWindow: any = window.open('','', 'height: 500;width:500');
-  ReactDOM.render(<SalePrintMarkup order={order} /> , myWindow.document.body);
+
+  const div = myWindow.document.createElement('div');
+  div.id = 'print-root';
+
+  myWindow.document.body.appendChild(div)
+
+  const container = myWindow.document.querySelector('#print-root');
+  const root = createRoot(container);
+  root.render(<SalePrintMarkup order={order} />);
 
   myWindow.document.close();
   myWindow.focus();
-  myWindow.print();
-  myWindow.close();
+  setTimeout(() => {
+    myWindow.print();
+    myWindow.close();
+  }, 100)
 };
 
 export const SalePrint: FC<SalePrintProps> = (props) => {
@@ -264,8 +275,8 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
             </tr>
             </thead>
             <tbody id="saleLineItemTableBody3Inch">
-            {order.items.map(item => (
-              <tr>
+            {order.items.map((item, index) => (
+              <tr key={index}>
                 <td
                   style={{textAlign: "right", display: "none"}}
                   className="GSTClm"
@@ -354,8 +365,8 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
                 </td>
               </tr>
             )}
-            {order.payments.map(item => (
-              <tr>
+            {order.payments.map((item, index) => (
+              <tr key={index}>
                 <td style={{textAlign: "right", width: "60%"}}>{item.type?.name} Amount</td>
                 <td style={{textAlign: "right", width: "40%"}}>{item.received}</td>
               </tr>

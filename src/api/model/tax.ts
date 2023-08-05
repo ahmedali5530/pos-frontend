@@ -6,4 +6,5 @@ export interface Tax extends HydraId, HydraType {
   name: string;
   rate: number;
   stores: Store[];
+  isActive: boolean;
 }

@@ -6,6 +6,7 @@ import localforage from "localforage";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCheckCircle} from "@fortawesome/free-solid-svg-icons";
 import {Department} from "../../../api/model/department";
+import { Tooltip } from "antd";
 
 interface SaleDepartmentsProps extends PropsWithChildren{
   departments:  {[key: string]: Department} ;
@@ -50,19 +51,21 @@ export const SaleDepartments: FC<SaleDepartmentsProps> = ({
 
   return (
     <>
-      <Button
-        className="block w-full" variant="primary"
-        onClick={() => {
-          setModal(true);
-        }}
-        type="button"
-        title="Filter by Departments"
-      >
-        {children || 'Departments'}
-        {Object.values(departments).length > 0 && (
-          <span className="shrink-0 ml-1 bg-primary-500 text-white h-5 w-5 rounded-full text-sm font-bold">{Object.values(departments).length}</span>
-        )}
-      </Button>
+      <Tooltip title="Filter by Departments">
+        <Button
+          className="block min-w-[48px]" variant="primary"
+          onClick={() => {
+            setModal(true);
+          }}
+          type="button"
+          size="lg"
+        >
+          {children || 'Departments'}
+          {Object.values(departments).length > 0 && (
+            <span className="shrink-0 ml-1 bg-primary-500 text-white h-5 w-5 rounded-full text-sm font-bold">{Object.values(departments).length}</span>
+          )}
+        </Button>
+      </Tooltip>
       <Modal open={modal} onClose={() => {
         setModal(false);
       }} title="Filter by departments">

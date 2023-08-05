@@ -1,35 +1,29 @@
-import {useState, useEffect} from "react";
-import {jsonRequest} from "../request/request";
-import {QueryString} from "../../lib/location/query.string";
-import {HydraCollection, HydraError} from "../model/hydra";
-import {get} from 'lodash';
-import {
-  useQuery,
-  useQueryClient,
-  QueryClient,
-  QueryClientProvider,
-} from "react-query";
+import { useEffect, useState } from "react";
+import { jsonRequest } from "../request/request";
+import { QueryString } from "../../lib/location/query.string";
+import { HydraCollection, HydraError } from "../model/hydra";
+import { get } from 'lodash';
 
-export interface FetchDataState{
+export interface FetchDataState {
   loading: boolean;
   error: Error | null;
   page: number;
   limit: number;
-  filter: {[key: string]: string|string[]}|undefined;
+  filter: { [key: string]: string | string[] } | undefined;
   order?: { [sort: string]: string };
   sort?: string;
   sortMode?: string;
   abort?: () => void;
 }
 
-export interface FetchDataReturns<T> extends FetchDataState{
+export interface FetchDataReturns<T> extends FetchDataState {
   handlePageChange?: (page: number) => void;
   handleLimitChange?: (limit: number) => void;
   handleFilterChange?: (filter: any) => void;
   handleSortChange?: (sort?: string) => void;
   handleSortModeChange?: (sortMode?: string) => void;
   fetchData: () => void;
-  data: HydraCollection<T>|HydraError|any;
+  data: HydraCollection<T> | HydraError | any;
   list: T[];
 }
 
@@ -52,23 +46,23 @@ export const useLoadList = <L>(url: string, options?: any): FetchDataReturns<L> 
 
   useEffect(() => {
     const optionsLimit = get(options, 'limit');
-    if(optionsLimit){
+    if( optionsLimit ) {
       handleLimitChange(optionsLimit);
     }
     const optionsPage = get(options, 'page');
-    if(optionsPage){
+    if( optionsPage ) {
       handlePageChange(optionsPage);
     }
     const optionsFilter = get(options, 'filter');
-    if(optionsFilter){
+    if( optionsFilter ) {
       handleFilterChange(optionsFilter);
     }
     const optionsSort = get(options, 'sort');
-    if(optionsSort){
+    if( optionsSort ) {
       handleSortChange(optionsSort);
     }
     const optionsSortMode = get(options, 'sortMode');
-    if(optionsSortMode){
+    if( optionsSortMode ) {
       handleSortModeChange(optionsSortMode);
     }
   }, []);
@@ -80,7 +74,7 @@ export const useLoadList = <L>(url: string, options?: any): FetchDataReturns<L> 
       itemsPerPage: state.limit,
     };
 
-    if(state.sort){
+    if( state.sort ) {
       query['order'] = {
         [state.sort]: state.sortMode
       }
@@ -92,14 +86,14 @@ export const useLoadList = <L>(url: string, options?: any): FetchDataReturns<L> 
       const response = await jsonRequest(url + '?' + QueryString.stringify(query), {
         signal: abortController.signal
       });
-      let json: HydraCollection|any = await response.json();
+      let json: HydraCollection | any = await response.json();
 
-      if(json['hydra:member']){
+      if( json['hydra:member'] ) {
         setList(json['hydra:member']);
       }
 
       setData(json);
-    } catch (error: any) {
+    } catch ( error: any ) {
       setState((prevState) => ({ ...prevState, error }));
     } finally {
       setState((prevState) => ({ ...prevState, loading: false }));

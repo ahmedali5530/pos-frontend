@@ -1,44 +1,42 @@
-import {Input} from "../../../../app-common/components/input/input";
-import {Trans} from "react-i18next";
-import {Controller, useFieldArray, useForm, UseFormRegister} from "react-hook-form";
-import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
-import {Button} from "../../../../app-common/components/input/button";
-import React, {FC, FunctionComponent, useCallback, useEffect, useMemo, useState} from "react";
-import {Supplier} from "../../../../api/model/supplier";
+import { Input } from "../../../../app-common/components/input/input";
+import { Trans } from "react-i18next";
+import { Controller, useFieldArray, useForm, UseFormRegister } from "react-hook-form";
+import { ReactSelect } from "../../../../app-common/components/input/custom.react.select";
+import { Button } from "../../../../app-common/components/input/button";
+import React, { FC, FunctionComponent, useCallback, useEffect, useMemo, useState } from "react";
+import { Supplier } from "../../../../api/model/supplier";
 import {
   PRODUCT_GET,
   PRODUCT_KEYWORDS,
-  PRODUCT_LIST,
   PURCHASE_ORDER_CREATE,
   PURCHASE_ORDER_EDIT,
   SUPPLIER_LIST
 } from "../../../../api/routing/routes/backend.app";
-import {fetchJson, jsonRequest} from "../../../../api/request/request";
-import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
-import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
-import {useSelector} from "react-redux";
-import {getStore} from "../../../../duck/store/store.selector";
-import {Product} from "../../../../api/model/product";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faArrowDown, faArrowRight, faPlus, faRemove} from "@fortawesome/free-solid-svg-icons";
-import {DateTime} from "luxon";
-import {Modal} from "../../../../app-common/components/modal/modal";
+import { fetchJson, jsonRequest } from "../../../../api/request/request";
+import { HttpException, UnprocessableEntityException } from "../../../../lib/http/exception/http.exception";
+import { ConstraintViolation, ValidationResult } from "../../../../lib/validator/validation.result";
+import { useSelector } from "react-redux";
+import { getStore } from "../../../../duck/store/store.selector";
+import { Product } from "../../../../api/model/product";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowDown, faArrowRight, faPlus, faRemove } from "@fortawesome/free-solid-svg-icons";
+import { DateTime } from "luxon";
+import { Modal } from "../../../../app-common/components/modal/modal";
 import classNames from "classnames";
-import {getErrorClass, getErrors, hasErrors} from "../../../../lib/error/error";
-import {SelectedItem} from "../purchase/create.purchase";
-import {PurchaseOrder} from "../../../../api/model/purchase.order";
-import {CreateSupplier} from "../supplier/create.supplier";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
+import { getErrorClass, getErrors, hasErrors } from "../../../../lib/error/error";
+import { SelectedItem } from "../purchase/create.purchase";
+import { PurchaseOrder } from "../../../../api/model/purchase.order";
+import { CreateSupplier } from "../supplier/create.supplier";
 import * as yup from 'yup';
-import {yupResolver} from "@hookform/resolvers/yup";
-import {ValidationMessage} from "../../../../api/model/validation";
-import {notify} from "../../../../app-common/components/confirm/notification";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { ValidationMessage } from "../../../../api/model/validation";
+import { notify } from "../../../../app-common/components/confirm/notification";
 import _ from "lodash";
-import {ConfirmAlert} from "../../../../app-common/components/confirm/confirm.alert";
-import {ProductVariant} from "../../../../api/model/product.variant";
-import {withCurrency} from "../../../../lib/currency/currency";
+import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
+import { ProductVariant } from "../../../../api/model/product.variant";
+import { withCurrency } from "../../../../lib/currency/currency";
 import useApi from "../../../../api/hooks/use.api";
-import {HydraCollection} from "../../../../api/model/hydra";
+import { HydraCollection } from "../../../../api/model/hydra";
 
 export interface CreatePurchaseOrderProps {
   operation: string;
@@ -66,10 +64,10 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
 }) => {
   const store = useSelector(getStore);
 
-  const {register, handleSubmit, setError, formState: {errors}, reset, control, watch, getValues} = useForm({
+  const { register, handleSubmit, setError, formState: { errors }, reset, control, watch, getValues } = useForm({
     resolver: yupResolver(ValidationSchema)
   });
-  const {fields, append, remove, update} = useFieldArray({
+  const { fields, append, remove, update } = useFieldArray({
     control: control,
     name: 'items'
   });
@@ -79,7 +77,7 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
     fetchData: loadSuppliers,
     data: suppliers,
     isFetching: loadingSuppliers
-  } = useApi<HydraCollection<Supplier>>('suppliers', SUPPLIER_LIST, {}, '', 'asc', 1, 9999999, {}, {enabled: false});
+  } = useApi<HydraCollection<Supplier>>('suppliers', SUPPLIER_LIST, {}, '', 'asc', 1, 9999999, {}, { enabled: false });
 
   const {
     data: items,
@@ -87,21 +85,21 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
     fetchData: loadProducts
   } = useApi<{ list: Product[] }>(
     'productKeywords', PRODUCT_KEYWORDS, {}, '', 'asc', 1, 9999999,
-    {}, {enabled: false}
+    {}, { enabled: false }
   );
   const [modal, setModal] = useState(false);
   const [supplierModal, setSupplierModal] = useState(false);
 
   useEffect(() => {
     setModal(showModal);
-    if(showModal){
+    if( showModal ) {
       loadSuppliers();
       loadProducts();
     }
   }, [showModal]);
 
   useEffect(() => {
-    if (purchaseOrder) {
+    if( purchaseOrder ) {
       reset({
         ...purchaseOrder,
         supplier: {
@@ -131,15 +129,15 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
     setCreating(true);
     try {
       let url: string, method: string = 'POST';
-      if (values.id) {
+      if( values.id ) {
         method = 'PUT';
         url = PURCHASE_ORDER_EDIT.replace(':id', values.id);
-        if (values.store) {
+        if( values.store ) {
           values.store = values.store['@id'];
         }
 
-        if (values.items) {
-          values.items = values.items.map((item: SelectedItem) =>( {
+        if( values.items ) {
+          values.items = values.items.map((item: SelectedItem) => ({
             item: item.item["@id"],
             quantity: item.quantity.toString(),
             price: item.cost.toString(),
@@ -158,8 +156,8 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
         url = PURCHASE_ORDER_CREATE;
         values.store = `/api/stores/${store?.id}`;
 
-        if (values.items) {
-          values.items = values.items.map((item: SelectedItem) =>( {
+        if( values.items ) {
+          values.items = values.items.map((item: SelectedItem) => ({
             item: item.item["@id"],
             quantity: item.quantity.toString(),
             price: item.cost.toString(),
@@ -174,7 +172,7 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
         }
       }
 
-      if (values.supplier) {
+      if( values.supplier ) {
         values.supplier = values.supplier.value;
       }
 
@@ -186,9 +184,9 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
       });
 
       onModalClose();
-    } catch (exception: any) {
-      if (exception instanceof HttpException) {
-        if (exception.message) {
+    } catch ( exception: any ) {
+      if( exception instanceof HttpException ) {
+        if( exception.message ) {
           notify({
             type: 'error',
             description: exception.message
@@ -196,7 +194,7 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
         }
       }
 
-      if (exception instanceof UnprocessableEntityException) {
+      if( exception instanceof UnprocessableEntityException ) {
         const e: ValidationResult = await exception.response.json();
         e.violations.forEach((item: ConstraintViolation) => {
           setError(item.propertyPath, {
@@ -205,7 +203,7 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
           });
         });
 
-        if (e.errorMessage) {
+        if( e.errorMessage ) {
           notify({
             type: 'error',
             description: e.errorMessage
@@ -350,7 +348,7 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
                 )}
                 name="supplier"
                 control={control}
-                rules={{required: true}}
+                rules={{ required: true }}
               />
 
               {getErrors(errors.supplier)}
@@ -359,7 +357,7 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
               <label htmlFor="items">Items</label>
               <ReactSelect
                 onChange={(value) => {
-                  if (value) {
+                  if( value ) {
                     addSelectedItem(value.value);
                   }
                 }}
@@ -505,7 +503,7 @@ const ItemRow: FC<ItemRowProps> = ({
               <Input
                 type="number"
                 className="form-control w-full"
-                {...register(`items.${index}.variants.${variantIndex}.cost`, {valueAsNumber: true})}
+                {...register(`items.${index}.variants.${variantIndex}.cost`, { valueAsNumber: true })}
                 defaultValue={variant.price || 0}
                 selectable={true}
                 hasError={hasErrors(_.get(errors.items?.[index]?.variants?.[variantIndex], `cost`))}

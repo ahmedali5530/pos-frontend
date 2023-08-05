@@ -3,8 +3,8 @@ import { Button } from "../../../app-common/components/input/button";
 import { Input } from "../../../app-common/components/input/input";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faBarcode,
-  faGear,
+  faBarcode, faCubesStacked, faFlag,
+  faGear, faIcons,
   faMagnifyingGlass,
   faMicrophone,
   faReply,
@@ -30,8 +30,8 @@ import { Brand } from "../../../api/model/brand";
 import { Category } from "../../../api/model/category";
 import { Department } from "../../../api/model/department";
 import { QueryString } from "../../../lib/location/query.string";
-import { jsonRequest } from "../../../api/request/request";
-import { PRODUCT_KEYWORDS } from "../../../api/routing/routes/backend.app";
+import { fetchJson, jsonRequest } from "../../../api/request/request";
+import { BARCODE_GET, BARCODE_LIST, PRODUCT_KEYWORDS } from "../../../api/routing/routes/backend.app";
 import { FixedSizeList } from "react-window";
 import localforage from "../../../lib/localforage/localforage";
 import Mousetrap from "mousetrap";
@@ -40,6 +40,18 @@ import { CartControls } from "../../components/cart/cart.controls";
 import { Controller, useForm } from "react-hook-form";
 import classNames from "classnames";
 import { Modal } from "../../../app-common/components/modal/modal";
+import { SaleBrands } from "../../components/search/sale.brands";
+import { SaleCategories } from "../../components/search/sale.categories";
+import { SaleDepartments } from "../../components/search/sale.departments";
+import { SaleHistory } from "../../components/sale/sale.history";
+import { Expenses } from "../../components/sale/expenses";
+import { More } from "../../components/settings/more";
+import { SaleClosing } from "../../components/sale/sale.closing";
+import { Logout } from "../../components/logout";
+import { PurchaseTabs } from "../../components/inventory/purchase.tabs";
+import { NotFoundException } from "../../../lib/http/exception/http.exception";
+import { Barcode } from "../../../api/model/barcode";
+import { SearchTable } from "../../components/search/search.table";
 
 enum SearchModes {
   barcode = 'barcode',
@@ -51,21 +63,6 @@ enum SearchModes {
 }
 
 export const PosV2 = () => {
-
-  const searchModes = [
-    {
-      icon: faBarcode,
-      value: SearchModes.barcode,
-      variant: 'primary',
-      title: 'Barcode search'
-    }, {
-      icon: faMagnifyingGlass,
-      value: SearchModes.search,
-      variant: 'primary',
-      title: 'Search by name'
-    }
-  ]
-
   const searchBy = [
     {
       icon: faMicrophone,
@@ -85,7 +82,7 @@ export const PosV2 = () => {
     }
   ]
 
-  const [searchMode, setSearchMode] = useState(searchModes[0]);
+  const [searchMode, setSearchMode] = useState<any>();
 
   const [list, setList] = useState<HomeProps['list']>(initialData);
   const [paymentTypesList, setPaymentTypesList] = useState<HomeProps['paymentTypesList']>(initialData);
@@ -117,7 +114,7 @@ export const PosV2 = () => {
   const [refundingFrom, setRefundingFrom] = useState<number>();
   const [closeSale, setCloseSale] = useState(false);
   const [adjustment, setAdjustment] = useState(0);
-  const [cartItem, setCartItem] = useState<number>(0);
+  const [cartItem, setCartItem] = useState<number>();
   const [cartItemType, setCartItemType] = useState<CartItemType>(CartItemType.quantity);
   const [itemsMeta, setItemsMeta] = useState<Product[]>([]);
 
@@ -306,6 +303,7 @@ export const PosV2 = () => {
         variant: undefined
       };
       map.set(item.barcode, i);
+      map.set(item.name, i);
 
       if(item.variants.length > 0) {
         item.variants.forEach(variant => {
@@ -328,31 +326,50 @@ export const PosV2 = () => {
   const { handleSubmit, control, reset } = useForm();
 
   const searchAction = async (values: any) => {
-    reset({
-      q: '',
-      quantity: 1
-    });
-
     const item = itemsMap.get(values.q);
 
     if(item === undefined){
-      // TODO: check for database for dynamic barcodes
-      // for now throw error that product not found
-      notify({
-        type: 'error',
-        description: 'Item not found'
-      });
+      // check in DB for dynamic barcode item
+      try {
+        const response = await fetchJson(`${BARCODE_LIST}?barcode=${values.q}`);
+        if(response['hydra:member'].length > 0){
+          const item: Barcode = response['hydra:member'][0];
+          if(item.variant){
+            await addItemVariant(item.item, item.variant, Number(item.measurement), Number(item.price));
+          }
+
+          if(!item.variant){
+            await addItem(item.item, Number(item.measurement), Number(item.price));
+          }
+        }else{
+          notify({
+            type: 'error',
+            description: `${values.q} not found`,
+            placement: 'top',
+            duration: 1
+          });
+        }
+      }catch ( e ){
+        console.log(e)
+      }
     }
 
     if( item !== undefined ) {
+      // if main item, add it
       if(!item.isVariant) {
         await addItem(item.item, Number(values.quantity));
       }
 
+      // if variant add it
       if(item.isVariant){
         await addItemVariant(item.item, item.variant, Number(values.quantity))
       }
     }
+
+    reset({
+      q: '',
+      quantity: 1
+    });
   }
 
   const addItem = async (item: Product, quantity: number, price?: number) => {
@@ -408,7 +425,7 @@ export const PosV2 = () => {
     await getItemsMetadata(item.id);
   };
 
-  const addItemVariant = async (item: Product, variant: ProductVariant, quantity: number) => {
+  const addItemVariant = async (item: Product, variant: ProductVariant, quantity: number, price?: number) => {
     const oldItems = [...added];
     let index = oldItems.findIndex(addItem => {
       return addItem.item.id === item.id && addItem.variant === variant
@@ -441,6 +458,8 @@ export const PosV2 = () => {
     setQ('');
 
     scrollToBottom(containerRef.current);
+
+    console.log(item, variant)
 
     await getItemsMetadata(item.id, variant.id);
   };
@@ -515,35 +534,6 @@ export const PosV2 = () => {
     }
   };
 
-  const searchScrollContainer = createRef<FixedSizeList>();
-
-  const moveCursor = (event: any) => {
-    const itemsLength = items.length;
-    if( event.key === 'ArrowDown' ) {
-      let newSelected = selected + 1;
-      if( (newSelected) === itemsLength ) {
-        newSelected = 0;
-        setSelected(newSelected);
-      }
-      setSelected(newSelected);
-
-      moveSearchList(newSelected);
-      setRate(getRealProductPrice(items[newSelected]));
-    } else if( event.key === 'ArrowUp' ) {
-      let newSelected = selected - 1;
-      if( (newSelected) === -1 ) {
-        newSelected = itemsLength - 1;
-      }
-      setSelected(newSelected);
-
-      moveSearchList(newSelected);
-      setRate(getRealProductPrice(items[newSelected]));
-    } else if( event.key === 'Enter' ) {
-      setRate(getRealProductPrice(items[selected]));
-      addItem(items[selected], quantity);
-    }
-  };
-
   const moveVariantsCursor = (event: any) => {
     const itemsLength = variants.length;
     if( event.key === 'ArrowDown' ) {
@@ -564,11 +554,7 @@ export const PosV2 = () => {
     }
   };
 
-  const moveSearchList = (index: number) => {
-    if( searchScrollContainer && searchScrollContainer.current ) {
-      searchScrollContainer.current.scrollToItem(index, 'center');
-    }
-  };
+
 
   useEffect(() => {
     if( searchField && searchField.current ) {
@@ -621,26 +607,28 @@ export const PosV2 = () => {
 
   useEffect(() => {
     Mousetrap.bind(['up', 'down', 'enter'], function (e: Event) {
-      e.preventDefault();
+      // e.preventDefault();
       if( modal ) {
         //move cursor in variant chooser modal
         moveVariantsCursor(e);
       } else {
         //skip if some other modal is open
-        if( !document.body.classList.contains('ReactModal__Body--open') ) {
-          //move cursor in items
-          moveCursor(e);
-        }
+        // if( !document.body.classList.contains('ReactModal__Body--open') ) {
+        //   //move cursor in items
+        //   moveCursor(e);
+        // }
       }
     });
   }, [modal, selected, selectedVariant, variants, items, added, quantity]);
 
-  Mousetrap.bind('f3', function (e: any) {
-    e.preventDefault();
-    if( searchField.current !== null ) {
-      searchField.current.focus();
-    }
-  });
+  useEffect(() => {
+    Mousetrap.bind(['f3', '/'], function (e: any) {
+      e.preventDefault();
+      if( searchField.current !== null ) {
+        searchField.current.focus();
+      }
+    });
+  }, [searchField])
 
   const onCheckAll = (e: any) => {
     const newAdded = [...added];
@@ -665,38 +653,44 @@ export const PosV2 = () => {
         <div className="flex flex-row gap-5 p-2 bg-white">
           <div className="gap-2 flex">
             <div className="input-group">
-              <Button variant="primary">Brands</Button>
-              <Button variant="primary">Categories</Button>
-              <Button variant="primary">Departments</Button>
+              <SaleBrands brands={brands} setBrands={setBrands}>
+                <FontAwesomeIcon icon={faFlag}/>
+              </SaleBrands>
+              <SaleCategories categories={categories} setCategories={setCategories}>
+                <FontAwesomeIcon icon={faCubesStacked}/>
+              </SaleCategories>
+              <SaleDepartments departments={departments} setDepartments={setDepartment}>
+                <FontAwesomeIcon icon={faIcons}/>
+              </SaleDepartments>
             </div>
           </div>
           <div className="flex flex-1 gap-3">
             <div className="input-group">
-              {searchModes.map(item => (
-                <Tooltip title={item.title} key={item.value}>
-                  <Button
-                    variant={item.variant}
-                    className="w-[48px]"
-                    type="button"
-                    active={item.value === searchMode.value}
-                    onClick={() => {
-                      setSearchMode(item)
-                    }}
-                  ><FontAwesomeIcon icon={item.icon}/></Button>
-                </Tooltip>
-              ))}
+              <Tooltip title="Barcode search">
+                <Button
+                  variant="primary"
+                  className="btn-square"
+                  type="button"
+                  active
+                  size="lg"
+                ><FontAwesomeIcon icon={faBarcode}/></Button>
+              </Tooltip>
+              <SearchTable
+                items={items}
+                addItem={addItem}
+              />
             </div>
             <div className="input-group">
               {searchBy.map(item => (
                 <Tooltip title={item.title} key={item.value}>
                   <Button
                     variant={item.variant}
-                    className="w-[48px]"
+                    className="btn-square"
                     type="button"
-                    active={item.value === searchMode.value}
                     onClick={() => {
                       setSearchMode(item)
                     }}
+                    size="lg"
                   ><FontAwesomeIcon icon={item.icon}/></Button>
                 </Tooltip>
               ))}
@@ -706,8 +700,8 @@ export const PosV2 = () => {
                 <Controller
                   render={({ field }) => (
                     <Input
-                      placeholder={searchMode.title}
-                      ref={searchField} autoFocus type="search" className="search-field"
+                      placeholder="Scan barcode or search by name"
+                      ref={searchField} autoFocus type="search" className="search-field mousetrap lg w-72"
                       value={field.value}
                       onChange={field.onChange}
                     />
@@ -721,7 +715,7 @@ export const PosV2 = () => {
                 <Controller
                   render={({ field }) => (
                     <Input
-                      type="number" placeholder="Quantity" className="w-32"
+                      type="number" placeholder="Quantity" className="w-28 mousetrap lg"
                       value={field.value}
                       onChange={field.onChange}
                     />
@@ -734,15 +728,32 @@ export const PosV2 = () => {
               <button className="hidden">submit</button>
             </form>
           </div>
-          <div className="ml-auto flex gap-3">
-            <Button variant="secondary" className="w-[48px]" type="button"><FontAwesomeIcon icon={faGear}/></Button>
-            <Button variant="danger" className="w-[48px]" type="button"><FontAwesomeIcon icon={faSignOut}/></Button>
+          <div className="ml-auto flex gap-4">
+            <Expenses/>
+            <PurchaseTabs/>
+            <More
+              setTax={setTax}
+              setDiscount={setDiscount}
+            />
+            <span className="w-[2px] bg-gray-200"></span>
+            <SaleHistory
+              setAdded={setAdded}
+              setDiscount={setDiscount}
+              setTax={setTax}
+              setCustomer={setCustomer}
+              setDiscountAmount={setDiscountAmount}
+              customer={customer}
+              setRefundingFrom={setRefundingFrom}
+            />
+            <SaleClosing/>
+            <span className="w-[2px] bg-gray-200"></span>
+            <Logout/>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-3 p-3">
-          <div className="col-span-2 bg-white">
+        <div className="grid grid-cols-4 gap-3 p-3">
+          <div className="col-span-3 bg-white">
             <CartControls added={added} setAdded={setAdded} containerRef={containerRef.current}/>
-            <div className="overflow-auto block h-[calc(100vh_-_170px)]" ref={containerRef}>
+            <div className="overflow-auto block h-[calc(100vh_-_155px)]" ref={containerRef}>
               <CartContainer
                 added={added}
                 onQuantityChange={onQuantityChange}
@@ -787,6 +798,9 @@ export const PosV2 = () => {
               isInline={true}
               adjustment={adjustment}
               setAdjustment={setAdjustment}
+              onSale={() => {
+                setCartItem(undefined);
+              }}
             />
           </div>
         </div>

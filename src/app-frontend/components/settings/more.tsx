@@ -1,35 +1,35 @@
-import React, {FC, useEffect, useState} from "react";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCog} from "@fortawesome/free-solid-svg-icons";
-import {Button} from "../../../app-common/components/input/button";
-import {Modal} from "../../../app-common/components/modal/modal";
-import {Tax} from "../../../api/model/tax";
-import {Discount} from "../../../api/model/discount";
+import React, { FC, useEffect, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCog } from "@fortawesome/free-solid-svg-icons";
+import { Button } from "../../../app-common/components/input/button";
+import { Modal } from "../../../app-common/components/modal/modal";
+import { Tax } from "../../../api/model/tax";
+import { Discount } from "../../../api/model/discount";
 import localforage from "../../../lib/localforage/localforage";
-import {useDispatch, useSelector} from "react-redux";
-import {getAuthorizedUser} from "../../../duck/auth/auth.selector";
-import {Switch} from "../../../app-common/components/input/switch";
-import {Tab, TabContent, TabControl, TabNav} from "../../../app-common/components/tabs/tabs";
-import {ReactSelectOptionProps} from "../../../api/model/common";
-import {ReactSelect} from "../../../app-common/components/input/custom.react.select";
-import {useLoadData} from "../../../api/hooks/use.load.data";
-import {Stores} from "./stores/stores";
+import { useDispatch, useSelector } from "react-redux";
+import { getAuthorizedUser } from "../../../duck/auth/auth.selector";
+import { Switch } from "../../../app-common/components/input/switch";
+import { Tab, TabContent, TabControl, TabNav } from "../../../app-common/components/tabs/tabs";
+import { ReactSelectOptionProps } from "../../../api/model/common";
+import { ReactSelect } from "../../../app-common/components/input/custom.react.select";
+import { useLoadData } from "../../../api/hooks/use.load.data";
+import { Stores } from "./stores/stores";
 import { Users } from "./users/users";
-import {PaymentTypes} from "./payment-types/payment.types";
-import {DiscountTypes} from "./discounts/discount.types";
-import {TaxTypes} from "./taxes/tax.types";
-import {displayShortcutAction, shortcutAction} from "../../../duck/shortcuts/shortcut.action";
-import {touchAction} from "../../../duck/touch/touch.action";
-import {Terminals} from "./terminals/terminals";
-import {Departments} from "./departments/departments";
-import {Items} from "./items/items";
-import {Categories} from "./categories/categories";
-import {Brands} from "./brands/brands";
-import {useMediaQuery} from "react-responsive";
-import {message as AntMessage} from "antd";
-import {getProgress} from "../../../duck/progress/progress.selector";
+import { PaymentTypes } from "./payment-types/payment.types";
+import { DiscountTypes } from "./discounts/discount.types";
+import { TaxTypes } from "./taxes/tax.types";
+import { displayShortcutAction, shortcutAction } from "../../../duck/shortcuts/shortcut.action";
+import { touchAction } from "../../../duck/touch/touch.action";
+import { Terminals } from "./terminals/terminals";
+import { Departments } from "./departments/departments";
+import { Items } from "./items/items";
+import { Categories } from "./categories/categories";
+import { Brands } from "./brands/brands";
+import { useMediaQuery } from "react-responsive";
+import { message as AntMessage, Tooltip } from "antd";
+import { getProgress } from "../../../duck/progress/progress.selector";
 
-interface Props{
+interface Props {
   setTax: (data?: Tax) => void;
   setDiscount: (data?: Discount) => void;
 }
@@ -46,7 +46,7 @@ export const More: FC<Props> = ({
   const progress = useSelector(getProgress);
 
   useEffect(() => {
-    if(progress === 'Done'){
+    if( progress === 'Done' ) {
       messageApi.open({
         key: 'loading',
         type: 'success',
@@ -54,7 +54,7 @@ export const More: FC<Props> = ({
       });
 
       setTimeout(() => messageApi.destroy(), 1000);
-    }else{
+    } else {
       messageApi.open({
         key: 'loading',
         type: 'loading',
@@ -96,7 +96,7 @@ export const More: FC<Props> = ({
 
   useEffect(() => {
     localforage.getItem('defaultTax').then((data: any) => {
-      if(data) {
+      if( data ) {
         setDefaultTax({
           label: data?.name + ' ' + data?.rate,
           value: JSON.stringify(data)
@@ -107,7 +107,7 @@ export const More: FC<Props> = ({
     });
 
     localforage.getItem('defaultDiscount').then((data: any) => {
-      if(data) {
+      if( data ) {
         setDefaultDiscount({
           label: data?.name,
           value: JSON.stringify(data)
@@ -118,7 +118,7 @@ export const More: FC<Props> = ({
     });
 
     localforage.getItem('defaultPaymentType').then((data: any) => {
-      if(data) {
+      if( data ) {
         setDefaultPaymentType({
           label: data?.name,
           value: JSON.stringify(data)
@@ -127,7 +127,7 @@ export const More: FC<Props> = ({
     });
 
     localforage.getItem('defaultDevice').then((data: any) => {
-      if(data) {
+      if( data ) {
         setDefaultDevice({
           label: data?.name,
           value: JSON.stringify(data)
@@ -136,38 +136,38 @@ export const More: FC<Props> = ({
     });
 
     localforage.getItem('displayVariants').then((data: any) => {
-      if(data){
+      if( data ) {
         setDisplayVariants(data);
-      }else{
+      } else {
         setDisplayVariants(false);
       }
     });
 
     localforage.getItem('enableShortcuts').then((data: any) => {
-      if(data){
+      if( data ) {
         setEnableShortcuts(data);
         dispatch(shortcutAction(data));
-      }else{
+      } else {
         setEnableShortcuts(false);
         dispatch(shortcutAction(false));
       }
     });
 
     localforage.getItem('displayShortcuts').then((data: any) => {
-      if(data){
+      if( data ) {
         setDisplayShortcuts(data);
         dispatch(displayShortcutAction(data));
-      }else{
+      } else {
         setDisplayShortcuts(false);
         dispatch(displayShortcutAction(false));
       }
     });
 
     localforage.getItem('enableTouch').then((data: any) => {
-      if(data){
+      if( data ) {
         setEnableTouch(data);
         dispatch(touchAction(data));
-      }else{
+      } else {
         setEnableTouch(false);
         dispatch(touchAction(false));
       }
@@ -183,9 +183,11 @@ export const More: FC<Props> = ({
   return (
     <>
       {contextHolder}
-      <Button variant="secondary" className="w-auto" size="lg" onClick={() => {
-        setModal(true);
-      }} title="Settings" tabIndex={-1}><FontAwesomeIcon icon={faCog} className="mr-2"/> Settings</Button>
+      <Tooltip title="Settings">
+        <Button variant="secondary" className="btn-square" size="lg" onClick={() => {
+          setModal(true);
+        }} tabIndex={-1}><FontAwesomeIcon icon={faCog}/></Button>
+      </Tooltip>
 
       <Modal open={modal} onClose={() => {
         setModal(false);
@@ -193,9 +195,9 @@ export const More: FC<Props> = ({
         <TabControl
           defaultTab="general"
           position={isMobile ? 'top' : 'left'}
-          render={({isTabActive, setActiveTab}) => (
+          render={({ isTabActive, setActiveTab }) => (
             <>
-              <TabNav position={isMobile ? 'top' : 'left'} >
+              <TabNav position={isMobile ? 'top' : 'left'}>
                 <Tab isActive={isTabActive('general')} onClick={() => setActiveTab('general')}>General</Tab>
                 <Tab isActive={isTabActive('profile')} onClick={() => setActiveTab('profile')}>Profile</Tab>
                 <Tab isActive={isTabActive('stores')} onClick={() => setActiveTab('stores')}>Stores</Tab>
@@ -249,10 +251,10 @@ export const More: FC<Props> = ({
                       })}
                       isClearable
                       onChange={(value: any) => {
-                        if(value) {
+                        if( value ) {
                           localforage.setItem('defaultTax', JSON.parse(value.value));
                           setTax(JSON.parse(value.value));
-                        }else{
+                        } else {
                           localforage.removeItem('defaultTax');
                           setTax(undefined);
                           setDefaultTax(undefined);
@@ -272,10 +274,10 @@ export const More: FC<Props> = ({
                       })}
                       isClearable
                       onChange={(value: any) => {
-                        if(value) {
+                        if( value ) {
                           localforage.setItem('defaultDiscount', JSON.parse(value.value));
                           setDiscount(JSON.parse(value.value));
-                        }else{
+                        } else {
                           localforage.removeItem('defaultDiscount');
                           setDiscount(undefined);
                           setDefaultDiscount(undefined);
@@ -295,9 +297,9 @@ export const More: FC<Props> = ({
                       })}
                       isClearable
                       onChange={(value: any) => {
-                        if(value) {
+                        if( value ) {
                           localforage.setItem('defaultPaymentType', JSON.parse(value.value));
-                        }else{
+                        } else {
                           localforage.removeItem('defaultPaymentType');
                           setDefaultPaymentType(undefined);
                         }
@@ -316,9 +318,9 @@ export const More: FC<Props> = ({
                       })}
                       isClearable
                       onChange={(value: any) => {
-                        if(value) {
+                        if( value ) {
                           localforage.setItem('defaultDevice', JSON.parse(value.value));
-                        }else{
+                        } else {
                           localforage.removeItem('defaultDevice');
                           setDefaultDevice(undefined);
                         }
@@ -329,33 +331,34 @@ export const More: FC<Props> = ({
                 </div>
               </TabContent>
               <TabContent isActive={isTabActive('profile')}>
-                <div className="border flex justify-center items-center mb-5 border-primary-500 text-primary-500 w-full font-bold p-5">
+                <div
+                  className="border flex justify-center items-center mb-5 border-primary-500 text-primary-500 w-full font-bold p-5">
                   Logged in as {user?.displayName}
                 </div>
               </TabContent>
               <TabContent isActive={isTabActive('payments')}>
-                <PaymentTypes />
+                <PaymentTypes/>
               </TabContent>
               <TabContent isActive={isTabActive('discounts')}>
-                <DiscountTypes />
+                <DiscountTypes/>
               </TabContent>
               <TabContent isActive={isTabActive('taxes')}>
-                <TaxTypes />
+                <TaxTypes/>
               </TabContent>
               <TabContent isActive={isTabActive('stores')}>
-                <Stores />
+                <Stores/>
               </TabContent>
               <TabContent isActive={isTabActive('users')}>
-                <Users />
+                <Users/>
               </TabContent>
               <TabContent isActive={isTabActive('terminals')}>
-                <Terminals />
+                <Terminals/>
               </TabContent>
               <TabContent isActive={isTabActive('departments')}>
-                <Departments />
+                <Departments/>
               </TabContent>
               <TabContent isActive={isTabActive('list')}>
-                <Items />
+                <Items/>
               </TabContent>
               <TabContent isActive={isTabActive('categories')}>
                 <Categories/>

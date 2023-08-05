@@ -1,25 +1,28 @@
-import React, {useState} from "react";
-import {USER_LIST,} from "../../../../api/routing/routes/backend.app";
-import {useTranslation} from "react-i18next";
-import {createColumnHelper} from "@tanstack/react-table";
-import {Button} from "../../../../app-common/components/input/button";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPencilAlt, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
-import {TableComponent} from "../../../../app-common/components/table/table";
-import {User} from "../../../../api/model/user";
-import {CreateUser} from "./create.user";
+import React, { useState } from "react";
+import { USER_LIST, USER_GET } from "../../../../api/routing/routes/backend.app";
+import { useTranslation } from "react-i18next";
+import { createColumnHelper } from "@tanstack/react-table";
+import { Button } from "../../../../app-common/components/input/button";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPencilAlt, faPlus } from "@fortawesome/free-solid-svg-icons";
+import { TableComponent } from "../../../../app-common/components/table/table";
+import { User } from "../../../../api/model/user";
+import { CreateUser } from "./create.user";
 import useApi from "../../../../api/hooks/use.api";
-import {HydraCollection} from "../../../../api/model/hydra";
+import { HydraCollection } from "../../../../api/model/hydra";
+import { Switch } from "../../../../app-common/components/input/switch";
+import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
+import { jsonRequest } from "../../../../api/request/request";
 
 export const Users = () => {
   const [operation, setOperation] = useState('create');
 
   const useLoadHook = useApi<HydraCollection<User>>('users', USER_LIST);
-  const {fetchData} = useLoadHook;
+  const { fetchData } = useLoadHook;
   const [user, setUser] = useState<User>();
   const [modal, setModal] = useState(false);
 
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
   const columnHelper = createColumnHelper<User>();
 
@@ -58,14 +61,33 @@ export const Users = () => {
               <FontAwesomeIcon icon={faPencilAlt}/>
             </Button>
             <span className="mx-2 text-gray-300">|</span>
-            <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
-              <FontAwesomeIcon icon={faTrash}/>
-            </Button>
+            <ConfirmAlert
+              onConfirm={() => {
+                deleteUser(info.getValue().toString(), !info.row.original.isActive);
+              }}
+              confirmText="Yes, please"
+              cancelText="No, wait"
+              title="Confirm deletion"
+              description={`Are you sure to ${info.row.original.isActive ? 'de-' : ''}activate this user?`}
+            >
+              <Switch checked={info.row.original.isActive} readOnly/>
+            </ConfirmAlert>
           </>
         )
       }
     })
   ];
+
+  async function deleteUser(id: string, status: boolean) {
+    await jsonRequest(USER_GET.replace(':id', id), {
+      method: 'PUT',
+      body: JSON.stringify({
+        isActive: status
+      })
+    });
+
+    await useLoadHook.fetchData();
+  }
 
   return (
     <>

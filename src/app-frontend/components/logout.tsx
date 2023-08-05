@@ -1,8 +1,9 @@
 import React, {FC} from "react";
 import {Button} from "../../app-common/components/input/button";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPowerOff} from "@fortawesome/free-solid-svg-icons";
+import {faSignOut} from "@fortawesome/free-solid-svg-icons";
 import {useLogout} from "../../duck/auth/hooks/useLogout";
+import { Tooltip } from "antd";
 
 export const Logout: FC = () => {
   const [state, action] = useLogout();
@@ -12,10 +13,10 @@ export const Logout: FC = () => {
   };
 
   return (
-    <>
-      <Button variant="danger" className="w-24" size="lg" onClick={logoutAction} tabIndex={-1}>
-        <FontAwesomeIcon icon={faPowerOff} />
+    <Tooltip title="Logout">
+      <Button variant="danger" className="btn-square" size="lg" onClick={logoutAction} tabIndex={-1}>
+        <FontAwesomeIcon icon={faSignOut} />
       </Button>
-    </>
+    </Tooltip>
   );
 };

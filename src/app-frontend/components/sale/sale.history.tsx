@@ -39,7 +39,6 @@ import { ViewOrder } from "./view.order";
 import { CustomerPayments } from "../customers/customer.payments";
 import { ResponsivePie as Pie } from "@nivo/pie";
 import { ResponsiveBar as Bar } from "@nivo/bar";
-import { useTranslation } from "react-i18next";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Shortcut } from "../../../app-common/components/input/shortcut";
 import { SalePrint } from "./sale.print";
@@ -47,6 +46,7 @@ import { useSelector } from "react-redux";
 import { getStore } from "../../../duck/store/store.selector";
 import { TableComponent } from "../../../app-common/components/table/table";
 import useApi from "../../../api/hooks/use.api";
+import { Tooltip } from "antd";
 
 interface Props {
   setAdded: (item: CartItem[]) => void;
@@ -99,20 +99,21 @@ export const SaleHistory: FC<Props> = ({
       cell: info => (
         <>
           {!!info.getValue() ? (
-            <span
-              className="text-primary-500 cursor-pointer"
-              title="View this customer"
-            >
-              <CustomerPayments customer={info.getValue()!}>
-                <FontAwesomeIcon icon={faEye} className="mr-2"/>
-                {info.getValue()?.name}
-              </CustomerPayments>
-              {customer?.id === info.getValue()?.id && (
-                <span className="ml-3 btn btn-success">
-                  <FontAwesomeIcon icon={faCheck}/>
-                </span>
-              )}
-            </span>
+            <Tooltip title="View this customer">
+              <span
+                className="text-primary-500 cursor-pointer"
+              >
+                <CustomerPayments customer={info.getValue()!}>
+                  <FontAwesomeIcon icon={faEye} className="mr-2"/>
+                  {info.getValue()?.name}
+                </CustomerPayments>
+                {customer?.id === info.getValue()?.id && (
+                  <span className="ml-3 btn btn-success">
+                    <FontAwesomeIcon icon={faCheck}/>
+                  </span>
+                )}
+              </span>
+            </Tooltip>
           ) : 'Cash Sale'}
         </>
       )
@@ -546,12 +547,14 @@ export const SaleHistory: FC<Props> = ({
 
   return (
     <>
-      <Button variant="primary" size="lg" onClick={() => {
-        setModal(true);
-      }} title="Sale history" tabIndex={-1}>
-        <FontAwesomeIcon icon={faClockRotateLeft} className="mr-2"/> History
-        <Shortcut shortcut="ctrl+h" handler={() => setModal(true)}/>
-      </Button>
+      <Tooltip title="Sale history">
+        <Button variant="primary" size="lg" onClick={() => {
+          setModal(true);
+        }} tabIndex={-1} className="btn-square">
+          <FontAwesomeIcon icon={faClockRotateLeft} />
+          <Shortcut shortcut="ctrl+h" handler={() => setModal(true)}/>
+        </Button>
+      </Tooltip>
 
       <Modal open={modal} onClose={() => {
         setModal(false);

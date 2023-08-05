@@ -1,7 +1,7 @@
 import {useTranslation} from "react-i18next";
 import {Button} from "../../../../app-common/components/input/button";
 import React, {useState} from "react";
-import {SUPPLIER_LIST} from "../../../../api/routing/routes/backend.app";
+import { PURCHASE_DELETE, SUPPLIER_EDIT, SUPPLIER_LIST } from "../../../../api/routing/routes/backend.app";
 import {Supplier} from "../../../../api/model/supplier";
 import {TableComponent} from "../../../../app-common/components/table/table";
 import {createColumnHelper} from "@tanstack/react-table";
@@ -14,15 +14,18 @@ import {SupplierLedger} from "./supplier.ledger";
 import useApi from "../../../../api/hooks/use.api";
 import {HydraCollection} from "../../../../api/model/hydra";
 import { withCurrency } from "../../../../lib/currency/currency";
+import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
+import { jsonRequest } from "../../../../api/request/request";
 
 export const Suppliers = () => {
   const [operation, setOperation] = useState('create');
 
-  const useLoadHook = useApi<HydraCollection<Supplier>>('suppliers', SUPPLIER_LIST)
+  const store = useSelector(getStore);
+  const useLoadHook = useApi<HydraCollection<Supplier>>('suppliers', SUPPLIER_LIST, {
+    store: store?.id
+  })
   const [supplier, setSupplier] = useState<Supplier>();
   const [modal, setModal] = useState(false);
-
-  const store = useSelector(getStore);
 
   const {t} = useTranslation();
 
@@ -63,9 +66,19 @@ export const Suppliers = () => {
               <FontAwesomeIcon icon={faPencilAlt}/>
             </Button>
             <span className="mx-2 text-gray-300">|</span>
+            <ConfirmAlert
+              onConfirm={() => {
+                deleteSupplier(info.getValue().toString());
+              }}
+              confirmText="Yes, please"
+              cancelText="No, wait"
+              title="Confirm deletion"
+              description={`Are you sure to delete ${info.row.original.name} with all purchases and purchase orders?`}
+            >
             <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
               <FontAwesomeIcon icon={faTrash}/>
             </Button>
+            </ConfirmAlert>
             <span className="mx-2 text-gray-300">|</span>
             <SupplierLedger supplier={info.row.original}/>
           </>
@@ -74,14 +87,19 @@ export const Suppliers = () => {
     })
   ];
 
+  async function deleteSupplier(id: string) {
+    await jsonRequest(SUPPLIER_EDIT.replace(':id', id), {
+      method: 'DELETE'
+    });
+
+    await useLoadHook.fetchData();
+  }
+
   return (
     <>
       <TableComponent
         columns={columns}
         useLoadList={useLoadHook}
-        params={{
-          store: store?.id
-        }}
         loaderLineItems={6}
         buttons={[{
           html: <Button variant="primary" onClick={() => {

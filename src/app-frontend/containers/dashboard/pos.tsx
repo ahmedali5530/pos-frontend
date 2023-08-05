@@ -175,7 +175,7 @@ const Pos: FC = () => {
   const [refundingFrom, setRefundingFrom] = useState<number>();
   const [closeSale, setCloseSale] = useState(false);
   const [adjustment, setAdjustment] = useState(0);
-  const [cartItem, setCartItem] = useState<number>(0);
+  const [cartItem, setCartItem] = useState<number>();
   const [cartItemType, setCartItemType] = useState<CartItemType>(CartItemType.quantity);
   const [itemsMeta, setItemsMeta] = useState<Product[]>([]);
 
@@ -701,14 +701,14 @@ const Pos: FC = () => {
           </div>
 
           <SearchTable
-            searchScrollContainer={searchScrollContainer}
+            // searchScrollContainer={searchScrollContainer}
             items={items}
-            selected={selected}
-            setSelected={setSelected}
-            setRate={setRate}
+            // selected={selected}
+            // setSelected={setSelected}
+            // setRate={setRate}
             addItem={addItem}
-            quantity={quantity}
-            q={q}
+            // quantity={quantity}
+            // q={q}
           />
         </div>
         <div className="col-span-6 bg-white">

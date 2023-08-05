@@ -37,7 +37,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
       }} title={`Order# ${order.orderId}`}>
         <div className="grid grid-cols-6 gap-3 mb-5">
           <div className="border border-gray-500 p-5 rounded">
-            <div className="text-2xl">+{itemsTotal}</div>
+            <div className="text-2xl">+{itemsTotal.toFixed(2)}</div>
             Items total with tax
           </div>
           <div className="border border-gray-500 p-5 rounded">
@@ -115,7 +115,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
               <th></th>
               <th></th>
               <th></th>
-              <th className="text-right">{itemsTotal}</th>
+              <th className="text-right">{itemsTotal.toFixed(2)}</th>
             </tr>
           </tfoot>
         </table>

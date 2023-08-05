@@ -1,24 +1,21 @@
-import React, {FC, useEffect, useState} from "react";
-import {Modal} from "../../../../app-common/components/modal/modal";
-import {Input} from "../../../../app-common/components/input/input";
-import {Trans} from "react-i18next";
-import {Controller, useForm} from "react-hook-form";
-import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
-import {Button} from "../../../../app-common/components/input/button";
-import {STORE_LIST, USER_CREATE, USER_EDIT} from "../../../../api/routing/routes/backend.app";
-import {ReactSelectOptionProps} from "../../../../api/model/common";
-import {jsonRequest} from "../../../../api/request/request";
-import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
-import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
-import {User} from "../../../../api/model/user";
+import React, { FC, useEffect, useState } from "react";
+import { Modal } from "../../../../app-common/components/modal/modal";
+import { Input } from "../../../../app-common/components/input/input";
+import { Controller, useForm } from "react-hook-form";
+import { ReactSelect } from "../../../../app-common/components/input/custom.react.select";
+import { Button } from "../../../../app-common/components/input/button";
+import { USER_CREATE, USER_EDIT } from "../../../../api/routing/routes/backend.app";
+import { ReactSelectOptionProps } from "../../../../api/model/common";
+import { jsonRequest } from "../../../../api/request/request";
+import { HttpException, UnprocessableEntityException } from "../../../../lib/http/exception/http.exception";
+import { ConstraintViolation, ValidationResult } from "../../../../lib/validator/validation.result";
+import { User } from "../../../../api/model/user";
 import * as yup from 'yup';
-import {ValidationMessage} from "../../../../api/model/validation";
-import {yupResolver} from "@hookform/resolvers/yup";
-import {getErrorClass, getErrors, hasErrors} from "../../../../lib/error/error";
-import {Store} from "../../../../api/model/store";
-import {useLoadList} from "../../../../api/hooks/use.load.list";
-import {notify} from "../../../../app-common/components/confirm/notification";
-import {StoresInput} from "../../../../app-common/components/input/stores";
+import { ValidationMessage } from "../../../../api/model/validation";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { getErrorClass, getErrors, hasErrors } from "../../../../lib/error/error";
+import { notify } from "../../../../app-common/components/confirm/notification";
+import { StoresInput } from "../../../../app-common/components/input/stores";
 
 interface CreateUserProps {
   entity?: User;
@@ -38,29 +35,24 @@ export const CreateUser: FC<CreateUserProps> = ({
     stores: yup.array().min(1, 'Please add some stores').required(ValidationMessage.Required)
   }
 
-  if(!entity){
+  if( !entity ) {
     schema['password'] = yup.string().required(ValidationMessage.Required)
   }
 
   const ValidationSchema = yup.object(schema);
 
-  const {register, handleSubmit, setError, formState: {errors}, reset, control} = useForm({
+  const { register, handleSubmit, setError, formState: { errors }, reset, control } = useForm({
     resolver: yupResolver(ValidationSchema)
   });
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
-  const {list: stores, fetchData: loadStores} = useLoadList<Store>(STORE_LIST);
-
-  useEffect(() => {
-    loadStores();
-  }, []);
 
   useEffect(() => {
     setModal(addModal);
   }, [addModal]);
 
   useEffect(() => {
-    if (entity) {
+    if( entity ) {
       reset({
         ...entity,
         roles: entity.roles.map(item => {
@@ -83,7 +75,7 @@ export const CreateUser: FC<CreateUserProps> = ({
     setCreating(true);
     try {
       let url, method = 'POST';
-      if (values.id) {
+      if( values.id ) {
         method = 'PUT';
         url = USER_EDIT.replace(':id', values.id);
       } else {
@@ -91,10 +83,10 @@ export const CreateUser: FC<CreateUserProps> = ({
         delete values.id;
       }
 
-      if (values.roles) {
+      if( values.roles ) {
         values.roles = values.roles.map((item: ReactSelectOptionProps) => item.value);
       }
-      if (values.stores) {
+      if( values.stores ) {
         values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value.toString());
       }
 
@@ -106,9 +98,9 @@ export const CreateUser: FC<CreateUserProps> = ({
       });
 
       onModalClose();
-    } catch (exception: any) {
-      if (exception instanceof HttpException) {
-        if (exception.message) {
+    } catch ( exception: any ) {
+      if( exception instanceof HttpException ) {
+        if( exception.message ) {
           notify({
             type: 'error',
             description: exception.message
@@ -116,7 +108,7 @@ export const CreateUser: FC<CreateUserProps> = ({
         }
       }
 
-      if (exception instanceof UnprocessableEntityException) {
+      if( exception instanceof UnprocessableEntityException ) {
         const e: ValidationResult = await exception.response.json();
         e.violations.forEach((item: ConstraintViolation) => {
           setError(item.propertyPath, {
@@ -125,7 +117,7 @@ export const CreateUser: FC<CreateUserProps> = ({
           });
         });
 
-        if (e.errorMessage) {
+        if( e.errorMessage ) {
           notify({
             type: 'error',
             description: e.errorMessage
@@ -218,7 +210,7 @@ export const CreateUser: FC<CreateUserProps> = ({
             {getErrors(errors.roles)}
           </div>
 
-          <StoresInput control={control} errors={errors} valueAsNumber={true} />
+          <StoresInput control={control} errors={errors} valueAsNumber={true}/>
 
           <div>
             <Button variant="primary" type="submit" disabled={creating}>

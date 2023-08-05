@@ -6,4 +6,5 @@ export interface Store extends HydraId, HydraType{
   name: string;
   location?: string;
   terminals: Terminal[];
+  isActive: boolean
 }

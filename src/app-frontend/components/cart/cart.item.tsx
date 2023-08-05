@@ -84,7 +84,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
         </label>
       </div>
       <div className="table-cell p-1 text-center">{item.item.manageInventory && Number(item.stock)}</div>
-      <div className="table-cell p-1">
+      <div className="table-cell px-1">
         <div className="flex justify-center">
           <div className="input-group">
             <Button tabIndex={-1} size="lg" type="button" variant="primary" onClick={() => onQuantityChange(item, item.quantity - 1)}>
@@ -103,7 +103,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
           </div>
         </div>
       </div>
-      <div className="table-cell text-center p-1">
+      <div className="table-cell text-center px-1">
         <Input
           type="number"
           value={item.discount}
@@ -122,13 +122,14 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
           )
         }
       </div>
-      <div className="table-cell text-right p-1">
+      <div className="table-cell text-right px-1">
         <Input
           value={item.price}
           type="number"
           className={"text-center w-full lg mousetrap"}
           onChange={(event) => onPriceChange(item, +event.currentTarget.value)}
           ref={rateRef}
+          disabled
         />
       </div>
       <div className="table-cell p-2 text-right">{getRowTotal(item)}</div>

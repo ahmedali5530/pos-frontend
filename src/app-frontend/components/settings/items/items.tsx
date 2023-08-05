@@ -1,30 +1,28 @@
-import {Button} from "../../../../app-common/components/input/button";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPencilAlt, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
-import React, {useState} from "react";
-import {Product} from "../../../../api/model/product";
-import {PRODUCT_LIST} from "../../../../api/routing/routes/backend.app";
-import {TableComponent} from "../../../../app-common/components/table/table";
+import { Button } from "../../../../app-common/components/input/button";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPencilAlt, faPlus, faToggleOff, faTrash } from "@fortawesome/free-solid-svg-icons";
+import React, { useState } from "react";
+import { Product } from "../../../../api/model/product";
+import { PRODUCT_GET, PRODUCT_LIST } from "../../../../api/routing/routes/backend.app";
+import { TableComponent } from "../../../../app-common/components/table/table";
 import { useTranslation } from "react-i18next";
-import { createColumnHelper} from "@tanstack/react-table";
-import {ImportItems} from "./import.items";
-import {ExportItems} from "./export.items";
-import {useSelector} from "react-redux";
-import {getAuthorizedUser} from "../../../../duck/auth/auth.selector";
-import {getStore} from "../../../../duck/store/store.selector";
-import {CreateItem} from "./items.create";
+import { createColumnHelper } from "@tanstack/react-table";
+import { ImportItems } from "./import.items";
+import { ExportItems } from "./export.items";
+import { CreateItem } from "./items.create";
 import useApi from "../../../../api/hooks/use.api";
-import {HydraCollection} from "../../../../api/model/hydra";
+import { HydraCollection } from "../../../../api/model/hydra";
+import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
+import { jsonRequest } from "../../../../api/request/request";
+import { Switch } from "../../../../app-common/components/input/switch";
 
 export const Items = () => {
   const useLoadHook = useApi<HydraCollection<Product>>('products', PRODUCT_LIST);
   const [entity, setEntity] = useState<Product>();
-  const user = useSelector(getAuthorizedUser);
-  const store = useSelector(getStore);
   const [operation, setOperation] = useState('create');
   const [modal, setModal] = useState(false);
 
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
   const columnHelper = createColumnHelper<Product>();
 
@@ -76,6 +74,7 @@ export const Items = () => {
       enableColumnFilter: false,
     }),
     columnHelper.accessor('id', {
+      id: 'actions',
       header: ('Actions'),
       enableSorting: false,
       enableColumnFilter: false,
@@ -90,14 +89,33 @@ export const Items = () => {
               <FontAwesomeIcon icon={faPencilAlt}/>
             </Button>
             <span className="mx-2 text-gray-300">|</span>
-            <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
-              <FontAwesomeIcon icon={faTrash}/>
-            </Button>
+            <ConfirmAlert
+              onConfirm={() => {
+                deleteItem(info.getValue().toString(), !info.row.original.isActive);
+              }}
+              confirmText="Yes, please"
+              cancelText="No, wait"
+              title="Confirm deletion"
+              description={`Are you sure to ${info.row.original.isActive ? 'de-' : ''}activate this item?`}
+            >
+              <Switch checked={info.row.original.isActive} readOnly />
+            </ConfirmAlert>
           </>
         )
       }
     })
   ];
+
+  async function deleteItem(id: string, status: boolean) {
+    await jsonRequest(PRODUCT_GET.replace(':id', id), {
+      method: 'PUT',
+      body: JSON.stringify({
+        isActive: status
+      })
+    });
+
+    await useLoadHook.fetchData();
+  }
 
   return (
     <>
@@ -107,7 +125,7 @@ export const Items = () => {
         buttons={[
           {
             html: <ImportItems/>,
-          },{
+          }, {
             html: <ExportItems/>,
           },
           {
@@ -128,7 +146,7 @@ export const Items = () => {
         setOperation('create');
         useLoadHook.fetchData();
         setEntity(undefined);
-      }} operation={operation} />
+      }} operation={operation}/>
     </>
   );
 };

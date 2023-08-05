@@ -1,32 +1,31 @@
-import React, {FC, PropsWithChildren, useState} from "react";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPencilAlt, faTrash, faUsers} from "@fortawesome/free-solid-svg-icons";
-import {Button} from "../../../app-common/components/input/button";
-import {Modal} from "../../../app-common/components/modal/modal";
-import {Customer} from "../../../api/model/customer";
-import {fetchJson} from "../../../api/request/request";
-import {useForm} from "react-hook-form";
-import {Input} from "../../../app-common/components/input/input";
-import {faSquare, faSquareCheck} from "@fortawesome/free-regular-svg-icons";
-import {CustomerPayments} from "./customer.payments";
-import {CUSTOMER_CREATE, CUSTOMER_EDIT, CUSTOMER_LIST} from "../../../api/routing/routes/backend.app";
-import {ConstraintViolation, ValidationResult} from "../../../lib/validator/validation.result";
-import {Trans, useTranslation} from "react-i18next";
-import {HttpException, UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
-import {useLoadList} from "../../../api/hooks/use.load.list";
-import {createColumnHelper} from "@tanstack/react-table";
-import {TableComponent} from "../../../app-common/components/table/table";
-import {Shortcut} from "../../../app-common/components/input/shortcut";
+import React, { FC, PropsWithChildren, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPencilAlt, faTrash, faUsers } from "@fortawesome/free-solid-svg-icons";
+import { Button } from "../../../app-common/components/input/button";
+import { Modal } from "../../../app-common/components/modal/modal";
+import { Customer } from "../../../api/model/customer";
+import { fetchJson } from "../../../api/request/request";
+import { useForm } from "react-hook-form";
+import { Input } from "../../../app-common/components/input/input";
+import { faSquare, faSquareCheck } from "@fortawesome/free-regular-svg-icons";
+import { CustomerPayments } from "./customer.payments";
+import { CUSTOMER_CREATE, CUSTOMER_EDIT, CUSTOMER_LIST } from "../../../api/routing/routes/backend.app";
+import { ConstraintViolation, ValidationResult } from "../../../lib/validator/validation.result";
+import { useTranslation } from "react-i18next";
+import { HttpException, UnprocessableEntityException } from "../../../lib/http/exception/http.exception";
+import { createColumnHelper } from "@tanstack/react-table";
+import { TableComponent } from "../../../app-common/components/table/table";
+import { Shortcut } from "../../../app-common/components/input/shortcut";
 import * as yup from 'yup';
-import {ValidationMessage} from "../../../api/model/validation";
-import {getErrors, hasErrors} from "../../../lib/error/error";
-import {yupResolver} from "@hookform/resolvers/yup";
+import { ValidationMessage } from "../../../api/model/validation";
+import { getErrors, hasErrors } from "../../../lib/error/error";
+import { yupResolver } from "@hookform/resolvers/yup";
 import useApi from "../../../api/hooks/use.api";
 import { HydraCollection } from "../../../api/model/hydra";
-import {notify} from "../../../app-common/components/confirm/notification";
+import { notify } from "../../../app-common/components/confirm/notification";
 
 
-interface Props extends PropsWithChildren{
+interface Props extends PropsWithChildren {
   customer?: Customer;
   setCustomer: (customer?: Customer) => void;
   className?: string;
@@ -45,9 +44,9 @@ export const Customers: FC<Props> = ({
   const [operation, setOperation] = useState('create');
 
   const useLoadHook = useApi<HydraCollection<Customer>>('customers', CUSTOMER_LIST);
-  const {fetchData} = useLoadHook;
+  const { fetchData } = useLoadHook;
 
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
   const columnHelper = createColumnHelper<Customer>();
 
@@ -135,7 +134,7 @@ export const Customers: FC<Props> = ({
   ];
   const [params, setParams] = useState<{ [key: string]: any }>();
 
-  const {register, handleSubmit, setError, formState: {errors}, reset} = useForm({
+  const { register, handleSubmit, setError, formState: { errors }, reset } = useForm({
     resolver: yupResolver(ValidationSchema)
   });
   const [creating, setCreating] = useState(false);
@@ -146,7 +145,7 @@ export const Customers: FC<Props> = ({
     setCreating(true);
     try {
       let url, method = 'POST';
-      if (values.id) {
+      if( values.id ) {
         method = 'PUT';
         url = CUSTOMER_EDIT.replace(':id', values.id);
       } else {
@@ -166,9 +165,9 @@ export const Customers: FC<Props> = ({
 
       resetForm();
       setOperation('create');
-    } catch (exception: any) {
-      if (exception instanceof HttpException) {
-        if (exception.message) {
+    } catch ( exception: any ) {
+      if( exception instanceof HttpException ) {
+        if( exception.message ) {
           notify({
             type: 'error',
             description: exception.message
@@ -176,7 +175,7 @@ export const Customers: FC<Props> = ({
         }
       }
 
-      if (exception instanceof UnprocessableEntityException) {
+      if( exception instanceof UnprocessableEntityException ) {
         const e: ValidationResult = await exception.response.json();
         e.violations.forEach((item: ConstraintViolation) => {
           setError(item.propertyPath, {
@@ -185,7 +184,7 @@ export const Customers: FC<Props> = ({
           });
         });
 
-        if (e.errorMessage) {
+        if( e.errorMessage ) {
           notify({
             type: 'error',
             description: e.errorMessage
@@ -204,7 +203,7 @@ export const Customers: FC<Props> = ({
 
   const mergeFilters = (filters: any) => {
     setParams(prev => {
-      return {...prev, ...filters};
+      return { ...prev, ...filters };
     });
   };
 
@@ -229,7 +228,7 @@ export const Customers: FC<Props> = ({
             <FontAwesomeIcon icon={faUsers} className="mr-2"/> Customers
           </>
         )}
-        <Shortcut shortcut="ctrl+c" handler={() => setModal(true)}/>
+        <Shortcut shortcut="ctrl+shift+c" handler={() => setModal(true)}/>
       </button>
 
       <Modal shouldCloseOnEsc={false} open={modal} onClose={() => {
@@ -254,7 +253,8 @@ export const Customers: FC<Props> = ({
             </div>
             <div>
               <label htmlFor="openingBalance">Opening balance</label>
-              <Input {...register('openingBalance')} id="openingBalance" className="w-full" hasError={hasErrors(errors.openingBalance)}/>
+              <Input {...register('openingBalance')} id="openingBalance" className="w-full"
+                     hasError={hasErrors(errors.openingBalance)}/>
               {getErrors(errors.openingBalance)}
             </div>
             <div>

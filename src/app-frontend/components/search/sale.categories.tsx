@@ -6,6 +6,7 @@ import localforage from "localforage";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCheckCircle} from "@fortawesome/free-solid-svg-icons";
 import {Category} from "../../../api/model/category";
+import { Tooltip } from "antd";
 
 interface SaleCategoriesProps extends PropsWithChildren{
   categories:  {[key: string]: Category} ;
@@ -50,19 +51,21 @@ export const SaleCategories: FC<SaleCategoriesProps> = ({
 
   return (
     <>
-      <Button
-        className="block w-full" variant="primary"
-        onClick={() => {
-          setModal(true);
-        }}
-        type="button"
-        title="Filter by Categories"
-      >
-        {children || 'Categories'}
-        {Object.values(categories).length > 0 && (
-          <span className="shrink-0 ml-1 bg-primary-500 text-white h-5 w-5 rounded-full text-sm font-bold">{Object.values(categories).length}</span>
-        )}
-      </Button>
+      <Tooltip title="Filter by Categories">
+        <Button
+          className="block min-w-[48px]" variant="primary"
+          onClick={() => {
+            setModal(true);
+          }}
+          type="button"
+          size="lg"
+        >
+          {children || 'Categories'}
+          {Object.values(categories).length > 0 && (
+            <span className="shrink-0 ml-1 bg-primary-500 text-white h-5 w-5 rounded-full text-sm font-bold">{Object.values(categories).length}</span>
+          )}
+        </Button>
+      </Tooltip>
       <Modal open={modal} onClose={() => {
         setModal(false);
       }} title="Filter by categories">

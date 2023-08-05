@@ -1,19 +1,22 @@
-import React, {useMemo, useState} from 'react';
-import {TERMINAL_LIST} from "../../../../api/routing/routes/backend.app";
-import {useTranslation} from "react-i18next";
-import {createColumnHelper} from "@tanstack/react-table";
-import {Button} from "../../../../app-common/components/input/button";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPencilAlt, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
-import {Input} from "../../../../app-common/components/input/input";
-import {TableComponent} from "../../../../app-common/components/table/table";
-import {Terminal} from '../../../../api/model/terminal';
-import {Store} from "../../../../api/model/store";
-import {Modal} from "../../../../app-common/components/modal/modal";
-import {Product} from "../../../../api/model/product";
-import {CreateTerminal} from "./create.terminal";
-import {HydraCollection} from "../../../../api/model/hydra";
+import React, { useMemo, useState } from 'react';
+import { TERMINAL_GET, TERMINAL_LIST } from "../../../../api/routing/routes/backend.app";
+import { useTranslation } from "react-i18next";
+import { createColumnHelper } from "@tanstack/react-table";
+import { Button } from "../../../../app-common/components/input/button";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPencilAlt, faPlus } from "@fortawesome/free-solid-svg-icons";
+import { Input } from "../../../../app-common/components/input/input";
+import { TableComponent } from "../../../../app-common/components/table/table";
+import { Terminal } from '../../../../api/model/terminal';
+import { Store } from "../../../../api/model/store";
+import { Modal } from "../../../../app-common/components/modal/modal";
+import { Product } from "../../../../api/model/product";
+import { CreateTerminal } from "./create.terminal";
+import { HydraCollection } from "../../../../api/model/hydra";
 import useApi from "../../../../api/hooks/use.api";
+import { Switch } from "../../../../app-common/components/input/switch";
+import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
+import { jsonRequest } from "../../../../api/request/request";
 
 export const Terminals = () => {
   const [operation, setOperation] = useState('create');
@@ -21,13 +24,13 @@ export const Terminals = () => {
   const [modal, setModal] = useState(false);
 
   const useLoadHook = useApi<HydraCollection<Terminal>>('terminals', TERMINAL_LIST);
-  const {fetchData} = useLoadHook;
+  const { fetchData } = useLoadHook;
 
   const [terminalProducts, setTerminalProducts] = useState<Product[]>([]);
   const [filter, setFilter] = useState<string>();
 
   const terminalProductsFilter = useMemo(() => {
-    if (filter) {
+    if( filter ) {
       return terminalProducts.filter(item => item.name.toLowerCase().indexOf(filter.toLowerCase()) !== -1);
     }
 
@@ -35,7 +38,7 @@ export const Terminals = () => {
 
   }, [terminalProducts, filter]);
 
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
   const columnHelper = createColumnHelper<Terminal>();
 
@@ -80,14 +83,33 @@ export const Terminals = () => {
               <FontAwesomeIcon icon={faPencilAlt}/>
             </Button>
             <span className="mx-2 text-gray-300">|</span>
-            <Button type="button" variant="danger" className="w-[40px]" tabIndex={-1}>
-              <FontAwesomeIcon icon={faTrash}/>
-            </Button>
+            <ConfirmAlert
+              onConfirm={() => {
+                deleteTerminal(info.getValue().toString(), !info.row.original.isActive);
+              }}
+              confirmText="Yes, please"
+              cancelText="No, wait"
+              title="Confirm deletion"
+              description={`Are you sure to ${info.row.original.isActive ? 'de-' : ''}activate this terminal?`}
+            >
+              <Switch checked={info.row.original.isActive} readOnly/>
+            </ConfirmAlert>
           </>
         )
       }
     })
   ];
+
+  async function deleteTerminal(id: string, status: boolean) {
+    await jsonRequest(TERMINAL_GET.replace(':id', id), {
+      method: 'PUT',
+      body: JSON.stringify({
+        isActive: status
+      })
+    });
+
+    await useLoadHook.fetchData();
+  }
 
   return (
     <>

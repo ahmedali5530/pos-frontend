@@ -1,49 +1,56 @@
-import {FC, InputHTMLAttributes, PropsWithChildren, useEffect, useState} from "react";
+import { FC, InputHTMLAttributes, PropsWithChildren, useEffect, useState } from "react";
 import classNames from "classnames";
-import {useSelector} from "react-redux";
-import {displayShortcut, getShortcut} from "../../../duck/shortcuts/shortcut.selector";
+import { useSelector } from "react-redux";
+import { displayShortcut, getShortcut } from "../../../duck/shortcuts/shortcut.selector";
 import Mousetrap from 'mousetrap';
 
-interface Props extends PropsWithChildren, InputHTMLAttributes<HTMLSpanElement>{
+interface Props extends PropsWithChildren, InputHTMLAttributes<HTMLSpanElement> {
   shortcut: string;
   handler: (e: Event) => void;
   invisible?: boolean;
 }
 
-export const Shortcut: FC<Props> = ({children, ...rest}) => {
+export const Shortcut: FC<Props> = ({ children, ...rest }) => {
   const state = useSelector(getShortcut);
   const displayShortcuts = useSelector(displayShortcut);
 
-  const [visible, setVisible] = useState<boolean|undefined>(rest.invisible);
+  const [visible, setVisible] = useState<boolean | undefined>(rest.invisible);
 
   useEffect(() => {
     setVisible(displayShortcuts);
   }, [displayShortcuts]);
 
   useEffect(() => {
-    const handler = function (e: Event) {
-      e.preventDefault();
-      e.stopPropagation();
+    const handler = function (e: any) {
+      const inputNodes = [
+        'INPUT', 'TEXTAREA'
+      ];
 
-      rest.handler(e);
+      // only run shortcuts when there is no modal active
+      if( !document.body.classList.contains('ReactModal__Body--open') ) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        rest.handler(e);
+      }
 
       return false;
     };
 
-    if(state){
+    if( state ) {
       Mousetrap.bind(rest.shortcut, handler);
-    }else{
+    } else {
       Mousetrap.unbind(rest.shortcut, handler);
     }
 
     return () => Mousetrap.unbind(rest.shortcut, handler);
   }, [state, rest]);
 
-  if(!state){
+  if( !state ) {
     return (<></>);
   }
 
-  if(rest.invisible){
+  if( rest.invisible ) {
     return (<></>);
   }
 
