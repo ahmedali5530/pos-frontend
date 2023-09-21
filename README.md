@@ -2,6 +2,13 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+### Demo
+[https://pos.ezportal.online](https://pos.ezportal.online)
+
+Username: admin
+
+Password: admin
+
 A point of sale system built using React.js and [Symfony as a backend](https://github.com/ahmedali5530/pos).
 ### Features
 
