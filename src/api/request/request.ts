@@ -42,6 +42,7 @@ export const jsonRequest = async (input: RequestInfo, init: RequestInit = {}) =>
 };
 
 export const fetchJson = async (input: RequestInfo, init: RequestInit = {}) => {
+
   const response = await jsonRequest(input, init);
   return await response.json();
 };

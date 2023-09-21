@@ -67,7 +67,7 @@ export const ProductVariant = ({
         />
       </div>
       <div>
-        <label>Quantity</label>
+        <label>Stock</label>
         <Controller
           render={(props) => (
             <Input onChange={props.field.onChange} value={props.field.value} className="w-full"/>

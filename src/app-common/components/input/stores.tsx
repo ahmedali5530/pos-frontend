@@ -11,10 +11,11 @@ interface StoresInputProps{
   control: UseFormReturn['control'];
   errors: UseFormReturn['formState']['errors'];
   valueAsNumber?: boolean;
+  name?: string;
 }
 
 export const StoresInput: FC<StoresInputProps> = ({
-  control, errors, valueAsNumber
+  control, errors, valueAsNumber, name
 }) => {
   const [stores, setStores] = useState<Store[]>([]);
   const loadStores = async () => {
@@ -34,7 +35,7 @@ export const StoresInput: FC<StoresInputProps> = ({
     <div>
       <label htmlFor="stores">Stores</label>
       <Controller
-        name="stores"
+        name={name || "stores"}
         control={control}
         render={(props) => (
           <ReactSelect

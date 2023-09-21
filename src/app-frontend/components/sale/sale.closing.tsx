@@ -1,30 +1,30 @@
-import React, {FC, PropsWithChildren, useEffect, useLayoutEffect, useMemo, useState} from "react";
-import {Modal} from "../../../app-common/components/modal/modal";
-import {Closing} from "../../../api/model/closing";
-import {QueryString} from "../../../lib/location/query.string";
-import {fetchJson, jsonRequest} from "../../../api/request/request";
-import {CLOSING_EDIT, CLOSING_OPENED, EXPENSE_LIST, ORDER_LIST} from "../../../api/routing/routes/backend.app";
-import {Button} from "../../../app-common/components/input/button";
-import {Input} from "../../../app-common/components/input/input";
-import {Controller, useForm} from "react-hook-form";
-import {DateTime} from "luxon";
-import {Expenses} from "./expenses";
-import {Expense} from "../../../api/model/expense";
-import {useSelector} from "react-redux";
-import {getAuthorizedUser} from "../../../duck/auth/auth.selector";
+import React, { FC, PropsWithChildren, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { Modal } from "../../../app-common/components/modal/modal";
+import { Closing } from "../../../api/model/closing";
+import { QueryString } from "../../../lib/location/query.string";
+import { fetchJson, jsonRequest } from "../../../api/request/request";
+import { CLOSING_EDIT, CLOSING_OPENED, EXPENSE_LIST, ORDER_LIST } from "../../../api/routing/routes/backend.app";
+import { Button } from "../../../app-common/components/input/button";
+import { Input } from "../../../app-common/components/input/input";
+import { Controller, useForm } from "react-hook-form";
+import { DateTime } from "luxon";
+import { Expenses } from "./expenses";
+import { Expense } from "../../../api/model/expense";
+import { useSelector } from "react-redux";
+import { getAuthorizedUser } from "../../../duck/auth/auth.selector";
 import classNames from "classnames";
-import {KeyboardInput} from "../../../app-common/components/input/keyboard.input";
-import {getStore} from "../../../duck/store/store.selector";
-import {getTerminal} from "../../../duck/terminal/terminal.selector";
-import {HttpException, UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
-import {notify} from "../../../app-common/components/confirm/notification";
-import {ConstraintViolation, ValidationResult} from "../../../lib/validator/validation.result";
+import { KeyboardInput } from "../../../app-common/components/input/keyboard.input";
+import { getStore } from "../../../duck/store/store.selector";
+import { getTerminal } from "../../../duck/terminal/terminal.selector";
+import { HttpException, UnprocessableEntityException } from "../../../lib/http/exception/http.exception";
+import { notify } from "../../../app-common/components/confirm/notification";
+import { ValidationResult } from "../../../lib/validator/validation.result";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faShopLock } from "@fortawesome/free-solid-svg-icons";
 import { Tooltip } from "antd";
-import { HydraCollection } from "../../../api/model/hydra";
 import useApi from "../../../api/hooks/use.api";
 import { Order } from "../../../api/model/order";
+import { withCurrency } from "../../../lib/currency/currency";
 
 interface TaxProps extends PropsWithChildren {
 
@@ -37,13 +37,18 @@ export const SaleClosing: FC<TaxProps> = (props) => {
 
   const [payments, setPayments] = useState<{ [key: string]: number }>({});
 
-  const useLoadHook = useApi<{count: number, list: Order[], payments: {[name: string]: number}, total: number}>('orders', ORDER_LIST);
-  const {handleFilterChange, data, fetchData: fetchOrders} = useLoadHook;
+  const useLoadHook = useApi<{
+    count: number,
+    list: Order[],
+    payments: { [name: string]: number },
+    total: number
+  }>('orders', ORDER_LIST);
+  const { handleFilterChange, data, fetchData: fetchOrders } = useLoadHook;
 
   //check for day closing
   const [closing, setClosing] = useState<Closing>();
   const checkDayOpening = async () => {
-    try{
+    try {
       const queryString = QueryString.stringify({
         store: store?.id,
         terminal: terminal?.id
@@ -54,7 +59,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
 
       setClosing(json.closing);
 
-    }catch (e){
+    } catch ( e ) {
       throw e;
     }
   };
@@ -63,7 +68,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
   const [hideCloseButton, setHideCloseButton] = useState(false);
 
   useEffect(() => {
-    if(closing){
+    if( closing ) {
       reset({
         openingBalance: closing.openingBalance,
         cashAdded: closing.cashAdded || 0,
@@ -71,13 +76,13 @@ export const SaleClosing: FC<TaxProps> = (props) => {
         id: closing.id
       });
 
-      if(closing.openingBalance === null){
+      if( closing.openingBalance === null ) {
         setModal(true);
         setHideCloseButton(true);
         setTitle('Start day');
       }
 
-      if(closing.openingBalance !== null && DateTime.now().diff(DateTime.fromISO(closing.createdAt.datetime), 'hours').hours > 24){
+      if( closing.openingBalance !== null && DateTime.now().diff(DateTime.fromISO(closing.createdAt.datetime), 'hours').hours > 24 ) {
         setModal(true);
         setHideCloseButton(true);
         setTitle('Close previous day first');
@@ -99,39 +104,39 @@ export const SaleClosing: FC<TaxProps> = (props) => {
   }, []);
 
   useEffect(() => {
-    if(modal) {
+    if( modal ) {
       fetchOrders();
       checkDayOpening();
     }
   }, [modal]);
 
-  const {reset, register, handleSubmit, control, watch, getValues} = useForm();
+  const { reset, register, handleSubmit, control, watch, getValues } = useForm();
   const [saving, setSaving] = useState(false);
   const [expenses, setExpenses] = useState(0);
 
   const user = useSelector(getAuthorizedUser);
 
   useEffect(() => {
-    if(data?.payments) {
+    if( data?.payments ) {
       setPayments(data?.payments);
     }
   }, [data]);
 
   const onSubmit = async (values: any) => {
     setSaving(true);
-    try{
-      if(values.openingBalance !== null){
-          values.dateTe = {
-            datetime: DateTime.now().toISO()
-          }
+    try {
+      if( values.openingBalance !== null ) {
+        values.dateTe = {
+          datetime: DateTime.now().toISO()
+        }
 
-          values.closedBy = user?.id;
-          values.closingBalance = cashInHand;
-      }else{
+        values.closedBy = user?.id;
+        values.closingBalance = cashInHand;
+      } else {
         values.openingBalance = 0;
       }
 
-      if(!values.updateOnly){
+      if( !values.updateOnly ) {
         values.closedAt = {
           datetime: DateTime.now().toISO()
         }
@@ -150,9 +155,9 @@ export const SaleClosing: FC<TaxProps> = (props) => {
       setHideCloseButton(false);
       setModal(false);
 
-    }catch (exception){
-      if (exception instanceof HttpException) {
-        if (exception.message) {
+    } catch ( exception ) {
+      if( exception instanceof HttpException ) {
+        if( exception.message ) {
           notify({
             type: 'error',
             description: exception.message
@@ -160,9 +165,9 @@ export const SaleClosing: FC<TaxProps> = (props) => {
         }
       }
 
-      if (exception instanceof UnprocessableEntityException) {
+      if( exception instanceof UnprocessableEntityException ) {
         const e: ValidationResult = await exception.response.json();
-        if (e.errorMessage) {
+        if( e.errorMessage ) {
           notify({
             type: 'error',
             description: e.errorMessage
@@ -172,7 +177,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
         return false;
       }
       throw exception;
-    }finally {
+    } finally {
       setSaving(false);
     }
   };
@@ -196,7 +201,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
         return current.amount + prev
       }, 0));
 
-    } catch (e) {
+    } catch ( e ) {
 
       throw e;
     }
@@ -216,7 +221,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
           setTitle('Close day');
           setHideCloseButton(false);
         }} tabIndex={-1}>
-          <FontAwesomeIcon icon={faShopLock} />
+          <FontAwesomeIcon icon={faShopLock}/>
         </Button>
       </Tooltip>
 
@@ -226,106 +231,106 @@ export const SaleClosing: FC<TaxProps> = (props) => {
         <form onSubmit={handleSubmit(onSubmit)}>
           <table className="table table-borderless table-hover table-fixed">
             <tbody>
-              <tr>
-                <th className="text-right">Store</th>
-                <td>{closing?.store?.name}</td>
-              </tr>
-              <tr>
-                <th className="text-right">Terminal</th>
-                <td>{closing?.terminal?.code}</td>
-              </tr>
-              <tr>
-                <th className="text-right">Day started by</th>
-                <td>{closing?.openedBy?.displayName}</td>
-              </tr>
-              <tr>
-                <th className="text-right">Day started at</th>
-                <td>{closing?.createdAt?.datetime && DateTime.fromISO(closing?.createdAt?.datetime).toFormat(import.meta.env.VITE_DATE_TIME_FORMAT as string)}</td>
-              </tr>
-              <tr>
-                <th className="text-right">Previous closing</th>
-                <td>0</td>
-              </tr>
-              <tr>
-                <th className="text-right">Opening balance</th>
-                <td>
-                  <Controller
-                    render={(props) => (
-                      <KeyboardInput
-                        className="w-full"
-                        type="number"
-                        defaultValue={props.field.value}
-                        value={props.field.value}
-                        onChange={props.field.onChange}
-                      />
-                    )}
-                    name="openingBalance"
-                    control={control}
-                  />
-                </td>
-              </tr>
-              <tr>
-                <th className="text-right">Cash added</th>
-                <td>
-                  <Input {...register('cashAdded', {
-                    valueAsNumber: true
-                  })} type="number" className="w-full" tabIndex={0} selectable={true} />
-                </td>
-              </tr>
-              {closing?.openingBalance !== null && (
-                <>
-                  <tr>
-                    <th className="text-right">
-                      Expenses
-                    </th>
-                    <td>
-                      <Controller
-                        control={control}
-                        name="expenses"
-                        render={(props) => (
-                          <Input
-                            {...register('expenses', { valueAsNumber: true })}
-                            type="number"
-                            className="w-full"
-                            value={expenses.toString()}
-                            onChange={props.field.onChange}
-                            readOnly
-                            selectable={true}
-                          />
-                        )}
-                      />
-                    </td>
-                  </tr>
-                  <tr>
-                    <th className="text-right">Cash withdrawn</th>
-                    <td>
-                      <Input {...register('cashWithdrawn', {
-                        valueAsNumber: true
-                      })} type="number" className="w-full" tabIndex={0} selectable={true}/>
-                    </td>
-                  </tr>
-                </>
-              )}
-              {Object.keys(payments).map(paymentType => (
-                <tr key={paymentType}>
-                  <th className="text-right">{paymentType.toUpperCase()} sale</th>
+            <tr>
+              <th className="text-right">Store</th>
+              <td>{closing?.store?.name}</td>
+            </tr>
+            <tr>
+              <th className="text-right">Terminal</th>
+              <td>{closing?.terminal?.code}</td>
+            </tr>
+            <tr>
+              <th className="text-right">Day started by</th>
+              <td>{closing?.openedBy?.displayName}</td>
+            </tr>
+            <tr>
+              <th className="text-right">Day started at</th>
+              <td>{closing?.createdAt?.datetime && DateTime.fromISO(closing?.createdAt?.datetime || '').toFormat(import.meta.env.VITE_DATE_TIME_FORMAT as string)}</td>
+            </tr>
+            <tr>
+              <th className="text-right">Previous closing</th>
+              <td>{withCurrency(0)}</td>
+            </tr>
+            <tr>
+              <th className="text-right">Opening balance</th>
+              <td>
+                <Controller
+                  render={(props) => (
+                    <KeyboardInput
+                      className="w-full"
+                      type="number"
+                      defaultValue={props.field.value}
+                      value={props.field.value}
+                      onChange={props.field.onChange}
+                    />
+                  )}
+                  name="openingBalance"
+                  control={control}
+                />
+              </td>
+            </tr>
+            <tr>
+              <th className="text-right">Cash added</th>
+              <td>
+                <Input {...register('cashAdded', {
+                  valueAsNumber: true
+                })} type="number" className="w-full" tabIndex={0} selectable={true}/>
+              </td>
+            </tr>
+            {closing?.openingBalance !== null && (
+              <>
+                <tr>
+                  <th className="text-right">
+                    Expenses
+                  </th>
                   <td>
-                    {payments[paymentType]}
-                    <input type="hidden" {...register(`data.${paymentType}`)} value={payments[paymentType]}/>
+                    <Controller
+                      control={control}
+                      name="expenses"
+                      render={(props) => (
+                        <Input
+                          {...register('expenses', { valueAsNumber: true })}
+                          type="number"
+                          className="w-full"
+                          value={expenses.toString()}
+                          onChange={props.field.onChange}
+                          readOnly
+                          selectable={true}
+                        />
+                      )}
+                    />
                   </td>
                 </tr>
-              ))}
-              <tr>
-                <th className="text-right">Cash in hand</th>
-                <td className={
-                  classNames(
-                    'text-2xl font-bold',
-                    cashInHand < 0 ? 'text-danger-500' : 'text-success-500'
-                  )
-                }>
-                  {cashInHand}
+                <tr>
+                  <th className="text-right">Cash withdrawn</th>
+                  <td>
+                    <Input {...register('cashWithdrawn', {
+                      valueAsNumber: true
+                    })} type="number" className="w-full" tabIndex={0} selectable={true}/>
+                  </td>
+                </tr>
+              </>
+            )}
+            {Object.keys(payments).map(paymentType => (
+              <tr key={paymentType}>
+                <th className="text-right">{paymentType.toUpperCase()} sale</th>
+                <td>
+                  {withCurrency(payments[paymentType])}
+                  <input type="hidden" {...register(`data.${paymentType}`)} value={payments[paymentType]}/>
                 </td>
               </tr>
+            ))}
+            <tr>
+              <th className="text-right">Cash in hand</th>
+              <td className={
+                classNames(
+                  'text-2xl font-bold',
+                  cashInHand < 0 ? 'text-danger-500' : 'text-success-500'
+                )
+              }>
+                {withCurrency(cashInHand)}
+              </td>
+            </tr>
             </tbody>
           </table>
           <table className="table table-borderless table-fixed">
@@ -360,7 +365,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
         <div className="text-center">
           <Expenses onClose={() => loadExpenses({
             dateTimeFrom: closing?.dateFrom?.datetime
-          })} />
+          })}/>
         </div>
       </Modal>
     </>

@@ -66,12 +66,12 @@ export const ApplyDiscount: FC<Props> = ({
               type="button"
       >
         {children || 'Discounts'}
-        <Shortcut shortcut="ctrl+d" handler={() => setModal(true)} />
+        <Shortcut shortcut="ctrl+shift+d" handler={() => setModal(true)} />
       </button>
 
       <Modal open={modal} onClose={() => {
         setModal(false);
-      }} title="Apply Discount">
+      }} title="Apply Discount" shouldCloseOnEsc={true}>
         <Button variant="danger" onClick={() => {
           setDiscount(undefined);
           setAskDiscount(false);

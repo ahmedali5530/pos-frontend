@@ -8,6 +8,7 @@ import {Department} from "./department";
 import {Terminal} from "./terminal";
 import {Tax} from "./tax";
 import {HydraId, HydraType} from "./hydra";
+import { ProductStore } from "./product.store";
 
 export interface Product extends HydraId, HydraType{
   id: number;
@@ -28,7 +29,7 @@ export interface Product extends HydraId, HydraType{
   cost?: number;
   brands: Brand[];
   suppliers: Supplier[];
-  stores: Store[];
+  stores: ProductStore[];
   department?: Department;
   terminals: Terminal[];
   taxes: Tax[];

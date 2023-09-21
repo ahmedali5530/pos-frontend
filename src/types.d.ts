@@ -19,4 +19,3 @@ interface ImportMeta {
 
 declare module 'react-mousetrap';
 declare module 'mousetrap';
-declare module 'react-alert-template-basic';

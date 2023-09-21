@@ -13,10 +13,12 @@ import { Button } from "../../../app-common/components/input/button";
 import { Tooltip } from "antd";
 import Mousetrap from "mousetrap";
 import { Shortcut } from "../../../app-common/components/input/shortcut";
+import { ItemComponent } from "../settings/items/item";
 
 interface SearchTableProps {
   items: Product[];
   addItem: (item: Product, quantity: number, price?: number) => void;
+  onClick?: () => void;
 }
 
 export const SearchTable = (props: SearchTableProps) => {
@@ -27,7 +29,9 @@ export const SearchTable = (props: SearchTableProps) => {
   const [q, setQ] = useState('');
 
   const items = useMemo(() => {
-    return allItems.filter(item => item.name.toLowerCase().includes(q.toLowerCase()))
+    return allItems.filter(item => (
+      item.name.toLowerCase().includes(q.toLowerCase()) || item.barcode?.includes(q)
+    ))
   }, [allItems, q]);
 
   const [modal, setModal] = useState(false);
@@ -42,13 +46,18 @@ export const SearchTable = (props: SearchTableProps) => {
   const columns = React.useMemo(
     () => [
       {
+        Header: 'View',
+        style: {}
+      },
+      {
         Header: 'Name',
         style: {}
       },
       {
         Header: 'Price',
         style: {
-          textAlign: 'right'
+          textAlign: 'right',
+          paddingRight: '15px'
         }
       },
     ],
@@ -86,12 +95,17 @@ export const SearchTable = (props: SearchTableProps) => {
               selected === index ? 'bg-gray-300' : ''
             )
           }
-          onClick={() => {
-            addItem(item, quantity)
-            setModal(false)
-          }}
         >
-          <div className="basis-auto grow-1 shrink-1 p-2">
+          <div className="basis-auto p-2">
+            <ItemComponent product={item} />
+          </div>
+          <div
+            className="basis-auto grow-1 shrink-1 p-2"
+            onClick={() => {
+              addItem(item, quantity)
+              setModal(false)
+            }}
+          >
             <Highlighter
               highlightClassName="YourHighlightClass"
               searchWords={[q]}
@@ -110,7 +124,13 @@ export const SearchTable = (props: SearchTableProps) => {
               </div>
             )}
           </div>
-          <div className="basis-auto grow shrink p-2 text-right font-bold">
+          <div
+            className="basis-auto grow shrink p-2 text-right font-bold"
+            onClick={() => {
+              addItem(item, quantity)
+              setModal(false)
+            }}
+          >
             {getRealProductPrice(item)}
             {item.basePrice !== getRealProductPrice(item) && (
               <div className="text-danger-500 font-normal text-sm">
@@ -173,7 +193,8 @@ export const SearchTable = (props: SearchTableProps) => {
   const onOpen = () => {
     setModal(true)
     setQ('')
-    setQuantity(1)
+    setQuantity(1);
+    props.onClick && props.onClick();
   }
 
   return (

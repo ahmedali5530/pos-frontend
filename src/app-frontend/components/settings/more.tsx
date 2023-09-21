@@ -28,6 +28,8 @@ import { Brands } from "./brands/brands";
 import { useMediaQuery } from "react-responsive";
 import { message as AntMessage, Tooltip } from "antd";
 import { getProgress } from "../../../duck/progress/progress.selector";
+import { getStore } from "../../../duck/store/store.selector";
+import { getTerminal } from "../../../duck/terminal/terminal.selector";
 
 interface Props {
   setTax: (data?: Tax) => void;
@@ -42,6 +44,10 @@ export const More: FC<Props> = ({
   const [messageApi, contextHolder] = AntMessage.useMessage();
 
   const dispatch = useDispatch();
+
+  const user = useSelector(getAuthorizedUser);
+  const store = useSelector(getStore);
+  const terminal = useSelector(getTerminal);
 
   const progress = useSelector(getProgress);
 
@@ -59,7 +65,7 @@ export const More: FC<Props> = ({
         key: 'loading',
         type: 'loading',
         content: `Loading ${progress}`,
-        duration: 30
+        duration: 120
       });
     }
   }, [progress]);
@@ -174,8 +180,6 @@ export const More: FC<Props> = ({
     });
   }, []);
 
-  const user = useSelector(getAuthorizedUser);
-
   const isMobile = useMediaQuery({
     query: '(max-width: 1224px)'
   });
@@ -233,11 +237,11 @@ export const More: FC<Props> = ({
                     }}>Display shortcut texts?</Switch>
                   )}
 
-                  <Switch checked={enableTouch} onChange={(value) => {
+                  {/*<Switch checked={enableTouch} onChange={(value) => {
                     localforage.setItem('enableTouch', value.target.checked);
                     setEnableTouch(value.target.checked);
                     dispatch(touchAction(value.target.checked));
-                  }}>Enable Touch support?</Switch>
+                  }}>Enable Touch support?</Switch>*/}
                 </div>
                 <div className="grid grid-cols-4 gap-5 mt-3">
                   <div>
@@ -331,9 +335,10 @@ export const More: FC<Props> = ({
                 </div>
               </TabContent>
               <TabContent isActive={isTabActive('profile')}>
-                <div
-                  className="border flex justify-center items-center mb-5 border-primary-500 text-primary-500 w-full font-bold p-5">
-                  Logged in as {user?.displayName}
+                <div className="col-span-1 grid grid-cols-2 font-bold gap-0 auto-rows-min">
+                  <span>User</span><span className="text-primary-500">{user?.displayName}</span>
+                  <span>Store</span><span className="text-primary-500">{store?.name}</span>
+                  <span>Terminal</span><span className="text-primary-500">{terminal?.code}</span>
                 </div>
               </TabContent>
               <TabContent isActive={isTabActive('payments')}>
@@ -366,8 +371,6 @@ export const More: FC<Props> = ({
               <TabContent isActive={isTabActive('brands')}>
                 <Brands/>
               </TabContent>
-              <TabContent isActive={isTabActive('transfer')}>transfer inventory</TabContent>
-              <TabContent isActive={isTabActive('close_inventory')}>close inventory</TabContent>
             </>
           )}
         />

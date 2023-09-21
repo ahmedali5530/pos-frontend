@@ -247,7 +247,7 @@ const Pos: FC = () => {
     if( store ) {
       filtered = filtered?.filter(item => {
         if( item?.stores?.length > 0 ) {
-          const stores = item.stores.map(item => item.id);
+          const stores = item.stores.map(item => item.store.id);
 
           return stores.includes(store?.id);
         } else {

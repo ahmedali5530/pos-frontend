@@ -7,7 +7,7 @@ import {
   PRODUCT_CREATE,
   PRODUCT_GET,
   SUPPLIER_LIST,
-  TAX_LIST
+  TAX_LIST, TERMINAL_LIST
 } from "../../../../api/routing/routes/backend.app";
 import { fetchJson } from "../../../../api/request/request";
 import { HttpException, UnprocessableEntityException } from "../../../../lib/http/exception/http.exception";
@@ -44,6 +44,7 @@ import { Switch } from "../../../../app-common/components/input/switch";
 import { Terminal } from "../../../../api/model/terminal";
 import useApi from "../../../../api/hooks/use.api";
 import { HydraCollection } from "../../../../api/model/hydra";
+import { CreateTerminal } from "../terminals/create.terminal";
 
 interface ItemsCreateProps {
   entity?: Product;
@@ -115,7 +116,13 @@ export const CreateItem = ({
         values.brands = values.brands.map((item: ReactSelectOptionProps) => item.value);
       }
       if( values.stores ) {
-        values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value);
+        values.stores = values.stores.filter((item: any) => item.quantity !== undefined).map((item: any) => ({
+          store: item.store,
+          location: item.location,
+          quantity: item.quantity,
+          reOrderLevel: item.reOrderLevel,
+          product: entity ? entity['@id'] : null
+        }));
       }
       if( values.department ) {
         values.department = values.department.value;
@@ -129,7 +136,7 @@ export const CreateItem = ({
         values.barcode = values.barcode.toString();
       }
       if( values.terminals ) {
-        values.terminals = values.terminals.map((t: Terminal) => t['@id'])
+        values.terminals = values.terminals.map((item: ReactSelectOptionProps) => item.value)
       }
 
       await fetchJson(url, {
@@ -149,6 +156,7 @@ export const CreateItem = ({
       if( exception instanceof HttpException ) {
         notify({
           type: 'error',
+          title: exception.code,
           description: exception.message
         });
       }
@@ -167,6 +175,7 @@ export const CreateItem = ({
         if( e.errorMessage ) {
           notify({
             type: 'error',
+            title: 'Validation Error',
             description: e.errorMessage
           });
         }
@@ -215,12 +224,20 @@ export const CreateItem = ({
   } = useApi<HydraCollection<Tax>>('taxes', TAX_LIST, {
     isActive: true
   });
+  const {
+    data: terminals,
+    fetchData: loadTerminals,
+    isLoading: loadingTerminals
+  } = useApi<HydraCollection<Terminal>>('terminals', TERMINAL_LIST, {
+    isActive: true
+  });
 
   const [categoryModal, setCategoryModal] = useState(false);
   const [supplierModal, setSupplierModal] = useState(false);
   const [brandModal, setBrandModal] = useState(false);
   const [departmentModal, setDepartmentModal] = useState(false);
   const [taxModal, setTaxModal] = useState(false);
+  const [terminalModal, setTerminalModal] = useState(false);
 
   useEffect(() => {
     if( entity ) {
@@ -238,9 +255,15 @@ export const CreateItem = ({
           label: item.name,
           value: item['@id']
         })),
+        storesDropdown: entity.stores.map(item => ({
+          label: item.store.name,
+          value: item.store["@id"],
+        })),
         stores: entity.stores.map(item => ({
-          label: item.name,
-          value: item['@id']
+          store: item.store['@id'],
+          quantity: item.quantity,
+          location: item.location,
+          reOrderLevel: item.reOrderLevel
         })),
         department: {
           label: entity?.department?.name,
@@ -248,6 +271,10 @@ export const CreateItem = ({
         },
         taxes: entity.taxes.map(item => ({
           label: `${item.name} ${item.rate}%`,
+          value: item['@id']
+        })),
+        terminals: entity.terminals.map(item => ({
+          label: item.code,
           value: item['@id']
         }))
       });
@@ -288,6 +315,8 @@ export const CreateItem = ({
     resetForm();
     onClose && onClose();
   }
+
+  const stores = watch('storesDropdown');
 
   return (
     <>
@@ -374,9 +403,9 @@ export const CreateItem = ({
             <div>
               <label htmlFor="basePrice">Sale price</label>
               <div className="input-group">
-            <span className="input-addon">
-              {withCurrency(undefined)}
-            </span>
+              <span className="input-addon">
+                {withCurrency(undefined)}
+              </span>
                 <Input {...register('basePrice')} id="basePrice" className={classNames(
                   "w-full"
                 )} hasError={hasErrors(errors.basePrice)}/>
@@ -414,30 +443,6 @@ export const CreateItem = ({
             </div>
             <div className="col-span-4"></div>
             <div>
-              <label className="w-full block">&nbsp;</label>
-              <Controller
-                control={control}
-                name="manageInventory"
-                render={(props) => (
-                  <Switch
-                    checked={props.field.value}
-                    onChange={props.field.onChange}
-                  >
-                    Manage inventory?
-                  </Switch>
-                )}
-              />
-              {getErrors(errors.manageInventory)}
-            </div>
-            <div>
-              <label htmlFor="quantity">Opening Quantity</label>
-              <Input {...register('quantity')} id="quantity" className={classNames(
-                "w-full"
-              )} hasError={hasErrors(errors.quantity)} disabled={!watch('manageInventory')}/>
-              {getErrors(errors.quantity)}
-            </div>
-            <div className="col-span-4"></div>
-            <div>
               <label htmlFor="taxes">Taxes</label>
               <Controller
                 name="taxes"
@@ -467,108 +472,200 @@ export const CreateItem = ({
                 control={control}
               />
               {getErrors(errors.taxes)}
+            </div>
+            <div className="col-span-4"></div>
+            <div>
+              <label className="w-full block">&nbsp;</label>
+              <Controller
+                control={control}
+                name="manageInventory"
+                render={(props) => (
+                  <Switch
+                    checked={props.field.value}
+                    onChange={props.field.onChange}
+                  >
+                    Manage inventory?
+                  </Switch>
+                )}
+              />
+              {getErrors(errors.manageInventory)}
+            </div>
+            <div className="col-span-4"></div>
+            <div>
+              <label htmlFor="terminals">Terminals</label>
+              <Controller
+                name="terminals"
+                render={(props) => (
+                  <div className="input-group">
+                    <ReactSelect
+                      options={terminals?.['hydra:member']?.map(item => ({
+                        label: item.code,
+                        value: item['@id']
+                      }))}
+                      onChange={props.field.onChange}
+                      value={props.field.value}
+                      isMulti
+                      className={
+                        classNames(
+                          getErrorClass(errors.terminals),
+                          'flex-grow rs-__container'
+                        )
+                      }
+                      isLoading={loadingTerminals}
+                    />
+                    <button className="btn btn-primary" type={"button"} onClick={() => setTaxModal(true)}>
+                      <FontAwesomeIcon icon={faPlus}/>
+                    </button>
+                  </div>
+                )}
+                control={control}
+              />
+              {getErrors(errors.terminals)}
+            </div>
+            <div className="col-span-4"></div>
+            <StoresInput control={control} errors={errors} name="storesDropdown" />
+            <div className="col-span-4"></div>
+            <div className="col-span-4">
+              <div className="grid grid-cols-4 gap-3 font-bold">
+                <div>Store</div>
+                <div>Stock</div>
+                <div>Location</div>
+                <div>Re Order Level</div>
+              </div>
+            </div>
+            <div className="col-span-4">
+              {stores?.map((store: any, index: number) => (
+                <div key={index} className="grid grid-cols-4 mb-3 gap-3 hover:bg-gray-200">
+                  <div>
+                    <input type="hidden" {...register(`stores.${index}.store`)} value={store.value} />
+                    {store.label}
+                  </div>
+                  <div>
+                    <Controller
+                      render={({field}) => (
+                        <Input type="number" placeholder="Stock" onChange={field.onChange} value={field.value} className="w-full" />
+                      )}
+                      name={`stores.${index}.quantity`}
+                      control={control}
+                    />
+                  </div>
+                  <div>
+                    <Controller
+                      render={({field}) => (
+                        <Input placeholder="Location" onChange={field.onChange} value={field.value} className="w-full" />
+                      )}
+                      name={`stores.${index}.location`}
+                      control={control}
+                    />
+                  </div>
+                  <div>
+                    <Controller
+                      render={({field}) => (
+                        <Input type="number" placeholder="Re Order Level" onChange={field.onChange} value={field.value} className="w-full" />
+                      )}
+                      name={`stores.${index}.reOrderLevel`}
+                      control={control}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="col-span-4"></div>
+            <div>
+              <label htmlFor="categories">Categories</label>
+              <Controller
+                name="categories"
+                render={(props) => (
+                  <div className="input-group">
+                    <ReactSelect
+                      options={categories?.['hydra:member']?.map(item => ({
+                        label: item.name,
+                        value: item['@id']
+                      }))}
+                      onChange={props.field.onChange}
+                      value={props.field.value}
+                      isMulti
+                      className={
+                        classNames(
+                          getErrorClass(errors.categories),
+                          'flex-grow rs-__container'
+                        )
+                      }
+                      isLoading={loadingCategories}
+                    />
+                    <button className="btn btn-primary" type={"button"} onClick={() => setCategoryModal(true)}>
+                      <FontAwesomeIcon icon={faPlus}/>
+                    </button>
+                  </div>
+                )}
+                control={control}
+              />
+              {getErrors(errors.categories)}
 
             </div>
+            <div>
+              <label htmlFor="suppliers">Suppliers</label>
+              <Controller
+                name="suppliers"
+                render={(props) => (
+                  <div className="input-group">
+                    <ReactSelect
+                      options={suppliers?.['hydra:member']?.map(item => ({
+                        label: item.name,
+                        value: item['@id']
+                      }))}
+                      onChange={props.field.onChange}
+                      value={props.field.value}
+                      isMulti
+                      className={
+                        classNames(
+                          getErrorClass(errors.suppliers),
+                          'flex-grow rs-__container'
+                        )
+                      }
+                      isLoading={loadingSuppliers}
+                    />
+                    <button className="btn btn-primary" type={"button"} onClick={() => setSupplierModal(true)}>
+                      <FontAwesomeIcon icon={faPlus}/>
+                    </button>
+                  </div>
+                )}
+                control={control}
+              />
+              {getErrors(errors.suppliers)}
 
-            <StoresInput control={control} errors={errors}/>
+            </div>
+            <div>
+              <label htmlFor="brands">Brands</label>
+              <Controller
+                name="brands"
+                render={(props) => (
+                  <div className="input-group">
+                    <ReactSelect
+                      options={brands?.['hydra:member']?.map(item => ({
+                        label: item.name,
+                        value: item['@id']
+                      }))}
+                      onChange={props.field.onChange}
+                      value={props.field.value}
+                      isMulti
+                      className={
+                        classNames(
+                          getErrorClass(errors.brands),
+                          'flex-grow rs-__container'
+                        )
+                      }
+                      isLoading={loadingBrands}
+                    />
+                    <button className="btn btn-primary" type={"button"} onClick={() => setBrandModal(true)}>
+                      <FontAwesomeIcon icon={faPlus}/>
+                    </button>
+                  </div>
+                )}
+                control={control}
+              />
+              {getErrors(errors.brands)}
 
-            <div className="col-span-4 grid grid-cols-4 gap-3 gap-y-2">
-              <div>
-                <label htmlFor="categories">Categories</label>
-                <Controller
-                  name="categories"
-                  render={(props) => (
-                    <div className="input-group">
-                      <ReactSelect
-                        options={categories?.['hydra:member']?.map(item => ({
-                          label: item.name,
-                          value: item['@id']
-                        }))}
-                        onChange={props.field.onChange}
-                        value={props.field.value}
-                        isMulti
-                        className={
-                          classNames(
-                            getErrorClass(errors.categories),
-                            'flex-grow rs-__container'
-                          )
-                        }
-                        isLoading={loadingCategories}
-                      />
-                      <button className="btn btn-primary" type={"button"} onClick={() => setCategoryModal(true)}>
-                        <FontAwesomeIcon icon={faPlus}/>
-                      </button>
-                    </div>
-                  )}
-                  control={control}
-                />
-                {getErrors(errors.categories)}
-
-              </div>
-              <div>
-                <label htmlFor="suppliers">Suppliers</label>
-                <Controller
-                  name="suppliers"
-                  render={(props) => (
-                    <div className="input-group">
-                      <ReactSelect
-                        options={suppliers?.['hydra:member']?.map(item => ({
-                          label: item.name,
-                          value: item['@id']
-                        }))}
-                        onChange={props.field.onChange}
-                        value={props.field.value}
-                        isMulti
-                        className={
-                          classNames(
-                            getErrorClass(errors.suppliers),
-                            'flex-grow rs-__container'
-                          )
-                        }
-                        isLoading={loadingSuppliers}
-                      />
-                      <button className="btn btn-primary" type={"button"} onClick={() => setSupplierModal(true)}>
-                        <FontAwesomeIcon icon={faPlus}/>
-                      </button>
-                    </div>
-                  )}
-                  control={control}
-                />
-                {getErrors(errors.suppliers)}
-
-              </div>
-              <div>
-                <label htmlFor="brands">Brands</label>
-                <Controller
-                  name="brands"
-                  render={(props) => (
-                    <div className="input-group">
-                      <ReactSelect
-                        options={brands?.['hydra:member']?.map(item => ({
-                          label: item.name,
-                          value: item['@id']
-                        }))}
-                        onChange={props.field.onChange}
-                        value={props.field.value}
-                        isMulti
-                        className={
-                          classNames(
-                            getErrorClass(errors.brands),
-                            'flex-grow rs-__container'
-                          )
-                        }
-                        isLoading={loadingBrands}
-                      />
-                      <button className="btn btn-primary" type={"button"} onClick={() => setBrandModal(true)}>
-                        <FontAwesomeIcon icon={faPlus}/>
-                      </button>
-                    </div>
-                  )}
-                  control={control}
-                />
-                {getErrors(errors.brands)}
-
-              </div>
             </div>
             <div className="col-span-4">
               <h4 className="text-lg">Variants</h4>
@@ -588,7 +685,6 @@ export const CreateItem = ({
             {/*</div>*/}
             {/*<div className="col-span-4"></div>*/}
           </div>
-
           <Button variant="primary" type="submit"
                   disabled={creating}>{creating ? 'Saving...' : (operation === 'create' ? 'Create new' : 'Update')}</Button>
         </form>
@@ -617,6 +713,11 @@ export const CreateItem = ({
       <CreateBrand addModal={brandModal} operation="create" onClose={() => {
         setBrandModal(false);
         loadBrands();
+      }}/>
+
+      <CreateTerminal addModal={terminalModal} operation="create" onClose={() => {
+        setTerminalModal(false);
+        loadTerminals();
       }}/>
     </>
   );

@@ -3,15 +3,15 @@ import { Button } from "../../../app-common/components/input/button";
 import { Input } from "../../../app-common/components/input/input";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faBarcode, faCubesStacked, faFlag,
-  faGear, faIcons,
-  faMagnifyingGlass,
+  faBarcode,
+  faCubesStacked,
+  faFlag,
+  faIcons,
   faMicrophone,
   faReply,
-  faRotateRight,
-  faSignOut
+  faRotateRight
 } from "@fortawesome/free-solid-svg-icons";
-import { Alert, Tooltip } from "antd";
+import { Tooltip } from "antd";
 import { CartContainer, CartItemType } from "../../components/cart/cart.container";
 import { CartItem } from "../../../api/model/cart.item";
 import { notify } from "../../../app-common/components/confirm/notification";
@@ -21,7 +21,7 @@ import { HomeProps, initialData, useLoadData } from "../../../api/hooks/use.load
 import { useSelector } from "react-redux";
 import { getStore } from "../../../duck/store/store.selector";
 import { getTerminal } from "../../../duck/terminal/terminal.selector";
-import { Product, SearchableProduct } from "../../../api/model/product";
+import { Product } from "../../../api/model/product";
 import { Discount, DiscountRate, DiscountScope } from "../../../api/model/discount";
 import { Tax } from "../../../api/model/tax";
 import { Customer } from "../../../api/model/customer";
@@ -31,8 +31,7 @@ import { Category } from "../../../api/model/category";
 import { Department } from "../../../api/model/department";
 import { QueryString } from "../../../lib/location/query.string";
 import { fetchJson, jsonRequest } from "../../../api/request/request";
-import { BARCODE_GET, BARCODE_LIST, PRODUCT_KEYWORDS } from "../../../api/routing/routes/backend.app";
-import { FixedSizeList } from "react-window";
+import { BARCODE_LIST, PRODUCT_KEYWORDS, PRODUCT_QUANTITIES } from "../../../api/routing/routes/backend.app";
 import localforage from "../../../lib/localforage/localforage";
 import Mousetrap from "mousetrap";
 import { getAuthorizedUser } from "../../../duck/auth/auth.selector";
@@ -49,40 +48,19 @@ import { More } from "../../components/settings/more";
 import { SaleClosing } from "../../components/sale/sale.closing";
 import { Logout } from "../../components/logout";
 import { PurchaseTabs } from "../../components/inventory/purchase.tabs";
-import { NotFoundException } from "../../../lib/http/exception/http.exception";
 import { Barcode } from "../../../api/model/barcode";
 import { SearchTable } from "../../components/search/search.table";
+import { SaleFind } from "../../components/sale/sale.find";
+import { Order } from "../../../api/model/order";
 
 enum SearchModes {
-  barcode = 'barcode',
-  voice = 'voice',
-  qrcode = 'qrcode',
-  search = 'search',
+  sale = 'sale',
   refund = 'refund',
   reorder = 'reorder'
 }
 
 export const PosV2 = () => {
-  const searchBy = [
-    {
-      icon: faMicrophone,
-      value: SearchModes.voice,
-      variant: 'primary',
-      title: 'Voice search'
-    }, {
-      icon: faReply,
-      value: SearchModes.refund,
-      variant: 'danger',
-      title: 'Refund items'
-    }, {
-      icon: faRotateRight,
-      value: SearchModes.reorder,
-      variant: 'success',
-      title: 'Re Order'
-    }
-  ]
-
-  const [searchMode, setSearchMode] = useState<any>();
+  const [mode, setMode] = useState(SearchModes.sale);
 
   const [list, setList] = useState<HomeProps['list']>(initialData);
   const [paymentTypesList, setPaymentTypesList] = useState<HomeProps['paymentTypesList']>(initialData);
@@ -103,6 +81,7 @@ export const PosV2 = () => {
   const searchField = createRef<HTMLInputElement>();
   const containerRef = createRef<HTMLDivElement>();
   const [latest, setLatest] = useState<Product>();
+  const [latestIndex, setLatestIndex] = useState<number>();
   const [quantity, setQuantity] = useState(1);
   const [rate, setRate] = useState(0);
   const [discount, setDiscount] = useState<Discount>();
@@ -183,12 +162,16 @@ export const PosV2 = () => {
     }
 
     // filter products by store
-    if( store ) {
-      filtered = filtered?.filter(item => {
+    if( store && filtered ) {
+      filtered = filtered.filter(item => {
         if( item?.stores?.length > 0 ) {
-          const stores = item.stores.map(item => item.id);
+          const stores = item.stores.map(item => {
+            if(item.store){
+              return item.store.id
+            }
+          });
 
-          return stores.includes(store?.id);
+          return stores.includes(store.id);
         } else {
           return true;
         }
@@ -196,12 +179,12 @@ export const PosV2 = () => {
     }
 
     //filter products by terminal
-    if( terminal ) {
-      filtered = filtered?.filter(item => {
+    if( terminal && filtered ) {
+      filtered = filtered.filter(item => {
         if( item?.terminals?.length > 0 ) {
           const terminals = item.terminals.map(item => item.id);
 
-          return terminals.includes(terminal?.id);
+          return terminals.includes(terminal.id);
         } else {
           return true;
         }
@@ -243,20 +226,22 @@ export const PosV2 = () => {
     if( departmentIds.length > 0 ) {
       filtered = filtered.filter(item => {
         if( item?.department ) {
-          return departmentIds.includes(item?.department?.id?.toString());
+          return departmentIds.includes(item.department.id.toString());
         }
 
         return false;
       });
     }
 
-    filtered = filtered?.filter(item => {
-      if( item?.barcode && item?.barcode.toLowerCase().startsWith(q.toLowerCase()) ) {
-        return true;
-      }
+    if(filtered) {
+      filtered = filtered.filter(item => {
+        if( item?.barcode && item?.barcode.toLowerCase().startsWith(q.toLowerCase()) ) {
+          return true;
+        }
 
-      return item?.name?.toLowerCase().indexOf(q.toLowerCase()) !== -1;
-    });
+        return item?.name?.toLowerCase().indexOf(q.toLowerCase()) !== -1;
+      });
+    }
 
     return filtered;
   }, [list?.list, q, brands, categories, departments, terminal, store]);
@@ -264,27 +249,31 @@ export const PosV2 = () => {
   const getItemsMetadata = useCallback(async (itemId: number, variantId?: number) => {
     try {
       const search = QueryString.stringify({
-        itemId
+        itemId,
+        variantId,
+        store: store?.id,
       });
-      const response = await jsonRequest(`${PRODUCT_KEYWORDS}?${search}`);
+      const response = await jsonRequest(`${PRODUCT_QUANTITIES}?${search}`);
       const json = await response.json();
 
-      setAdded(newItems => (
-        newItems.map(item => {
-          if( item.item.id === itemId && item.item.manageInventory ) {
-            if( !variantId ) {
-              item.stock = Number(json.list[0].quantity);
-            } else {
-              const variant = json.list[0].variants.find((variant: ProductVariant) => variantId === item.variant?.id && variantId === variant.id);
-
-              if( variant && variantId === item.variant?.id && variantId === variant.id ) {
-                item.stock = Number(variant.quantity);
+      if(json.quantity) {
+        setAdded(newItems => (
+          newItems.map(item => {
+            console.log(item.item, itemId)
+            if(!variantId){
+              if( item.item.id === itemId && item.item.manageInventory) {
+                item.stock = Number(json.quantity);
+              }
+            }else if(variantId){
+              if( item.item.id === itemId && item.item.manageInventory && item.variant?.id === variantId) {
+                item.stock = Number(json.quantity);
               }
             }
-          }
-          return item;
-        })
-      ));
+
+            return item;
+          })
+        ));
+      }
 
       // set new items with updated info
       // setAdded(newItems);
@@ -305,7 +294,7 @@ export const PosV2 = () => {
       map.set(item.barcode, i);
       map.set(item.name, i);
 
-      if(item.variants.length > 0) {
+      if( item.variants.length > 0 ) {
         item.variants.forEach(variant => {
           if( variant.barcode ) {
             const v = {
@@ -328,20 +317,20 @@ export const PosV2 = () => {
   const searchAction = async (values: any) => {
     const item = itemsMap.get(values.q);
 
-    if(item === undefined){
+    if( item === undefined ) {
       // check in DB for dynamic barcode item
       try {
         const response = await fetchJson(`${BARCODE_LIST}?barcode=${values.q}`);
-        if(response['hydra:member'].length > 0){
+        if( response['hydra:member'].length > 0 ) {
           const item: Barcode = response['hydra:member'][0];
-          if(item.variant){
+          if( item.variant ) {
             await addItemVariant(item.item, item.variant, Number(item.measurement), Number(item.price));
           }
 
-          if(!item.variant){
+          if( !item.variant ) {
             await addItem(item.item, Number(item.measurement), Number(item.price));
           }
-        }else{
+        } else {
           notify({
             type: 'error',
             description: `${values.q} not found`,
@@ -349,19 +338,19 @@ export const PosV2 = () => {
             duration: 1
           });
         }
-      }catch ( e ){
+      } catch ( e ) {
         console.log(e)
       }
     }
 
     if( item !== undefined ) {
       // if main item, add it
-      if(!item.isVariant) {
+      if( !item.isVariant ) {
         await addItem(item.item, Number(values.quantity));
       }
 
       // if variant add it
-      if(item.isVariant){
+      if( item.isVariant ) {
         await addItemVariant(item.item, item.variant, Number(values.quantity))
       }
     }
@@ -402,6 +391,7 @@ export const PosV2 = () => {
     let index = oldItems.findIndex(addItem => addItem.item.id === item.id);
     if( index !== -1 ) {
       oldItems[index].quantity += quantity;
+      setLatestIndex(index);
     } else {
       oldItems.push({
         quantity: quantity,
@@ -412,6 +402,8 @@ export const PosV2 = () => {
         taxIncluded: true,
         stock: 0
       });
+
+      setLatestIndex(oldItems.length - 1);
     }
 
     setAdded(oldItems);
@@ -458,8 +450,6 @@ export const PosV2 = () => {
     setQ('');
 
     scrollToBottom(containerRef.current);
-
-    console.log(item, variant)
 
     await getItemsMetadata(item.id, variant.id);
   };
@@ -534,7 +524,7 @@ export const PosV2 = () => {
     }
   };
 
-  const moveVariantsCursor = (event: any) => {
+  const moveVariantsCursor = async (event: any) => {
     const itemsLength = variants.length;
     if( event.key === 'ArrowDown' ) {
       let newSelected = selectedVariant + 1;
@@ -550,17 +540,9 @@ export const PosV2 = () => {
       }
       setSelectedVariant(newSelected);
     } else if( event.key === 'Enter' ) {
-      addItemVariant(items[selected], items[selected].variants[selectedVariant], 1);
+      await addItemVariant(items[selected], items[selected].variants[selectedVariant], 1);
     }
   };
-
-
-
-  useEffect(() => {
-    if( searchField && searchField.current ) {
-      // searchField.current.focus();
-    }
-  }, [searchField]);
 
   useEffect(() => {
     localforage.setItem('data', added);
@@ -647,6 +629,49 @@ export const PosV2 = () => {
 
   const user = useSelector(getAuthorizedUser);
 
+  const refundOrder = async (order: Order) => {
+    const items: CartItem[] = [];
+    order.items.forEach((item) => {
+      items.push({
+        quantity: -1 * item.quantity,
+        price: item.price,
+        discount: 0,
+        variant: item.variant,
+        item: item.product,
+        taxes: item.taxes,
+        taxIncluded: true
+      });
+    });
+
+    setAdded(items);
+    setDiscount(order.discount?.type);
+    setTax(order.tax?.type);
+    setDiscountAmount(order.discount?.amount);
+    setCustomer(order?.customer);
+    setRefundingFrom!(Number(order.id));
+  }
+
+  const reOrder = async (order: Order) => {
+    const items: CartItem[] = [];
+    order.items.forEach((item) => {
+      items.push({
+        quantity: item.quantity,
+        price: item.price,
+        discount: 0,
+        variant: item.variant,
+        item: item.product,
+        taxes: item.taxes,
+        taxIncluded: true
+      });
+    });
+
+    setAdded(items);
+    setDiscount(order.discount?.type);
+    setTax(order.tax?.type);
+    setDiscountAmount(order.discount?.amount);
+    setCustomer(order?.customer);
+  }
+
   return (
     <>
       <div className="flex flex-col" onClick={(event) => setFocus(event, searchField)}>
@@ -671,29 +696,53 @@ export const PosV2 = () => {
                   variant="primary"
                   className="btn-square"
                   type="button"
-                  active
+                  active={mode === SearchModes.sale}
                   size="lg"
+                  onClick={() => setMode(SearchModes.sale)}
                 ><FontAwesomeIcon icon={faBarcode}/></Button>
               </Tooltip>
               <SearchTable
                 items={items}
                 addItem={addItem}
+                onClick={() => setMode(SearchModes.sale)}
               />
             </div>
             <div className="input-group">
-              {searchBy.map(item => (
-                <Tooltip title={item.title} key={item.value}>
-                  <Button
-                    variant={item.variant}
-                    className="btn-square"
-                    type="button"
-                    onClick={() => {
-                      setSearchMode(item)
-                    }}
-                    size="lg"
-                  ><FontAwesomeIcon icon={item.icon}/></Button>
-                </Tooltip>
-              ))}
+              {/*TODO: add voice search here*/}
+              <SaleFind
+                icon={faReply}
+                title="Refund"
+                variant="danger"
+                onSuccess={refundOrder}
+                onError={() => {
+                  notify({
+                    title: 'Not found',
+                    description: 'Order not found',
+                    type: "error",
+                    placement: 'top'
+                  })
+                }}
+                displayLabel
+                // active={mode === SearchModes.refund}
+                // onClick={() => setMode(SearchModes.refund)}
+              />
+              <SaleFind
+                icon={faRotateRight}
+                title="Re Order"
+                variant="success"
+                onSuccess={reOrder}
+                onError={() => {
+                  notify({
+                    title: 'Not found',
+                    description: 'Order not found',
+                    type: "error",
+                    placement: 'top'
+                  })
+                }}
+                displayLabel
+                // active={mode === SearchModes.reorder}
+                // onClick={() => setMode(SearchModes.reorder)}
+              />
             </div>
             <form className="flex gap-3" onSubmit={handleSubmit(searchAction)}>
               <div className="input-group">
@@ -727,33 +776,13 @@ export const PosV2 = () => {
               </div>
               <button className="hidden">submit</button>
             </form>
-          </div>
-          <div className="ml-auto flex gap-4">
-            <Expenses/>
-            <PurchaseTabs/>
-            <More
-              setTax={setTax}
-              setDiscount={setDiscount}
-            />
-            <span className="w-[2px] bg-gray-200"></span>
-            <SaleHistory
-              setAdded={setAdded}
-              setDiscount={setDiscount}
-              setTax={setTax}
-              setCustomer={setCustomer}
-              setDiscountAmount={setDiscountAmount}
-              customer={customer}
-              setRefundingFrom={setRefundingFrom}
-            />
-            <SaleClosing/>
-            <span className="w-[2px] bg-gray-200"></span>
-            <Logout/>
+            {/*<Input placeholder="Enter customer name" className="lg" />*/}
           </div>
         </div>
         <div className="grid grid-cols-4 gap-3 p-3">
-          <div className="col-span-3 bg-white">
+          <div className="col-span-3">
             <CartControls added={added} setAdded={setAdded} containerRef={containerRef.current}/>
-            <div className="overflow-auto block h-[calc(100vh_-_155px)]" ref={containerRef}>
+            <div className="block overflow-auto h-[calc(100vh_-_300px)] bg-white" ref={containerRef}>
               <CartContainer
                 added={added}
                 onQuantityChange={onQuantityChange}
@@ -768,7 +797,29 @@ export const PosV2 = () => {
                 cartItem={cartItem}
                 setCartItem={setCartItem}
                 setCartItemType={setCartItemType}
+                latestIndex={latestIndex}
               />
+            </div>
+            <div className="flex gap-4 mt-3 items-center h-[120px]">
+              <Expenses/>
+              <PurchaseTabs/>
+              <More
+                setTax={setTax}
+                setDiscount={setDiscount}
+              />
+              <span className="w-[2px] bg-gray-200"></span>
+              <SaleHistory
+                setAdded={setAdded}
+                setDiscount={setDiscount}
+                setTax={setTax}
+                setCustomer={setCustomer}
+                setDiscountAmount={setDiscountAmount}
+                customer={customer}
+                setRefundingFrom={setRefundingFrom}
+              />
+              <SaleClosing/>
+              <span className="w-[2px] bg-gray-200"></span>
+              <Logout/>
             </div>
           </div>
           <div className="col-span-1 bg-white p-3">
@@ -800,6 +851,7 @@ export const PosV2 = () => {
               setAdjustment={setAdjustment}
               onSale={() => {
                 setCartItem(undefined);
+                setCartItemType(CartItemType.quantity);
               }}
             />
           </div>

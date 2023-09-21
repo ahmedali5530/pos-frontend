@@ -141,7 +141,7 @@ const Login = () => {
               <h5 className="card-title text-center pb-0 fs-4">{t('Login to Your Account')}</h5>
             </div>
             {errorMessage !== undefined && (
-              <div className="alert alert-danger mb-3 bg-danger-50">{errorMessage}</div>
+              <div className="alert alert-danger mb-3 bg-danger-100">{errorMessage}</div>
             )}
             <form onSubmit={handleSubmit(submitForm)} className="flex flex-col gap-5">
               <div>

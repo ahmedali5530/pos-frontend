@@ -3,7 +3,7 @@ import {ReactNode} from "react";
 import {IconType, NotificationPlacement} from "antd/es/notification/interface";
 
 interface NotifyProps{
-  title?: string;
+  title?: ReactNode;
   description?: ReactNode;
   onClick?: () => void;
   icon?: ReactNode;

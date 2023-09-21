@@ -47,6 +47,7 @@ import { getStore } from "../../../duck/store/store.selector";
 import { TableComponent } from "../../../app-common/components/table/table";
 import useApi from "../../../api/hooks/use.api";
 import { Tooltip } from "antd";
+import { withCurrency } from "../../../lib/currency/currency";
 
 interface Props {
   setAdded: (item: CartItem[]) => void;
@@ -122,42 +123,43 @@ export const SaleHistory: FC<Props> = ({
       header: 'Order Tax',
       cell: info => (
         <>
-          +{(info.getValue()?.amount || 0).toFixed(2)}
+          +{withCurrency(info.getValue()?.amount || 0)}
         </>
       )
     }),
     columnHelper.accessor('itemTaxes', {
       header: 'Items Tax',
-      cell: info => `+${info.getValue().toFixed(2)}`
+      cell: info => `+${withCurrency(info.getValue())}`
     }),
     columnHelper.accessor('discount', {
       header: 'Discount',
-      cell: info => '-' + (info.getValue()?.amount || 0).toFixed(2)
+      cell: info => '-' + withCurrency(info.getValue()?.amount || 0)
     }),
     columnHelper.accessor('items', {
       header: 'Rate',
-      cell: info => '+' + info.getValue().reduce((prev, item) => {
+      cell: info => '+' + withCurrency(info.getValue().reduce((prev, item) => {
         return (item.price * item.quantity) + prev
-      }, 0),
+      }, 0)),
       enableSorting: false,
     }),
     columnHelper.accessor('items', {
       id: 'cost',
       header: 'Cost',
-      cell: info => info.getValue().reduce((prev, item) => {
+      cell: info => withCurrency(info.getValue().reduce((prev, item) => {
         return ((item.product?.cost || 0) * item.quantity) + prev
-      }, 0),
+      }, 0)),
       enableSorting: false,
     }),
     columnHelper.accessor('adjustment', {
       header: 'Adjustment',
       enableSorting: false,
+      cell: info => withCurrency(info.getValue())
     }),
     columnHelper.accessor('payments', {
       header: 'Total',
-      cell: info => '=' + info.getValue().reduce((prev, payment) => {
-        return payment.received + prev
-      }, 0),
+      cell: info => '=' + withCurrency(info.getValue().reduce((prev, payment) => {
+        return payment.total + prev
+      }, 0)),
       enableSorting: false,
     }),
     columnHelper.accessor('status', {
@@ -547,7 +549,7 @@ export const SaleHistory: FC<Props> = ({
 
   return (
     <>
-      <Tooltip title="Sale history">
+      <Tooltip title="Sale lookup">
         <Button variant="primary" size="lg" onClick={() => {
           setModal(true);
         }} tabIndex={-1} className="btn-square">
@@ -700,15 +702,15 @@ export const SaleHistory: FC<Props> = ({
               </div>
               <div className="border border-primary-500 p-5 font-bold text-primary-500 rounded">
                 Total Amount
-                <span className="float-right">{totalAmount.toFixed(2)}</span>
+                <span className="float-right">{withCurrency(totalAmount)}</span>
               </div>
               <div className="border border-warning-500 p-5 font-bold text-warning-500 rounded">
                 Total Cost
-                <span className="float-right">{totalCost.toFixed(2)}</span>
+                <span className="float-right">{withCurrency(totalCost)}</span>
               </div>
               <div className="border border-danger-500 p-5 font-bold text-danger-500 rounded">
                 Expenses
-                <span className="float-right">{totalExpenses}</span>
+                <span className="float-right">{withCurrency(totalExpenses)}</span>
               </div>
               <div className={
                 classNames(
@@ -718,7 +720,7 @@ export const SaleHistory: FC<Props> = ({
                 )
               }>
                 {totalAmount - totalCost - totalExpenses <= 0 ? 'Loss' : 'Profit'}
-                <span className="float-right">{(totalAmount - totalCost - totalExpenses).toFixed(2)}</span>
+                <span className="float-right">{withCurrency(totalAmount - totalCost - totalExpenses)}</span>
               </div>
             </div>
           </>

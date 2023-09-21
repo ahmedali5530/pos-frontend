@@ -1,9 +1,7 @@
 import React, {FunctionComponent} from 'react';
-import {DashboardLayout} from "../layout/dashboard.layout";
+import { DashboardLayout } from '../../../app-admin/containers/layout/dashboard.layout';
 
-export interface DashboardProps {
-
-}
+interface DashboardProps {}
 
 export const Dashboard: FunctionComponent<DashboardProps> = (props) => {
   return (

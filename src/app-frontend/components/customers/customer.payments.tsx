@@ -122,8 +122,7 @@ export const CustomerPayments: FC<Props> = ({
   };
 
   const diff = useMemo(() => {
-    // return Number(customer?.sale) - Number(customer?.paid);
-    return customer.outstanding;
+    return customer.outstanding + Number(customer.openingBalance);
   }, [customer]);
 
   const list = useMemo(() => {
@@ -202,7 +201,11 @@ export const CustomerPayments: FC<Props> = ({
           </div>
         </form>
 
-        <div className="grid grid-cols-3 gap-4 mb-5">
+        <div className="grid grid-cols-4 gap-4 mb-5">
+          <div className="border border-primary-500 p-5 font-bold text-primary-500 rounded">
+            Opening Balance
+            <span className="float-right">{withCurrency(customer.openingBalance)}</span>
+          </div>
           <div className="border border-primary-500 p-5 font-bold text-primary-500 rounded">
             Total Credit Sale
             <span className="float-right">{withCurrency(customer.sale)}</span>

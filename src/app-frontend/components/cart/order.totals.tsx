@@ -50,11 +50,11 @@ export const OrderTotals :FC<OrderTotalsProps> = ({
       <tbody>
       <tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left" style={{width: '60%'}}>Sub total</th>
-        <td className="border border-gray-300 p-2 text-right">{subTotal.toFixed(2)}</td>
+        <td className="border border-gray-300 p-2 text-right">{withCurrency(subTotal)}</td>
       </tr>
       <tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left">Taxable amount</th>
-        <td className="border border-gray-300 p-2 text-right">{exclusiveSubTotal.toFixed(2)}</td>
+        <td className="border border-gray-300 p-2 text-right">{withCurrency(exclusiveSubTotal)}</td>
       </tr>
       <tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left">
@@ -71,7 +71,7 @@ export const OrderTotals :FC<OrderTotalsProps> = ({
             )}
           </ApplyTax>
         </th>
-        <td className="border border-gray-300 p-2 text-right">{taxTotal.toFixed(2)}</td>
+        <td className="border border-gray-300 p-2 text-right">{withCurrency(taxTotal)}</td>
       </tr>
       <tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left">
@@ -92,7 +92,7 @@ export const OrderTotals :FC<OrderTotalsProps> = ({
             )}
           </ApplyDiscount>
         </th>
-        <td className="border border-gray-300 p-2 text-right">{Number(discountTotal).toFixed(2)}</td>
+        <td className="border border-gray-300 p-2 text-right">{withCurrency(discountTotal)}</td>
       </tr>
       <tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left">
@@ -128,7 +128,7 @@ export const OrderTotals :FC<OrderTotalsProps> = ({
       <tr className="hover:bg-gray-100">
         <th className="border border-gray-300 p-2 text-left text-4xl font-bold text-success-500">Total</th>
         <td
-          className="border border-gray-300 p-2 text-right text-4xl font-bold text-success-500">{finalTotal.toFixed(2)}</td>
+          className="border border-gray-300 p-2 text-right text-4xl font-bold text-success-500">{withCurrency(finalTotal)}</td>
       </tr>
       {children}
       </tbody>

@@ -3,6 +3,7 @@ import {Order} from "../../../api/model/order";
 import {Button} from "../../../app-common/components/input/button";
 import {Modal} from "../../../app-common/components/modal/modal";
 import {OrderItem} from "../../../api/model/order.item";
+import { withCurrency } from "../../../lib/currency/currency";
 
 interface ViewOrderProps extends PropsWithChildren{
   order: Order;
@@ -37,32 +38,30 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
       }} title={`Order# ${order.orderId}`}>
         <div className="grid grid-cols-6 gap-3 mb-5">
           <div className="border border-gray-500 p-5 rounded">
-            <div className="text-2xl">+{itemsTotal.toFixed(2)}</div>
+            <div className="text-2xl">+{withCurrency(itemsTotal)}</div>
             Items total with tax
           </div>
           <div className="border border-gray-500 p-5 rounded">
-            <div className="text-2xl">+{(order.tax ? order.tax.amount : 0)}</div>
+            <div className="text-2xl">+{withCurrency(order.tax ? order.tax.amount : 0)}</div>
             Tax
           </div>
           <div className="border border-gray-500 p-5 rounded">
-            <div className="text-2xl">-{(order.discount ? (order.discount.amount) : 0)}</div>
+            <div className="text-2xl">-{withCurrency(order.discount ? (order.discount.amount) : 0)}</div>
             Discount
           </div>
           <div className="border border-gray-500 p-5 rounded">
-            <div className="text-2xl">{order.adjustment && (
-              (itemsTotal + (order?.tax?.amount || 0) - (order?.discount?.amount || 0)) % 10 < 5 ? '' : '+'
-            )}{(order.adjustment ? order.adjustment : 0)}</div>
+            <div className="text-2xl">{withCurrency(order.adjustment ? order.adjustment : 0)}</div>
             Adjustment
           </div>
           <div className="border border-success-500 p-5 text-success-500 rounded font-bold">
-            <div className="text-2xl">={orderTotal.toFixed(2)}</div>
+            <div className="text-2xl">={withCurrency(orderTotal)}</div>
             Total
           </div>
           <div className="border border-primary-500 p-5 text-primary-500 rounded">
             <div className="text-2xl">Payments</div>
             <ul className="font-normal">
               {order.payments.map(item => (
-                <li key={item["@id"]}>{item.type?.name}: <span className="float-right">{item.received}</span></li>
+                <li key={item["@id"]}>{item.type?.name}: <span className="float-right">{withCurrency(item.received)}</span></li>
               ))}
             </ul>
           </div>
@@ -100,22 +99,22 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
               </td>
               <td className="text-right">{item.quantity}</td>
               <td className="text-right">
-                {itemTax(item)}
+                {withCurrency(itemTax(item))}
               </td>
-              <td className="text-right">{item.discount}</td>
-              <td className="text-right">{item.price}</td>
-              <td className="text-right">{(item.price * item.quantity) + itemTax(item) - item.discount}</td>
+              <td className="text-right">{withCurrency(item.discount)}</td>
+              <td className="text-right">{withCurrency(item.price)}</td>
+              <td className="text-right">{withCurrency((item.price * item.quantity) + itemTax(item) - item.discount)}</td>
             </tr>
           ))}
           </tbody>
           <tfoot>
             <tr>
               <th className="text-left">Total</th>
-              <th className="text-right">{order.items.reduce((prev, item) => prev + (item.quantity), 0)}</th>
+              <th className="text-right">{(order.items.reduce((prev, item) => prev + (item.quantity), 0))}</th>
               <th></th>
               <th></th>
               <th></th>
-              <th className="text-right">{itemsTotal.toFixed(2)}</th>
+              <th className="text-right">{withCurrency(itemsTotal)}</th>
             </tr>
           </tfoot>
         </table>

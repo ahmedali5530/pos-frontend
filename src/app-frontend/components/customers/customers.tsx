@@ -23,6 +23,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import useApi from "../../../api/hooks/use.api";
 import { HydraCollection } from "../../../api/model/hydra";
 import { notify } from "../../../app-common/components/confirm/notification";
+import { withCurrency } from "../../../lib/currency/currency";
 
 
 interface Props extends PropsWithChildren {
@@ -76,7 +77,8 @@ export const Customers: FC<Props> = ({
     columnHelper.accessor('outstanding', {
       header: ('Balance'),
       enableSorting: false,
-      enableColumnFilter: false
+      enableColumnFilter: false,
+      cell: info => withCurrency(info.getValue() + Number(info.row.original.openingBalance))
     }),
     columnHelper.accessor('id', {
       id: 'customerSelector',
@@ -231,7 +233,7 @@ export const Customers: FC<Props> = ({
         <Shortcut shortcut="ctrl+shift+c" handler={() => setModal(true)}/>
       </button>
 
-      <Modal shouldCloseOnEsc={false} open={modal} onClose={() => {
+      <Modal shouldCloseOnEsc={true} open={modal} onClose={() => {
         setModal(false);
       }} title="Customers">
         <form className="mb-5" onSubmit={handleSubmit(createCustomer)}>

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css');
 
 :root {
@@ -22,10 +22,13 @@
   @apply bg-primary-500;
 }
 
-body{
-  @apply bg-black;
-  font-family: 'Barlow', sans-serif;
+html, body{
+  font-family: 'Outfit', sans-serif;
   background-color: #f3f3f3;
+}
+
+html, body, button, input, optgroup, select, textarea{
+  font-family: 'Outfit', sans-serif;
 }
 
 a{
@@ -212,7 +215,7 @@ a{
   }
   &.btn-primary{
     @apply border-primary-500 text-primary-500 focus:outline-none
-    active:bg-primary-500 active:text-white focus:border-primary-500 hover:bg-primary-100 focus:bg-primary-50;
+    active:bg-primary-500 active:text-white focus:border-primary-500 hover:bg-primary-100 focus:bg-primary-100;
     &:disabled{
       @apply bg-primary-100;
     }
@@ -222,7 +225,7 @@ a{
   }
   &.btn-danger{
     @apply border-danger-500 text-danger-500 focus:outline-none focus:border-danger-500
-    active:bg-danger-500 active:text-white hover:bg-danger-50 focus:bg-danger-50;
+    active:bg-danger-500 active:text-white hover:bg-danger-100 focus:bg-danger-100;
     &:disabled{
       @apply bg-danger-100;
     }
@@ -242,7 +245,7 @@ a{
   }
   &.btn-warning{
     @apply disabled:bg-warning-200 border-warning-500 text-warning-500 focus:outline-none
-    focus:border-warning-500 active:bg-warning-500 active:text-white hover:bg-warning-50 focus:bg-warning-50;
+    focus:border-warning-500 active:bg-warning-500 active:text-white hover:bg-warning-100 focus:bg-warning-100;
     &:disabled{
       @apply bg-warning-100;
     }
@@ -252,7 +255,7 @@ a{
   }
   &.btn-success{
     @apply border-success-500 text-success-500 focus:outline-none
-    focus:border-success-500 active:bg-success-500 active:text-white hover:bg-success-50 focus:bg-success-50;
+    focus:border-success-500 active:bg-success-500 active:text-white hover:bg-success-100 focus:bg-success-100;
     &:disabled{
       @apply bg-success-100;
     }
@@ -534,7 +537,7 @@ textarea.form-control, textarea.input{
   }
   &:checked:after{
     content: '';
-    background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(0,149,255)" viewBox="0 0 40 40"><path d="m15.792 29.833-9.375-9.375 2-2 7.375 7.417 15.791-15.792 1.959 2Z"/></svg>');
+    background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(108 0 253)" viewBox="0 0 40 40"><path d="m15.792 29.833-9.375-9.375 2-2 7.375 7.417 15.791-15.792 1.959 2Z"/></svg>');
     height: 100%;
     width: 100%;
   }
@@ -542,7 +545,7 @@ textarea.form-control, textarea.input{
     box-shadow: 0 0 0 2px theme('colors.primary.500');
   }
   &:indeterminate{
-    background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(0,149,255)" viewBox="0 96 960 960" ><path d="M280 606v-60h400v60H280Z"/></svg>');
+    background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" fill="rgb(108 0 253)" viewBox="0 96 960 960" ><path d="M280 606v-60h400v60H280Z"/></svg>');
     box-shadow: 0 0 0 2px theme('colors.primary.500');
   }
 }

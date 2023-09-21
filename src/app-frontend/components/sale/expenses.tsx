@@ -21,6 +21,7 @@ import {yupResolver} from "@hookform/resolvers/yup";
 import * as yup from 'yup';
 import {ValidationMessage} from "../../../api/model/validation";
 import {notify} from "../../../app-common/components/confirm/notification";
+import { withCurrency } from "../../../lib/currency/currency";
 
 interface ExpensesProps{
   onClose?: () => void;
@@ -227,7 +228,7 @@ export const Expenses: FC<ExpensesProps> = (props) => {
 
         {isLoading && (
           <div className="flex justify-center items-center">
-            <Loader lines={5} lineItems={3}/>
+            <Loader lines={10} lineItems={3}/>
           </div>
         )}
         {!isLoading && (
@@ -236,7 +237,7 @@ export const Expenses: FC<ExpensesProps> = (props) => {
             <div className="border border-danger-500 p-5 font-bold text-danger-500 rounded">
               Expenses
               <span className="float-right">
-                {list.reduce((prev, item) => prev + item.amount , 0)}
+                {withCurrency(list.reduce((prev, item) => prev + item.amount , 0))}
               </span>
             </div>
             <div></div>
@@ -255,7 +256,7 @@ export const Expenses: FC<ExpensesProps> = (props) => {
                 <tr key={index} className="hover:bg-gray-100">
                   <td title={order.createdAt}>{DateTime.fromISO(order.createdAt).toRelative({base: DateTime.now()})}</td>
                   <td>{order.description}</td>
-                  <td>{order.amount}</td>
+                  <td>{withCurrency(order.amount)}</td>
                 </tr>
               ))}
               </tbody>

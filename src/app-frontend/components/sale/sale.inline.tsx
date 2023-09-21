@@ -25,6 +25,7 @@ import {useSelector} from "react-redux";
 import {getStore} from "../../../duck/store/store.selector";
 import {getTerminal} from "../../../duck/terminal/terminal.selector";
 import {notify} from "../../../app-common/components/confirm/notification";
+import { withCurrency } from "../../../lib/currency/currency";
 
 interface Props {
   added: CartItem[];
@@ -124,10 +125,10 @@ export const CloseSaleInline: FC<Props> = ({
     setSaleClosing(true);
     if (payments.length === 0) {
       paymentsAdded = [{
-        received: finalTotal + adjustment,
+        received: values.received,
         type: payment,
         total: finalTotal + adjustment,
-        due: 0
+        due: changeDue
       }];
     }
     try {
@@ -256,23 +257,25 @@ export const CloseSaleInline: FC<Props> = ({
 
   const shortcutHandler = useCallback((e: Event) => {
     //open sale modal
-    if (added.length > 0) {
-      if (setSaleModal) {
-        setSaleModal!(true);
-      }
-    }
+    // if (added.length > 0) {
+    //   if (setSaleModal) {
+    //     setSaleModal!(true);
+    //   }
+    // }
 
-    if (saleModal) {
-      //close sale
-      onSaleSubmit(getValues());
-    }
+    // if (saleModal) {
+    //   //close sale
+    //   onSaleSubmit(getValues());
+    // }
 
-    if (isInline) {
+    const hasError = changeDue < 0 || isSaleClosing || added.length === 0;
+
+    if (isInline && !hasError) {
       onSaleSubmit(getValues());
     }
   }, [
     added, saleModal, payments, hold, tax, customer, discount,
-    finalTotal, discountTotal, discountRateType, refundingFrom, getValues, isInline, payment
+    finalTotal, discountTotal, discountRateType, refundingFrom, getValues, isInline, payment, changeDue
   ]);
 
   const addSplitPayment = (amount: number, payment?: PaymentType) => {
@@ -392,7 +395,7 @@ export const CloseSaleInline: FC<Props> = ({
                       `border border-gray-300 p-2 text-right text-4xl font-bold`,
                       finalTotal % 10 < 5 ? 'text-danger-500' : ' text-success-500'
                     )
-                  }>{adjustment.toFixed(2)}</td>
+                  }>{withCurrency(adjustment)}</td>
                 </tr>
               )}
               <tr>
@@ -410,7 +413,7 @@ export const CloseSaleInline: FC<Props> = ({
                     changeDue < 0 ? 'text-danger-500' : ' text-success-500'
                   )
                 }>
-                  {changeDue.toFixed(2)}
+                  {withCurrency(changeDue)}
                 </td>
               </tr>
             </OrderTotals>
@@ -562,7 +565,7 @@ export const CloseSaleInline: FC<Props> = ({
                 className="btn-warning flex-1"
                 onClick={() => setHold(true)}
               >
-                <FontAwesomeIcon icon={faPause} className="m-2"/> {isSaleClosing ? '...' : 'Hold'}
+                <FontAwesomeIcon icon={faPause} size="lg"/>
               </Button>
               <div className="flex-1">
                 <ClearSale

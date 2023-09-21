@@ -15,6 +15,7 @@ import { HydraCollection } from "../../../../api/model/hydra";
 import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
 import { jsonRequest } from "../../../../api/request/request";
 import { Switch } from "../../../../app-common/components/input/switch";
+import { ItemComponent } from "./item";
 
 export const Items = () => {
   const useLoadHook = useApi<HydraCollection<Product>>('products', PRODUCT_LIST);
@@ -70,8 +71,15 @@ export const Items = () => {
     }),
     columnHelper.accessor('stores', {
       header: ('Stores'),
-      cell: info => info.getValue().map(item => item.name).join(', '),
+      cell: info => info.getValue().map(item => item.store.name).join(', '),
       enableColumnFilter: false,
+      enableSorting: false
+    }),
+    columnHelper.accessor('terminals', {
+      header: ('Terminals'),
+      cell: info => info.getValue().map(item => item.code).join(', '),
+      enableColumnFilter: false,
+      enableSorting: false
     }),
     columnHelper.accessor('id', {
       id: 'actions',
@@ -81,6 +89,8 @@ export const Items = () => {
       cell: (info) => {
         return (
           <>
+            <ItemComponent product={info.row.original} />
+            <span className="mx-2 text-gray-300">|</span>
             <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
               setEntity(info.row.original);
               setOperation('update');
@@ -95,7 +105,7 @@ export const Items = () => {
               }}
               confirmText="Yes, please"
               cancelText="No, wait"
-              title="Confirm deletion"
+              title="Confirmation"
               description={`Are you sure to ${info.row.original.isActive ? 'de-' : ''}activate this item?`}
             >
               <Switch checked={info.row.original.isActive} readOnly />

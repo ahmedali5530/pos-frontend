@@ -54,14 +54,17 @@ function useApi<T>(
       page: page,
       itemsPerPage: pageSize
     };
-    if (sort) {
-      query['order'] = {
-        [sort]: sortMode
-      }
+
+    const newUrl = new URL(url);
+    for(const item in query){
+      newUrl.searchParams.append(item, query[item]);
     }
 
-    const search = QueryString.stringify(query);
-    const response = await jsonRequest(`${url}?${search}`, {
+    if (sort) {
+      newUrl.searchParams.append(`order[${sort}]`, sortMode);
+    }
+
+    const response = await jsonRequest(newUrl.toString(), {
       method: 'GET',
       ...fetchOptions
     });

@@ -46,6 +46,8 @@ export const Input = forwardRef((props: InputProps, ref: Ref<any>) => {
         onClick={onClick}
         readOnly={props.readOnly}
         disabled={props.disabled}
+        placeholder={props.placeholder}
+        autoFocus={props.autoFocus}
       />
     );
   }else {

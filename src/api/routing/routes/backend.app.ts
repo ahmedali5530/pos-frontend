@@ -1,6 +1,6 @@
 import { url } from '../url';
 
-const scopeUrl = (path: string) => url(path);
+export const scopeUrl = (path: string) => url(path);
 
 export const LOGIN = scopeUrl('/auth/login_check');
 export const LOGOUT = scopeUrl('/auth/logout');
@@ -13,6 +13,7 @@ export const AUTH_LOGOUT = scopeUrl('/auth/logout');
 
 export const PRODUCT_LIST = scopeUrl('/products');
 export const PRODUCT_KEYWORDS = scopeUrl('/admin/product/keywords');
+export const PRODUCT_QUANTITIES = scopeUrl('/admin/product/quantities');
 export const PRODUCT_CREATE = scopeUrl('/products');
 export const PRODUCT_GET = scopeUrl('/products/:id');
 export const PRODUCT_UPLOAD = scopeUrl('/products/import');
@@ -24,12 +25,15 @@ export const BARCODE_LIST = scopeUrl('/barcodes');
 export const BARCODE_CREATE = scopeUrl('/barcodes');
 export const BARCODE_GET = scopeUrl('/barcodes/:id');
 
+export const ORDERS_LIST = scopeUrl('/orders');
 export const ORDER_LIST = scopeUrl('/admin/order/list');
 export const ORDER_CREATE = scopeUrl('/admin/order/create');
 export const ORDER_GET = scopeUrl('/admin/order/:id');
 export const ORDER_DISPATCH = scopeUrl('/admin/order/dispatch/:id');
 export const ORDER_RESTORE = scopeUrl('/admin/order/restore/:id');
 export const ORDER_REFUND = scopeUrl('/admin/order/refund/:id');
+
+export const ORDER_PRODUCTS_LIST = scopeUrl('/order_products/');
 
 export const DISCOUNT_LIST = scopeUrl('/discounts');
 export const DISCOUNT_CREATE = scopeUrl('/discounts');

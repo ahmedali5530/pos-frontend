@@ -72,6 +72,7 @@ export const TableComponent: FC<TableComponentProps> = ({
 
   useEffect(() => {
     if(sorting.length > 0) {
+
       handleSortChange!(sorting[0].id);
       handleSortModeChange!(sorting[0].desc ? 'desc' : 'asc');
     }

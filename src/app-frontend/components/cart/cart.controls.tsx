@@ -7,6 +7,8 @@ import {Controller, useForm} from "react-hook-form";
 import {Input} from "../../../app-common/components/input/input";
 import {DiscountRate} from "../../../api/model/discount";
 import {ReactSelect} from "../../../app-common/components/input/custom.react.select";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCopy, faTrash } from "@fortawesome/free-solid-svg-icons";
 
 interface CartControlsProps{
   added: CartItem[];
@@ -151,13 +153,16 @@ export const CartControls = ({
 
   return (
     <>
-      <div className="p-3 border-b flex gap-3 justify-end">
-        <button tabIndex={-1} disabled={added.length === 0} type="button" className="btn btn-danger" onClick={voidCartItems}>Void</button>
-        <button tabIndex={-1} disabled={added.length === 0} type="button" className="btn btn-secondary" onClick={copyCartItems}>Copy</button>
-        {/*<button tabIndex={-1} type="button" className="btn btn-secondary"><FontAwesomeIcon icon={faPencil}/></button>*/}
-        <button tabIndex={-1} disabled={added.length === 0} type="button" className="btn btn-secondary" onClick={() => setQtyModal(true) }>QTY</button>
-        <button tabIndex={-1} disabled={added.length === 0} type="button" className="btn btn-secondary" onClick={openDiscount}>Disc.</button>
-        <button tabIndex={-1} disabled={added.length === 0} type="button" className="btn btn-secondary" onClick={toggleTax}>Toggle Tax</button>
+      <div className="p-3 border-b flex gap-3 justify-end bg-white">
+        <button tabIndex={-1} disabled={added.length === 0} type="button" className="btn btn-danger lg btn-square" onClick={voidCartItems}>
+          <FontAwesomeIcon icon={faTrash} />
+        </button>
+        <button tabIndex={-1} disabled={added.length === 0} type="button" className="btn btn-secondary lg btn-square" onClick={copyCartItems}>
+          <FontAwesomeIcon icon={faCopy} />
+        </button>
+        <button tabIndex={-1} disabled={added.length === 0} type="button" className="btn btn-secondary lg" onClick={() => setQtyModal(true) }>QTY</button>
+        <button tabIndex={-1} disabled={added.length === 0} type="button" className="btn btn-secondary lg" onClick={openDiscount}>Disc.</button>
+        <button tabIndex={-1} disabled={added.length === 0} type="button" className="btn btn-secondary lg" onClick={toggleTax}>Toggle Tax</button>
       </div>
 
       <Modal open={qtyModal} title="Update quantity" size="sm" onClose={() => setQtyModal(false)}>

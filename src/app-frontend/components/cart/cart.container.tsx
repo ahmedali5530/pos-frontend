@@ -4,11 +4,12 @@ import { Product } from "../../../api/model/product";
 import { CartItem } from "./cart.item";
 import { Checkbox } from "../../../app-common/components/input/checkbox";
 import Mousetrap from 'mousetrap';
+import { withCurrency } from "../../../lib/currency/currency";
 
 
 interface CartContainerProps {
   added: CartItemModel[];
-  latest?: Product;
+  latestIndex?: number;
   onQuantityChange: (item: CartItemModel, quantity: number) => void;
   onDiscountChange: (item: CartItemModel, discount: number) => void;
   onPriceChange: (item: CartItemModel, price: number) => void;
@@ -30,7 +31,7 @@ export enum CartItemType {
 }
 
 export const CartContainer: FunctionComponent<CartContainerProps> = ({
-  added, latest, onQuantityChange, onPriceChange, onDiscountChange, deleteItem, subTotal,
+  added, latestIndex, onQuantityChange, onPriceChange, onDiscountChange, deleteItem, subTotal,
   onCheckAll, onCheck, setAdded, cartItem, setCartItem, setCartItemType, cartItemType
 }) => {
   const allChecked = useMemo(() => {
@@ -83,17 +84,22 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
     if( direction === 'down' ) {
       if( newCartItem + 1 < addedItems ) {
         setCartItem(newCartItem + 1);
-      } else if( newCartItem + 1 === addedItems ) {
+      } else if( newCartItem + 1 >= addedItems ) {
         setCartItem(0);
       }
     }
   }, [cartItem, added]);
 
-  Mousetrap.bind(['ctrl+up', 'ctrl+down', 'ctrl+left', 'ctrl+right'], function (e: KeyboardEvent) {
+  Mousetrap.bind(['ctrl+up', 'ctrl+down', 'ctrl+left', 'ctrl+right', 'del'], function (e: KeyboardEvent) {
     e.preventDefault();
     if(!cartItem){
       setCartItem(0);
     }
+
+    if(e.code === 'Delete'){
+      setAdded(added.filter((item, index) => index !== cartItem))
+    }
+
     //update quantity of last added item
     if( e.code === 'ArrowLeft' || e.code === 'ArrowRight' ) {
       updateCartItemType(e.code === 'ArrowLeft' ? 'left' : 'right');
@@ -123,7 +129,7 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
           <div className="table-cell p-2 text-center font-bold w-[90px]">Disc.</div>
           <div className="table-cell p-2 text-center font-bold w-[90px]">Taxes</div>
           <div className="table-cell p-2 text-center font-bold w-[100px]">Rate</div>
-          <div className="table-cell p-2 text-right font-bold w-[100px]">Total</div>
+          <div className="table-cell p-2 text-right font-bold w-[100px]">Total {withCurrency(undefined)}.</div>
           {/*<div className="table-cell w-[80px]"/>*/}
         </div>
       </div>
@@ -139,7 +145,7 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
             item={item}
             index={index}
             onCheck={onCheck}
-            latest={latest}
+            latestIndex={latestIndex}
             cartItemType={cartItemType}
             cartItem={cartItem}
           />
@@ -161,7 +167,7 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
           <div className="table-cell"></div>
           <div className="table-cell"></div>
           <div className="table-cell text-right p-2">
-            {Number(subTotal).toFixed(2)}
+            {withCurrency(subTotal)}
           </div>
         </div>
       </div>

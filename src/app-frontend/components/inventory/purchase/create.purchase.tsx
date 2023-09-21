@@ -204,7 +204,7 @@ export const CreatePurchase: FC<PurchaseProps> = ({
             return {
               item: item.item["@id"],
               quantity: item.quantity,
-              quantityRequested: Number(item.quantityRequested).toString(),
+              quantityRequested: item.quantityRequested ? Number(item.quantityRequested).toString() : null,
               purchasePrice: item.cost.toString(),
               comments: item.comments,
               purchaseUnit: item.item.purchaseUnit,
@@ -228,7 +228,7 @@ export const CreatePurchase: FC<PurchaseProps> = ({
             return {
               item: item.item["@id"],
               quantity: item.quantity,
-              quantityRequested: Number(item.quantityRequested).toString(),
+              quantityRequested: item.quantityRequested ? Number(item.quantityRequested).toString() : null,
               purchasePrice: item.cost.toString(),
               comments: item.comments,
               purchaseUnit: item.item.purchaseUnit,

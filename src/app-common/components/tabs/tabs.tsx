@@ -1,6 +1,7 @@
 import {ButtonHTMLAttributes, FunctionComponent, PropsWithChildren, ReactElement, useCallback, useState} from 'react';
 import classNames from "classnames";
 import ScrollContainer from 'react-indiana-drag-scroll';
+import { Button } from "../input/button";
 
 export interface TabControlState {
   activeTab: string;
@@ -77,11 +78,12 @@ interface TabProps extends PropsWithChildren, ButtonHTMLAttributes<HTMLButtonEle
   isActive: boolean;
 }
 export const Tab = (props: TabProps) => {
+  const {isActive, ...rest} = props;
   return (
-    <button {...props} className={
+    <button {...rest} className={
       classNames(
-        'p-3 px-5 flex-shrink-0 text-left rounded-full transition-all uppercase',
-        props.isActive ?
+        'p-3 px-5 flex-shrink-0 text-left rounded-full transition-all uppercase font-bold',
+        isActive ?
           'text-white bg-primary-500' : ''
       )
     }>{props.children}</button>
