@@ -1,6 +1,22 @@
-# Getting Started with Create React App
+# Getting Started with Point of sale system
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+
+A point of sale system built using React.js and [Symfony as a backend](https://github.com/ahmedali5530/pos).
+### Features
+
+- Order management
+- Inventory
+- Expenses
+- Multiple stores with multiple terminals
+- Can support variants. i.e. sizes, colors, anything etc...
+- Supports shortcuts for faster operations
+- Day closing
+- Supports multiple taxes
+- Supports multiple discounts
+- Customers management
+- Suppliers management
+- Supports Refunds
 
 ## Available Scripts
 
