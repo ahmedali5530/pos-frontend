@@ -27,9 +27,12 @@ A point of sale system built using React.js and [Symfony as a backend](https://g
 - NodeJs >= 14
 - Any text editor for updating configuration files
 ## Installation
-After setting up and running [symfony](https://github.com/ahmedali5530/pos) instance open `.env` file and add your `VITE_API_HOST` variable according to your symfony installation. Then run following scripts to run application.
-Use `VITE_CURRENCY` and `VITE_LOCALE` variable to setup your currency settings.
-Use `VITE_DATE_FORMAT` and `VITE_TIME_FORMAT` for time formats, I am using [luxon](https://moment.github.io/luxon/#/formatting) for date and time formatting.
+- Download or clone this project
+- run `yarn install` to install all third party libraries
+- After setting up and running [symfony](https://github.com/ahmedali5530/pos) instance open `.env` file and add your `VITE_API_HOST` variable according to your symfony installation. 
+- Then run following Available scripts to run application.
+- Use `VITE_CURRENCY` and `VITE_LOCALE` variable to setup your currency settings.
+- Use `VITE_DATE_FORMAT` and `VITE_TIME_FORMAT` for time formats, I am using [luxon](https://moment.github.io/luxon/#/formatting) for date and time formatting.
 
 ## Available Scripts
 
