@@ -1,7 +1,5 @@
 # Getting Started with Point of sale system
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-
 ### Demo
 [https://pos.ezportal.online](https://pos.ezportal.online)
 
@@ -24,6 +22,14 @@ A point of sale system built using React.js and [Symfony as a backend](https://g
 - Customers management
 - Suppliers management
 - Supports Refunds
+
+## Requirements
+- NodeJs >= 14
+- Any text editor for updating configuration files
+## Installation
+After setting up and running [symfony](https://github.com/ahmedali5530/pos) instance open `.env` file and add your `VITE_API_HOST` variable according to your symfony installation. Then run following scripts to run application.
+Use `VITE_CURRENCY` and `VITE_LOCALE` variable to setup your currency settings.
+Use `VITE_DATE_FORMAT` and `VITE_TIME_FORMAT` for time formats, I am using [luxon](https://moment.github.io/luxon/#/formatting) for date and time formatting.
 
 ## Available Scripts
 
