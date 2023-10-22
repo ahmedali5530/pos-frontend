@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@apollo/client": "^3.8.4",
     "@fortawesome/fontawesome-svg-core": "^6.1.2",
     "@fortawesome/free-regular-svg-icons": "^6.1.2",
     "@fortawesome/free-solid-svg-icons": "^6.1.2",
@@ -39,7 +40,10 @@
     "antd": "^5.4.7",
     "classnames": "^2.3.1",
     "dotenv": "^16.3.1",
+    "fuse.js": "^6.6.2",
+    "graphql": "^16.8.1",
     "i18next": "^21.8.16",
+    "jotai": "^2.4.3",
     "js-cookie": "^3.0.1",
     "localforage": "^1.10.0",
     "lodash": "^4.17.21",
@@ -83,7 +87,8 @@
   },
   "scripts": {
     "start": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "compile": "graphql-codegen"
   },
   "eslintConfig": {
     "extends": [
@@ -104,6 +109,9 @@
     ]
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.0",
+    "@graphql-codegen/client-preset": "^4.1.0",
+    "@graphql-typed-document-node/core": "^3.2.0",
     "@vitejs/plugin-react": "^2.0.1",
     "autoprefixer": "^10.4.8",
     "postcss": "^8.4.14",

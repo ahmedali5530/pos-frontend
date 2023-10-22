@@ -28,7 +28,7 @@ const ValidationSchema = yup.object({
   name: yup.string().trim().required(ValidationMessage.Required),
   phone: yup.string().required(ValidationMessage.Required),
   email: yup.string().required(ValidationMessage.Required).email(ValidationMessage.Email),
-  openingBalance: yup.number().typeError(ValidationMessage.Number).required(ValidationMessage.Required),
+  openingBalance: yup.string().required(ValidationMessage.Required),
   stores: yup.array().min(1).required(ValidationMessage.Required)
 }).required();
 
@@ -76,7 +76,7 @@ export const CreateSupplier: FC<CreateSupplierProps> = ({
       }
 
       if(values.openingBalance){
-        values.openingBalance = values.openingBalance.toString();
+        values.openingBalance = (values.openingBalance).toString();
       }
 
       await jsonRequest(url, {
@@ -185,7 +185,7 @@ export const CreateSupplier: FC<CreateSupplierProps> = ({
           </div>
           <div>
             <label htmlFor="openingBalance">Opening balance</label>
-            <Input {...register('openingBalance')} id="openingBalance" className="w-full" hasError={hasErrors(errors.openingBalance)}/>
+            <Input {...register('openingBalance')} type="number" id="openingBalance" className="w-full" hasError={hasErrors(errors.openingBalance)}/>
             {errors.openingBalance && (
               <div className="text-danger-500 text-sm">
                 <Trans>

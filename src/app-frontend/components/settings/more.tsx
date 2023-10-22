@@ -9,7 +9,12 @@ import localforage from "../../../lib/localforage/localforage";
 import { useDispatch, useSelector } from "react-redux";
 import { getAuthorizedUser } from "../../../duck/auth/auth.selector";
 import { Switch } from "../../../app-common/components/input/switch";
-import { Tab, TabContent, TabControl, TabNav } from "../../../app-common/components/tabs/tabs";
+import {
+  Tab,
+  TabContent,
+  TabControl,
+  TabNav,
+} from "../../../app-common/components/tabs/tabs";
 import { ReactSelectOptionProps } from "../../../api/model/common";
 import { ReactSelect } from "../../../app-common/components/input/custom.react.select";
 import { useLoadData } from "../../../api/hooks/use.load.data";
@@ -18,7 +23,10 @@ import { Users } from "./users/users";
 import { PaymentTypes } from "./payment-types/payment.types";
 import { DiscountTypes } from "./discounts/discount.types";
 import { TaxTypes } from "./taxes/tax.types";
-import { displayShortcutAction, shortcutAction } from "../../../duck/shortcuts/shortcut.action";
+import {
+  displayShortcutAction,
+  shortcutAction,
+} from "../../../duck/shortcuts/shortcut.action";
 import { touchAction } from "../../../duck/touch/touch.action";
 import { Terminals } from "./terminals/terminals";
 import { Departments } from "./departments/departments";
@@ -30,15 +38,17 @@ import { message as AntMessage, Tooltip } from "antd";
 import { getProgress } from "../../../duck/progress/progress.selector";
 import { getStore } from "../../../duck/store/store.selector";
 import { getTerminal } from "../../../duck/terminal/terminal.selector";
+import { DynamicBarcodes } from "./dynamic-barcodes";
+import { useAtom } from "jotai";
+import { defaultState, defaultData } from "../../../store/jotai";
 
-interface Props {
-  setTax: (data?: Tax) => void;
-  setDiscount: (data?: Discount) => void;
-}
+interface Props {}
 
-export const More: FC<Props> = ({
-  setTax, setDiscount
-}) => {
+export const More: FC<Props> = ({}) => {
+  const [appState, setAppState] = useAtom(defaultState);
+  const [defaultOptions, setDefaultOptions] = useAtom(defaultData);
+  const { defaultDiscount, defaultPaymentType, defaultTax } = defaultOptions;
+  const {} = defaultState;
   const [modal, setModal] = useState(false);
   const [state, action] = useLoadData();
   const [messageApi, contextHolder] = AntMessage.useMessage();
@@ -52,20 +62,20 @@ export const More: FC<Props> = ({
   const progress = useSelector(getProgress);
 
   useEffect(() => {
-    if( progress === 'Done' ) {
+    if (progress === "Done") {
       messageApi.open({
-        key: 'loading',
-        type: 'success',
+        key: "loading",
+        type: "success",
         content: `${progress}`,
       });
 
       setTimeout(() => messageApi.destroy(), 1000);
     } else {
       messageApi.open({
-        key: 'loading',
-        type: 'loading',
+        key: "loading",
+        type: "loading",
         content: `Loading ${progress}`,
-        duration: 120
+        duration: 120,
       });
     }
   }, [progress]);
@@ -74,14 +84,14 @@ export const More: FC<Props> = ({
 
   const clearCache = async () => {
     setLoading(true);
-    await localforage.removeItem('list');
-    await localforage.removeItem('deviceList');
-    await localforage.removeItem('discountList');
-    await localforage.removeItem('taxList');
-    await localforage.removeItem('paymentTypesList');
-    await localforage.removeItem('defaultTax');
-    await localforage.removeItem('defaultDiscount');
-    await localforage.removeItem('defaultPaymentType');
+    await localforage.removeItem("list");
+    await localforage.removeItem("deviceList");
+    await localforage.removeItem("discountList");
+    await localforage.removeItem("taxList");
+    await localforage.removeItem("paymentTypesList");
+    await localforage.removeItem("defaultTax");
+    await localforage.removeItem("defaultDiscount");
+    await localforage.removeItem("defaultPaymentType");
     // await action.load();
 
     setLoading(false);
@@ -89,68 +99,13 @@ export const More: FC<Props> = ({
     window.location.reload();
   };
 
-  const [defaultTax, setDefaultTax] = useState<ReactSelectOptionProps>();
-  const [defaultDiscount, setDefaultDiscount] = useState<ReactSelectOptionProps>();
-  const [defaultPaymentType, setDefaultPaymentType] = useState<ReactSelectOptionProps>();
-  const [defaultDevice, setDefaultDevice] = useState<ReactSelectOptionProps>();
-
-  const [displayVariants, setDisplayVariants] = useState(false);
   const [enableShortcuts, setEnableShortcuts] = useState(false);
   const [displayShortcuts, setDisplayShortcuts] = useState(false);
   const [enableTouch, setEnableTouch] = useState(false);
 
-
   useEffect(() => {
-    localforage.getItem('defaultTax').then((data: any) => {
-      if( data ) {
-        setDefaultTax({
-          label: data?.name + ' ' + data?.rate,
-          value: JSON.stringify(data)
-        });
-
-        setTax(data);
-      }
-    });
-
-    localforage.getItem('defaultDiscount').then((data: any) => {
-      if( data ) {
-        setDefaultDiscount({
-          label: data?.name,
-          value: JSON.stringify(data)
-        });
-
-        setDiscount(data);
-      }
-    });
-
-    localforage.getItem('defaultPaymentType').then((data: any) => {
-      if( data ) {
-        setDefaultPaymentType({
-          label: data?.name,
-          value: JSON.stringify(data)
-        });
-      }
-    });
-
-    localforage.getItem('defaultDevice').then((data: any) => {
-      if( data ) {
-        setDefaultDevice({
-          label: data?.name,
-          value: JSON.stringify(data)
-        });
-      }
-    });
-
-    localforage.getItem('displayVariants').then((data: any) => {
-      if( data ) {
-        setDisplayVariants(data);
-      } else {
-        setDisplayVariants(false);
-      }
-    });
-
-    localforage.getItem('enableShortcuts').then((data: any) => {
-      if( data ) {
+    localforage.getItem("enableShortcuts").then((data: any) => {
+      if (data) {
         setEnableShortcuts(data);
         dispatch(shortcutAction(data));
       } else {
@@ -159,8 +114,8 @@ export const More: FC<Props> = ({
       }
     });
 
-    localforage.getItem('displayShortcuts').then((data: any) => {
-      if( data ) {
+    localforage.getItem("displayShortcuts").then((data: any) => {
+      if (data) {
         setDisplayShortcuts(data);
         dispatch(displayShortcutAction(data));
       } else {
@@ -169,8 +124,8 @@ export const More: FC<Props> = ({
       }
     });
 
-    localforage.getItem('enableTouch').then((data: any) => {
-      if( data ) {
+    localforage.getItem("enableTouch").then((data: any) => {
+      if (data) {
         setEnableTouch(data);
         dispatch(touchAction(data));
       } else {
@@ -181,60 +136,144 @@ export const More: FC<Props> = ({
   }, []);
 
   const isMobile = useMediaQuery({
-    query: '(max-width: 1224px)'
+    query: "(max-width: 1224px)",
   });
 
   return (
     <>
       {contextHolder}
       <Tooltip title="Settings">
-        <Button variant="secondary" className="btn-square" size="lg" onClick={() => {
-          setModal(true);
-        }} tabIndex={-1}><FontAwesomeIcon icon={faCog}/></Button>
+        <Button
+          variant="secondary"
+          className="btn-square"
+          size="lg"
+          onClick={() => {
+            setModal(true);
+          }}
+          tabIndex={-1}>
+          <FontAwesomeIcon icon={faCog} />
+        </Button>
       </Tooltip>
 
-      <Modal open={modal} onClose={() => {
-        setModal(false);
-      }} title="Settings" size="full" transparentContainer={false}>
+      <Modal
+        open={modal}
+        onClose={() => {
+          setModal(false);
+        }}
+        title="Settings"
+        size="full"
+        transparentContainer={false}>
         <TabControl
           defaultTab="general"
-          position={isMobile ? 'top' : 'left'}
+          position={isMobile ? "top" : "left"}
           render={({ isTabActive, setActiveTab }) => (
             <>
-              <TabNav position={isMobile ? 'top' : 'left'}>
-                <Tab isActive={isTabActive('general')} onClick={() => setActiveTab('general')}>General</Tab>
-                <Tab isActive={isTabActive('profile')} onClick={() => setActiveTab('profile')}>Profile</Tab>
-                <Tab isActive={isTabActive('stores')} onClick={() => setActiveTab('stores')}>Stores</Tab>
-                <Tab isActive={isTabActive('users')} onClick={() => setActiveTab('users')}>Users</Tab>
-                <Tab isActive={isTabActive('brands')} onClick={() => setActiveTab('brands')}>Brands</Tab>
-                <Tab isActive={isTabActive('categories')} onClick={() => setActiveTab('categories')}>Categories</Tab>
-                <Tab isActive={isTabActive('payments')} onClick={() => setActiveTab('payments')}>Payment types</Tab>
-                <Tab isActive={isTabActive('discounts')} onClick={() => setActiveTab('discounts')}>Discounts</Tab>
-                <Tab isActive={isTabActive('taxes')} onClick={() => setActiveTab('taxes')}>Taxes</Tab>
-                <Tab isActive={isTabActive('departments')} onClick={() => setActiveTab('departments')}>Departments</Tab>
-                <Tab isActive={isTabActive('list')} onClick={() => setActiveTab('list')}>Items list</Tab>
-                <Tab isActive={isTabActive('terminals')} onClick={() => setActiveTab('terminals')}>Terminals</Tab>
+              <TabNav position={isMobile ? "top" : "left"}>
+                <Tab
+                  isActive={isTabActive("general")}
+                  onClick={() => setActiveTab("general")}>
+                  General
+                </Tab>
+                <Tab
+                  isActive={isTabActive("profile")}
+                  onClick={() => setActiveTab("profile")}>
+                  Profile
+                </Tab>
+                <Tab
+                  isActive={isTabActive("stores")}
+                  onClick={() => setActiveTab("stores")}>
+                  Stores
+                </Tab>
+                <Tab
+                  isActive={isTabActive("users")}
+                  onClick={() => setActiveTab("users")}>
+                  Users
+                </Tab>
+                <Tab
+                  isActive={isTabActive("brands")}
+                  onClick={() => setActiveTab("brands")}>
+                  Brands
+                </Tab>
+                <Tab
+                  isActive={isTabActive("categories")}
+                  onClick={() => setActiveTab("categories")}>
+                  Categories
+                </Tab>
+                <Tab
+                  isActive={isTabActive("payments")}
+                  onClick={() => setActiveTab("payments")}>
+                  Payment types
+                </Tab>
+                <Tab
+                  isActive={isTabActive("discounts")}
+                  onClick={() => setActiveTab("discounts")}>
+                  Discounts
+                </Tab>
+                <Tab
+                  isActive={isTabActive("taxes")}
+                  onClick={() => setActiveTab("taxes")}>
+                  Taxes
+                </Tab>
+                <Tab
+                  isActive={isTabActive("departments")}
+                  onClick={() => setActiveTab("departments")}>
+                  Departments
+                </Tab>
+                <Tab
+                  isActive={isTabActive("list")}
+                  onClick={() => setActiveTab("list")}>
+                  Items list
+                </Tab>
+                <Tab
+                  isActive={isTabActive("barcodes")}
+                  onClick={() => setActiveTab("barcodes")}>
+                  Barcodes
+                </Tab>
+                <Tab
+                  isActive={isTabActive("terminals")}
+                  onClick={() => setActiveTab("terminals")}>
+                  Terminals
+                </Tab>
               </TabNav>
-              <TabContent isActive={isTabActive('general')}>
+              <TabContent isActive={isTabActive("general")}>
                 <div className="inline-flex flex-col gap-5 justify-start">
-                  <Button variant="success" onClick={() => {
-                    clearCache();
-                  }} className="mr-3 flex-grow-0" size="lg" disabled={isLoading}>
-                    {isLoading ? 'Clearing...' : 'Refresh Cache'}
+                  <Button
+                    variant="success"
+                    onClick={() => {
+                      clearCache();
+                    }}
+                    className="mr-3 flex-grow-0"
+                    size="lg"
+                    disabled={isLoading}>
+                    {isLoading ? "Clearing..." : "Refresh Cache"}
                   </Button>
 
-                  <Switch checked={enableShortcuts} onChange={(value) => {
-                    localforage.setItem('enableShortcuts', value.target.checked);
-                    setEnableShortcuts(value.target.checked);
-                    dispatch(shortcutAction(value.target.checked));
-                  }}>Enable shortcuts?</Switch>
+                  <Switch
+                    checked={enableShortcuts}
+                    onChange={(value) => {
+                      localforage.setItem(
+                        "enableShortcuts",
+                        value.target.checked
+                      );
+                      setEnableShortcuts(value.target.checked);
+                      dispatch(shortcutAction(value.target.checked));
+                    }}>
+                    Enable shortcuts?
+                  </Switch>
 
                   {enableShortcuts && (
-                    <Switch checked={displayShortcuts} onChange={(value) => {
-                      localforage.setItem('displayShortcuts', value.target.checked);
-                      setDisplayShortcuts(value.target.checked);
-                      dispatch(displayShortcutAction(value.target.checked));
-                    }}>Display shortcut texts?</Switch>
+                    <Switch
+                      checked={displayShortcuts}
+                      onChange={(value) => {
+                        localforage.setItem(
+                          "displayShortcuts",
+                          value.target.checked
+                        );
+                        setDisplayShortcuts(value.target.checked);
+                        dispatch(displayShortcutAction(value.target.checked));
+                      }}>
+                      Display shortcut texts?
+                    </Switch>
                   )}
 
                   {/*<Switch checked={enableTouch} onChange={(value) => {
@@ -247,129 +286,190 @@ export const More: FC<Props> = ({
                   <div>
                     <h3 className="text-xl">Set Default tax</h3>
                     <ReactSelect
-                      options={state.taxList.list.map(item => {
+                      options={state.taxList.list.map((item) => {
                         return {
-                          label: item.name + ' ' + item.rate,
-                          value: JSON.stringify(item)
+                          label: item.name + " " + item.rate,
+                          value: JSON.stringify(item),
                         };
                       })}
                       isClearable
                       onChange={(value: any) => {
-                        if( value ) {
-                          localforage.setItem('defaultTax', JSON.parse(value.value));
-                          setTax(JSON.parse(value.value));
+                        if (value) {
+                          setAppState((prev) => ({
+                            ...prev,
+                            tax: JSON.parse(value.value),
+                          }));
+
+                          setDefaultOptions((prev) => ({
+                            ...prev,
+                            defaultTax: JSON.parse(value.value),
+                          }));
                         } else {
-                          localforage.removeItem('defaultTax');
-                          setTax(undefined);
-                          setDefaultTax(undefined);
+                          setAppState((prev) => ({
+                            ...prev,
+                            tax: undefined,
+                          }));
+
+                          setDefaultOptions((prev) => ({
+                            ...prev,
+                            defaultTax: undefined,
+                          }));
                         }
                       }}
-                      value={defaultTax}
+                      value={
+                        defaultTax
+                          ? {
+                              label: defaultTax?.name + " " + defaultTax?.rate,
+                              value: JSON.stringify(defaultTax),
+                            }
+                          : null
+                      }
                     />
                   </div>
                   <div>
                     <h3 className="text-xl">Set Default discount</h3>
                     <ReactSelect
-                      options={state.discountList.list.map(item => {
+                      options={state.discountList.list.map((item) => {
                         return {
                           label: item.name,
-                          value: JSON.stringify(item)
+                          value: JSON.stringify(item),
                         };
                       })}
                       isClearable
                       onChange={(value: any) => {
-                        if( value ) {
-                          localforage.setItem('defaultDiscount', JSON.parse(value.value));
-                          setDiscount(JSON.parse(value.value));
+                        if (value) {
+                          setAppState((prev) => ({
+                            ...prev,
+                            discount: JSON.parse(value.value),
+                          }));
+
+                          setDefaultOptions((prev) => ({
+                            ...prev,
+                            defaultDiscount: JSON.parse(value.value),
+                          }));
                         } else {
-                          localforage.removeItem('defaultDiscount');
-                          setDiscount(undefined);
-                          setDefaultDiscount(undefined);
+                          setAppState((prev) => ({
+                            ...prev,
+                            discount: undefined,
+                          }));
+
+                          setDefaultOptions((prev) => ({
+                            ...prev,
+                            defaultDiscount: undefined,
+                          }));
                         }
                       }}
-                      value={defaultDiscount}
+                      value={
+                        defaultDiscount
+                          ? {
+                              label: defaultDiscount?.name,
+                              value: JSON.stringify(defaultDiscount),
+                            }
+                          : null
+                      }
                     />
                   </div>
                   <div>
                     <h3 className="text-xl">Set Default payment type</h3>
                     <ReactSelect
-                      options={state.paymentTypesList.list.map(item => {
+                      options={state.paymentTypesList.list.map((item) => {
                         return {
                           label: item.name,
-                          value: JSON.stringify(item)
+                          value: JSON.stringify(item),
                         };
                       })}
                       isClearable
                       onChange={(value: any) => {
-                        if( value ) {
-                          localforage.setItem('defaultPaymentType', JSON.parse(value.value));
+                        if (value) {
+                          setDefaultOptions((prev) => ({
+                            ...prev,
+                            defaultPaymentType: JSON.parse(value.value),
+                          }));
                         } else {
-                          localforage.removeItem('defaultPaymentType');
-                          setDefaultPaymentType(undefined);
+                          setDefaultOptions((prev) => ({
+                            ...prev,
+                            defaultPaymentType: undefined,
+                          }));
                         }
                       }}
-                      value={defaultPaymentType}
+                      value={
+                        defaultPaymentType
+                          ? {
+                              label: defaultPaymentType?.name,
+                              value: JSON.stringify(defaultPaymentType),
+                            }
+                          : null
+                      }
                     />
                   </div>
                   <div>
-                    <h3 className="text-xl">Set Default Printer</h3>
+                    {/* <h3 className="text-xl">Set Default Printer</h3>
                     <ReactSelect
-                      options={state.deviceList.list.map(item => {
+                      options={state.deviceList.list.map((item) => {
                         return {
                           label: item.name,
-                          value: JSON.stringify(item)
+                          value: JSON.stringify(item),
                         };
                       })}
                       isClearable
                       onChange={(value: any) => {
-                        if( value ) {
-                          localforage.setItem('defaultDevice', JSON.parse(value.value));
+                        if (value) {
+                          localforage.setItem(
+                            "defaultDevice",
+                            JSON.parse(value.value)
+                          );
                         } else {
-                          localforage.removeItem('defaultDevice');
+                          localforage.removeItem("defaultDevice");
                           setDefaultDevice(undefined);
                         }
                       }}
                       value={defaultDevice}
-                    />
+                    /> */}
                   </div>
                 </div>
               </TabContent>
-              <TabContent isActive={isTabActive('profile')}>
+              <TabContent isActive={isTabActive("profile")}>
                 <div className="col-span-1 grid grid-cols-2 font-bold gap-0 auto-rows-min">
-                  <span>User</span><span className="text-primary-500">{user?.displayName}</span>
-                  <span>Store</span><span className="text-primary-500">{store?.name}</span>
-                  <span>Terminal</span><span className="text-primary-500">{terminal?.code}</span>
+                  <span>User</span>
+                  <span className="text-primary-500">{user?.displayName}</span>
+                  <span>Store</span>
+                  <span className="text-primary-500">{store?.name}</span>
+                  <span>Terminal</span>
+                  <span className="text-primary-500">{terminal?.code}</span>
                 </div>
               </TabContent>
-              <TabContent isActive={isTabActive('payments')}>
-                <PaymentTypes/>
+              <TabContent isActive={isTabActive("payments")}>
+                <PaymentTypes />
               </TabContent>
-              <TabContent isActive={isTabActive('discounts')}>
-                <DiscountTypes/>
+              <TabContent isActive={isTabActive("discounts")}>
+                <DiscountTypes />
               </TabContent>
-              <TabContent isActive={isTabActive('taxes')}>
-                <TaxTypes/>
+              <TabContent isActive={isTabActive("taxes")}>
+                <TaxTypes />
               </TabContent>
-              <TabContent isActive={isTabActive('stores')}>
-                <Stores/>
+              <TabContent isActive={isTabActive("stores")}>
+                <Stores />
               </TabContent>
-              <TabContent isActive={isTabActive('users')}>
-                <Users/>
+              <TabContent isActive={isTabActive("users")}>
+                <Users />
               </TabContent>
-              <TabContent isActive={isTabActive('terminals')}>
-                <Terminals/>
+              <TabContent isActive={isTabActive("terminals")}>
+                <Terminals />
               </TabContent>
-              <TabContent isActive={isTabActive('departments')}>
-                <Departments/>
+              <TabContent isActive={isTabActive("departments")}>
+                <Departments />
               </TabContent>
-              <TabContent isActive={isTabActive('list')}>
-                <Items/>
+              <TabContent isActive={isTabActive("list")}>
+                <Items />
               </TabContent>
-              <TabContent isActive={isTabActive('categories')}>
-                <Categories/>
+              <TabContent isActive={isTabActive("barcodes")}>
+                <DynamicBarcodes />
               </TabContent>
-              <TabContent isActive={isTabActive('brands')}>
-                <Brands/>
+              <TabContent isActive={isTabActive("categories")}>
+                <Categories />
+              </TabContent>
+              <TabContent isActive={isTabActive("brands")}>
+                <Brands />
               </TabContent>
             </>
           )}

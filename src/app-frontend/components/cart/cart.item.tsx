@@ -7,10 +7,10 @@ import { faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { getRowTotal } from "../../containers/dashboard/pos";
 import { Checkbox } from "../../../app-common/components/input/checkbox";
+import { useAtom } from "jotai";
+import { defaultState } from "../../../store/jotai";
 
 interface CartItemProps {
-  added: CartItemModel[];
-  latestIndex?: number;
   onQuantityChange: (item: CartItemModel, quantity: any) => void;
   onDiscountChange: (item: CartItemModel, discount: number) => void;
   onPriceChange: (item: CartItemModel, price: number) => void;
@@ -18,16 +18,23 @@ interface CartItemProps {
   item: CartItemModel;
   index: number;
   onCheck: (state: boolean, index: number) => void;
-  cartItemType: string;
-  cartItem?: number;
 }
 
 export const CartItem: FunctionComponent<CartItemProps> = ({
-  latestIndex, onQuantityChange, onPriceChange, onDiscountChange, deleteItem, onCheck,
-  item, index, cartItem, cartItemType
+  onQuantityChange,
+  onPriceChange,
+  onDiscountChange,
+  onCheck,
+  item,
+  index,
 }) => {
+  const [appState, setAppState] = useAtom(defaultState);
+  const { latestIndex, cartItemType, cartItem } = appState;
   const taxTotal = useMemo(() => {
-    return item.taxes.reduce((prev, tax) => prev + (tax.rate * item.price / 100), 0)
+    return item.taxes.reduce(
+      (prev, tax) => prev + (tax.rate * item.price) / 100,
+      0
+    );
   }, [item]);
 
   let qtyRef = useRef<HTMLInputElement>();
@@ -35,33 +42,26 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
   let rateRef = useRef<HTMLInputElement>();
 
   useEffect(() => {
-    if( cartItem === index ) {
-      if( cartItemType === 'quantity' ) {
+    if (cartItem === index) {
+      if (cartItemType === "quantity") {
         qtyRef.current?.focus();
         qtyRef.current?.select();
       }
 
-      if( cartItemType === 'discount' ) {
+      if (cartItemType === "discount") {
         discRef.current?.focus();
         discRef.current?.select();
       }
 
-      if( cartItemType === 'rate' ) {
+      if (cartItemType === "rate") {
         rateRef.current?.focus();
         rateRef.current?.select();
       }
     }
   }, [cartItem, cartItemType, index]);
 
-  console.log(latestIndex)
-
   return (
-    <div className={
-      classNames(
-        'table-row hover:bg-gray-200',
-        latestIndex && latestIndex === index ? 'fade-highlight' : ''
-      )
-    } key={index}>
+    <div className={classNames("table-row hover:bg-gray-200")} key={index}>
       <div className="table-cell p-2">
         <Checkbox
           checked={item.checked}
@@ -83,24 +83,36 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
           )}
         </label>
       </div>
-      <div className="table-cell p-1 text-center">{item.item.manageInventory && Number(item.stock)}</div>
+      <div className="table-cell p-1 text-center">
+        {item.item.manageInventory && Number(item.stock)}
+      </div>
       <div className="table-cell p-1">
         <div className="flex justify-center">
           <div className="input-group">
-            <Button tabIndex={-1} size="lg" type="button" variant="primary"
-                    onClick={() => onQuantityChange(item, item.quantity - 1)}>
-              <FontAwesomeIcon icon={faMinus}/>
+            <Button
+              tabIndex={-1}
+              size="lg"
+              type="button"
+              variant="primary"
+              onClick={() => onQuantityChange(item, item.quantity - 1)}>
+              <FontAwesomeIcon icon={faMinus} />
             </Button>
             <Input
               type="number"
               value={item.quantity}
               className={"text-center w-full lg mousetrap"}
-              onChange={(event) => onQuantityChange(item, event.currentTarget.value)}
+              onChange={(event) =>
+                onQuantityChange(item, event.currentTarget.value)
+              }
               ref={qtyRef}
             />
-            <Button tabIndex={-1} size="lg" type="button" variant="primary"
-                    onClick={() => onQuantityChange(item, item.quantity + 1)}>
-              <FontAwesomeIcon icon={faPlus}/>
+            <Button
+              tabIndex={-1}
+              size="lg"
+              type="button"
+              variant="primary"
+              onClick={() => onQuantityChange(item, item.quantity + 1)}>
+              <FontAwesomeIcon icon={faPlus} />
             </Button>
           </div>
         </div>
@@ -111,18 +123,17 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
           value={item.discount}
           className={"text-center w-full lg mousetrap"}
           onChange={(event) => {
-            onDiscountChange(item, +event.currentTarget.value)
+            onDiscountChange(item, +event.currentTarget.value);
           }}
           ref={discRef}
         />
       </div>
       <div className="table-cell p-2 text-center">
-        {item.taxIncluded ? taxTotal : (
-          <span className="line-through">
-              {taxTotal}
-            </span>
-        )
-        }
+        {item.taxIncluded ? (
+          taxTotal
+        ) : (
+          <span className="line-through">{taxTotal}</span>
+        )}
       </div>
       <div className="table-cell text-right p-1">
         <Input

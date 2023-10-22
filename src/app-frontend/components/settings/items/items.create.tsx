@@ -525,14 +525,17 @@ export const CreateItem = ({
             <div className="col-span-4"></div>
             <StoresInput control={control} errors={errors} name="storesDropdown" />
             <div className="col-span-4"></div>
-            <div className="col-span-4">
-              <div className="grid grid-cols-4 gap-3 font-bold">
-                <div>Store</div>
-                <div>Stock</div>
-                <div>Location</div>
-                <div>Re Order Level</div>
+            {getValues('storesDropdown')?.length > 0 && (
+              <div className="col-span-4">
+                <div className="grid grid-cols-4 gap-3 font-bold">
+                  <div>Store</div>
+                  <div>Stock</div>
+                  <div>Location</div>
+                  <div>Re Order Level</div>
+                </div>
               </div>
-            </div>
+            )}
+
             <div className="col-span-4">
               {stores?.map((store: any, index: number) => (
                 <div key={index} className="grid grid-cols-4 mb-3 gap-3 hover:bg-gray-200">

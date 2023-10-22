@@ -1,8 +1,8 @@
-import {useCallback, useEffect, useState} from "react";
-import {Controller, useFieldArray, UseFormReturn, useWatch} from "react-hook-form";
-import {Button} from "../../../../../app-common/components/input/button";
-import {Input} from "../../../../../app-common/components/input/input";
-import {VariantGroup} from "./variant.group";
+import { useCallback, useEffect, useState } from "react";
+import { Controller, useFieldArray, UseFormReturn, useWatch } from "react-hook-form";
+import { Button } from "../../../../../app-common/components/input/button";
+import { Input } from "../../../../../app-common/components/input/input";
+import { VariantGroup } from "./variant.group";
 
 
 interface CreateVariantsProps {
@@ -10,15 +10,17 @@ interface CreateVariantsProps {
 }
 
 export const CreateVariants = ({
-                                 useForm
-                               }: CreateVariantsProps) => {
-  const {control, watch} = useForm;
-  const {fields, append, remove,} = useFieldArray({
+  useForm
+}: CreateVariantsProps) => {
+  const [filter, setFilter] = useState('');
+
+  const { control, watch, getValues } = useForm;
+  const { fields, append, remove, } = useFieldArray({
     control: useForm.control,
     name: 'groups'
   });
 
-  const {fields: variants, replace } = useFieldArray({
+  const { fields: variants, replace } = useFieldArray({
     name: 'variants',
     control: useForm.control
   })
@@ -26,7 +28,7 @@ export const CreateVariants = ({
   const [groupName, setGroupName] = useState('');
 
   const addGroup = useCallback(() => {
-    if (groupName.length === 0) {
+    if( groupName.length === 0 ) {
       return false;
     }
 
@@ -49,15 +51,15 @@ export const CreateVariants = ({
       sets = new_sets.flatMap((set: any) => set);
     });
 
-    if (sets.length === 1 && sets[0].length === 0) {
+    if( sets.length === 1 && sets[0].length === 0 ) {
       return [];
     }
 
-    replace(sets.map(item => ({
-      price: null,
+    replace(sets.map((item, index) => ({
+      price: getValues('basePrice'),
       attributeValue: item.join('-'),
-      barcode: '',
-      quantity: 1000
+      barcode: (getValues('barcode') + index).toString(),
+      quantity: '10'
     })));
   }
 
@@ -93,8 +95,21 @@ export const CreateVariants = ({
           />
         ))}
       </div>
+
+      {variants.length > 0 && (
+        <div>
+          <Input onChange={(event) => setFilter(event.target.value)} value={filter} placeholder="Filter variants" />
+        </div>
+      )}
+
       <div>
-        {variants.map((item: any, index) => (
+        {variants.filter((item: any) => {
+          if(filter.trim().length > 0){
+            return item.attributeValue.toLowerCase().indexOf(filter.trim().toLowerCase()) !== -1;
+          }
+
+          return true;
+        }).map((item: any, index) => (
           <div className="grid grid-cols-5 mb-5 gap-3" key={index}>
             <div>
               <label>Variant</label>
@@ -142,7 +157,6 @@ export const CreateVariants = ({
           </div>
         ))}
       </div>
-
     </div>
   );
 };

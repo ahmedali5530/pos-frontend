@@ -22,6 +22,11 @@
   @apply bg-primary-500;
 }
 
+@font-face {
+  font-family: "Digital";
+  src: url("../assets/fonts/digital-7.ttf");
+}
+
 html, body{
   font-family: 'Outfit', sans-serif;
   background-color: #f3f3f3;
@@ -29,6 +34,10 @@ html, body{
 
 html, body, button, input, optgroup, select, textarea{
   font-family: 'Outfit', sans-serif;
+}
+
+.digital{
+  font-family: "Digital", "Outfit", "sans-serif";
 }
 
 a{

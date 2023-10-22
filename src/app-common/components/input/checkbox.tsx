@@ -26,7 +26,7 @@ export const Checkbox = (props: InputProps) => {
       type="checkbox"
       className={
         classNames(
-          'checkbox',
+          'checkbox mousetrap',
           props.className && props.className
         )
       }
