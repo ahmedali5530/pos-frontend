@@ -47,7 +47,14 @@ interface Props {}
 export const More: FC<Props> = ({}) => {
   const [appState, setAppState] = useAtom(defaultState);
   const [defaultOptions, setDefaultOptions] = useAtom(defaultData);
-  const { defaultDiscount, defaultPaymentType, defaultTax } = defaultOptions;
+  const {
+    defaultDiscount,
+    defaultPaymentType,
+    defaultTax,
+    displayShortcuts,
+    enableShortcuts,
+    enableTouch,
+  } = defaultOptions;
   const {} = defaultState;
   const [modal, setModal] = useState(false);
   const [state, action] = useLoadData();
@@ -89,51 +96,12 @@ export const More: FC<Props> = ({}) => {
     await localforage.removeItem("discountList");
     await localforage.removeItem("taxList");
     await localforage.removeItem("paymentTypesList");
-    await localforage.removeItem("defaultTax");
-    await localforage.removeItem("defaultDiscount");
-    await localforage.removeItem("defaultPaymentType");
     // await action.load();
 
     setLoading(false);
 
     window.location.reload();
   };
-
-  const [enableShortcuts, setEnableShortcuts] = useState(false);
-  const [displayShortcuts, setDisplayShortcuts] = useState(false);
-  const [enableTouch, setEnableTouch] = useState(false);
-
-  useEffect(() => {
-    localforage.getItem("enableShortcuts").then((data: any) => {
-      if (data) {
-        setEnableShortcuts(data);
-        dispatch(shortcutAction(data));
-      } else {
-        setEnableShortcuts(false);
-        dispatch(shortcutAction(false));
-      }
-    });
-
-    localforage.getItem("displayShortcuts").then((data: any) => {
-      if (data) {
-        setDisplayShortcuts(data);
-        dispatch(displayShortcutAction(data));
-      } else {
-        setDisplayShortcuts(false);
-        dispatch(displayShortcutAction(false));
-      }
-    });
-
-    localforage.getItem("enableTouch").then((data: any) => {
-      if (data) {
-        setEnableTouch(data);
-        dispatch(touchAction(data));
-      } else {
-        setEnableTouch(false);
-        dispatch(touchAction(false));
-      }
-    });
-  }, []);
 
   const isMobile = useMediaQuery({
     query: "(max-width: 1224px)",
@@ -251,12 +219,10 @@ export const More: FC<Props> = ({}) => {
                   <Switch
                     checked={enableShortcuts}
                     onChange={(value) => {
-                      localforage.setItem(
-                        "enableShortcuts",
-                        value.target.checked
-                      );
-                      setEnableShortcuts(value.target.checked);
-                      dispatch(shortcutAction(value.target.checked));
+                      setDefaultOptions((prev) => ({
+                        ...prev,
+                        enableShortcuts: value.target.checked,
+                      }));
                     }}>
                     Enable shortcuts?
                   </Switch>
@@ -265,22 +231,25 @@ export const More: FC<Props> = ({}) => {
                     <Switch
                       checked={displayShortcuts}
                       onChange={(value) => {
-                        localforage.setItem(
-                          "displayShortcuts",
-                          value.target.checked
-                        );
-                        setDisplayShortcuts(value.target.checked);
-                        dispatch(displayShortcutAction(value.target.checked));
+                        setDefaultOptions((prev) => ({
+                          ...prev,
+                          displayShortcuts: value.target.checked,
+                        }));
                       }}>
                       Display shortcut texts?
                     </Switch>
                   )}
 
-                  {/*<Switch checked={enableTouch} onChange={(value) => {
-                    localforage.setItem('enableTouch', value.target.checked);
-                    setEnableTouch(value.target.checked);
-                    dispatch(touchAction(value.target.checked));
-                  }}>Enable Touch support?</Switch>*/}
+                  <Switch
+                    checked={enableTouch}
+                    onChange={(value) => {
+                      setDefaultOptions((prev) => ({
+                        ...prev,
+                        enableTouch: value.target.checked,
+                      }));
+                    }}>
+                    Enable Touch support?
+                  </Switch>
                 </div>
                 <div className="grid grid-cols-4 gap-5 mt-3">
                   <div>

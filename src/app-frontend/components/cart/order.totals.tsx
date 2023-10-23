@@ -109,12 +109,13 @@ export const OrderTotals: FC<OrderTotalsProps> = ({
                 </ConfirmAlert>
                 <span className="flex-grow">
                   {customer.name}
+                  <div className="w-full"></div>
                   {customer && (
                     <span
                       className={classNames(
                         "float-right",
                         customer.outstanding <= 0
-                          ? "text-success-500"
+                          ? "text-success-700"
                           : "text-danger-500"
                       )}>
                       {withCurrency(

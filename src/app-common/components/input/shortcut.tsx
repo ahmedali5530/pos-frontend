@@ -1,18 +1,31 @@
-import { FC, InputHTMLAttributes, PropsWithChildren, useEffect, useState } from "react";
+import {
+  FC,
+  InputHTMLAttributes,
+  PropsWithChildren,
+  useEffect,
+  useState,
+} from "react";
 import classNames from "classnames";
 import { useSelector } from "react-redux";
-import { displayShortcut, getShortcut } from "../../../duck/shortcuts/shortcut.selector";
-import Mousetrap from 'mousetrap';
+import {
+  displayShortcut,
+  getShortcut,
+} from "../../../duck/shortcuts/shortcut.selector";
+import Mousetrap from "mousetrap";
+import { defaultData } from "../../../store/jotai";
+import { useAtom } from "jotai";
 
-interface Props extends PropsWithChildren, InputHTMLAttributes<HTMLSpanElement> {
+interface Props
+  extends PropsWithChildren,
+    InputHTMLAttributes<HTMLSpanElement> {
   shortcut: string;
   handler: (e: Event) => void;
   invisible?: boolean;
 }
 
 export const Shortcut: FC<Props> = ({ children, ...rest }) => {
-  const state = useSelector(getShortcut);
-  const displayShortcuts = useSelector(displayShortcut);
+  const [defaultState] = useAtom(defaultData);
+  const { displayShortcuts, enableShortcuts: state } = defaultState;
 
   const [visible, setVisible] = useState<boolean | undefined>(rest.invisible);
 
@@ -22,12 +35,10 @@ export const Shortcut: FC<Props> = ({ children, ...rest }) => {
 
   useEffect(() => {
     const handler = function (e: any) {
-      const inputNodes = [
-        'INPUT', 'TEXTAREA'
-      ];
+      const inputNodes = ["INPUT", "TEXTAREA"];
 
       // only run shortcuts when there is no modal active
-      if( !document.body.classList.contains('ReactModal__Body--open') ) {
+      if (!document.body.classList.contains("ReactModal__Body--open")) {
         e.preventDefault();
         e.stopPropagation();
 
@@ -37,7 +48,7 @@ export const Shortcut: FC<Props> = ({ children, ...rest }) => {
       return false;
     };
 
-    if( state ) {
+    if (state) {
       Mousetrap.bind(rest.shortcut, handler);
     } else {
       Mousetrap.unbind(rest.shortcut, handler);
@@ -46,12 +57,12 @@ export const Shortcut: FC<Props> = ({ children, ...rest }) => {
     return () => Mousetrap.unbind(rest.shortcut, handler);
   }, [state, rest]);
 
-  if( !state ) {
-    return (<></>);
+  if (!state) {
+    return <></>;
   }
 
-  if( rest.invisible ) {
-    return (<></>);
+  if (rest.invisible) {
+    return <></>;
   }
 
   return (
@@ -59,15 +70,12 @@ export const Shortcut: FC<Props> = ({ children, ...rest }) => {
       {visible && (
         <span
           {...rest}
-          className={
-            classNames(
-              "text-sm ml-2 bg-black/70 text-white px-1 rounded shadow",
-              rest.className && rest.className
-            )
-          }
-        >
-        {rest.shortcut}
-      </span>
+          className={classNames(
+            "text-sm ml-2 bg-black/70 text-white px-1 rounded shadow",
+            rest.className && rest.className
+          )}>
+          {rest.shortcut}
+        </span>
       )}
     </>
   );

@@ -47,6 +47,9 @@ export interface DefaultDataInterface {
   defaultTax?: Tax;
   defaultDiscount?: Discount;
   defaultPaymentType?: PaymentType;
+  enableShortcuts?: boolean;
+  displayShortcuts?: boolean;
+  enableTouch?: boolean;
 }
 
 export const defaultData = atomWithStorage<DefaultDataInterface>(
@@ -55,5 +58,8 @@ export const defaultData = atomWithStorage<DefaultDataInterface>(
     defaultTax: undefined,
     defaultDiscount: undefined,
     defaultPaymentType: undefined,
+    enableShortcuts: undefined,
+    displayShortcuts: undefined,
+    enableTouch: undefined,
   }
 );
