@@ -20,6 +20,7 @@ interface ModalProps extends PropsWithChildren {
   transparentContainer?: boolean;
   header?: ReactNode;
   size?: "full" | "bottom-sheet" | "sm";
+  backdrop?: boolean;
 }
 
 export const Modal: FunctionComponent<ModalProps> = (props) => {
@@ -34,11 +35,11 @@ export const Modal: FunctionComponent<ModalProps> = (props) => {
 
   const close = () => {
     setCloseClass("ReactModal__Content--after-close");
-    setTimeout(() => {
-      setOpen(false);
-      props.onClose!();
-      setCloseClass("");
-    }, 100);
+    // setTimeout(() => {
+    setOpen(false);
+    props.onClose!();
+    setCloseClass("");
+    // }, 100);
   };
 
   return (
@@ -53,15 +54,17 @@ export const Modal: FunctionComponent<ModalProps> = (props) => {
           closeClass,
           props.size === "full" && "modal-full",
           props.size === "bottom-sheet" && "modal-bottom-sheet",
-          props.size === "sm" && "modal-sm"
+          props.size === "sm" && "modal-sm",
+          !props.backdrop && 'no-backdrop'
         )}
         shouldCloseOnOverlayClick={props.shouldCloseOnOverlayClick}
         style={{
           overlay: {
-            backgroundColor: "transparent",
-            backdropFilter: "blur(15px)",
+            backgroundColor: "rgba(0, 70, 254, 0.01)",
+            backdropFilter: "blur(10px)",
           },
-        }}>
+        }}
+      >
         <div>
           {!props.hideCloseButton && (
             <button
@@ -72,7 +75,7 @@ export const Modal: FunctionComponent<ModalProps> = (props) => {
             </button>
           )}
 
-          <div className="p-5 border-b-2 border-gray-200">
+          <div className="p-5 border-b-2 border-gray-200 bg-white/40">
             <h3 className="text-2xl">{props?.title}</h3>
             {props.header && props.header}
           </div>

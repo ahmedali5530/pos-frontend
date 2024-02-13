@@ -6,6 +6,13 @@ import { PaymentType } from "../api/model/payment.type";
 import { Discount } from "../api/model/discount";
 import { Tax } from "../api/model/tax";
 import { Customer } from "../api/model/customer";
+import { ProductVariant } from "../api/model/product.variant";
+
+export enum PosModes {
+  pos = "pos",
+  order = "order",
+  payment = "payment",
+}
 
 export interface DefaultStateInterface {
   q: string;
@@ -13,7 +20,10 @@ export interface DefaultStateInterface {
   selected: number;
   selectedVariant: number;
   latest?: Product;
+  latestVariant?: ProductVariant;
   latestIndex?: number;
+  latestQuantity?: number;
+  latestRate?: number;
   quantity: number;
   rate: number;
   discount?: Discount;
@@ -26,6 +36,9 @@ export interface DefaultStateInterface {
   adjustment: number;
   cartItem?: number;
   cartItemType: string;
+  orderId?: string;
+  customerName?: string;
+  paymentType?: PaymentType
 }
 
 export const defaultState = atomWithStorage<DefaultStateInterface>(
@@ -50,6 +63,8 @@ export interface DefaultDataInterface {
   enableShortcuts?: boolean;
   displayShortcuts?: boolean;
   enableTouch?: boolean;
+  defaultMode?: PosModes;
+  searchBox?: boolean;
 }
 
 export const defaultData = atomWithStorage<DefaultDataInterface>(
@@ -61,5 +76,7 @@ export const defaultData = atomWithStorage<DefaultDataInterface>(
     enableShortcuts: undefined,
     displayShortcuts: undefined,
     enableTouch: undefined,
+    defaultMode: PosModes.pos,
+    searchBox: true
   }
 );

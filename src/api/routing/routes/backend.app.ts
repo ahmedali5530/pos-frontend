@@ -29,6 +29,7 @@ export const ORDERS_LIST = scopeUrl('/orders');
 export const ORDER_LIST = scopeUrl('/admin/order/list');
 export const ORDER_CREATE = scopeUrl('/admin/order/create');
 export const ORDER_GET = scopeUrl('/admin/order/:id');
+export const ORDER_EDIT = scopeUrl('/admin/order/edit/:id');
 export const ORDER_DISPATCH = scopeUrl('/admin/order/dispatch/:id');
 export const ORDER_RESTORE = scopeUrl('/admin/order/restore/:id');
 export const ORDER_REFUND = scopeUrl('/admin/order/refund/:id');

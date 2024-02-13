@@ -1,5 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { CartItem } from "../../../api/model/cart.item";
+import React, { useMemo, useState } from "react";
 import _ from "lodash";
 import { scrollToBottom } from "../../containers/dashboard/pos";
 import { Modal } from "../../../app-common/components/modal/modal";
@@ -18,15 +17,15 @@ interface CartControlsProps {
 
 export const CartControls = ({ containerRef }: CartControlsProps) => {
   const [appState, setAppState] = useAtom(defaultState);
-  const { added, latest } = appState;
+  const { added } = appState;
 
   const checkedCartItems = useMemo(() => {
     return added.filter((item) => item.checked);
-  }, []);
+  }, [added]);
 
   const voidCartItems = () => {
     let copyAdded = [...added];
-    if (checkedCartItems.length > 0) {
+    if( checkedCartItems.length > 0 ) {
       copyAdded = copyAdded.filter((item) => !checkedCartItems.includes(item));
     } else {
       //remove last item
@@ -44,7 +43,7 @@ export const CartControls = ({ containerRef }: CartControlsProps) => {
   const copyCartItems = () => {
     let newItems = _.concat(added, checkedCartItems);
 
-    if (checkedCartItems.length === 0) {
+    if( checkedCartItems.length === 0 ) {
       //copy last item
       newItems = _.concat(added, [added[added.length - 1]]);
     }
@@ -71,13 +70,13 @@ export const CartControls = ({ containerRef }: CartControlsProps) => {
 
     let checkedItems = _.concat(checkedCartItems);
 
-    if (checkedItems.length === 0) {
+    if( checkedItems.length === 0 ) {
       //copy last item
       checkedItems = [added[added.length - 1]];
     }
 
     newItems = newItems.map((item) => {
-      if (checkedItems.find((checkedItem) => checkedItem === item)) {
+      if( checkedItems.find((checkedItem) => checkedItem === item) ) {
         item.checked = false;
         item.quantity = values.quantity;
       }
@@ -119,15 +118,15 @@ export const CartControls = ({ containerRef }: CartControlsProps) => {
     let newItems = _.concat(added);
     let checkedItems = _.concat(checkedCartItems);
 
-    if (checkedItems.length === 0) {
+    if( checkedItems.length === 0 ) {
       //copy last item
       checkedItems = [added[added.length - 1]];
     }
 
     newItems = newItems.map((item) => {
-      if (checkedItems.find((checkedItem) => checkedItem === item)) {
+      if( checkedItems.find((checkedItem) => checkedItem === item) ) {
         item.checked = false;
-        if (values.discountType.value === DiscountRate["RATE_FIXED"]) {
+        if( values.discountType.value === DiscountRate["RATE_FIXED"] ) {
           item.discount = values.discount;
         } else {
           item.discount = (item.price * values.discount) / 100;
@@ -153,13 +152,13 @@ export const CartControls = ({ containerRef }: CartControlsProps) => {
     let newItems = _.concat(added);
     let checkedItems = _.concat(checkedCartItems);
 
-    if (checkedItems.length === 0) {
+    if( checkedItems.length === 0 ) {
       //copy last item
       checkedItems = [added[added.length - 1]];
     }
 
     newItems = newItems.map((item) => {
-      if (checkedItems.find((checkedItem) => checkedItem === item)) {
+      if( checkedItems.find((checkedItem) => checkedItem === item) ) {
         item.checked = false;
         item.taxIncluded = !item.taxIncluded;
       }
@@ -177,15 +176,29 @@ export const CartControls = ({ containerRef }: CartControlsProps) => {
   return (
     <>
       <div className="flex justify-between items-center bg-white p-3">
-        <div className="text-3xl">{latest?.name}</div>
-        <div className="border-b flex gap-3 justify-end">
+        <div className="flex justify-between items-center text-3xl gap-5">
+          {/*{latest && (
+            <>
+              <span className="text-danger-500">
+                {latest?.name}
+                {latestVariant && <> ({latestVariant?.attributeValue})</>}
+              </span>
+              <div className="flex gap-2 items-center">
+                <span className="text-primary-500">{latestQuantity}</span>
+                <span>&times;</span>
+                <span className="text-primary-500">{latestRate}</span>
+              </div>
+            </>
+          )}*/}
+        </div>
+        <div className="flex gap-3 justify-end">
           <button
             tabIndex={-1}
             disabled={added.length === 0}
             type="button"
             className="btn btn-danger lg btn-square"
             onClick={voidCartItems}>
-            <FontAwesomeIcon icon={faTrash} />
+            <FontAwesomeIcon icon={faTrash}/>
           </button>
           <button
             tabIndex={-1}
@@ -193,7 +206,7 @@ export const CartControls = ({ containerRef }: CartControlsProps) => {
             type="button"
             className="btn btn-secondary lg btn-square"
             onClick={copyCartItems}>
-            <FontAwesomeIcon icon={faCopy} />
+            <FontAwesomeIcon icon={faCopy}/>
           </button>
           <button
             tabIndex={-1}

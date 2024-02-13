@@ -3,19 +3,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCog } from "@fortawesome/free-solid-svg-icons";
 import { Button } from "../../../app-common/components/input/button";
 import { Modal } from "../../../app-common/components/modal/modal";
-import { Tax } from "../../../api/model/tax";
-import { Discount } from "../../../api/model/discount";
 import localforage from "../../../lib/localforage/localforage";
 import { useDispatch, useSelector } from "react-redux";
 import { getAuthorizedUser } from "../../../duck/auth/auth.selector";
 import { Switch } from "../../../app-common/components/input/switch";
-import {
-  Tab,
-  TabContent,
-  TabControl,
-  TabNav,
-} from "../../../app-common/components/tabs/tabs";
-import { ReactSelectOptionProps } from "../../../api/model/common";
+import { Tab, TabContent, TabControl, TabNav, } from "../../../app-common/components/tabs/tabs";
 import { ReactSelect } from "../../../app-common/components/input/custom.react.select";
 import { useLoadData } from "../../../api/hooks/use.load.data";
 import { Stores } from "./stores/stores";
@@ -23,11 +15,6 @@ import { Users } from "./users/users";
 import { PaymentTypes } from "./payment-types/payment.types";
 import { DiscountTypes } from "./discounts/discount.types";
 import { TaxTypes } from "./taxes/tax.types";
-import {
-  displayShortcutAction,
-  shortcutAction,
-} from "../../../duck/shortcuts/shortcut.action";
-import { touchAction } from "../../../duck/touch/touch.action";
 import { Terminals } from "./terminals/terminals";
 import { Departments } from "./departments/departments";
 import { Items } from "./items/items";
@@ -40,9 +27,10 @@ import { getStore } from "../../../duck/store/store.selector";
 import { getTerminal } from "../../../duck/terminal/terminal.selector";
 import { DynamicBarcodes } from "./dynamic-barcodes";
 import { useAtom } from "jotai";
-import { defaultState, defaultData } from "../../../store/jotai";
+import { defaultData, defaultState } from "../../../store/jotai";
 
-interface Props {}
+interface Props {
+}
 
 export const More: FC<Props> = ({}) => {
   const [appState, setAppState] = useAtom(defaultState);
@@ -51,11 +39,8 @@ export const More: FC<Props> = ({}) => {
     defaultDiscount,
     defaultPaymentType,
     defaultTax,
-    displayShortcuts,
-    enableShortcuts,
     enableTouch,
   } = defaultOptions;
-  const {} = defaultState;
   const [modal, setModal] = useState(false);
   const [state, action] = useLoadData();
   const [messageApi, contextHolder] = AntMessage.useMessage();
@@ -69,7 +54,7 @@ export const More: FC<Props> = ({}) => {
   const progress = useSelector(getProgress);
 
   useEffect(() => {
-    if (progress === "Done") {
+    if( progress === "Done" ) {
       messageApi.open({
         key: "loading",
         type: "success",
@@ -113,13 +98,13 @@ export const More: FC<Props> = ({}) => {
       <Tooltip title="Settings">
         <Button
           variant="secondary"
-          className="btn-square"
+          iconButton
           size="lg"
           onClick={() => {
             setModal(true);
           }}
           tabIndex={-1}>
-          <FontAwesomeIcon icon={faCog} />
+          <FontAwesomeIcon icon={faCog}/>
         </Button>
       </Tooltip>
 
@@ -132,20 +117,20 @@ export const More: FC<Props> = ({}) => {
         size="full"
         transparentContainer={false}>
         <TabControl
-          defaultTab="general"
+          defaultTab="profile"
           position={isMobile ? "top" : "left"}
           render={({ isTabActive, setActiveTab }) => (
             <>
               <TabNav position={isMobile ? "top" : "left"}>
                 <Tab
-                  isActive={isTabActive("general")}
-                  onClick={() => setActiveTab("general")}>
-                  General
-                </Tab>
-                <Tab
                   isActive={isTabActive("profile")}
                   onClick={() => setActiveTab("profile")}>
                   Profile
+                </Tab>
+                <Tab
+                  isActive={isTabActive("general")}
+                  onClick={() => setActiveTab("general")}>
+                  General
                 </Tab>
                 <Tab
                   isActive={isTabActive("stores")}
@@ -217,30 +202,6 @@ export const More: FC<Props> = ({}) => {
                   </Button>
 
                   <Switch
-                    checked={enableShortcuts}
-                    onChange={(value) => {
-                      setDefaultOptions((prev) => ({
-                        ...prev,
-                        enableShortcuts: value.target.checked,
-                      }));
-                    }}>
-                    Enable shortcuts?
-                  </Switch>
-
-                  {enableShortcuts && (
-                    <Switch
-                      checked={displayShortcuts}
-                      onChange={(value) => {
-                        setDefaultOptions((prev) => ({
-                          ...prev,
-                          displayShortcuts: value.target.checked,
-                        }));
-                      }}>
-                      Display shortcut texts?
-                    </Switch>
-                  )}
-
-                  <Switch
                     checked={enableTouch}
                     onChange={(value) => {
                       setDefaultOptions((prev) => ({
@@ -248,12 +209,14 @@ export const More: FC<Props> = ({}) => {
                         enableTouch: value.target.checked,
                       }));
                     }}>
-                    Enable Touch support?
+                    Enable Touch support? <span
+                    className="badge rounded-full bg-primary-500 text-primary-100 p-1 px-2 uppercase text-xs">Experimental</span>
                   </Switch>
                 </div>
+                <h3 className="text-xl my-3">Default options</h3>
                 <div className="grid grid-cols-4 gap-5 mt-3">
                   <div>
-                    <h3 className="text-xl">Set Default tax</h3>
+                    <label>Tax</label>
                     <ReactSelect
                       options={state.taxList.list.map((item) => {
                         return {
@@ -263,7 +226,7 @@ export const More: FC<Props> = ({}) => {
                       })}
                       isClearable
                       onChange={(value: any) => {
-                        if (value) {
+                        if( value ) {
                           setAppState((prev) => ({
                             ...prev,
                             tax: JSON.parse(value.value),
@@ -288,15 +251,15 @@ export const More: FC<Props> = ({}) => {
                       value={
                         defaultTax
                           ? {
-                              label: defaultTax?.name + " " + defaultTax?.rate,
-                              value: JSON.stringify(defaultTax),
-                            }
+                            label: defaultTax?.name + " " + defaultTax?.rate,
+                            value: JSON.stringify(defaultTax),
+                          }
                           : null
                       }
                     />
                   </div>
                   <div>
-                    <h3 className="text-xl">Set Default discount</h3>
+                    <label>Discount</label>
                     <ReactSelect
                       options={state.discountList.list.map((item) => {
                         return {
@@ -306,7 +269,7 @@ export const More: FC<Props> = ({}) => {
                       })}
                       isClearable
                       onChange={(value: any) => {
-                        if (value) {
+                        if( value ) {
                           setAppState((prev) => ({
                             ...prev,
                             discount: JSON.parse(value.value),
@@ -331,15 +294,15 @@ export const More: FC<Props> = ({}) => {
                       value={
                         defaultDiscount
                           ? {
-                              label: defaultDiscount?.name,
-                              value: JSON.stringify(defaultDiscount),
-                            }
+                            label: defaultDiscount?.name,
+                            value: JSON.stringify(defaultDiscount),
+                          }
                           : null
                       }
                     />
                   </div>
                   <div>
-                    <h3 className="text-xl">Set Default payment type</h3>
+                    <label>Payment type</label>
                     <ReactSelect
                       options={state.paymentTypesList.list.map((item) => {
                         return {
@@ -349,7 +312,7 @@ export const More: FC<Props> = ({}) => {
                       })}
                       isClearable
                       onChange={(value: any) => {
-                        if (value) {
+                        if( value ) {
                           setDefaultOptions((prev) => ({
                             ...prev,
                             defaultPaymentType: JSON.parse(value.value),
@@ -364,9 +327,9 @@ export const More: FC<Props> = ({}) => {
                       value={
                         defaultPaymentType
                           ? {
-                              label: defaultPaymentType?.name,
-                              value: JSON.stringify(defaultPaymentType),
-                            }
+                            label: defaultPaymentType?.name,
+                            value: JSON.stringify(defaultPaymentType),
+                          }
                           : null
                       }
                     />
@@ -398,47 +361,55 @@ export const More: FC<Props> = ({}) => {
                 </div>
               </TabContent>
               <TabContent isActive={isTabActive("profile")}>
-                <div className="col-span-1 grid grid-cols-2 font-bold gap-0 auto-rows-min">
-                  <span>User</span>
-                  <span className="text-primary-500">{user?.displayName}</span>
-                  <span>Store</span>
-                  <span className="text-primary-500">{store?.name}</span>
-                  <span>Terminal</span>
-                  <span className="text-primary-500">{terminal?.code}</span>
-                </div>
+                <table className="table">
+                  <tbody>
+                  <tr>
+                    <th className="text-end">User</th>
+                    <td>{user?.displayName}</td>
+                  </tr>
+                  <tr>
+                    <th className="text-end">Store</th>
+                    <td>{store?.name}</td>
+                  </tr>
+                  <tr>
+                    <th className="text-end">Terminal</th>
+                    <td>{terminal?.code}</td>
+                  </tr>
+                  </tbody>
+                </table>
               </TabContent>
               <TabContent isActive={isTabActive("payments")}>
-                <PaymentTypes />
+                <PaymentTypes/>
               </TabContent>
               <TabContent isActive={isTabActive("discounts")}>
-                <DiscountTypes />
+                <DiscountTypes/>
               </TabContent>
               <TabContent isActive={isTabActive("taxes")}>
-                <TaxTypes />
+                <TaxTypes/>
               </TabContent>
               <TabContent isActive={isTabActive("stores")}>
-                <Stores />
+                <Stores/>
               </TabContent>
               <TabContent isActive={isTabActive("users")}>
-                <Users />
+                <Users/>
               </TabContent>
               <TabContent isActive={isTabActive("terminals")}>
-                <Terminals />
+                <Terminals/>
               </TabContent>
               <TabContent isActive={isTabActive("departments")}>
-                <Departments />
+                <Departments/>
               </TabContent>
               <TabContent isActive={isTabActive("list")}>
-                <Items />
+                <Items/>
               </TabContent>
               <TabContent isActive={isTabActive("barcodes")}>
-                <DynamicBarcodes />
+                <DynamicBarcodes/>
               </TabContent>
               <TabContent isActive={isTabActive("categories")}>
-                <Categories />
+                <Categories/>
               </TabContent>
               <TabContent isActive={isTabActive("brands")}>
-                <Brands />
+                <Brands/>
               </TabContent>
             </>
           )}

@@ -19,11 +19,13 @@ import { DynamicValue } from "../../../../app-common/components/dynamic.value/dy
 import { PurchaseItem } from "../../../../api/model/purchase.item";
 
 interface Props{
-  product: Product
+  product: Product;
+  show?: boolean;
+  onClose?: () => void;
 }
 
 export const ItemComponent = ({
-  product
+  product, show, onClose
 }: Props) => {
   const [modal, setModal] = useState(false);
 

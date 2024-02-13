@@ -17,4 +17,6 @@ export interface Customer extends HydraId, HydraType {
   payments: CustomerPayment[];
   orders: Omit<Order, "customer">[];
   openingBalance?: number;
+  allowCreditSale?: boolean;
+  creditLimit?: string;
 }

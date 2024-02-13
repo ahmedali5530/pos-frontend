@@ -1,12 +1,12 @@
 import {Popover} from "antd";
-import {PropsWithChildren, useState} from "react";
+import { PropsWithChildren, ReactNode, useState } from "react";
 
 interface ConfirmAlertProps extends PropsWithChildren{
   onConfirm: () => void,
   confirmText?: string,
   cancelText?: string,
-  description?: React.ReactNode,
-  title: React.ReactNode
+  description?: ReactNode,
+  title: ReactNode
 }
 
 export const ConfirmAlert = (params: ConfirmAlertProps) => {
@@ -38,7 +38,7 @@ export const ConfirmAlert = (params: ConfirmAlertProps) => {
 };
 
 interface ConfirmAlertButtonsProps{
-  description?: React.ReactNode;
+  description?: ReactNode;
   confirmText?: string;
   cancelText?: string;
   onConfirm: () => void;

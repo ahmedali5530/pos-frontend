@@ -1,17 +1,15 @@
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {
-  faMicrophone,
-} from "@fortawesome/free-solid-svg-icons";
-import {Button} from "../../../app-common/components/input/button";
-import React, {useEffect} from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMicrophone } from "@fortawesome/free-solid-svg-icons";
+import { Button } from "../../../app-common/components/input/button";
+import React, { useEffect } from "react";
 // import SpeechRecognition , { useSpeechRecognition } from 'react-speech-recognition';
 
-interface Props{
-  setQ: (term: string) => void;
-  setQuantity: (q: number) => void;
+interface Props {
+  setQ?: (term: string) => void;
+  setQuantity?: (q: number) => void;
 }
 
-const SpeechSearch = ({setQ, setQuantity}: Props) => {
+const SpeechSearch = ({ setQ, setQuantity }: Props) => {
   // const {
   //   listening,
   //   browserSupportsSpeechRecognition,
@@ -52,11 +50,11 @@ const SpeechSearch = ({setQ, setQuantity}: Props) => {
 
   const toggleListening = async () => {
     // if(listening){
-      // SpeechRecognition.stopListening();
+    // SpeechRecognition.stopListening();
     // }else{
-      // await SpeechRecognition.startListening({
-      //   language: 'en-US'
-      // });
+    // await SpeechRecognition.startListening({
+    //   language: 'en-US'
+    // });
     // }
   };
 

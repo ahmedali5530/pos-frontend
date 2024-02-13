@@ -604,7 +604,8 @@ export const SaleHistory: FC<Props> = ({}) => {
             setModal(true);
           }}
           tabIndex={-1}
-          className="btn-square">
+          iconButton
+        >
           <FontAwesomeIcon icon={faClockRotateLeft} />
           <Shortcut shortcut="ctrl+h" handler={() => setModal(true)} />
         </Button>

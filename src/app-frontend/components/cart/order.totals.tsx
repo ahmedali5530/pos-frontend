@@ -2,7 +2,7 @@ import React, { FC, PropsWithChildren, useMemo } from "react";
 import { Customers } from "../customers/customers";
 import { ApplyDiscount } from "../sale/apply.discount";
 import { ApplyTax } from "../sale/apply.tax";
-import { getExclusiveRowTotal } from "../../containers/dashboard/pos";
+import { discountTotal, finalTotal, getExclusiveRowTotal, subTotal, taxTotal } from "../../containers/dashboard/pos";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencil, faTrash } from "@fortawesome/free-solid-svg-icons";
 import classNames from "classnames";
@@ -12,27 +12,18 @@ import { useAtom } from "jotai";
 import { defaultState } from "../../../store/jotai";
 
 interface OrderTotalsProps extends PropsWithChildren {
-  subTotal: number;
-  taxTotal: number;
-  discountTotal: number;
-  couponTotal: number;
-  finalTotal: number;
   inSale?: boolean;
 }
 
 export const OrderTotals: FC<OrderTotalsProps> = ({
-  subTotal,
-  taxTotal,
-  discountTotal,
-  finalTotal,
   children,
 }) => {
   const [appState, setAppState] = useAtom(defaultState);
-  const { added, tax, discount, customer } = appState;
+  const { added, tax, discount, customer, discountAmount, discountRateType } = appState;
 
   const exclusiveSubTotal = useMemo(() => {
     return added.reduce((prev, item) => prev + getExclusiveRowTotal(item), 0);
-  }, []);
+  }, [added]);
 
   return (
     <table className="border border-collapse w-full">
@@ -44,7 +35,7 @@ export const OrderTotals: FC<OrderTotalsProps> = ({
             Sub total
           </th>
           <td className="border border-gray-300 p-2 text-right">
-            {withCurrency(subTotal)}
+            {withCurrency(subTotal(added))}
           </td>
         </tr>
         <tr className="hover:bg-gray-100">
@@ -67,7 +58,7 @@ export const OrderTotals: FC<OrderTotalsProps> = ({
             </ApplyTax>
           </th>
           <td className="border border-gray-300 p-2 text-right">
-            {withCurrency(taxTotal)}
+            {withCurrency(taxTotal(added, tax))}
           </td>
         </tr>
         <tr className="hover:bg-gray-100">
@@ -76,13 +67,13 @@ export const OrderTotals: FC<OrderTotalsProps> = ({
               Discount <FontAwesomeIcon icon={faPencil} className="ml-2" />
               {discount && (
                 <span className="float-right bg-danger-500 text-white py-1 px-2 rounded-lg text-sm">
-                  {discountTotal}
+                  {discountTotal(added, tax, discountAmount, discountRateType, discount)}
                 </span>
               )}
             </ApplyDiscount>
           </th>
           <td className="border border-gray-300 p-2 text-right">
-            {withCurrency(discountTotal)}
+            {withCurrency(discountTotal(added, tax, discountAmount, discountRateType, discount))}
           </td>
         </tr>
         <tr className="hover:bg-gray-100">
@@ -135,7 +126,7 @@ export const OrderTotals: FC<OrderTotalsProps> = ({
             Total
           </th>
           <td className="border border-gray-300 p-2 text-right text-3xl font-bold text-success-500 digital bg-black">
-            {withCurrency(finalTotal)}
+            {withCurrency(finalTotal(added, tax, discountAmount, discountRateType, discount))}
           </td>
         </tr>
         {children}

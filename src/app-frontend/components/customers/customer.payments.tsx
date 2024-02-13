@@ -175,7 +175,9 @@ export const CustomerPayments: FC<Props> = ({
                   <ReactSelect
                     options={customer.orders.reverse().map(item => {
                       return {
-                        label: `${item.orderId} (${DateTime.fromISO(item.createdAt).toFormat('ff')})`,
+                        label: `${item.orderId} (${DateTime.fromISO(item.createdAt).toFormat(
+                          import.meta.env.VITE_DATE_TIME_HUMAN_FORMAT
+                        )})`,
                         value: item['@id']
                       };
                     })}

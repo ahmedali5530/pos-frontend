@@ -58,7 +58,7 @@ export const CreateVariants = ({
     replace(sets.map((item, index) => ({
       price: getValues('basePrice'),
       attributeValue: item.join('-'),
-      barcode: (getValues('barcode') + index).toString(),
+      barcode: (getValues('barcode') + index + 1).toString(),
       quantity: '10'
     })));
   }
@@ -133,7 +133,7 @@ export const CreateVariants = ({
               />
             </div>
             <div>
-              <label>Quantity</label>
+              <label>Quantity in stock</label>
               <Controller
                 render={(props) => (
                   <Input onChange={props.field.onChange} value={props.field.value} className="w-full"/>

@@ -13,9 +13,8 @@ import {useLogout} from "../duck/auth/hooks/useLogout";
 import {Navigate, Routes} from 'react-router';
 import {Error404} from "../app-common/components/error/404";
 import {ForgotPassword} from "./containers/forgot/forgot";
-import Pos from "./containers/dashboard/pos";
+import { Pos } from "./containers/dashboard/pos";
 import {ResetPassword} from "./containers/forgot/reset";
-import { PosV2 } from "./containers/dashboard/pos.v2";
 import { Dashboard } from "./containers/dashboard/dashboard";
 
 export interface AppProps {
@@ -76,8 +75,7 @@ const AppComponent: FunctionComponent<AppProps> = (props) => {
           </>
         }/>
 
-        <Route path={POS} element={<RequireAuth><PosV2/></RequireAuth>}/>
-        <Route path={POS_V2} element={<RequireAuth><Pos/></RequireAuth>}/>
+        <Route path={POS} element={<RequireAuth><Pos/></RequireAuth>}/>
         <Route path={DASHBOARD} element={<RequireAuth><Dashboard/></RequireAuth>}/>
 
         {/*if nothing matches show 404*/}

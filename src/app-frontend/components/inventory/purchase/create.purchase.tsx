@@ -38,7 +38,7 @@ import {ConfirmAlert} from "../../../../app-common/components/confirm/confirm.al
 import useApi from "../../../../api/hooks/use.api";
 import {HydraCollection} from "../../../../api/model/hydra";
 import {CreateSupplier} from "../supplier/create.supplier";
-import {CreateItem} from "../../settings/items/items.create";
+import {CreateItem} from "../../settings/items/manage-item/items.create";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {notify} from "../../../../app-common/components/confirm/notification";
 import {CreatePurchaseOrder} from "../purchase-orders/create.purchase.order";

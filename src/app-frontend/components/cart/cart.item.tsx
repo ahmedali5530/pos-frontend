@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useEffect, useMemo, useRef } from "react";
+import React, { FunctionComponent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import classNames from "classnames";
 import { Button } from "../../../app-common/components/input/button";
 import { Input } from "../../../app-common/components/input/input";
@@ -9,6 +9,14 @@ import { getRowTotal } from "../../containers/dashboard/pos";
 import { Checkbox } from "../../../app-common/components/input/checkbox";
 import { useAtom } from "jotai";
 import { defaultState } from "../../../store/jotai";
+import { formatNumber, withCurrency } from "../../../lib/currency/currency";
+import QueryString from "qs";
+import { jsonRequest } from "../../../api/request/request";
+import { PRODUCT_QUANTITIES } from "../../../api/routing/routes/backend.app";
+import { useSelector } from "react-redux";
+import { getStore } from "../../../duck/store/store.selector";
+// @ts-ignore
+import Spinner from "../../../assets/images/spinner.svg";
 
 interface CartItemProps {
   onQuantityChange: (item: CartItemModel, quantity: any) => void;
@@ -20,6 +28,10 @@ interface CartItemProps {
   onCheck: (state: boolean, index: number) => void;
 }
 
+interface ItemInfo {
+  quantity: string;
+}
+
 export const CartItem: FunctionComponent<CartItemProps> = ({
   onQuantityChange,
   onPriceChange,
@@ -28,6 +40,8 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
   item,
   index,
 }) => {
+  const [isLoading, setLoading] = useState(false);
+  const [itemInfo, setItemInfo] = useState<ItemInfo>();
   const [appState, setAppState] = useAtom(defaultState);
   const { latestIndex, cartItemType, cartItem } = appState;
   const taxTotal = useMemo(() => {
@@ -36,6 +50,28 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
       0
     );
   }, [item]);
+
+  const store = useSelector(getStore);
+
+  const getItemsMetadata = async (itemId: number, variantId?: number) => {
+    setLoading(true);
+    try {
+      const search = QueryString.stringify({
+        itemId,
+        variantId,
+        store: store?.id,
+      });
+      const response = await jsonRequest(`${PRODUCT_QUANTITIES}?${search}`);
+      const json = await response.json();
+
+      setItemInfo(json);
+
+    } catch ( e ) {
+      throw e;
+    } finally {
+      setLoading(false);
+    }
+  }
 
   let qtyRef = useRef<HTMLInputElement>();
   let discRef = useRef<HTMLInputElement>();
@@ -59,6 +95,12 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
       }
     }
   }, [cartItem, cartItemType, index]);
+
+  useEffect(() => {
+    if(item.item.manageInventory) {
+      getItemsMetadata(item.item.id, item?.variant?.id);
+    }
+  }, [item]);
 
   return (
     <div className={classNames("table-row hover:bg-gray-200")} key={index}>
@@ -84,19 +126,27 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
         </label>
       </div>
       <div className="table-cell p-1 text-center">
-        {item.item.manageInventory && Number(item.stock)}
+        {item.item.manageInventory && (
+          <>
+            {isLoading ? (
+              <img alt="loading..." src={Spinner} className="w-[16px]"/>
+            ) : (
+              <span className={Number(itemInfo?.quantity) <= 0 ? 'text-danger-500 animated blink' : ''}>{itemInfo?.quantity}</span>
+            )}
+          </>
+        )}
       </div>
       <div className="table-cell p-1">
         <div className="flex justify-center">
           <div className="input-group">
-            <Button
+            {/*<Button
               tabIndex={-1}
               size="lg"
               type="button"
               variant="primary"
-              onClick={() => onQuantityChange(item, item.quantity - 1)}>
+              onClick={() => onQuantityChange(item, Number(item.quantity) - 1)}>
               <FontAwesomeIcon icon={faMinus} />
-            </Button>
+            </Button>*/}
             <Input
               type="number"
               value={item.quantity}
@@ -106,14 +156,14 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
               }
               ref={qtyRef}
             />
-            <Button
+            {/*<Button
               tabIndex={-1}
               size="lg"
               type="button"
               variant="primary"
-              onClick={() => onQuantityChange(item, item.quantity + 1)}>
+              onClick={() => onQuantityChange(item, Number(item.quantity) + 1)}>
               <FontAwesomeIcon icon={faPlus} />
-            </Button>
+            </Button>*/}
           </div>
         </div>
       </div>
@@ -145,7 +195,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
           disabled
         />
       </div>
-      <div className="table-cell p-2 text-right">{getRowTotal(item)}</div>
+      <div className="table-cell p-2 text-right">{formatNumber(getRowTotal(item))}</div>
     </div>
   );
 };

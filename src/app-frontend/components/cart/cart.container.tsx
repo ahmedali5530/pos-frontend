@@ -12,15 +12,11 @@ import Mousetrap from "mousetrap";
 import { withCurrency } from "../../../lib/currency/currency";
 import { useAtom } from "jotai";
 import { defaultState } from "../../../store/jotai";
+import { notify } from "../../../app-common/components/confirm/notification";
+import { subTotal } from "../../containers/dashboard/pos";
 
 interface CartContainerProps {
-  onQuantityChange: (item: CartItemModel, quantity: number) => void;
-  onDiscountChange: (item: CartItemModel, discount: number) => void;
-  onPriceChange: (item: CartItemModel, price: number) => void;
-  deleteItem: (index: number) => void;
-  subTotal: number;
-  onCheckAll: (event: any) => void;
-  onCheck: (state: boolean, index: number) => void;
+
 }
 
 export enum CartItemType {
@@ -30,16 +26,31 @@ export enum CartItemType {
 }
 
 export const CartContainer: FunctionComponent<CartContainerProps> = ({
-  onQuantityChange,
-  onPriceChange,
-  onDiscountChange,
-  deleteItem,
-  subTotal,
-  onCheckAll,
-  onCheck,
+
 }) => {
   const [appState, setAppState] = useAtom(defaultState);
   const { added, cartItemType, cartItem } = appState;
+  const onCheckAll = (e: any) => {
+    const newAdded = [...added];
+    newAdded.map((item) => (item.checked = e.target.checked));
+
+    setAppState((prev) => ({
+      ...prev,
+      added: newAdded,
+    }));
+  };
+
+  const onCheck = (state: boolean, index: number) => {
+    const items = [...added];
+
+    items[index].checked = state;
+
+    setAppState((prev) => ({
+      ...prev,
+      added: items,
+    }));
+  };
+
   const allChecked = useMemo(() => {
     return (
       added.length > 0 &&
@@ -58,6 +69,85 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
       added.length !== checked
     );
   }, [added]);
+
+  const onQuantityChange = (item: CartItemModel, newQuantity: number) => {
+    const oldItems = [...added];
+    let index = oldItems.findIndex(
+      (addItem) =>
+        addItem.item.id === item.item.id && item.variant === addItem.variant
+    );
+    if (index !== -1) {
+      if (newQuantity <= 0) {
+        notify({
+          type: "error",
+          description: "Quantity cannot be less then 1",
+        });
+        return false;
+      }
+
+      oldItems[index].quantity = Number(newQuantity);
+    }
+
+    setAppState((prev) => ({
+      ...prev,
+      added: oldItems,
+    }));
+  };
+
+  const onPriceChange = (item: CartItemModel, newPrice: number) => {
+    const oldItems = [...added];
+    let index = oldItems.findIndex(
+      (addItem) =>
+        addItem.item.id === item.item.id && item.variant === addItem.variant
+    );
+    if (index !== -1) {
+      oldItems[index].price = newPrice;
+    }
+
+    setAppState((prev) => ({
+      ...prev,
+      added: oldItems,
+    }));
+  };
+
+  const onDiscountChange = (item: CartItemModel, newDiscount: number) => {
+    const oldItems = [...added];
+    let index = oldItems.findIndex(
+      (addItem) =>
+        addItem.item.id === item.item.id && item.variant === addItem.variant
+    );
+
+    //discount cannot exceed price
+    const quantity = parseFloat(oldItems[index].quantity as unknown as string);
+
+    if (newDiscount >= oldItems[index].price * quantity) {
+      newDiscount = oldItems[index].price * quantity;
+    }
+
+    if (index !== -1) {
+      oldItems[index].discount = newDiscount;
+    }
+
+    setAppState((prev) => ({
+      ...prev,
+      added: oldItems,
+    }));
+  };
+
+  const deleteItem = (index: number) => {
+    const oldItems = [...added];
+
+    oldItems.splice(index, 1);
+
+    setAppState((prev) => ({
+      ...prev,
+      added: oldItems,
+    }));
+  };
+
+  const copyLastItem = () => {
+
+  }
 
   const updateCartItemType = useCallback(
     (direction: "left" | "right") => {
@@ -130,8 +220,10 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
   );
 
   Mousetrap.bind(
-    ["ctrl+up", "ctrl+down", "ctrl+left", "ctrl+right", "del"],
+    ["ctrl+up", "ctrl+down", "ctrl+left", "ctrl+right", "del", 'ctrl+shift+down'],
     function (e: KeyboardEvent) {
+      if (document.body.classList.contains("ReactModal__Body--open")) return;
+
       e.preventDefault();
       if (!cartItem) {
         setAppState((prev) => ({
@@ -155,6 +247,10 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
       if (e.code === "ArrowDown" || e.code === "ArrowUp") {
         updateCartItem(e.code === "ArrowDown" ? "down" : "up");
       }
+
+      if(e.code === 'ArrowDown'){
+        copyLastItem();
+      }
     }
   );
 
@@ -172,23 +268,23 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
             />
           </div>
           <div className="table-cell p-2 text-left font-bold">Item</div>
-          <div className="table-cell p-2 text-center font-bold w-[80px]">
+          <div className="table-cell p-2 text-center font-bold w-[100px]">
             Stock
           </div>
-          <div className="table-cell p-2 text-center font-bold w-[180px]">
+          <div className="table-cell p-2 text-center font-bold w-[100px]">
             QTY
           </div>
-          <div className="table-cell p-2 text-center font-bold w-[90px]">
+          <div className="table-cell p-2 text-center font-bold w-[100px]">
             Disc.
           </div>
-          <div className="table-cell p-2 text-center font-bold w-[90px]">
+          <div className="table-cell p-2 text-center font-bold w-[100px]">
             Taxes
           </div>
           <div className="table-cell p-2 text-center font-bold w-[100px]">
             Rate
           </div>
           <div className="table-cell p-2 text-right font-bold w-[100px]">
-            Total {withCurrency(undefined)}.
+            Total
           </div>
           {/*<div className="table-cell w-[80px]"/>*/}
         </div>
@@ -221,7 +317,7 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
           <div className="table-cell"></div>
           <div className="table-cell"></div>
           <div className="table-cell text-right p-2">
-            {withCurrency(subTotal)}
+            {withCurrency(subTotal(added))}
           </div>
         </div>
       </div>

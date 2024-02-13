@@ -4,6 +4,7 @@ import {
   faPencilAlt,
   faTrash,
   faUsers,
+  faHistory
 } from "@fortawesome/free-solid-svg-icons";
 import { Button } from "../../../app-common/components/input/button";
 import { Modal } from "../../../app-common/components/modal/modal";
@@ -40,6 +41,7 @@ import { notify } from "../../../app-common/components/confirm/notification";
 import { withCurrency } from "../../../lib/currency/currency";
 import { useAtom } from "jotai";
 import { defaultState } from "../../../store/jotai";
+import { Switch } from "../../../app-common/components/input/switch";
 
 interface Props extends PropsWithChildren {
   className?: string;
@@ -85,20 +87,23 @@ export const Customers: FC<Props> = ({ children, className }) => {
       header: "Phone",
     }),
     columnHelper.accessor("cnic", {
-      header: "CNIC Number",
+      header: "National ID",
     }),
     columnHelper.accessor("openingBalance", {
       header: "Opening balance",
+      cell: info => withCurrency(info.getValue())
     }),
     columnHelper.accessor("sale", {
       header: "Credit Sale",
       enableSorting: false,
       enableColumnFilter: false,
+      cell: info => withCurrency(info.getValue())
     }),
     columnHelper.accessor("paid", {
       header: "Payments",
       enableSorting: false,
       enableColumnFilter: false,
+      cell: info => withCurrency(info.getValue())
     }),
     columnHelper.accessor("outstanding", {
       header: "Balance",
@@ -152,7 +157,13 @@ export const Customers: FC<Props> = ({ children, className }) => {
               className="w-[40px]"
               onClick={() => {
                 reset({
-                  ...info.row.original,
+                  name: info.row.original.name,
+                  phone: info.row.original.phone,
+                  cnic: info.row.original.cnic,
+                  openingBalance: info.row.original.openingBalance,
+                  allowCreditSale: info.row.original.allowCreditSale,
+                  creditLimit: info.row.original.creditLimit,
+                  id: info.row.original.id
                 });
                 setOperation("update");
               }}>
@@ -166,13 +177,14 @@ export const Customers: FC<Props> = ({ children, className }) => {
             <CustomerPayments
               customer={info.row.original}
               onCreate={fetchData}
-            />
+            >
+              <FontAwesomeIcon icon={faHistory} />
+            </CustomerPayments>
           </>
         );
       },
     }),
   ];
-  const [params, setParams] = useState<{ [key: string]: any }>();
 
   const {
     register,
@@ -247,18 +259,14 @@ export const Customers: FC<Props> = ({ children, className }) => {
     }
   };
 
-  const mergeFilters = (filters: any) => {
-    setParams((prev) => {
-      return { ...prev, ...filters };
-    });
-  };
-
   const resetForm = () => {
     reset({
       name: null,
       phone: null,
       cnic: null,
       openingBalance: null,
+      allowCreditSale: null,
+      creditLimit: null
     });
   };
 
@@ -288,7 +296,7 @@ export const Customers: FC<Props> = ({ children, className }) => {
         }}
         title="Customers">
         <form className="mb-5" onSubmit={handleSubmit(createCustomer)}>
-          <div className="grid lg:grid-cols-5 gap-4 mb-3 md:grid-cols-3 sm:grid-cols-1">
+          <div className="grid lg:grid-cols-4 gap-4 gap-y-2 mb-3 md:grid-cols-3 sm:grid-cols-1">
             <div>
               <label htmlFor="name">Name</label>
               <Input
@@ -310,7 +318,7 @@ export const Customers: FC<Props> = ({ children, className }) => {
               {getErrors(errors.phone)}
             </div>
             <div>
-              <label htmlFor="cnic">CNIC Number</label>
+              <label htmlFor="cnic">National ID</label>
               <Input
                 {...register("cnic")}
                 id="cnic"
@@ -326,8 +334,27 @@ export const Customers: FC<Props> = ({ children, className }) => {
                 id="openingBalance"
                 className="w-full"
                 hasError={hasErrors(errors.openingBalance)}
+                type="number"
               />
               {getErrors(errors.openingBalance)}
+            </div>
+            <div>
+              <label className="md:block w-full sm:hidden">&nbsp;</label>
+              <Switch {...register('allowCredit')}>
+                Allow credit
+              </Switch>
+              {getErrors(errors.allowCredit)}
+            </div>
+            <div>
+              <label htmlFor="creditLimit">Credit Limit</label>
+              <Input
+                {...register("creditLimit")}
+                id="creditLimit"
+                className="w-full"
+                hasError={hasErrors(errors.creditLimit)}
+                type="number"
+              />
+              {getErrors(errors.creditLimit)}
             </div>
             <div>
               <label className="md:block w-full sm:hidden">&nbsp;</label>
@@ -335,8 +362,8 @@ export const Customers: FC<Props> = ({ children, className }) => {
                 {creating
                   ? "Saving..."
                   : operation === "create"
-                  ? "Create new"
-                  : "Update"}
+                    ? "Create new"
+                    : "Update"}
               </Button>
 
               {operation === "update" && (
@@ -354,6 +381,8 @@ export const Customers: FC<Props> = ({ children, className }) => {
             </div>
           </div>
         </form>
+
+        <hr/>
 
         <TableComponent
           columns={columns}

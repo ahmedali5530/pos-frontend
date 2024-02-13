@@ -216,7 +216,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
   return (
     <>
       <Tooltip title="Day closing">
-        <Button variant="primary" size="lg" onClick={() => {
+        <Button variant="primary" iconButton size="lg" onClick={() => {
           setModal(true);
           setTitle('Close day');
           setHideCloseButton(false);
@@ -299,6 +299,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
                         />
                       )}
                     />
+                    <p className="text-gray-500 text-sm">click on expenses button to add expenses</p>
                   </td>
                 </tr>
                 <tr>

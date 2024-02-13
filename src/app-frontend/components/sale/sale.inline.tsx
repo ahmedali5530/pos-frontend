@@ -1,24 +1,12 @@
 import { Button } from "../../../app-common/components/input/button";
-import React, {
-  FC,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { FC, useCallback, useEffect, useMemo, useRef, useState, } from "react";
 import { OrderTotals } from "../cart/order.totals";
 import { Textarea } from "../../../app-common/components/input/textarea";
-import { CartItem } from "../../../api/model/cart.item";
 import { Controller, useForm } from "react-hook-form";
 import { jsonRequest } from "../../../api/request/request";
-import { ORDER_CREATE } from "../../../api/routing/routes/backend.app";
-import { Discount } from "../../../api/model/discount";
-import { Tax } from "../../../api/model/tax";
+import { ORDER_CREATE, ORDER_EDIT, } from "../../../api/routing/routes/backend.app";
 import { PaymentType } from "../../../api/model/payment.type";
-import { Customer } from "../../../api/model/customer";
 import classNames from "classnames";
-import localforage from "../../../lib/localforage/localforage";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPause, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { OrderPayment } from "../../../api/model/order.payment";
@@ -35,17 +23,12 @@ import { notify } from "../../../app-common/components/confirm/notification";
 import { withCurrency } from "../../../lib/currency/currency";
 import { useAtom } from "jotai";
 import { CartItemType } from "../cart/cart.container";
-import { defaultState } from "../../../store/jotai";
+import { defaultData, defaultState, PosModes } from "../../../store/jotai";
+import { discountTotal, finalTotal, taxTotal } from "../../containers/dashboard/pos";
+import { OrderStatus } from "../../../api/model/order";
 
 interface Props {
-  finalTotal: number;
   paymentTypesList: PaymentType[];
-  subTotal: number;
-  taxTotal: number;
-  couponTotal: number;
-  discountTotal: number;
-  closeSale?: boolean;
-  setCloseSale?: (state: boolean) => void;
   isInline?: boolean;
   saleModal?: boolean;
   setSaleModal?: (state: boolean) => void;
@@ -53,12 +36,7 @@ interface Props {
 }
 
 export const CloseSaleInline: FC<Props> = ({
-  finalTotal,
   paymentTypesList,
-  subTotal,
-  taxTotal,
-  couponTotal,
-  discountTotal,
   isInline,
   saleModal,
   setSaleModal,
@@ -73,10 +51,20 @@ export const CloseSaleInline: FC<Props> = ({
     refundingFrom,
     discountRateType,
     adjustment,
+    orderId,
+    customerName, discountAmount
   } = appState;
+
+  const ft = finalTotal(added, tax, discountAmount, discountRateType, discount);
 
   const { register, handleSubmit, watch, reset, control, getValues } =
     useForm();
+
+  const [defaultAppState, setDefaultAppState] = useAtom(defaultData);
+
+  const { defaultMode, defaultDiscount, defaultPaymentType, defaultTax } =
+    defaultAppState;
+
   const [isSaleClosing, setSaleClosing] = useState(false);
   const [payment, setPayment] = useState<PaymentType>();
   const [payments, setPayments] = useState<OrderPayment[]>([]);
@@ -98,52 +86,56 @@ export const CloseSaleInline: FC<Props> = ({
       customer: undefined,
       adjustment: 0,
       refundingFrom: undefined,
+      customerName: undefined,
+      cartItem: undefined,
+      cartItemType: CartItemType.quantity,
+      latest: undefined,
+      quantity: 1,
+      q: "",
+      orderId: undefined,
+      latestQuantity: undefined,
+      latestRate: undefined,
+      latestVariant: undefined,
     }));
 
-    if (setSaleModal) {
-      setSaleModal!(false);
+    if( typeof setSaleModal === 'function' ) {
+      setSaleModal(false);
     }
     reset({
       received: undefined,
     });
 
-    localforage.getItem("defaultPaymentType").then((data: any) => {
-      if (data) {
-        setPayment(data);
-      } else {
-        setPayment(undefined);
-      }
-    });
+    if( defaultPaymentType ) {
+      setPayment(defaultPaymentType);
+    } else {
+      setPayment(undefined);
+    }
 
-    localforage.getItem("defaultDiscount").then((data: any) => {
-      if (data) {
-        setAppState((prev) => ({
-          ...prev,
-          discount: data,
-        }));
-      } else {
-        setAppState((prev) => ({
-          ...prev,
-          discount: undefined,
-          discountAmount: undefined,
-        }));
-      }
-    });
+    if( defaultDiscount ) {
+      setAppState((prev) => ({
+        ...prev,
+        discount: defaultDiscount,
+      }));
+    } else {
+      setAppState((prev) => ({
+        ...prev,
+        discount: undefined,
+        discountAmount: undefined,
+      }));
+    }
 
     //set default options
-    localforage.getItem("defaultTax").then((data: any) => {
-      if (data) {
-        setAppState((prev) => ({
-          ...prev,
-          tax: data,
-        }));
-      } else {
-        setAppState((prev) => ({
-          ...prev,
-          tax: undefined,
-        }));
-      }
-    });
+    if( defaultTax ) {
+      setAppState((prev) => ({
+        ...prev,
+        tax: defaultTax,
+      }));
+    } else {
+      setAppState((prev) => ({
+        ...prev,
+        tax: undefined,
+      }));
+    }
 
     setHold(false);
   };
@@ -151,12 +143,12 @@ export const CloseSaleInline: FC<Props> = ({
   const onSaleSubmit = async (values: any) => {
     let paymentsAdded: OrderPayment[] = [...payments];
     setSaleClosing(true);
-    if (payments.length === 0) {
+    if( payments.length === 0 ) {
       paymentsAdded = [
         {
           received: values.received,
           type: payment,
-          total: finalTotal + adjustment,
+          total: ft + adjustment,
           due: changeDue,
         },
       ];
@@ -166,25 +158,38 @@ export const CloseSaleInline: FC<Props> = ({
         items: added,
         discount: discount,
         tax: tax,
-        taxAmount: taxTotal,
+        taxAmount: taxTotal(added),
         payments: paymentsAdded,
         customerId: customer?.id,
-        discountAmount: discountTotal,
+        customer: customerName,
+        discountAmount: discountTotal(added, tax, discountAmount, discountRateType, discount),
         discountRateType: discountRateType,
         refundingFrom: refundingFrom,
         notes: values.notes,
         store: store?.id,
-        total: finalTotal,
+        total: ft,
         terminal: terminal?.id,
         adjustment: adjustment,
       };
 
-      if (hold) {
+      if( hold ) {
         formValues["isSuspended"] = true;
       }
 
-      const response = await jsonRequest(ORDER_CREATE, {
-        method: "POST",
+      if( defaultMode === PosModes.order ) {
+        formValues["status"] = OrderStatus.PENDING;
+      } else {
+        formValues["status"] = OrderStatus.COMPLETED;
+      }
+
+      let url = ORDER_CREATE;
+      let method = 'POST';
+      if( orderId ) {
+        url = ORDER_EDIT.replace(":id", orderId);
+        method = 'PUT';
+      }
+      const response = await jsonRequest(url, {
+        method: method,
         body: JSON.stringify(formValues),
       });
 
@@ -193,19 +198,29 @@ export const CloseSaleInline: FC<Props> = ({
       resetFields();
       setPayments([]);
 
-      if (!hold) {
-        setAppState((prev) => ({
-          ...prev,
-          cartItem: undefined,
-          cartItemType: CartItemType.quantity,
-        }));
+      // reset app state
+      // setAppState((prev) => ({
+      //   ...prev,
+      //   cartItem: undefined,
+      //   cartItemType: CartItemType.quantity,
+      //   latest: undefined,
+      //   quantity: 1,
+      //   q: "",
+      //   orderId: undefined,
+      //   latestQuantity: undefined,
+      //   latestRate: undefined,
+      //   latestVariant: undefined,
+      //   added: [],
+      //   customer: undefined
+      // }));
 
+      if( json.order.status === OrderStatus.COMPLETED ) {
         onSale && onSale();
         //print the order
         PrintOrder(json.order);
       }
-    } catch (e) {
-      if (e instanceof UnprocessableEntityException) {
+    } catch ( e ) {
+      if( e instanceof UnprocessableEntityException ) {
         const res: ValidationResult = await e.response.json();
 
         const message = res.errorMessage;
@@ -213,14 +228,14 @@ export const CloseSaleInline: FC<Props> = ({
           return `${validation.message}`;
         });
 
-        if (message) {
+        if( message ) {
           notify({
             type: "error",
             description: message,
           });
         }
 
-        if (messages.length > 0) {
+        if( messages.length > 0 ) {
           notify({
             type: "error",
             description: messages.join(", "),
@@ -236,8 +251,8 @@ export const CloseSaleInline: FC<Props> = ({
 
   const changeDue = useMemo(() => {
     //get a total of payments
-    if (payments.length === 0) {
-      return Number(watch("received")) - finalTotal - adjustment;
+    if( payments.length === 0 ) {
+      return Number(watch("received")) - ft - adjustment;
     }
 
     return (
@@ -245,33 +260,29 @@ export const CloseSaleInline: FC<Props> = ({
         (prev, current) => Number(prev) + Number(current.received),
         0
       ) -
-      finalTotal +
+      ft +
       adjustment
     );
-  }, [payments, finalTotal, watch("received"), adjustment]);
+  }, [payments, watch("received"), adjustment]);
 
   useEffect(() => {
-    if (payment === undefined) {
+    if( payment === undefined ) {
       //check for default payment
-      localforage.getItem("defaultPaymentType").then((data: any) => {
-        if (data !== null) {
-          setPayment(data);
-        } else {
-          if (paymentTypesList.length > 0) {
-            setPayment(paymentTypesList[0]);
-          }
+      if( defaultPaymentType ) {
+        setPayment(defaultPaymentType);
+      } else {
+        if( paymentTypesList.length > 0 ) {
+          setPayment(paymentTypesList[0]);
         }
-      });
+      }
     }
   }, [paymentTypesList, payment, saleModal]);
 
   useEffect(() => {
-    if (payments.length === 0 && saleModal) {
-      localforage.getItem("defaultPaymentType").then((data: any) => {
-        if (data !== null) {
-          addSplitPayment(finalTotal, data);
-        }
-      });
+    if( payments.length === 0 && saleModal ) {
+      if( defaultPaymentType ) {
+        addSplitPayment(ft, defaultPaymentType);
+      }
     }
   }, [saleModal]);
 
@@ -286,19 +297,19 @@ export const CloseSaleInline: FC<Props> = ({
 
   useEffect(() => {
     reset({
-      received: (finalTotal + adjustment).toFixed(2),
+      received: (ft + adjustment).toFixed(2),
     });
-  }, [finalTotal, adjustment]);
+  }, [adjustment, ft]);
 
   const addQuickCash = useCallback(
     (item: number, cashOperation?: string) => {
       let method = cashOperation || quickCashOperation;
 
-      if (method === "exact") {
+      if( method === "exact" ) {
         addSplitPayment(item, payment);
-      } else if (method === "add") {
+      } else if( method === "add" ) {
         addSplitPayment(item, payment);
-      } else if (method === "subtract") {
+      } else if( method === "subtract" ) {
         addSplitPayment(-item, payment);
       }
     },
@@ -321,7 +332,7 @@ export const CloseSaleInline: FC<Props> = ({
 
       const hasError = changeDue < 0 || isSaleClosing || added.length === 0;
 
-      if (isInline && !hasError) {
+      if( isInline && !hasError ) {
         onSaleSubmit(getValues());
       }
     },
@@ -345,7 +356,7 @@ export const CloseSaleInline: FC<Props> = ({
   );
 
   const addSplitPayment = (amount: number, payment?: PaymentType) => {
-    if (amount === 0) {
+    if( amount === 0 ) {
       notify({
         type: "error",
         description: "Amount cannot be zero",
@@ -354,7 +365,7 @@ export const CloseSaleInline: FC<Props> = ({
       return false;
     }
 
-    if (!payment?.canHaveChangeDue && amount + received > finalTotal) {
+    if( !payment?.canHaveChangeDue && amount + received > ft ) {
       notify({
         type: "error",
         description: `Please add exact amount for ${payment?.name}`,
@@ -365,9 +376,9 @@ export const CloseSaleInline: FC<Props> = ({
 
     const prevPayments = [...payments];
     prevPayments.push({
-      total: finalTotal,
+      total: ft,
       received: amount,
-      due: amount - finalTotal,
+      due: amount - ft,
       type: payment,
     });
 
@@ -375,7 +386,7 @@ export const CloseSaleInline: FC<Props> = ({
 
     reset({
       received:
-        finalTotal -
+        ft -
         prevPayments.reduce(
           (prev, current) => Number(prev) + Number(current.received),
           0
@@ -392,7 +403,7 @@ export const CloseSaleInline: FC<Props> = ({
 
     reset({
       received:
-        finalTotal -
+        ft -
         prevPayments.reduce(
           (prev, current) => Number(prev) + Number(current.received),
           0
@@ -409,9 +420,9 @@ export const CloseSaleInline: FC<Props> = ({
   };
 
   const addAdjustment = () => {
-    const adj = finalTotal % 10;
+    const adj = ft % 10;
 
-    if (adj < 5) {
+    if( adj < 5 ) {
       setAppState((prev) => ({
         ...prev,
         adjustment: -adj,
@@ -425,12 +436,12 @@ export const CloseSaleInline: FC<Props> = ({
   };
 
   const canAdjust = useMemo(() => {
-    return finalTotal % 10 !== 0;
-  }, [finalTotal]);
+    return ft % 10 !== 0;
+  }, []);
 
   const paymentInputRef = useRef<HTMLInputElement>(null);
   const selectPaymentInput = () => {
-    if (paymentInputRef.current !== null) {
+    if( paymentInputRef.current !== null ) {
       paymentInputRef.current.select();
     }
   };
@@ -441,18 +452,13 @@ export const CloseSaleInline: FC<Props> = ({
         <div className="grid grid-cols-6 gap-4">
           <div className={classNames(isInline ? "col-span-6" : "col-span-4")}>
             <OrderTotals
-              subTotal={subTotal}
-              taxTotal={taxTotal}
-              discountTotal={discountTotal}
-              couponTotal={couponTotal}
-              finalTotal={finalTotal}
               inSale={true}>
               {!!adjustment && (
                 <tr>
                   <th
                     className={classNames(
                       `border border-gray-300 p-2 text-left text-3xl font-bold digital bg-black`,
-                      finalTotal % 10 < 5
+                      ft % 10 < 5
                         ? "text-danger-500"
                         : " text-success-500"
                     )}>
@@ -461,7 +467,7 @@ export const CloseSaleInline: FC<Props> = ({
                   <td
                     className={classNames(
                       `border border-gray-300 p-2 text-right text-3xl font-bold digital bg-black`,
-                      finalTotal % 10 < 5
+                      ft % 10 < 5
                         ? "text-danger-500"
                         : " text-success-500"
                     )}>
@@ -530,143 +536,150 @@ export const CloseSaleInline: FC<Props> = ({
                 <Button
                   className="w-full btn-primary"
                   size="lg"
-                  key={finalTotal}
-                  onClick={() => addQuickCash(finalTotal, "exact")}>
-                  {finalTotal.toFixed(2)}
+                  key={ft}
+                  onClick={() => addQuickCash(ft, "exact")}>
+                  {ft.toFixed(2)}
                 </Button>
               </div>
             </div>
           )}
         </div>
       </div>
-      <div>
-        <ScrollContainer
-          horizontal
-          className="scroll-container flex gap-3 mb-3 py-3"
-          vertical={false}>
-          {paymentTypesList.map((pt, index) => {
-            return (
-              <Button
-                key={index}
-                onClick={() => {
-                  setPayment(pt);
-                }}
-                className="btn-primary flex-grow flex-shrink-0 w-auto"
-                active={payment?.id === pt.id}
-                type="button"
-                size="lg"
-                disabled={
-                  (pt.type === "credit" &&
-                    (customer === undefined || customer === null)) ||
-                  added.length === 0
-                }>
-                {pt.name}
-                {pt.type === "credit" &&
-                (customer === undefined || customer === null) ? (
-                  ""
-                ) : (
-                  <Shortcut
-                    shortcut={`alt+p+${index}`}
-                    handler={() => {
-                      setPayment(pt);
-                    }}
-                  />
-                )}
-              </Button>
-            );
-          })}
-        </ScrollContainer>
-      </div>
+      {(defaultMode === PosModes.payment || defaultMode === PosModes.pos) && (
+        <div>
+          <ScrollContainer
+            horizontal
+            className="scroll-container flex gap-3 mb-3 py-3"
+            vertical={false}>
+            {paymentTypesList.map((pt, index) => {
+              return (
+                <Button
+                  key={index}
+                  onClick={() => {
+                    setPayment(pt);
+                  }}
+                  className="btn-primary flex-grow flex-shrink-0 w-auto"
+                  active={payment?.id === pt.id}
+                  type="button"
+                  size="lg"
+                  disabled={
+                    (pt.type === "credit" &&
+                      (customer === undefined || customer === null)) ||
+                    added.length === 0
+                  }>
+                  {pt.name}
+                  {pt.type === "credit" &&
+                  (customer === undefined || customer === null) ? (
+                    ""
+                  ) : (
+                    <Shortcut
+                      shortcut={`alt+p+${index}`}
+                      handler={() => {
+                        setPayment(pt);
+                      }}
+                    />
+                  )}
+                </Button>
+              );
+            })}
+          </ScrollContainer>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit(onSaleSubmit)}>
         <div className="grid grid-cols-2 gap-5">
           <div>
-            <div className="mb-3">
-              <div className="input-group">
-                <Controller
-                  name="received"
-                  control={control}
-                  render={(props) => {
-                    return (
-                      <>
-                        <input
-                          ref={paymentInputRef}
-                          onChange={props.field.onChange}
-                          value={props.field.value}
-                          type="number"
-                          id="amount"
-                          placeholder="Payment"
-                          className="w-full flex-1 lg input mousetrap form-control"
-                          onClick={selectPaymentInput}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-
-                              addSplitPayment(
-                                Number(watch("received")),
-                                payment
-                              );
-
-                              return false;
-                            }
-                          }}
-                          disabled={added.length === 0}
-                          tabIndex={0}
-                        />
-                      </>
-                    );
-                  }}
-                  defaultValue={finalTotal + adjustment}
-                />
-
-                <Shortcut
-                  shortcut="ctrl+enter"
-                  handler={() => focusAmountField()}
-                  invisible={true}
-                />
-
-                <Button
-                  type="button"
-                  className="btn-secondary lg w-[48px]"
-                  onClick={() =>
-                    addSplitPayment(Number(watch("received")), payment)
-                  }
-                  disabled={added.length === 0}
-                  tabIndex={-1}>
-                  <FontAwesomeIcon icon={faPlus} />
-                </Button>
-              </div>
-            </div>
-
-            {canAdjust && (
+            {(defaultMode === PosModes.payment ||
+              defaultMode === PosModes.pos) && (
               <>
-                {!!adjustment ? (
-                  <Button
-                    type="button"
-                    className="btn-danger lg w-full"
-                    disabled={added.length === 0}
-                    tabIndex={-1}
-                    onClick={() => {
-                      setAppState((prev) => ({
-                        ...prev,
-                        adjustment: 0,
-                      }));
-                    }}>
-                    <FontAwesomeIcon icon={faTrash} className="mr-2" />{" "}
-                    Adjustment
-                  </Button>
-                ) : (
-                  <Button
-                    type="button"
-                    className="btn-secondary lg w-full"
-                    disabled={added.length === 0}
-                    tabIndex={-1}
-                    onClick={addAdjustment}>
-                    Add Adjustment
-                  </Button>
+                <div className="mb-3">
+                  <div className="input-group">
+                    <Controller
+                      name="received"
+                      control={control}
+                      render={(props) => {
+                        return (
+                          <>
+                            <input
+                              ref={paymentInputRef}
+                              onChange={props.field.onChange}
+                              value={props.field.value}
+                              type="number"
+                              id="amount"
+                              placeholder="Payment"
+                              className="w-full flex-1 lg input mousetrap form-control"
+                              onClick={selectPaymentInput}
+                              onKeyDown={(e) => {
+                                if( e.key === "Enter" ) {
+                                  e.preventDefault();
+
+                                  addSplitPayment(
+                                    Number(watch("received")),
+                                    payment
+                                  );
+
+                                  return false;
+                                }
+                              }}
+                              disabled={added.length === 0}
+                              tabIndex={0}
+                            />
+                          </>
+                        );
+                      }}
+                      defaultValue={ft + adjustment}
+                    />
+
+                    <Shortcut
+                      shortcut="ctrl+enter"
+                      handler={() => focusAmountField()}
+                      invisible={true}
+                    />
+
+                    <Button
+                      type="button"
+                      className="btn-secondary lg w-[48px]"
+                      onClick={() =>
+                        addSplitPayment(Number(watch("received")), payment)
+                      }
+                      disabled={added.length === 0}
+                      tabIndex={-1}>
+                      <FontAwesomeIcon icon={faPlus}/>
+                    </Button>
+                  </div>
+                </div>
+
+                {canAdjust && (
+                  <>
+                    {!!adjustment ? (
+                      <Button
+                        type="button"
+                        className="btn-danger lg w-full"
+                        disabled={added.length === 0}
+                        tabIndex={-1}
+                        onClick={() => {
+                          setAppState((prev) => ({
+                            ...prev,
+                            adjustment: 0,
+                          }));
+                        }}>
+                        <FontAwesomeIcon icon={faTrash} className="mr-2"/>{" "}
+                        Adjustment
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        className="btn-secondary lg w-full"
+                        disabled={added.length === 0}
+                        tabIndex={-1}
+                        onClick={addAdjustment}>
+                        Add Adjustment
+                      </Button>
+                    )}
+                  </>
                 )}
               </>
             )}
-
             <div className="mb-3">
               <label htmlFor="notes">Notes</label>
               <Textarea
@@ -684,8 +697,8 @@ export const CloseSaleInline: FC<Props> = ({
                 disabled={added.length === 0 || isSaleClosing || changeDue < 0}
                 size="lg"
                 tabIndex={0}>
-                {isSaleClosing ? "..." : "Complete"}
-                <Shortcut shortcut="ctrl+s" handler={shortcutHandler} />
+                {isSaleClosing ? "..." : "Done"}
+                <Shortcut shortcut="ctrl+s" handler={shortcutHandler}/>
               </Button>
 
               <Button
@@ -694,10 +707,10 @@ export const CloseSaleInline: FC<Props> = ({
                 size="lg"
                 className="btn-warning flex-1"
                 onClick={() => setHold(true)}>
-                <FontAwesomeIcon icon={faPause} size="lg" />
+                <FontAwesomeIcon icon={faPause} size="lg"/>
               </Button>
               <div className="flex-1">
-                <ClearSale />
+                <ClearSale/>
               </div>
             </div>
           </div>
@@ -716,7 +729,7 @@ export const CloseSaleInline: FC<Props> = ({
                     className="btn btn-danger"
                     type="button"
                     onClick={() => removeSplitPayment(index)}>
-                    <FontAwesomeIcon icon={faTrash} />
+                    <FontAwesomeIcon icon={faTrash}/>
                   </button>
                 </div>
               </div>

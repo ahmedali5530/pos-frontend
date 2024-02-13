@@ -48,7 +48,7 @@ export const PurchaseOrders = () => {
     }),
     columnHelper.accessor('createdAt', {
       header: ('Created at'),
-      cell: info => DateTime.fromISO(info.getValue()).toFormat("yyyy-MM-dd")
+      cell: info => DateTime.fromISO(info.getValue()).toFormat(import.meta.env.VITE_DATE_FORMAT)
     }),
     columnHelper.accessor('store', {
       header: ('Store'),

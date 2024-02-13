@@ -22,5 +22,25 @@ export default defineConfig({
     react(),
     svgr(),
     envCompatible
-  ]
+  ],
+  build: {
+    sourcemap: false,
+    cssCodeSplit: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          apollo: ['@apollo/client'],
+          lodash: ['lodash'],
+          antd: ['antd'],
+          nivo: ['@nivo/bar', '@nivo/core', '@nivo/pie'],
+          tanstack: ['@tanstack/react-query', '@tanstack/react-query-devtools', '@tanstack/react-table'],
+          keyboard: ['react-simple-keyboard'],
+          fontawesome: [
+            '@fortawesome/fontawesome-svg-core', '@fortawesome/free-regular-svg-icons',
+            '@fortawesome/free-solid-svg-icons', '@fortawesome/react-fontawesome'
+          ]
+        }
+      }
+    }
+  }
 })

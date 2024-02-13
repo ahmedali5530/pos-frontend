@@ -187,7 +187,9 @@ export const SupplierLedger: FC<SupplierLedgerProps> = ({
                   <ReactSelect
                     options={purchases?.['hydra:member']?.reverse().map(item => {
                       return {
-                        label: `${item.purchaseNumber} (${DateTime.fromISO(item.createdAt).toFormat('ff')})`,
+                        label: `${item.purchaseNumber} (${DateTime.fromISO(item.createdAt).toFormat(
+                          import.meta.env.VITE_DATE_TIME_HUMAN_FORMAT
+                        )})`,
                         value: item['@id']
                       };
                     })}

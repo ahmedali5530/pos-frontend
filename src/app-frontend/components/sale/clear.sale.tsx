@@ -5,53 +5,74 @@ import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Shortcut } from "../../../app-common/components/input/shortcut";
 import { useAtom } from "jotai";
-import { defaultState } from "../../../store/jotai";
+import { defaultData, defaultState } from "../../../store/jotai";
+import { CartItemType } from "../cart/cart.container";
 
 interface Props {}
 
 export const ClearSale: FC<Props> = ({}) => {
   const [appState, setAppState] = useAtom(defaultState);
   const { added } = appState;
+  const [defaultAppState] = useAtom(defaultData);
+
+  const { defaultDiscount, defaultPaymentType, defaultTax } =
+    defaultAppState;
+
   const cancel = () => {
     setAppState((prev) => ({
       ...prev,
       added: [],
       customer: undefined,
       adjustment: 0,
-      tax: undefined,
-      discount: undefined,
-      discountAmount: undefined,
+      latest: undefined,
+      orderId: undefined,
+      q: "",
+      quantity: 1,
+      cartItem: undefined,
+      cartItemType: CartItemType.quantity,
+      latestQuantity: undefined,
+      latestRate: undefined,
+      latestVariant: undefined,
+      customerName: undefined
     }));
 
-    localforage.getItem("defaultDiscount").then((data: any) => {
-      if (data) {
-        setAppState((prev) => ({
-          ...prev,
-          discount: data,
-        }));
-      } else {
-        setAppState((prev) => ({
-          ...prev,
-          discount: undefined,
-          discountAmount: undefined,
-        }));
-      }
-    });
+    if (defaultPaymentType) {
+      setAppState(prev => ({
+        ...prev,
+        paymentType: defaultPaymentType
+      }))
+    } else {
+      setAppState(prev => ({
+        ...prev,
+        paymentType: defaultPaymentType
+      }))
+    }
+
+    if (defaultDiscount) {
+      setAppState((prev) => ({
+        ...prev,
+        discount: defaultDiscount,
+      }));
+    } else {
+      setAppState((prev) => ({
+        ...prev,
+        discount: undefined,
+        discountAmount: undefined,
+      }));
+    }
 
     //set default options
-    localforage.getItem("defaultTax").then((data: any) => {
-      if (data) {
-        setAppState((prev) => ({
-          ...prev,
-          tax: data,
-        }));
-      } else {
-        setAppState((prev) => ({
-          ...prev,
-          tax: undefined,
-        }));
-      }
-    });
+    if (defaultTax) {
+      setAppState((prev) => ({
+        ...prev,
+        tax: defaultTax,
+      }));
+    } else {
+      setAppState((prev) => ({
+        ...prev,
+        tax: undefined,
+      }));
+    }
   };
   return (
     <Button

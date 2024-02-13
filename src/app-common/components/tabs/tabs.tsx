@@ -1,11 +1,18 @@
-import {ButtonHTMLAttributes, FunctionComponent, PropsWithChildren, ReactElement, useCallback, useState} from 'react';
+import {
+  ButtonHTMLAttributes,
+  FunctionComponent,
+  PropsWithChildren,
+  ReactElement,
+  useCallback,
+  useState,
+} from "react";
 import classNames from "classnames";
-import ScrollContainer from 'react-indiana-drag-scroll';
+import ScrollContainer from "react-indiana-drag-scroll";
 import { Button } from "../input/button";
 
 export interface TabControlState {
   activeTab: string;
-  isTabActive: (tab: string) => boolean
+  isTabActive: (tab: string) => boolean;
 }
 
 export interface TabControlActions {
@@ -16,8 +23,10 @@ export interface UseTabControlProps {
   defaultTab: string;
 }
 
-export const useTabControl = (props: UseTabControlProps): [TabControlState, TabControlActions] => {
-  const {defaultTab} = props;
+export const useTabControl = (
+  props: UseTabControlProps
+): [TabControlState, TabControlActions] => {
+  const { defaultTab } = props;
   const [activeTab, setActiveTab] = useState<string>(defaultTab);
 
   const isTabActive = useCallback(
@@ -28,21 +37,19 @@ export const useTabControl = (props: UseTabControlProps): [TabControlState, TabC
   return [{ activeTab, isTabActive }, { setActiveTab }];
 };
 
-
-export interface RenderProps extends TabControlState, TabControlActions {
-}
+export interface RenderProps extends TabControlState, TabControlActions {}
 
 export interface TabControlProps {
   defaultTab: string;
   render: (props: RenderProps) => ReactElement | null;
-  position?: 'top'|'left'|'right';
+  position?: "top" | "left" | "right";
 }
 
 export const TabControl: FunctionComponent<TabControlProps> = (props) => {
   const [{ activeTab, isTabActive }, { setActiveTab }] = useTabControl(props);
-  let classes = 'tab-control flex gap-5';
-  if(props.position === 'top'){
-    classes = 'tab-control flex gap-5 flex-col';
+  let classes = `tab-control flex gap-5 ${props?.position}`;
+  if (props.position === "top") {
+    classes = `tab-control flex gap-5 flex-col ${props?.position}`;
   }
 
   return (
@@ -52,14 +59,15 @@ export const TabControl: FunctionComponent<TabControlProps> = (props) => {
   );
 };
 
-interface TabNavProps extends PropsWithChildren{
-  position?: 'top'|'left'|'right';
+interface TabNavProps extends PropsWithChildren {
+  position?: "top" | "left" | "right";
 }
 export const TabNav = (props: TabNavProps) => {
-  let classes = 'flex flex-col w-[220px] flex-shrink-0 border-r ml-[-20px] p-3 bg-gray-50';
+  let classes =
+    "flex flex-col w-[220px] flex-shrink-0 ml-[-20px] bg-primary-500 py-5 pl-3 min-h-[100ex]";
 
-  if(props.position === 'top'){
-    classes = 'flex flex-shrink-0 p-1';
+  if (props.position === "top") {
+    classes = "flex flex-shrink-0 p-1 rounded-lg";
     return (
       <div className="bg-gray-100 rounded-full">
         <ScrollContainer horizontal nativeMobileScroll={true}>
@@ -69,43 +77,46 @@ export const TabNav = (props: TabNavProps) => {
     );
   }
 
-  return (
-    <div className={classes}>{props.children}</div>
-  );
+  return <div className={classes}>{props.children}</div>;
 };
 
-interface TabProps extends PropsWithChildren, ButtonHTMLAttributes<HTMLButtonElement>{
+interface TabProps
+  extends PropsWithChildren,
+    ButtonHTMLAttributes<HTMLButtonElement> {
   isActive: boolean;
 }
 export const Tab = (props: TabProps) => {
-  const {isActive, ...rest} = props;
+  const { isActive, ...rest } = props;
   return (
-    <button {...rest} className={
-      classNames(
-        'p-3 px-5 flex-shrink-0 text-left rounded-full transition-all uppercase font-bold',
-        isActive ?
-          'text-white bg-primary-500' : ''
-      )
-    }>{props.children}</button>
+    <button
+      {...rest}
+      type="button"
+      className={classNames(
+        "p-3 px-5 flex-shrink-0 text-left rounded-full relative sidebar-btn",
+        isActive ? "text-primary-500 bg-white active shadow shadow-lg" : "text-white"
+      )}>
+      <span></span>
+      {props.children}
+    </button>
   );
 };
 
-
-interface TabContentProps extends PropsWithChildren{
+interface TabContentProps extends PropsWithChildren {
   isActive: boolean;
   holdState?: boolean;
 }
 export const TabContent = (props: TabContentProps) => {
-  if(!props.isActive && !props.holdState){
-    return (<></>);
+  if (!props.isActive && !props.holdState) {
+    return <></>;
   }
 
   return (
-    <div className={
-      classNames(
-        'py-5 flex-grow-1 w-full',
-        !props.isActive && 'hidden'
-      )
-    }>{props.children}</div>
+    <div
+      className={classNames(
+        "py-5 flex-grow-1 w-full",
+        !props.isActive && "hidden"
+      )}>
+      {props.children}
+    </div>
   );
 };

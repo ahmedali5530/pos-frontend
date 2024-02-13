@@ -25,7 +25,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
   }, [order]);
 
   const orderTotal = useMemo(() => {
-    return itemsTotal + (order?.adjustment || 0) - (order?.discount?.amount || 0);
+    return Number(itemsTotal) + Number(order?.adjustment || 0) - Number(order?.discount?.amount || 0);
   }, [order, itemsTotal]);
 
   return (
@@ -36,7 +36,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
       <Modal open={modal} onClose={() => {
         setModal(false);
       }} title={`Order# ${order.orderId}`}>
-        <div className="grid grid-cols-6 gap-3 mb-5">
+        <div className="grid grid-cols-6 md:grid-cols-4 gap-3 mb-5">
           <div className="border border-gray-500 p-5 rounded">
             <div className="text-2xl">+{withCurrency(itemsTotal)}</div>
             Items total with tax
@@ -53,15 +53,15 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
             <div className="text-2xl">{withCurrency(order.adjustment ? order.adjustment : 0)}</div>
             Adjustment
           </div>
-          <div className="border border-success-500 p-5 text-success-500 rounded font-bold">
+          <div className="border border-success-500 p-5 bg-success-100 text-success-900 rounded font-bold">
             <div className="text-2xl">={withCurrency(orderTotal)}</div>
             Total
           </div>
-          <div className="border border-primary-500 p-5 text-primary-500 rounded">
-            <div className="text-2xl">Payments</div>
+          <div className="border border-primary-500 p-5 bg-primary-100 text-primary-900 rounded">
+            <div className="text-sm font-bold uppercase">Payments</div>
             <ul className="font-normal">
               {order.payments.map(item => (
-                <li key={item["@id"]}>{item.type?.name}: <span className="float-right">{withCurrency(item.received)}</span></li>
+                <li key={item["@id"]} className="font-bold">{item.type?.name}: <span className="float-right">{withCurrency(item.received)}</span></li>
               ))}
             </ul>
           </div>
@@ -110,7 +110,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
           <tfoot>
             <tr>
               <th className="text-left">Total</th>
-              <th className="text-right">{(order.items.reduce((prev, item) => prev + (item.quantity), 0))}</th>
+              <th className="text-right">{(order.items.reduce((prev, item) => prev + Number(item.quantity), 0))}</th>
               <th></th>
               <th></th>
               <th></th>

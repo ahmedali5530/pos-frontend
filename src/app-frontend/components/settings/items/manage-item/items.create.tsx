@@ -8,43 +8,43 @@ import {
   PRODUCT_GET,
   SUPPLIER_LIST,
   TAX_LIST, TERMINAL_LIST
-} from "../../../../api/routing/routes/backend.app";
-import { fetchJson } from "../../../../api/request/request";
-import { HttpException, UnprocessableEntityException } from "../../../../lib/http/exception/http.exception";
-import { ConstraintViolation } from "../../../../lib/validator/validation.result";
-import { Input } from "../../../../app-common/components/input/input";
+} from "../../../../../api/routing/routes/backend.app";
+import { fetchJson } from "../../../../../api/request/request";
+import { HttpException, UnprocessableEntityException } from "../../../../../lib/http/exception/http.exception";
+import { ConstraintViolation } from "../../../../../lib/validator/validation.result";
+import { Input } from "../../../../../app-common/components/input/input";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faRefresh } from "@fortawesome/free-solid-svg-icons";
-import { Button } from "../../../../app-common/components/input/button";
-import { Category } from "../../../../api/model/category";
-import { Product } from "../../../../api/model/product";
-import { ReactSelect } from "../../../../app-common/components/input/custom.react.select";
-import { ReactSelectOptionProps } from "../../../../api/model/common";
-import { Supplier } from "../../../../api/model/supplier";
-import { Brand } from "../../../../api/model/brand";
-import { withCurrency } from "../../../../lib/currency/currency";
+import { Button } from "../../../../../app-common/components/input/button";
+import { Category } from "../../../../../api/model/category";
+import { Product } from "../../../../../api/model/product";
+import { ReactSelect } from "../../../../../app-common/components/input/custom.react.select";
+import { ReactSelectOptionProps } from "../../../../../api/model/common";
+import { Supplier } from "../../../../../api/model/supplier";
+import { Brand } from "../../../../../api/model/brand";
+import { withCurrency } from "../../../../../lib/currency/currency";
 import classNames from "classnames";
-import { getErrorClass, getErrors, hasErrors } from "../../../../lib/error/error";
-import { Department } from "../../../../api/model/department";
-import { ProductVariants } from "./products/variants";
-import { CreateVariants } from "./products/create.variants";
-import { Tax } from "../../../../api/model/tax";
-import { StoresInput } from "../../../../app-common/components/input/stores";
-import { Modal } from "../../../../app-common/components/modal/modal";
-import { notify } from "../../../../app-common/components/confirm/notification";
+import { getErrorClass, getErrors, hasErrors } from "../../../../../lib/error/error";
+import { Department } from "../../../../../api/model/department";
+import { ProductVariants } from "../products/variants";
+import { CreateVariants } from "../products/create.variants";
+import { Tax } from "../../../../../api/model/tax";
+import { StoresInput } from "../../../../../app-common/components/input/stores";
+import { Modal } from "../../../../../app-common/components/modal/modal";
+import { notify } from "../../../../../app-common/components/confirm/notification";
 import * as yup from 'yup';
-import { ValidationMessage } from "../../../../api/model/validation";
+import { ValidationMessage } from "../../../../../api/model/validation";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { CreateDepartment } from "../departments/create.department";
-import { CreateTax } from "../taxes/create.tax";
-import { CreateCategory } from "../categories/create.category";
-import { CreateSupplier } from "../../inventory/supplier/create.supplier";
-import { CreateBrand } from "../brands/create.brand";
-import { Switch } from "../../../../app-common/components/input/switch";
-import { Terminal } from "../../../../api/model/terminal";
-import useApi from "../../../../api/hooks/use.api";
-import { HydraCollection } from "../../../../api/model/hydra";
-import { CreateTerminal } from "../terminals/create.terminal";
+import { CreateDepartment } from "../../departments/create.department";
+import { CreateTax } from "../../taxes/create.tax";
+import { CreateCategory } from "../../categories/create.category";
+import { CreateSupplier } from "../../../inventory/supplier/create.supplier";
+import { CreateBrand } from "../../brands/create.brand";
+import { Switch } from "../../../../../app-common/components/input/switch";
+import { Terminal } from "../../../../../api/model/terminal";
+import useApi from "../../../../../api/hooks/use.api";
+import { HydraCollection } from "../../../../../api/model/hydra";
+import { CreateTerminal } from "../../terminals/create.terminal";
 
 interface ItemsCreateProps {
   entity?: Product;
@@ -195,6 +195,8 @@ export const CreateItem = ({
     isLoading: loadingCategories
   } = useApi<HydraCollection<Category>>('categories', CATEGORY_LIST, {
     isActive: true
+  }, '', 'asc', 1, 999999, {}, {
+    enabled: false
   });
   const {
     data: suppliers,
@@ -202,6 +204,8 @@ export const CreateItem = ({
     isLoading: loadingSuppliers
   } = useApi<HydraCollection<Supplier>>('suppliers', SUPPLIER_LIST, {
     isActive: true
+  }, '', 'asc', 1, 999999, {}, {
+    enabled: false
   });
   const {
     data: brands,
@@ -209,6 +213,8 @@ export const CreateItem = ({
     isLoading: loadingBrands
   } = useApi<HydraCollection<Brand>>('brands', BRAND_LIST, {
     isActive: true
+  }, '', 'asc', 1, 999999, {}, {
+    enabled: false
   });
   const {
     data: departments,
@@ -216,6 +222,8 @@ export const CreateItem = ({
     isLoading: loadingDepartments
   } = useApi<HydraCollection<Department>>('departments', DEPARTMENT_LIST, {
     isActive: true
+  }, '', 'asc', 1, 999999, {}, {
+    enabled: false
   });
   const {
     data: taxes,
@@ -223,6 +231,8 @@ export const CreateItem = ({
     isLoading: loadingTaxes
   } = useApi<HydraCollection<Tax>>('taxes', TAX_LIST, {
     isActive: true
+  }, '', 'asc', 1, 999999, {}, {
+    enabled: false
   });
   const {
     data: terminals,
@@ -230,6 +240,8 @@ export const CreateItem = ({
     isLoading: loadingTerminals
   } = useApi<HydraCollection<Terminal>>('terminals', TERMINAL_LIST, {
     isActive: true
+  }, '', 'asc', 1, 999999, {}, {
+    enabled: false
   });
 
   const [categoryModal, setCategoryModal] = useState(false);
@@ -238,6 +250,17 @@ export const CreateItem = ({
   const [departmentModal, setDepartmentModal] = useState(false);
   const [taxModal, setTaxModal] = useState(false);
   const [terminalModal, setTerminalModal] = useState(false);
+
+  useEffect(() => {
+    if(modal) {
+      loadDepartments();
+      loadTaxes();
+      loadTerminals();
+      loadCategories();
+      loadSuppliers();
+      loadBrands();
+    }
+  }, [modal]);
 
   useEffect(() => {
     if( entity ) {
