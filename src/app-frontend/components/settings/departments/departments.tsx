@@ -77,7 +77,8 @@ export const Departments = () => {
               confirmText="Yes, please"
               cancelText="No, wait"
               title="Confirm deletion"
-              description="Are you sure to delete this department?">
+              description="Are you sure to delete this department?"
+            >
               <Button
                 type="button"
                 variant="danger"

@@ -67,7 +67,7 @@ export const Users = () => {
               }}
               confirmText="Yes, please"
               cancelText="No, wait"
-              title="Confirm deletion"
+              title="Confirmation"
               description={`Are you sure to ${info.row.original.isActive ? 'de-' : ''}activate this user?`}
             >
               <Switch checked={info.row.original.isActive} readOnly/>

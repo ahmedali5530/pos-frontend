@@ -1,18 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faPencilAlt,
-  faPlus,
-  faTrash,
-} from "@fortawesome/free-solid-svg-icons";
+import { faPencilAlt, faPlus, } from "@fortawesome/free-solid-svg-icons";
 import { Button } from "../../../../app-common/components/input/button";
 import React, { useState } from "react";
-import {
-  BRAND_EDIT,
-  BRAND_LIST,
-  CUSTOMER_LIST,
-  PURCHASE_DELETE,
-} from "../../../../api/routing/routes/backend.app";
+import { BRAND_EDIT, BRAND_LIST, } from "../../../../api/routing/routes/backend.app";
 import { Brand } from "../../../../api/model/brand";
 import { createColumnHelper } from "@tanstack/react-table";
 import { TableComponent } from "../../../../app-common/components/table/table";
@@ -73,7 +64,7 @@ export const Brands = () => {
                 setModal(true);
               }}
               tabIndex={-1}>
-              <FontAwesomeIcon icon={faPencilAlt} />
+              <FontAwesomeIcon icon={faPencilAlt}/>
             </Button>
             <span className="mx-2 text-gray-300">|</span>
             <ConfirmAlert
@@ -85,9 +76,10 @@ export const Brands = () => {
               }}
               confirmText="Yes, please"
               cancelText="No, wait"
-              title="Confirm deletion"
-              description="Are you sure to delete this purchase?">
-              <Switch checked={info.row.original.isActive} readOnly />
+              title="Confirmation"
+              description={`Are you sure to ${info.row.original.isActive ? 'de-' : ''}activate this brand?`}
+            >
+              <Switch checked={info.row.original.isActive} readOnly/>
             </ConfirmAlert>
           </>
         );
@@ -121,7 +113,7 @@ export const Brands = () => {
                   setModal(true);
                   setOperation("create");
                 }}>
-                <FontAwesomeIcon icon={faPlus} className="mr-2" /> Brand
+                <FontAwesomeIcon icon={faPlus} className="mr-2"/> Brand
               </Button>
             ),
           },

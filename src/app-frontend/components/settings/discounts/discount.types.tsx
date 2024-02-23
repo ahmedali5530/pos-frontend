@@ -91,8 +91,9 @@ export const DiscountTypes = () => {
               }}
               confirmText="Yes, please"
               cancelText="No, wait"
-              title="Confirm deletion"
-              description="Are you sure to delete this purchase?">
+              title="Confirmation"
+              description={`Are you sure to ${info.row.original.isActive ? 'de-' : ''}activate this discount type?`}
+            >
               <Switch checked={info.row.original.isActive} readOnly />
             </ConfirmAlert>
           </>

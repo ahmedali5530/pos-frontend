@@ -54,7 +54,7 @@ export const Stores = () => {
               }}
               confirmText="Yes, please"
               cancelText="No, wait"
-              title="Confirm deletion"
+              title="Confirmation"
               description={`Are you sure to ${info.row.original.isActive ? 'de-' : ''}activate this store?`}
             >
               <Switch checked={info.row.original.isActive} readOnly />

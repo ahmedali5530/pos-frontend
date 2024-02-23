@@ -81,8 +81,9 @@ export const Categories = () => {
               }}
               confirmText="Yes, please"
               cancelText="No, wait"
-              title="Confirm deletion"
-              description="Are you sure to delete this category?">
+              title="Confirmation"
+              description={`Are you sure to ${info.row.original.isActive ? 'de-' : ''}activate this category?`}
+            >
               <Switch checked={info.row.original.isActive} readOnly />
             </ConfirmAlert>
           </>

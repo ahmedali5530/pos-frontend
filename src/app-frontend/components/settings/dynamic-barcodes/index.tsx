@@ -3,35 +3,23 @@ import { useSelector } from "react-redux";
 import { getStore } from "../../../../duck/store/store.selector";
 import useApi from "../../../../api/hooks/use.api";
 import { HydraCollection } from "../../../../api/model/hydra";
-import { Discount } from "../../../../api/model/discount";
-import {
-  BARCODE_LIST,
-  DISCOUNT_GET,
-  DISCOUNT_LIST,
-} from "../../../../api/routing/routes/backend.app";
-import { useTranslation } from "react-i18next";
+import { BARCODE_LIST, DISCOUNT_GET, } from "../../../../api/routing/routes/backend.app";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Button } from "../../../../app-common/components/input/button";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPencilAlt, faPlus } from "@fortawesome/free-solid-svg-icons";
-import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
-import { Switch } from "../../../../app-common/components/input/switch";
 import { jsonRequest } from "../../../../api/request/request";
 import { TableComponent } from "../../../../app-common/components/table/table";
-import { CreateDiscount } from "../discounts/create.discount";
 import { Barcode } from "../../../../api/model/barcode";
+import { Button } from "../../../../app-common/components/input/button";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCopy } from "@fortawesome/free-solid-svg-icons";
 
 export const DynamicBarcodes = () => {
-  const [operation, setOperation] = useState("create");
+
 
   const store = useSelector(getStore);
   const useLoadHook = useApi<HydraCollection<Barcode>>(
     "barcodes",
     `${BARCODE_LIST}?store=${store?.id}`
   );
-  const { fetchData } = useLoadHook;
-  const [entity, setEntity] = useState<Barcode>();
-  const [modal, setModal] = useState(false);
 
   const columnHelper = createColumnHelper<Barcode>();
 
@@ -44,6 +32,16 @@ export const DynamicBarcodes = () => {
     }),
     columnHelper.accessor("barcode", {
       header: "Barcode",
+      cell: info => (
+        <>
+          {info.getValue()}{' '}
+          <Button onClick={async () => {
+            await navigator.clipboard.writeText(info.getValue())
+          }} variant="secondary" className="ml-2">
+            <FontAwesomeIcon icon={faCopy} />
+          </Button>
+        </>
+      )
     }),
     columnHelper.accessor("measurement", {
       header: "Measurement",
