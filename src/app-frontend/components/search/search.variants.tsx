@@ -58,7 +58,7 @@ export const SearchVariants = ({
       addItemVariant(
         items[selected],
         items[selected].variants[selectedVariant],
-        quantity
+        1
       );
     }
   };

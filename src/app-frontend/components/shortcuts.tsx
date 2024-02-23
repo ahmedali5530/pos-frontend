@@ -45,7 +45,7 @@ export const Shortcuts = () => {
   return (
     <>
       <Tooltip title="Help">
-        <Button variant="secondary" size="lg" iconButton onClick={() => setModal(true)}>
+        <Button variant="secondary" size="lg" iconButton onClick={() => setModal(true)} tabIndex={-1}>
           <FontAwesomeIcon icon={faQuestionCircle} size="lg" />
           <Shortcut shortcut="?" handler={() => setModal(true)} />
         </Button>

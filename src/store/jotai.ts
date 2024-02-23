@@ -65,6 +65,8 @@ export interface DefaultDataInterface {
   enableTouch?: boolean;
   defaultMode?: PosModes;
   searchBox?: boolean;
+  customerBox?: boolean;
+  requireCustomerBox?: boolean;
 }
 
 export const defaultData = atomWithStorage<DefaultDataInterface>(
@@ -73,10 +75,12 @@ export const defaultData = atomWithStorage<DefaultDataInterface>(
     defaultTax: undefined,
     defaultDiscount: undefined,
     defaultPaymentType: undefined,
-    enableShortcuts: undefined,
-    displayShortcuts: undefined,
-    enableTouch: undefined,
+    enableShortcuts: true,
+    displayShortcuts: false,
+    enableTouch: false,
     defaultMode: PosModes.pos,
-    searchBox: true
+    searchBox: true,
+    customerBox: true,
+    requireCustomerBox: false
   }
 );

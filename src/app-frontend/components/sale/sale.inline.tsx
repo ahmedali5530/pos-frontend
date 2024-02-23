@@ -62,7 +62,7 @@ export const CloseSaleInline: FC<Props> = ({
 
   const [defaultAppState, setDefaultAppState] = useAtom(defaultData);
 
-  const { defaultMode, defaultDiscount, defaultPaymentType, defaultTax } =
+  const { defaultMode, defaultDiscount, defaultPaymentType, defaultTax, requireCustomerBox } =
     defaultAppState;
 
   const [isSaleClosing, setSaleClosing] = useState(false);
@@ -86,7 +86,7 @@ export const CloseSaleInline: FC<Props> = ({
       customer: undefined,
       adjustment: 0,
       refundingFrom: undefined,
-      customerName: undefined,
+      customerName: '',
       cartItem: undefined,
       cartItemType: CartItemType.quantity,
       latest: undefined,
@@ -142,6 +142,14 @@ export const CloseSaleInline: FC<Props> = ({
 
   const onSaleSubmit = async (values: any) => {
     let paymentsAdded: OrderPayment[] = [...payments];
+    if(requireCustomerBox && !customerName){
+      notify({
+        type: "error",
+        description: 'Add customer name',
+        placement: 'topRight'
+      });
+      return ;
+    }
     setSaleClosing(true);
     if( payments.length === 0 ) {
       paymentsAdded = [
@@ -352,6 +360,7 @@ export const CloseSaleInline: FC<Props> = ({
       isInline,
       payment,
       changeDue,
+      customerName
     ]
   );
 

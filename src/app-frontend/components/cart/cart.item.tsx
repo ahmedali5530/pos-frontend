@@ -1,15 +1,12 @@
-import React, { FunctionComponent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { FunctionComponent, useEffect, useMemo, useRef, useState } from "react";
 import classNames from "classnames";
-import { Button } from "../../../app-common/components/input/button";
 import { Input } from "../../../app-common/components/input/input";
 import { CartItem as CartItemModel } from "../../../api/model/cart.item";
-import { faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { getRowTotal } from "../../containers/dashboard/pos";
 import { Checkbox } from "../../../app-common/components/input/checkbox";
 import { useAtom } from "jotai";
 import { defaultState } from "../../../store/jotai";
-import { formatNumber, withCurrency } from "../../../lib/currency/currency";
+import { formatNumber } from "../../../lib/currency/currency";
 import QueryString from "qs";
 import { jsonRequest } from "../../../api/request/request";
 import { PRODUCT_QUANTITIES } from "../../../api/routing/routes/backend.app";
@@ -17,6 +14,8 @@ import { useSelector } from "react-redux";
 import { getStore } from "../../../duck/store/store.selector";
 // @ts-ignore
 import Spinner from "../../../assets/images/spinner.svg";
+import { CartItemType } from "./cart.container";
+import { KeyboardInput } from "../../../app-common/components/input/keyboard.input";
 
 interface CartItemProps {
   onQuantityChange: (item: CartItemModel, quantity: any) => void;
@@ -43,7 +42,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
   const [isLoading, setLoading] = useState(false);
   const [itemInfo, setItemInfo] = useState<ItemInfo>();
   const [appState, setAppState] = useAtom(defaultState);
-  const { latestIndex, cartItemType, cartItem } = appState;
+  const { cartItemType, cartItem } = appState;
   const taxTotal = useMemo(() => {
     return item.taxes.reduce(
       (prev, tax) => prev + (tax.rate * item.price) / 100,
@@ -78,18 +77,18 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
   let rateRef = useRef<HTMLInputElement>();
 
   useEffect(() => {
-    if (cartItem === index) {
-      if (cartItemType === "quantity") {
+    if( cartItem === index ) {
+      if( cartItemType === "quantity" ) {
         qtyRef.current?.focus();
         qtyRef.current?.select();
       }
 
-      if (cartItemType === "discount") {
+      if( cartItemType === "discount" ) {
         discRef.current?.focus();
         discRef.current?.select();
       }
 
-      if (cartItemType === "rate") {
+      if( cartItemType === "rate" ) {
         rateRef.current?.focus();
         rateRef.current?.select();
       }
@@ -97,7 +96,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
   }, [cartItem, cartItemType, index]);
 
   useEffect(() => {
-    if(item.item.manageInventory) {
+    if( item.item.manageInventory ) {
       getItemsMetadata(item.item.id, item?.variant?.id);
     }
   }, [item]);
@@ -117,7 +116,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
         <label htmlFor={index.toString()}>
           <div>{item.item.name}</div>
           {item.variant && (
-            <div className="text-sm">
+            <div className="text-sm text-primary-800">
               {item.variant?.attributeValue && (
                 <>{item.variant?.attributeValue}</>
               )}
@@ -131,7 +130,8 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
             {isLoading ? (
               <img alt="loading..." src={Spinner} className="w-[16px]"/>
             ) : (
-              <span className={Number(itemInfo?.quantity) <= 0 ? 'text-danger-500 animated blink' : ''}>{itemInfo?.quantity}</span>
+              <span
+                className={Number(itemInfo?.quantity) <= 0 ? 'text-danger-500 animated blink' : ''}>{itemInfo?.quantity}</span>
             )}
           </>
         )}
@@ -150,10 +150,18 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
             <Input
               type="number"
               value={item.quantity}
-              className={"text-center w-full lg mousetrap"}
-              onChange={(event) =>
+              className={"text-center w-full mousetrap"}
+              onChange={(event) => {
+                console.log(event)
                 onQuantityChange(item, event.currentTarget.value)
-              }
+              }}
+              onFocus={() => {
+                setAppState(prev => ({
+                  ...prev,
+                  cartItem: index,
+                  cartItemType: CartItemType.quantity
+                }));
+              }}
               ref={qtyRef}
             />
             {/*<Button
@@ -171,11 +179,18 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
         <Input
           type="number"
           value={item.discount}
-          className={"text-center w-full lg mousetrap"}
+          className={"text-center w-full mousetrap"}
           onChange={(event) => {
             onDiscountChange(item, +event.currentTarget.value);
           }}
           ref={discRef}
+          onFocus={() => {
+            setAppState(prev => ({
+              ...prev,
+              cartItem: index,
+              cartItemType: CartItemType.discount
+            }))
+          }}
         />
       </div>
       <div className="table-cell p-2 text-center">
@@ -189,7 +204,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
         <Input
           value={item.price}
           type="number"
-          className={"text-center w-full lg mousetrap"}
+          className={"text-center w-full mousetrap"}
           onChange={(event) => onPriceChange(item, +event.currentTarget.value)}
           ref={rateRef}
           disabled

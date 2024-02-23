@@ -10,6 +10,8 @@ import { Shortcut } from "../../../app-common/components/input/shortcut";
 import classNames from "classnames";
 import { useAtom } from "jotai";
 import { defaultState } from "../../../store/jotai";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCheck } from "@fortawesome/free-solid-svg-icons";
 
 interface Props extends PropsWithChildren {}
 
@@ -82,7 +84,9 @@ export const ApplyDiscount: FC<Props> = ({ children }) => {
           setModal(false);
         }}
         title="Apply Discount"
-        shouldCloseOnEsc={true}>
+        shouldCloseOnEsc={true}
+        size="sm"
+      >
         <Button
           variant="danger"
           onClick={() => {
@@ -198,7 +202,7 @@ export const ApplyDiscount: FC<Props> = ({ children }) => {
                       type="submit"
                       size="lg"
                       className="w-full">
-                      Apply discount
+                      <FontAwesomeIcon icon={faCheck} size="lg" />
                     </Button>
                   </div>
                 </div>

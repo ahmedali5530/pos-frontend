@@ -18,7 +18,7 @@ import { Controller, useForm } from "react-hook-form";
 import Fuse from "fuse.js";
 import { Switch } from "../../../app-common/components/input/switch";
 import { useAtom } from "jotai";
-import { defaultData } from "../../../store/jotai";
+import { defaultData, defaultState } from "../../../store/jotai";
 
 interface SearchTableProps {
   items: Product[];
@@ -34,15 +34,21 @@ export const SearchTable = (props: SearchTableProps) => {
     caseSensitive: false,
   });
 
+  const [appState, setAppState] = useAtom(defaultState);
+
+  const {
+    selected
+  } = appState;
+
   const searchScrollContainer = createRef<FixedSizeList>();
   const [quantity, setQuantity] = useState(1);
-  const [selected, setSelected] = useState(0);
+  // const [selected, setSelected] = useState(0);
   const [q, setQ] = useState("");
 
-  const { handleSubmit, register, control, reset } = useForm();
+  const { handleSubmit, control, reset } = useForm();
 
-  const [appState, setAppState] = useAtom(defaultData);
-  const { searchBox } = appState;
+  const [appSettings] = useAtom(defaultData);
+  const { searchBox } = appSettings;
 
 
   const items = useMemo(() => {
@@ -198,7 +204,10 @@ export const SearchTable = (props: SearchTableProps) => {
         if( newSelected === itemsLength ) {
           newSelected = 0;
         }
-        setSelected(newSelected);
+        setAppState(prev => ({
+          ...prev,
+          selected: newSelected
+        }));
 
         moveSearchList(newSelected);
       } else if( event.key === "ArrowUp" ) {
@@ -206,7 +215,11 @@ export const SearchTable = (props: SearchTableProps) => {
         if( newSelected === -1 ) {
           newSelected = itemsLength - 1;
         }
-        setSelected(newSelected);
+
+        setAppState(prev => ({
+          ...prev,
+          selected: newSelected
+        }));
 
         moveSearchList(newSelected);
       } else if( event.key === "Enter" ) {
@@ -219,6 +232,7 @@ export const SearchTable = (props: SearchTableProps) => {
 
   const submitForm = async (values: any) => {
     const item = items[selected];
+
     addItem(item, Number(values.quantity));
 
     if( searchBox ) {
@@ -228,7 +242,7 @@ export const SearchTable = (props: SearchTableProps) => {
       q: "",
       quantity: 1,
     });
-    setSelected(0);
+
     setQ("");
   };
 
@@ -255,6 +269,11 @@ export const SearchTable = (props: SearchTableProps) => {
     setQ("");
     setQuantity(1);
     props.onClick && props.onClick();
+
+    setAppState(prev => ({
+      ...prev,
+      selected: 0
+    }));
   };
 
   const onClose = () => {
@@ -290,7 +309,10 @@ export const SearchTable = (props: SearchTableProps) => {
                 className="search-field w-full mousetrap lg"
                 onChange={(event) => {
                   setQ(event.currentTarget.value);
-                  setSelected(0);
+                  setAppState(prev => ({
+                    ...prev,
+                    selected: 0
+                  }));
                 }}
                 autoFocus
                 type="search"

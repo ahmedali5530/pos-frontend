@@ -1,27 +1,19 @@
-import { useCallback, useEffect, useMemo, useRef, useState, } from "react";
+import { useEffect, useMemo, useRef, useState, } from "react";
 import { HomeProps, initialData, useLoadData, } from "../../../api/hooks/use.load.data";
 import { getStore } from "../../../duck/store/store.selector";
 import { getTerminal } from "../../../duck/terminal/terminal.selector";
 import { useSelector } from "react-redux";
-import { defaultState } from "../../../store/jotai";
+import { defaultData, defaultState } from "../../../store/jotai";
 import { faBarcode, faCubesStacked, faFlag, faIcons, faReply, faRotateRight, } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import classNames from "classnames";
 import { useAtom } from "jotai";
 import localforage from "localforage";
-import QueryString from "qs";
 import { Controller, useForm } from "react-hook-form";
 import { CartItem } from "../../../api/model/cart.item";
-import { DiscountRate, DiscountScope } from "../../../api/model/discount";
-import { fetchJson, jsonRequest } from "../../../api/request/request";
-import { BARCODE_LIST, PRODUCT_QUANTITIES, } from "../../../api/routing/routes/backend.app";
+import { fetchJson } from "../../../api/request/request";
+import { BARCODE_LIST, } from "../../../api/routing/routes/backend.app";
 import { notify } from "../../../app-common/components/confirm/notification";
-import {
-  getExclusiveRowTotal,
-  getRealProductPrice,
-  getRowTotal,
-  scrollToBottom,
-} from "../../containers/dashboard/pos";
+import { getRealProductPrice, scrollToBottom, } from "../../containers/dashboard/pos";
 import { CartContainer } from "../cart/cart.container";
 import { CartControls } from "../cart/cart.controls";
 import { SaleFind } from "../sale/sale.find";
@@ -41,7 +33,6 @@ import { Order } from "../../../api/model/order";
 import { Tooltip } from "antd";
 import { Button } from "../../../app-common/components/input/button";
 import { Input } from "../../../app-common/components/input/input";
-import { Modal } from "../../../app-common/components/modal/modal";
 import { TopbarRight } from "./topbar.right";
 import { Footer } from "./footer";
 import { TrapFocus } from "../../../app-common/components/container/trap.focus";
@@ -63,18 +54,17 @@ export const PosMode = () => {
   const terminal = useSelector(getTerminal);
 
   const [state] = useLoadData();
-
   const [appState, setAppState] = useAtom(defaultState);
+
+  const [appSettings] = useAtom(defaultData);
+  const {
+    customerBox
+  } = appSettings;
 
   const {
     q,
     added,
     rate,
-    discount,
-    discountAmount,
-    discountRateType,
-    tax,
-    coupon,
     customerName
   } = appState;
 
@@ -345,7 +335,7 @@ export const PosMode = () => {
       added: oldItems,
       q: "",
       quantity: 1,
-      selected: items.findIndex((i) => i.id === item.id),
+      // selected: items.findIndex((i) => i.id === item.id),
     }));
 
     scrollToBottom(containerRef.current);
@@ -433,14 +423,14 @@ export const PosMode = () => {
 
   // }, [modal, selected, selectedVariant, variants, items, added, quantity]);
 
-  useEffect(() => {
-    Mousetrap.bind(["f3"], function (e: any) {
-      e.preventDefault();
-      if( searchField.current !== null ) {
-        searchField.current.focus();
-      }
-    });
-  }, [searchField]);
+  // useEffect(() => {
+  Mousetrap.bind("f3", function (e: any) {
+    e.preventDefault();
+    if( searchField.current !== null ) {
+      searchField.current.focus();
+    }
+  });
+  // }, [searchField.current]);
 
   const refundOrder = async (order: Order) => {
     const items: CartItem[] = [];
@@ -600,22 +590,25 @@ export const PosMode = () => {
                     name="quantity"
                     control={control}
                     defaultValue={1}
-                    rules={{required: true}}
+                    rules={{ required: true }}
                   />
                 </div>
                 <button className="hidden">submit</button>
               </form>
-              <Input
-                placeholder="Enter customer name"
-                className="lg"
-                onChange={(event) => {
-                  setAppState(prev => ({
-                    ...prev,
-                    customerName: event.target.value
-                  }))
-                }}
-                value={customerName}
-              />
+              {customerBox && (
+                <Input
+                  placeholder="Enter customer name"
+                  className="lg mousetrap"
+                  onChange={(event) => {
+                    setAppState(prev => ({
+                      ...prev,
+                      customerName: event.target.value
+                    }))
+                  }}
+                  value={customerName}
+                />
+              )}
+
             </div>
             <div className="mr-auto">
               <TopbarRight/>
@@ -627,7 +620,7 @@ export const PosMode = () => {
               <div
                 className="block overflow-auto h-[calc(100vh_-_230px)] bg-white"
                 ref={containerRef}>
-                <CartContainer />
+                <CartContainer/>
               </div>
               <div className="flex gap-4 mt-3 items-center h-[50px]">
                 <Footer/>

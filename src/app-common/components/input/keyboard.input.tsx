@@ -10,8 +10,7 @@ interface KeyboardInputProps extends InputHTMLAttributes<HTMLInputElement> {
   triggerWithIcon?: boolean;
 }
 
-export const KeyboardInput = React.forwardRef(
-  (props: KeyboardInputProps, ref: Ref<HTMLInputElement>) => {
+export const KeyboardInput = React.forwardRef((props: KeyboardInputProps, ref: Ref<any>) => {
     const [defaultState] = useAtom(defaultData);
     const { enableTouch: isTouch } = defaultState;
 

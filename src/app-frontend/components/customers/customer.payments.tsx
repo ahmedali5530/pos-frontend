@@ -203,7 +203,7 @@ export const CustomerPayments: FC<Props> = ({
           </div>
         </form>
 
-        <div className="grid grid-cols-4 gap-4 mb-5">
+        <div className="grid grid-cols-5 gap-3 mb-5">
           <div className="border border-primary-500 p-5 font-bold text-primary-500 rounded">
             Opening Balance
             <span className="float-right">{withCurrency(customer.openingBalance)}</span>
@@ -212,18 +212,27 @@ export const CustomerPayments: FC<Props> = ({
             Total Credit Sale
             <span className="float-right">{withCurrency(customer.sale)}</span>
           </div>
-          <div className="border border-success-500 p-5 font-bold text-success-500 rounded">
+          <div className="border border-success-500 p-5 font-bold text-success-900 bg-success-100 rounded">
             Total Payments
             <span className="float-right">{withCurrency(customer.paid)}</span>
           </div>
           <div className={
             classNames(
               "border p-5 font-bold rounded",
-              diff > 0 ? 'border-danger-500 text-danger-500' : 'border-success-500 text-success-500'
+              diff > 0 ? 'border-danger-500 text-danger-900 bg-danger-100' : 'border-success-500 text-success-900 bg-success-100'
             )
           }>
             Outstanding
             <span className="float-right">{withCurrency(diff)}</span>
+          </div>
+          <div className={
+            classNames(
+              "border p-5 font-bold rounded",
+              customer?.creditLimit && diff > 0 ? 'text-danger-900 bg-danger-100 border-danger-500' : 'text-primary-900 bg-primary-100 border-primary-500'
+            )
+          }>
+            Credit limit
+            <span className="float-right">{customer?.creditLimit ? withCurrency(customer?.creditLimit) : 'no limit'}</span>
           </div>
         </div>
 
@@ -239,7 +248,7 @@ export const CustomerPayments: FC<Props> = ({
           <tbody>
           {list.map((item: any, index: number) => (
             <tr key={index} className="hover:bg-gray-100">
-              <td>{DateTime.fromISO(item.createdAt).toRelative()}</td>
+              <td>{DateTime.fromISO(item.createdAt).toFormat(import.meta.env.VITE_DATE_TIME_HUMAN_FORMAT)}</td>
               <td>
                 {item.amount && (
                   <>
@@ -248,8 +257,8 @@ export const CustomerPayments: FC<Props> = ({
                 )}
                 {item.orderId && (
                   <>
-                    {item.payments.map((p: OrderPayment) => (
-                      <div>
+                    {item.payments.map((p: OrderPayment, index: number) => (
+                      <div key={index}>
                         {p?.type?.name} Sale: {withCurrency(p.received)}
                       </div>
                     ))}

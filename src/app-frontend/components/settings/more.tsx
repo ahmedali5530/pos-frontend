@@ -40,6 +40,7 @@ export const More: FC<Props> = ({}) => {
     defaultPaymentType,
     defaultTax,
     enableTouch,
+    customerBox, requireCustomerBox
   } = defaultOptions;
   const [modal, setModal] = useState(false);
   const [state, action] = useLoadData();
@@ -190,16 +191,18 @@ export const More: FC<Props> = ({}) => {
               </TabNav>
               <TabContent isActive={isTabActive("general")}>
                 <div className="inline-flex flex-col gap-5 justify-start">
-                  <Button
-                    variant="success"
-                    onClick={() => {
-                      clearCache();
-                    }}
-                    className="mr-3 flex-grow-0"
-                    size="lg"
-                    disabled={isLoading}>
-                    {isLoading ? "Clearing..." : "Refresh Cache"}
-                  </Button>
+                  <div>
+                    <Button
+                      variant="success"
+                      onClick={() => {
+                        clearCache();
+                      }}
+                      className="mr-3 flex-grow-0"
+                      size="lg"
+                      disabled={isLoading}>
+                      {isLoading ? "Clearing..." : "Refresh Browser Cache"}
+                    </Button>
+                  </div>
 
                   <Switch
                     checked={enableTouch}
@@ -212,6 +215,39 @@ export const More: FC<Props> = ({}) => {
                     Enable Touch support? <span
                     className="badge rounded-full bg-primary-500 text-primary-100 p-1 px-2 uppercase text-xs">Experimental</span>
                   </Switch>
+
+                  <div className="flex gap-3">
+                    <Switch
+                      checked={customerBox}
+                      onChange={(value) => {
+                        setDefaultOptions((prev) => ({
+                          ...prev,
+                          customerBox: value.target.checked,
+                        }));
+
+                        if(!value.target.checked) {
+                          setDefaultOptions((prev) => ({
+                            ...prev,
+                            requireCustomerBox: false
+                          }));
+                        }
+                      }}>
+                      Show customer input?
+                    </Switch>
+
+                    {customerBox && (
+                      <Switch
+                        checked={requireCustomerBox}
+                        onChange={(value) => {
+                          setDefaultOptions((prev) => ({
+                            ...prev,
+                            requireCustomerBox: value.target.checked,
+                          }));
+                        }}>
+                        Require customer name with every order?
+                      </Switch>
+                    )}
+                  </div>
                 </div>
                 <h3 className="text-xl my-3">Default options</h3>
                 <div className="grid grid-cols-4 gap-5 mt-3">

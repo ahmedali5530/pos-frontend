@@ -48,6 +48,8 @@ export const Input = forwardRef((props: InputProps, ref: Ref<any>) => {
         disabled={props.disabled}
         placeholder={props.placeholder}
         autoFocus={props.autoFocus}
+        onFocus={props.onFocus}
+        onBlur={props.onBlur}
       />
     );
   }else {

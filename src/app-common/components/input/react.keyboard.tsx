@@ -1,12 +1,12 @@
-import Keyboard, {KeyboardReactInterface} from "react-simple-keyboard";
-import React, {FC, forwardRef, InputHTMLAttributes, Ref, useEffect, useRef, useState} from "react";
+import Keyboard, { KeyboardReactInterface } from "react-simple-keyboard";
+import React, { FC, forwardRef, InputHTMLAttributes, Ref, useEffect, useRef, useState } from "react";
 import "react-simple-keyboard/build/css/index.css";
-import {Input} from "./input";
-import {Modal} from "../modal/modal";
+import { Input } from "./input";
+import { Modal } from "../modal/modal";
 import classNames from "classnames";
-import {Button} from "./button";
+import { Button } from "./button";
 
-interface ReactKeyboardProps extends InputHTMLAttributes<HTMLInputElement>{
+interface ReactKeyboardProps extends InputHTMLAttributes<HTMLInputElement> {
   inputSize?: "lg"
   selectable?: boolean;
   innerRef?: any;
@@ -20,7 +20,8 @@ export const LayoutNames = {
   number: 'numeric'
 };
 
-export const ReactKeyboard: FC<ReactKeyboardProps> = forwardRef((props: ReactKeyboardProps, ref: Ref<HTMLInputElement>)  => {
+export const ReactKeyboard: FC<ReactKeyboardProps> = forwardRef((props: ReactKeyboardProps, ref: Ref<HTMLInputElement>) => {
+
   const [input, setInput] = useState<string>('');
   // @ts-ignore
   const [layout, setLayout] = useState(LayoutNames[props.type || 'text']);
@@ -40,39 +41,46 @@ export const ReactKeyboard: FC<ReactKeyboardProps> = forwardRef((props: ReactKey
   };
 
   const onKeyPress = (button: string) => {
-    if(isShift){
+    if( isShift ) {
       setShift(false);
       handleShift();
     }
 
-    if(button === '{cancel}' || button === '{ok}'){
+    if( button === '{cancel}' || button === '{ok}' ) {
       setShow(false);
     }
 
-    if(button === '{clear}'){
-      setInput('');
-      keyboard.current!.setInput('');
+    if( button === '{clear}' ) {
+      let val = '';
+      if( props.type === 'number' ) {
+        val = '0';
+      }
+      setInput(val);
+      keyboard.current!.setInput(val);
     }
 
     /**
      * If you want to handle the shift and caps lock buttons
      */
-    if(button === '{shift}'){
+    if( button === '{shift}' ) {
       setShift(true);
     }
 
-    if (button === "{shift}" || button === "{lock}") handleShift();
+    if( button === "{shift}" || button === "{lock}" ) handleShift();
   };
 
   const onChangeInput = (event: any) => {
-    const input = event.target.value;
+    let input = event.target.value;
+    if( props.type === 'number' ) {
+      input = parseFloat(input).toString();
+    }
     setInput(input);
     keyboard.current!.setInput(input);
   };
 
   useEffect(() => {
     setInput(props?.value as string);
-    if(keyboard.current) {
+    if( keyboard.current ) {
       keyboard?.current!.setInput(props?.value as string);
     }
   }, [keyboard?.current]);
@@ -83,19 +91,18 @@ export const ReactKeyboard: FC<ReactKeyboardProps> = forwardRef((props: ReactKey
         <Input
           {...props}
           value={input}
-          onChange={onChangeInput}
+          onChange={props.onChange}
           onFocus={() => {
-            if(props.triggerWithIcon){
+            if( props.triggerWithIcon ) {
               return false;
             }
 
             setShow(true)
           }}
           className={classNames(
-            !props.triggerWithIcon && 'keyboard-input' ,
+            !props.triggerWithIcon && 'keyboard-input',
             props.className
           )}
-          // onBlur={() => setShow(false)}
           ref={ref}
         />
         {props.triggerWithIcon && (
@@ -122,6 +129,7 @@ export const ReactKeyboard: FC<ReactKeyboardProps> = forwardRef((props: ReactKey
               '{ok}': 'OK',
               '{clear}': 'C',
               '{cancel}': 'Cancel',
+              '{decimal}': '.'
             }}
             mergeDisplay={true}
             layout={{
@@ -129,7 +137,7 @@ export const ReactKeyboard: FC<ReactKeyboardProps> = forwardRef((props: ReactKey
                 '1 2 3 4 5 6 7 8 9 0 - = {bksp}',
                 'q w e r t y u i o p [ ] \\',
                 '{lock} a s d f g h j k l ; \' {enter}',
-                '{shift} z x c v b n m , . / {shift}',
+                '{shift} z x c v b n m , {decimal} / {shift}',
                 '{space} {ok} {clear}'
               ],
               shift: [
@@ -140,17 +148,17 @@ export const ReactKeyboard: FC<ReactKeyboardProps> = forwardRef((props: ReactKey
                 '{space} {ok} {clear}'
               ],
               numeric: [
-                '9 8 7',
-                '6 5 4',
-                '3 2 1',
-                '{clear} 0 {ok}'
+                '7 8 9',
+                '4 5 6',
+                '1 2 3',
+                '{clear} . 0 {ok}'
               ]
             }}
             buttonTheme={[
               {
                 buttons: '{ok}',
                 class: 'btn btn-primary'
-              },{
+              }, {
                 buttons: '{clear}',
                 class: 'btn btn-danger'
               }
