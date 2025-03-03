@@ -23,6 +23,9 @@ A point of sale system built using React.js and [Symfony as a backend](https://g
 - Suppliers management
 - Supports Refunds
 
+## Other projects
+If you are interested in for restaurant based software, [Checkout my other](https://github.com/ahmedali5530/react-posr) software for demo.
+
 ## Requirements
 - NodeJs >= 14
 - Any text editor for updating configuration files

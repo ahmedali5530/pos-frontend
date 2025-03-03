@@ -6,7 +6,7 @@ import { getRowTotal } from "../../containers/dashboard/pos";
 import { Checkbox } from "../../../app-common/components/input/checkbox";
 import { useAtom } from "jotai";
 import { defaultState } from "../../../store/jotai";
-import { formatNumber } from "../../../lib/currency/currency";
+import { formatNumber, withCurrency } from "../../../lib/currency/currency";
 import QueryString from "qs";
 import { jsonRequest } from "../../../api/request/request";
 import { PRODUCT_QUANTITIES } from "../../../api/routing/routes/backend.app";
@@ -197,7 +197,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
         {item.taxIncluded ? (
           taxTotal
         ) : (
-          <span className="line-through">{taxTotal}</span>
+          <span className="line-through">{withCurrency(taxTotal)}</span>
         )}
       </div>
       <div className="table-cell text-right p-1">
