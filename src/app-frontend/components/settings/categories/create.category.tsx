@@ -1,9 +1,7 @@
 import React, {FC, useEffect, useState} from "react";
 import {Modal} from "../../../../app-common/components/modal/modal";
 import {useForm} from "react-hook-form";
-import {CATEGORY_CREATE, CATEGORY_GET} from "../../../../api/routing/routes/backend.app";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
-import {fetchJson} from "../../../../api/request/request";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
 import {StoresInput} from "../../../../app-common/components/input/stores";
@@ -16,6 +14,9 @@ import {Category} from "../../../../api/model/category";
 import {hasErrors} from "../../../../lib/error/error";
 import {yupResolver} from "@hookform/resolvers/yup";
 import {notify} from "../../../../app-common/components/confirm/notification";
+import {useDB} from "../../../../api/db/db";
+import {StringRecordId} from "surrealdb";
+import {Tables} from "../../../../api/db/tables";
 
 
 interface CreateCategoryProps {
@@ -39,6 +40,8 @@ export const CreateCategory: FC<CreateCategoryProps> = ({
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
 
+  const db = useDB();
+
   useEffect(() => {
     setModal(addModal);
   }, [addModal]);
@@ -50,7 +53,7 @@ export const CreateCategory: FC<CreateCategoryProps> = ({
         stores: entity.stores.map(item => {
           return {
             label: item.name,
-            value: item['@id']
+            value: item['id']
           }
         })
       });
@@ -60,27 +63,20 @@ export const CreateCategory: FC<CreateCategoryProps> = ({
   const createCategory = async (values: any) => {
     setCreating(true);
     try {
-      let url, method = 'POST';
-      if (values.id) {
-        method = 'PUT';
-        url = CATEGORY_GET.replace(':id', values.id);
-      } else {
-        url = CATEGORY_CREATE;
-        delete values.id;
-      }
-
       if (values.stores) {
-        values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value);
+        values.stores = values.stores.map((item: ReactSelectOptionProps) => new StringRecordId(item.value));
       }
 
-      await fetchJson(url, {
-        method: method,
-        body: JSON.stringify({
+      if (entity?.id) {
+        await db.merge(new StringRecordId(entity.id), {
           ...values,
-          type: 'product',
-          isActive: true
-        })
-      });
+        });
+      } else {
+        await db.insert(Tables.category, {
+          ...values,
+          is_active: true
+        });
+      }
 
       onModalClose();
 
@@ -140,7 +136,6 @@ export const CreateCategory: FC<CreateCategoryProps> = ({
       title={operation === 'create' ? 'Create category' : 'Update category'}
     >
       <form onSubmit={handleSubmit(createCategory)} className="mb-5">
-        <input type="hidden" {...register('id')}/>
         <div className="grid grid-cols-1 gap-4 mb-3">
           <div>
             <label htmlFor="name">Name</label>

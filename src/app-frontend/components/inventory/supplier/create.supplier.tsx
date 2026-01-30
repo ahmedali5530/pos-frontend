@@ -4,7 +4,6 @@ import {StoresInput} from "../../../../app-common/components/input/stores";
 import {Button} from "../../../../app-common/components/input/button";
 import React, {FC, useEffect, useState} from "react";
 import {useForm} from "react-hook-form";
-import {SUPPLIER_CREATE, SUPPLIER_EDIT} from "../../../../api/routing/routes/backend.app";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
 import {jsonRequest} from "../../../../api/request/request";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
@@ -14,8 +13,11 @@ import {Supplier} from "../../../../api/model/supplier";
 import {hasErrors} from "../../../../lib/error/error";
 import * as yup from "yup";
 import {ValidationMessage} from "../../../../api/model/validation";
-import { yupResolver } from '@hookform/resolvers/yup';
+import {yupResolver} from '@hookform/resolvers/yup';
 import {notify} from "../../../../app-common/components/confirm/notification";
+import {useDB} from "../../../../api/db/db";
+import {StringRecordId} from "surrealdb";
+import {Tables} from "../../../../api/db/tables";
 
 interface CreateSupplierProps{
   operation: string;
@@ -28,7 +30,7 @@ const ValidationSchema = yup.object({
   name: yup.string().trim().required(ValidationMessage.Required),
   phone: yup.string().required(ValidationMessage.Required),
   email: yup.string().required(ValidationMessage.Required).email(ValidationMessage.Email),
-  openingBalance: yup.string().required(ValidationMessage.Required),
+  opening_balance: yup.string().required(ValidationMessage.Required),
   stores: yup.array().min(1).required(ValidationMessage.Required)
 }).required();
 
@@ -40,6 +42,7 @@ export const CreateSupplier: FC<CreateSupplierProps> = ({
   });
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
+  const db = useDB();
 
   useEffect(() => {
     if(supplier){
@@ -47,7 +50,7 @@ export const CreateSupplier: FC<CreateSupplierProps> = ({
         ...supplier,
         stores: supplier?.stores?.map(item => {
           return {
-            value: item['@id'],
+            value: item['id'],
             label: item.name
           }
         })
@@ -62,29 +65,23 @@ export const CreateSupplier: FC<CreateSupplierProps> = ({
   const createSupplier = async (values: any) => {
     setCreating(true);
     try {
-      let url: string, method = 'POST';
-      if (values.id) {
-        method = 'PUT';
-        url = SUPPLIER_EDIT.replace(':id', values.id);
-      } else {
-        url = SUPPLIER_CREATE;
-        delete values.id;
-      }
-
       if (values.stores) {
-        values.stores = values.stores.map((item: ReactSelectOptionProps) => item?.value);
+        values.stores = values.stores.map((item: ReactSelectOptionProps) => new StringRecordId(item?.value));
       }
 
-      if(values.openingBalance){
-        values.openingBalance = (values.openingBalance).toString();
+      if(values.opening_balance){
+        values.opening_balance = Number(values.opening_balance);
       }
 
-      await jsonRequest(url, {
-        method: method,
-        body: JSON.stringify({
-          ...values,
-        })
-      });
+      if (supplier?.id) {
+        await db.merge(new StringRecordId(supplier.id), {
+          ...values
+        });
+      } else {
+        await db.insert(Tables.supplier, {
+          ...values
+        });
+      }
 
       onModalClose();
 
@@ -130,7 +127,7 @@ export const CreateSupplier: FC<CreateSupplierProps> = ({
       stores: null,
       phone: null,
       name: null,
-      openingBalance: null
+      opening_balance: null
     });
   };
 
@@ -148,7 +145,6 @@ export const CreateSupplier: FC<CreateSupplierProps> = ({
       size="sm"
     >
       <form onSubmit={handleSubmit(createSupplier)} className="mb-5">
-        <input type="hidden" {...register('id')}/>
         <div className="grid lg:grid-cols-1 gap-4 mb-3 md:grid-cols-3 sm:grid-cols-1">
           <div>
             <label htmlFor="name">Name</label>
@@ -184,12 +180,12 @@ export const CreateSupplier: FC<CreateSupplierProps> = ({
             )}
           </div>
           <div>
-            <label htmlFor="openingBalance">Opening balance</label>
-            <Input {...register('openingBalance')} type="number" id="openingBalance" className="w-full" hasError={hasErrors(errors.openingBalance)}/>
-            {errors.openingBalance && (
+            <label htmlFor="opening_balance">Opening balance</label>
+            <Input {...register('opening_balance')} type="number" id="opening_balance" className="w-full" hasError={hasErrors(errors.opening_balance)}/>
+            {errors.opening_balance && (
               <div className="text-danger-500 text-sm">
                 <Trans>
-                  {errors.openingBalance.message}
+                  {errors.opening_balance.message}
                 </Trans>
               </div>
             )}

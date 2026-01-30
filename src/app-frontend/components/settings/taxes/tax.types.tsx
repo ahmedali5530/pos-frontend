@@ -7,30 +7,29 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencilAlt, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { TableComponent } from "../../../../app-common/components/table/table";
 import { Tax } from "../../../../api/model/tax";
-import { getAuthorizedUser } from "../../../../duck/auth/auth.selector";
-import { useSelector } from "react-redux";
-import { getStore } from "../../../../duck/store/store.selector";
 import { CreateTax } from "./create.tax";
-import useApi from "../../../../api/hooks/use.api";
-import { HydraCollection } from "../../../../api/model/hydra";
 import { jsonRequest } from "../../../../api/request/request";
 import { Switch } from "../../../../app-common/components/input/switch";
 import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
+import {useAtom} from "jotai";
+import {appState} from "../../../../store/jotai";
+import {Tables} from "../../../../api/db/tables";
+import useApi, {SettingsData} from "../../../../api/db/use.api";
+import {useDB} from "../../../../api/db/db";
+import {StringRecordId} from "surrealdb";
 
 export const TaxTypes = () => {
   const [operation, setOperation] = useState("create");
   const [tax, setTax] = useState<Tax>();
   const [modal, setModal] = useState(false);
-  const user = useSelector(getAuthorizedUser);
-  const store = useSelector(getStore);
+  const [{store}] = useAtom(appState);
+  const db = useDB();
 
-  const useLoadHook = useApi<HydraCollection<Tax>>(
-    "taxes",
-    `${TAX_LIST}?store=${store?.id}`
+  const useLoadHook = useApi<SettingsData<Tax>>(
+    Tables.tax,
+    [`stores ?= ${store?.id}`], [], 0, 10, ['stores']
   );
   const { fetchData } = useLoadHook;
-
-  const { t } = useTranslation();
 
   const columnHelper = createColumnHelper<Tax>();
 
@@ -75,16 +74,16 @@ export const TaxTypes = () => {
               onConfirm={() => {
                 deleteTax(
                   info.getValue().toString(),
-                  !info.row.original.isActive
+                  !info.row.original.is_active
                 );
               }}
               confirmText="Yes, please"
               cancelText="No, wait"
               title="Confirmation"
               description={`Are you sure to ${
-                info.row.original.isActive ? "de-" : ""
+                info.row.original.is_active ? "de-" : ""
               }activate this tax?`}>
-              <Switch checked={info.row.original.isActive} readOnly />
+              <Switch checked={info.row.original.is_active} readOnly />
             </ConfirmAlert>
           </>
         );
@@ -93,11 +92,8 @@ export const TaxTypes = () => {
   ];
 
   async function deleteTax(id: string, status: boolean) {
-    await jsonRequest(TAX_GET.replace(":id", id), {
-      method: "PUT",
-      body: JSON.stringify({
-        isActive: status,
-      }),
+    await db.merge(new StringRecordId(id), {
+      is_active: status,
     });
 
     await useLoadHook.fetchData();
@@ -107,35 +103,34 @@ export const TaxTypes = () => {
     <>
       <TableComponent
         columns={columns}
-        useLoadList={useLoadHook}
+        loaderHook={useLoadHook}
         loaderLineItems={4}
         buttons={[
-          {
-            html: (
-              <Button
-                variant="primary"
-                onClick={() => {
-                  setModal(true);
-                  setOperation("create");
-                }}>
-                <FontAwesomeIcon icon={faPlus} className="mr-2" /> Tax
-              </Button>
-            ),
-          },
+          <Button
+            variant="primary"
+            onClick={() => {
+              setModal(true);
+              setOperation("create");
+            }}>
+            <FontAwesomeIcon icon={faPlus} className="mr-2" /> Tax
+          </Button>
         ]}
       />
 
-      <CreateTax
-        entity={tax}
-        onClose={() => {
-          setTax(undefined);
-          setOperation("create");
-          setModal(false);
-          fetchData();
-        }}
-        operation={operation}
-        addModal={modal}
-      />
+      {modal && (
+        <CreateTax
+          entity={tax}
+          onClose={() => {
+            setTax(undefined);
+            setOperation("create");
+            setModal(false);
+            fetchData();
+          }}
+          operation={operation}
+          addModal={modal}
+        />
+      )}
+
     </>
   );
 };

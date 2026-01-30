@@ -3,14 +3,14 @@ import {ReactSelectOptionProps} from "./common";
 import {HydraId, HydraType} from "./hydra";
 import {Product} from "./product";
 
-export interface Terminal extends HydraId, HydraType {
+export interface Terminal  {
   id: string;
   code: string;
   store?: Store;
   description?: string;
   uuid: string;
-  createdAt: {datetime: string};
-  updatedAt: {datetime: string};
+  createdAt: string;
+  updatedAt: string;
   products: Product[];
-  isActive: boolean
+  is_active: boolean
 }

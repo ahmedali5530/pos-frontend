@@ -14,6 +14,9 @@ import * as yup from 'yup';
 import {ValidationMessage} from "../../../../api/model/validation";
 import {hasErrors} from "../../../../lib/error/error";
 import {notify} from "../../../../app-common/components/confirm/notification";
+import {useDB} from "../../../../api/db/db";
+import {Tables} from "../../../../api/db/tables";
+import {StringRecordId} from "surrealdb";
 
 interface CreateStoreProps {
   entity?: Store;
@@ -34,6 +37,7 @@ export const CreateStore: FC<CreateStoreProps> = ({
   });
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
+  const db = useDB();
 
   useEffect(() => {
     setModal(addModal);
@@ -43,29 +47,24 @@ export const CreateStore: FC<CreateStoreProps> = ({
     if (entity) {
       reset({
         name: entity.name,
-        location: entity.location
+        location: entity.location,
       });
     }
   }, [entity]);
 
   const createStore = async (values: any) => {
     setCreating(true);
-    try {
-      let url, method = 'POST';
-      if (values.id) {
-        method = 'PUT';
-        url = STORE_EDIT.replace(':id', values.id);
-      } else {
-        url = STORE_CREATE;
-        delete values.id;
-      }
 
-      await jsonRequest(url, {
-        method: method,
-        body: JSON.stringify({
+    try {
+      if (entity?.id) {
+        await db.merge(entity.id, {
           ...values,
         })
-      });
+      } else {
+        await db.insert(Tables.store, {
+          ...values,
+        })
+      }
 
       onModalClose();
 
@@ -125,7 +124,6 @@ export const CreateStore: FC<CreateStoreProps> = ({
       size="sm"
     >
       <form onSubmit={handleSubmit(createStore)} className="mb-5">
-        <input type="hidden" {...register('id')}/>
         <div className="grid grid-cols-1 gap-4 mb-3">
           <div>
             <label htmlFor="name">Name</label>

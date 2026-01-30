@@ -24,12 +24,7 @@ interface Props {
 
 export const CloseSale: FC<Props> = ({
   added,
-  finalTotal,
   paymentTypesList,
-  subTotal,
-  taxTotal,
-  couponTotal,
-  discountTotal,
   closeSale,
   setCloseSale,
 }) => {
@@ -61,12 +56,7 @@ export const CloseSale: FC<Props> = ({
         }}
         title="Close sale">
         <CloseSaleInline
-          finalTotal={finalTotal}
           paymentTypesList={paymentTypesList}
-          subTotal={subTotal}
-          taxTotal={taxTotal}
-          couponTotal={couponTotal}
-          discountTotal={discountTotal}
           isInline={false}
           setSaleModal={setSaleModal}
           saleModal={saleModal}

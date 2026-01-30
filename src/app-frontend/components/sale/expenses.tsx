@@ -22,6 +22,8 @@ import * as yup from 'yup';
 import {ValidationMessage} from "../../../api/model/validation";
 import {notify} from "../../../app-common/components/confirm/notification";
 import { withCurrency } from "../../../lib/currency/currency";
+import {useAtom} from "jotai";
+import {appState, defaultState} from "../../../store/jotai";
 
 interface ExpensesProps{
   onClose?: () => void;
@@ -38,7 +40,8 @@ export const Expenses: FC<ExpensesProps> = (props) => {
   const [list, setList] = useState<Expense[]>([]);
   const [filters, setFilters] = useState<any>();
 
-  const store = useSelector(getStore);
+  const [state, setState] = useAtom(appState);
+  const {store} = state;
 
   const {register, handleSubmit, reset} = useForm();
   const loadExpenses = async (values?: any) => {

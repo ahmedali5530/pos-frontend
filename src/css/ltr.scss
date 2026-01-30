@@ -240,6 +240,7 @@ a {
   active:shadow-none bg-white uppercase font-bold border-2;
   font-size: 14px;
   line-height: 1;
+  white-space: nowrap;
   &.lg {
     @apply min-h-[48px];
   }

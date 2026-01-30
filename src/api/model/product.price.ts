@@ -1,7 +1,7 @@
 import {HydraId, HydraType} from "./hydra";
 
-export interface ProductPrice extends HydraId, HydraType {
-  id: number;
+export interface ProductPrice  {
+  id: string;
   date?: string;
   time?: string;
   timeTo?: string;

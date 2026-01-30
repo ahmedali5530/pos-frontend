@@ -9,23 +9,24 @@ import {Terminal} from "./terminal";
 import {Tax} from "./tax";
 import {HydraId, HydraType} from "./hydra";
 import { ProductStore } from "./product.store";
+import {RecordId} from "surrealdb";
 
-export interface Product extends HydraId, HydraType{
-  id: number;
+export interface Product {
+  id: string;
   name: string;
   sku?: string;
   barcode?: string;
-  baseQuantity?: number;
-  isAvailable?: boolean;
+  base_quantity?: number;
+  is_available?: boolean;
   quantity?: number;
-  basePrice: number;
+  base_price: number;
   categories: Category[];
   variants: ProductVariant[];
   prices: ProductPrice[];
-  isActive: boolean;
+  is_active: boolean;
   uuid?: string;
-  purchaseUnit?: string;
-  saleUnit?: string;
+  purchase_unit?: string;
+  sale_unit?: string;
   cost?: number;
   brands: Brand[];
   suppliers: Supplier[];
@@ -33,7 +34,7 @@ export interface Product extends HydraId, HydraType{
   department?: Department;
   terminals: Terminal[];
   taxes: Tax[];
-  manageInventory?: boolean
+  manage_inventory?: boolean
 }
 
 export interface SearchableProduct {

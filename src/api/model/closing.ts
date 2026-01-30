@@ -3,20 +3,20 @@ import {Store} from "./store";
 import {Terminal} from "./terminal";
 import {HydraId, HydraType} from "./hydra";
 
-export interface Closing extends HydraId, HydraType{
+export interface Closing {
   id: string;
-  dateFrom?: { datetime: string };
-  dateTo?: { datetime: string };
-  closedAt?: string;
-  closedBy?: User;
-  openingBalance?: number;
-  closingBalance?: number;
-  cashAdded?: number;
-  cashWithdrawn?: number;
-  openedBy?: User;
+  date_from?: string;
+  date_to?: string;
+  closed_at?: string;
+  closed_by?: User;
+  opening_balance?: number;
+  closing_balance?: number;
+  cash_added?: number;
+  cash_withdrawn?: number;
+  opened_by?: User;
   data?: any;
   store: Store;
   denominations?: any;
-  createdAt: {datetime: string};
+  created_at: string;
   terminal: Terminal;
 }

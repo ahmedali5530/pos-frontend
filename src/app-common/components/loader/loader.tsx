@@ -13,11 +13,11 @@ export const Loader = ({lines = 5, lineItems = 5}: LoaderProps) => {
       let b: ReactNode[] = [];
       for(let j = 1; j <= lineItems; j++){
         b.push(
-          <div className="h-5 bg-gray-300 rounded-full w-24"></div>
+          <div key={j+i} className="h-5 bg-gray-300 rounded-full w-24"></div>
         );
       }
       a.push(
-        <div className="flex justify-between items-center gap-5 p-5">
+        <div key={i} className="flex justify-between items-center gap-5 p-5">
           {b}
         </div>
       );

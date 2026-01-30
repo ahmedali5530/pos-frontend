@@ -1,6 +1,6 @@
 import {HydraId, HydraType} from "./hydra";
 
-export interface Device extends HydraId, HydraType {
+export interface Device  {
   id: string;
   name: string;
   ipAddress: string;

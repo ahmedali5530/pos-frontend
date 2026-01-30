@@ -14,27 +14,32 @@ import { useSelector } from "react-redux";
 import { getAuthorizedUser } from "../../../../duck/auth/auth.selector";
 import { getStore } from "../../../../duck/store/store.selector";
 import { CreatePaymentType } from "./create.payment.type";
-import useApi from "../../../../api/hooks/use.api";
-import { HydraCollection } from "../../../../api/model/hydra";
 import { Switch } from "../../../../app-common/components/input/switch";
 import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
 import { jsonRequest } from "../../../../api/request/request";
+import useApi, {SettingsData} from "../../../../api/db/use.api";
+import {Tables} from "../../../../api/db/tables";
+import {useAtom} from "jotai";
+import {appState} from "../../../../store/jotai";
+import {useDB} from "../../../../api/db/db";
+import {StringRecordId} from "surrealdb";
 
 export const PaymentTypes = () => {
   const [operation, setOperation] = useState("create");
 
-  const user = useSelector(getAuthorizedUser);
-  const store = useSelector(getStore);
+  const [appSt] = useAtom(appState);
+  const {user, store} = appSt;
 
-  const useLoadHook = useApi<HydraCollection<PaymentType>>(
-    "paymentTypes",
-    `${PAYMENT_TYPE_LIST}?store=${store?.id}`
+  const db = useDB();
+
+  const useLoadHook = useApi<SettingsData<PaymentType>>(
+    Tables.payment,
+    [`stores ?= ${store?.id}`],
+    [], 0, 10, ['stores']
   );
   const { fetchData } = useLoadHook;
   const [paymentType, setPaymentType] = useState<PaymentType>();
   const [modal, setModal] = useState(false);
-
-  const { t } = useTranslation();
 
   const columnHelper = createColumnHelper<PaymentType>();
 
@@ -84,16 +89,16 @@ export const PaymentTypes = () => {
               onConfirm={() => {
                 deletePaymentType(
                   info.getValue().toString(),
-                  !info.row.original.isActive
+                  !info.row.original.is_active
                 );
               }}
               confirmText="Yes, please"
               cancelText="No, wait"
               title="Confirmation"
               description={`Are you sure to ${
-                info.row.original.isActive ? "de-" : ""
+                info.row.original.is_active ? "de-" : ""
               }activate this payment type?`}>
-              <Switch checked={info.row.original.isActive} readOnly />
+              <Switch checked={info.row.original.is_active} readOnly />
             </ConfirmAlert>
           </>
         );
@@ -102,11 +107,8 @@ export const PaymentTypes = () => {
   ];
 
   async function deletePaymentType(id: string, status: boolean) {
-    await jsonRequest(PAYMENT_TYPE_GET.replace(":id", id), {
-      method: "PUT",
-      body: JSON.stringify({
-        isActive: status,
-      }),
+    await db.merge(new StringRecordId(id), {
+      is_active: status,
     });
 
     await useLoadHook.fetchData();
@@ -116,35 +118,34 @@ export const PaymentTypes = () => {
     <>
       <TableComponent
         columns={columns}
-        useLoadList={useLoadHook}
+        loaderHook={useLoadHook}
         loaderLineItems={5}
         buttons={[
-          {
-            html: (
-              <Button
-                variant="primary"
-                onClick={() => {
-                  setModal(true);
-                  setOperation("create");
-                }}>
-                <FontAwesomeIcon icon={faPlus} className="mr-2" /> Payment type
-              </Button>
-            ),
-          },
+          <Button
+            variant="primary"
+            onClick={() => {
+              setModal(true);
+              setOperation("create");
+            }}>
+            <FontAwesomeIcon icon={faPlus} className="mr-2" /> Payment type
+          </Button>
         ]}
       />
 
-      <CreatePaymentType
-        addModal={modal}
-        onClose={() => {
-          setPaymentType(undefined);
-          setOperation("create");
-          setModal(false);
-          fetchData();
-        }}
-        entity={paymentType}
-        operation={operation}
-      />
+      {modal && (
+        <CreatePaymentType
+          addModal={modal}
+          onClose={() => {
+            setPaymentType(undefined);
+            setOperation("create");
+            setModal(false);
+            fetchData();
+          }}
+          entity={paymentType}
+          operation={operation}
+        />
+      )}
+
     </>
   );
 };

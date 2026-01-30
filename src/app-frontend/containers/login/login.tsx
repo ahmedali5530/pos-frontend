@@ -1,106 +1,97 @@
-import React, { useCallback, useState } from "react";
+import React, {useState} from "react";
 import Layout from "../layout/layout";
-import { AUTH_INFO, LOGIN } from "../../../api/routing/routes/backend.app";
-import { jsonRequest } from "../../../api/request/request";
-import { useDispatch } from "react-redux";
-import { userAuthenticated } from "../../../duck/auth/auth.action";
-import { Controller, useForm } from "react-hook-form";
+import {Controller, useForm} from "react-hook-form";
 import Cookies from "js-cookie";
-import { useTranslation } from "react-i18next";
-import {
-  HttpException,
-  UnauthorizedException,
-} from "../../../lib/http/exception/http.exception";
-import { useNavigate } from "react-router";
-import { FORGOT_PASSWORD, POS } from "../../routes/frontend.routes";
-import { Link } from "react-router-dom";
-import { Modal } from "../../../app-common/components/modal/modal";
-import { Store } from "../../../api/model/store";
-import { Button } from "../../../app-common/components/input/button";
-import { User } from "../../../api/model/user";
-import { Terminal } from "../../../api/model/terminal";
-import { storeAction } from "../../../duck/store/store.action";
-import { terminalAction } from "../../../duck/terminal/terminal.action";
+import {useTranslation} from "react-i18next";
+import {HttpException, UnauthorizedException,} from "../../../lib/http/exception/http.exception";
+import {useNavigate} from "react-router";
+import {FORGOT_PASSWORD, POS} from "../../routes/frontend.routes";
+import {Link} from "react-router-dom";
+import {Modal} from "../../../app-common/components/modal/modal";
+import {Store} from "../../../api/model/store";
+import {Button} from "../../../app-common/components/input/button";
+import {User} from "../../../api/model/user";
+import {Terminal} from "../../../api/model/terminal";
+import {useAtom} from "jotai";
+import {appState} from "../../../store/jotai";
+import {useDB} from "../../../api/db/db";
+import {Tables} from "../../../api/db/tables";
+import * as yup from 'yup';
+import {yupResolver} from "@hookform/resolvers/yup";
+
+const schema = yup.object({
+  username: yup.string().required(),
+  password: yup.string().required()
+})
 
 const Login = () => {
+  const db = useDB();
   const [errorMessage, setErrorMessage] = useState<string | undefined>(
     undefined
   );
   const [isLoading, setLoading] = useState(false);
+  const [app, setApp] = useAtom(appState);
 
-  const dispatch = useDispatch();
-  const { handleSubmit, control } = useForm();
+  const {handleSubmit, register, formState: {errors}} = useForm({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      username: "",
+      password: ""
+    }
+  });
   const navigate = useNavigate();
 
   const [modal, setModal] = useState(false);
   const [user, setUser] = useState<User>();
-  const [tokens, setTokens] = useState<any>();
   const [store, setStore] = useState<Store>();
 
   const submitForm = async (values: any) => {
     setLoading(true);
     setErrorMessage(undefined);
-    const requestOptions = {
-      method: "POST",
-      body: JSON.stringify({
-        username: values.username,
-        password: values.password,
-        role: "ROLE_USER",
-      }),
-    };
 
     try {
-      const res = await jsonRequest(LOGIN + "?role=ROLE_USER", requestOptions);
-      const json = await res.json();
-
-      Cookies.set("JWT", json.token, {
-        secure: true,
+      const [record]: any = await db.query(`
+          SELECT *
+          from ${Tables.user_account}
+          where username = $username
+            and crypto::bcrypt::compare(password, $password) = true
+            and is_active = true
+              fetch stores
+              , stores.store, stores.terminals
+      `, {
+        username: values.username,
+        password: values.password
       });
-      Cookies.set("refresh_token", json.refresh_token, {
-        secure: true,
-      });
 
-      setTokens(json);
+      if(record.length > 0){
+        const userAccount = record[0];
+        setApp(prev => ({
+          ...prev,
+          // loggedIn: true,
+          user: record[0]
+        }));
 
-      //get user info and store
-      const info = await jsonRequest(AUTH_INFO + "?role=ROLE_USER");
-      const infoJson = await info.json();
+        setUser(record[0]);
 
-      setUser(infoJson.user);
+        if (userAccount?.stores?.length === 1) {
 
-      Cookies.remove("JWT");
-      Cookies.remove("refresh_token");
+          if (userAccount?.stores[0]?.terminals?.length === 1) {
+            //auto select a single store and single terminal
+            selectTerminal(userAccount?.stores[0]?.terminals[0], userAccount?.stores[0])
 
-      if (infoJson.user.stores.length === 1) {
-        if (infoJson?.user?.stores[0]?.terminals?.length === 1) {
-          //auto select single store and single terminal
-          setTimeout(() => {
-            selectTerminal(
-              infoJson.user.stores[0].terminals[0],
-              infoJson.user.stores[0],
-              infoJson.user,
-              json
-            );
-          }, 300);
-        } else {
-          setStore(infoJson.user.stores[0]);
+            return;
+          } else {
+            setStore(userAccount?.stores[0]);
+            setModal(true);
+
+            return;
+          }
+        } else if(userAccount?.stores?.length > 1) {
           setModal(true);
         }
-      } else {
-        setModal(true);
       }
     } catch (err: any) {
-      if (err instanceof HttpException) {
-        setErrorMessage(err.message);
-      }
-
-      if (err instanceof UnauthorizedException) {
-        const res = await err.response.json();
-        setErrorMessage(t(res.message));
-      }
-
-      // let errorResponse = await err.response.json();
-      // setErrorMessage(errorResponse.message);
+        setErrorMessage(err.toString());
     } finally {
       setLoading(false);
     }
@@ -108,46 +99,16 @@ const Login = () => {
 
   const selectTerminal = (
     terminal: Terminal,
-    store: Store,
-    paramUser?: User,
-    paramTokens?: any
+    store: Store | undefined,
   ) => {
-    // terminal.products = [];
-    terminal.store = undefined;
-
-    store.terminals = [];
-
-    Cookies.set("store", JSON.stringify(store));
-    Cookies.set("terminal", JSON.stringify(terminal));
-
-    let t = tokens;
-    if (!t) {
-      t = paramTokens;
-    }
-
-    Cookies.set("JWT", t?.token, {
-      secure: true,
-    });
-    Cookies.set("refresh_token", t?.refresh_token, {
-      secure: true,
-    });
-
-    setTokens(undefined);
-
-    let u = user;
-    if (!u) {
-      u = paramUser;
-    }
-
-    dispatch(userAuthenticated(u));
-
-    dispatch(storeAction(store));
-    dispatch(terminalAction(terminal));
-
+    setApp(prev => ({
+      ...prev,
+      loggedIn: true,
+      terminal: terminal,
+      store: store
+    }));
     navigate(POS);
   };
-
-  const { t } = useTranslation();
 
   return (
     <Layout>
@@ -156,7 +117,7 @@ const Login = () => {
           <div className="card-body">
             <div className="pt-4 pb-2">
               <h5 className="card-title text-center pb-0 fs-4">
-                {t("Login to Your Account")}
+                Login to Your Account
               </h5>
             </div>
             {errorMessage !== undefined && (
@@ -169,41 +130,25 @@ const Login = () => {
               className="flex flex-col gap-5">
               <div>
                 <label htmlFor="username" className="form-label">
-                  {t("Username")}
+                  Username
                 </label>
-                <Controller
-                  name="username"
-                  render={(props) => (
-                    <input
-                      onChange={props.field.onChange}
-                      value={props.field.value}
-                      type="text"
-                      id="username"
-                      className="input w-full"
-                      autoFocus
-                    />
-                  )}
-                  control={control}
-                  defaultValue=""
+                <input
+                  type="text"
+                  id="username"
+                  className="input w-full"
+                  autoFocus
+                  {...register('username')}
                 />
               </div>
               <div>
                 <label htmlFor="password" className="form-label">
-                  {t("Password")}
+                  Password
                 </label>
-                <Controller
-                  render={(props) => (
-                    <input
-                      type="password"
-                      onChange={props.field.onChange}
-                      value={props.field.value}
-                      id="password"
-                      className="input w-full"
-                    />
-                  )}
-                  name="password"
-                  control={control}
-                  defaultValue=""
+                <input
+                  type="password"
+                  id="password"
+                  className="input w-full"
+                  {...register('password')}
                 />
               </div>
               <div>
@@ -216,7 +161,7 @@ const Login = () => {
               </div>
               <div className="col-12 mt-3 d-flex justify-content-between">
                 <Link to={FORGOT_PASSWORD} className="text-white">
-                  {t("Forgot Password")}?
+                  Forgot Password?
                 </Link>
               </div>
             </form>
@@ -224,45 +169,48 @@ const Login = () => {
         </div>
       </div>
 
-      <Modal
-        open={modal}
-        onClose={() => {
-          setModal(false);
-        }}
-        title={<span className="text-white">Choose a store</span>}
-        shouldCloseOnEsc={false}
-        shouldCloseOnOverlayClick={false}
-        hideCloseButton={true}>
-        <div className="flex justify-center items-center gap-5">
-          {user?.stores.map((str, index) => (
-            <Button
-              variant="primary"
-              key={index}
-              onClick={() => setStore(str)}
-              className="mr-3 mb-3 h-[100px_!important] min-w-[150px] relative"
-              active={store === str}>
-              {str.name}
-            </Button>
-          ))}
-        </div>
+      {modal && (
+        <Modal
+          open={modal}
+          onClose={() => {
+            setModal(false);
+          }}
+          title={<span className="text-white">Choose a store</span>}
+          shouldCloseOnEsc={false}
+          shouldCloseOnOverlayClick={false}
+          hideCloseButton={true}>
+          <div className="flex justify-center items-center gap-5">
+            {user?.stores.map((str, index) => (
+              <Button
+                variant="primary"
+                key={index}
+                onClick={() => setStore(str)}
+                className="mr-3 mb-3 h-[100px_!important] min-w-[150px] relative"
+                active={store === str}>
+                {str.name}
+              </Button>
+            ))}
+          </div>
 
-        {store && (
-          <>
-            <h4 className="text-xl text-center my-3">Choose a Terminal</h4>
-            <div className="flex justify-center items-center gap-5 flex-wrap">
-              {store.terminals.map((terminal, index) => (
-                <Button
-                  variant="primary"
-                  key={index}
-                  onClick={() => selectTerminal(terminal, store)}
-                  className="mr-3 mb-3 h-[100px_!important] min-w-[150px] relative">
-                  {terminal.code}
-                </Button>
-              ))}
-            </div>
-          </>
-        )}
-      </Modal>
+          {store && (
+            <>
+              <h4 className="text-xl text-center my-3">Choose a Terminal</h4>
+              <div className="flex justify-center items-center gap-5 flex-wrap">
+                {store.terminals.map((terminal, index) => (
+                  <Button
+                    variant="primary"
+                    key={index}
+                    onClick={() => selectTerminal(terminal, store)}
+                    className="mr-3 mb-3 h-[100px_!important] min-w-[150px] relative">
+                    {terminal.code}
+                  </Button>
+                ))}
+              </div>
+            </>
+          )}
+        </Modal>
+      )}
+
     </Layout>
   );
 };

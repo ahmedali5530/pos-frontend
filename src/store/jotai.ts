@@ -7,12 +7,31 @@ import { Discount } from "../api/model/discount";
 import { Tax } from "../api/model/tax";
 import { Customer } from "../api/model/customer";
 import { ProductVariant } from "../api/model/product.variant";
+import {Ref} from "react";
+import {User} from "../api/model/user";
+import {Store} from "../api/model/store";
+import {Terminal} from "../api/model/terminal";
 
 export enum PosModes {
   pos = "pos",
   order = "order",
   payment = "payment",
 }
+
+export interface AppStateInterface {
+  loggedIn: boolean
+  user?: User
+  store?: Store
+  terminal?: Terminal
+  progress?: string
+}
+
+export const appState = atomWithStorage<AppStateInterface>(
+  "pos-app-state",
+  {
+    loggedIn: false,
+  }
+);
 
 export interface DefaultStateInterface {
   q: string;
@@ -38,7 +57,7 @@ export interface DefaultStateInterface {
   cartItemType: string;
   orderId?: string;
   customerName?: string;
-  paymentType?: PaymentType
+  paymentType?: PaymentType;
 }
 
 export const defaultState = atomWithStorage<DefaultStateInterface>(

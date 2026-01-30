@@ -17,25 +17,27 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { ImportItems } from "./import.items";
 import { ExportItems } from "./export.items";
 import { CreateItem } from "./manage-item/items.create";
-import useApi from "../../../../api/hooks/use.api";
-import { HydraCollection } from "../../../../api/model/hydra";
 import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
 import { jsonRequest } from "../../../../api/request/request";
 import { Switch } from "../../../../app-common/components/input/switch";
 import { ItemComponent } from "./item";
 import { Menu, MenuItem } from "react-aria-components";
 import { DropdownMenu, DropdownMenuItem } from "../../../../app-common/components/react-aria/dropdown.menu";
+import useApi, {SettingsData} from "../../../../api/db/use.api";
+import {Tables} from "../../../../api/db/tables";
+import {useDB} from "../../../../api/db/db";
+import {StringRecordId} from "surrealdb";
 
 export const Items = () => {
-  const useLoadHook = useApi<HydraCollection<Product>>(
-    "products",
-    PRODUCT_LIST
+  const useLoadHook = useApi<SettingsData<Product>>(
+    Tables.product, [], [], 0, 10, ['department', 'categories', 'suppliers', 'brands', 'variants', 'taxes', 'terminals',
+      'stores', 'stores.store', 'variants.stores', 'variants.stores.store'
+    ]
   );
   const [entity, setEntity] = useState<Product>();
   const [operation, setOperation] = useState("create");
   const [modal, setModal] = useState(false);
-
-  const { t } = useTranslation();
+  const db = useDB();
 
   const columnHelper = createColumnHelper<Product>();
 
@@ -46,7 +48,7 @@ export const Items = () => {
     columnHelper.accessor("barcode", {
       header: "Barcode",
     }),
-    columnHelper.accessor("basePrice", {
+    columnHelper.accessor("base_price", {
       header: "Sale Price",
     }),
     columnHelper.accessor("cost", {
@@ -129,17 +131,17 @@ export const Items = () => {
               onConfirm={() => {
                 deleteItem(
                   info.row.original.id.toString(),
-                  !info.row.original.isActive
+                  !info.row.original.is_active
                 );
               }}
               confirmText="Yes, please"
               cancelText="No, wait"
               title="Confirmation"
               description={`Are you sure to ${
-                info.row.original.isActive ? "de-" : ""
+                info.row.original.is_active ? "de-" : ""
               }activate this item?`}
             >
-              <Switch checked={info.row.original.isActive}></Switch>
+              <Switch checked={info.row.original.is_active} onChange={() => {}}></Switch>
             </ConfirmAlert>
             <ItemComponent product={info.row.original}/>
             <DropdownMenu label={
@@ -163,11 +165,8 @@ export const Items = () => {
   ];
 
   async function deleteItem(id: string, status: boolean) {
-    await jsonRequest(PRODUCT_GET.replace(":id", id), {
-      method: "PUT",
-      body: JSON.stringify({
-        isActive: status,
-      }),
+    await db.merge(new StringRecordId(id), {
+      is_active: status,
     });
 
     await useLoadHook.fetchData();
@@ -177,42 +176,36 @@ export const Items = () => {
     <>
       <TableComponent
         columns={columns}
-        useLoadList={useLoadHook}
+        loaderHook={useLoadHook}
         buttons={[
-          {
-            html: <ImportItems />,
-          },
-          {
-            html: <ExportItems />,
-          },
-          {
-            html: (
-              <Button
-                variant="primary"
-                onClick={() => {
-                  setModal(true);
-                  setOperation("create");
-                }}>
-                <FontAwesomeIcon icon={faPlus} className="mr-2" /> Item
-              </Button>
-            ),
-          },
+          <ImportItems />,
+          <ExportItems />,
+          <Button
+            variant="primary"
+            onClick={() => {
+              setModal(true);
+              setOperation("create");
+            }}>
+            <FontAwesomeIcon icon={faPlus} className="mr-2" /> Item
+          </Button>
         ]}
         loaderLineItems={12}
         loaderLines={10}
       />
 
-      <CreateItem
-        addModal={modal}
-        entity={entity}
-        onClose={() => {
-          setModal(false);
-          setOperation("create");
-          useLoadHook.fetchData();
-          setEntity(undefined);
-        }}
-        operation={operation}
-      />
+      {modal && (
+        <CreateItem
+          addModal={modal}
+          entity={entity}
+          onClose={() => {
+            setModal(false);
+            setOperation("create");
+            useLoadHook.fetchData();
+            setEntity(undefined);
+          }}
+          operation={operation}
+        />
+      )}
     </>
   );
 };

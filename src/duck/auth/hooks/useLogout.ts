@@ -1,9 +1,7 @@
 import {useState} from 'react';
-import {userLoggedOut} from '../auth.action';
-import {useDispatch} from 'react-redux';
 import Cookies from "js-cookie";
-import {jsonRequest} from "../../../api/request/request";
-import {AUTH_LOGOUT} from "../../../api/routing/routes/backend.app";
+import {useAtom} from "jotai";
+import {appState} from "../../../store/jotai";
 
 export interface LogoutState {
   isLoading: boolean;
@@ -13,22 +11,23 @@ export interface LogoutState {
 export type LogoutAction = () => Promise<void>;
 
 export const useLogout = (): [LogoutState, LogoutAction] => {
-  const dispatch = useDispatch();
-
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(undefined);
+  const [, setAppState] = useAtom(appState);
 
   const logout = async () => {
     setIsLoading(true);
     setError(undefined);
 
-    //delete cookie
-    Cookies.remove('JWT');
-    Cookies.remove('refresh_token');
+    setAppState(prev => ({
+      ...prev,
+      loggedIn: false,
+      user: undefined,
+      terminal: undefined,
+      store: undefined
+    }));
 
-    await jsonRequest(AUTH_LOGOUT);
-
-    dispatch(userLoggedOut());
+    // await jsonRequest(AUTH_LOGOUT);
   };
 
   return [{isLoading, error}, logout];

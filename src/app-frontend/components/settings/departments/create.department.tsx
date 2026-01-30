@@ -1,22 +1,21 @@
-import React, { FC, useEffect, useState } from "react";
-import { Modal } from "../../../../app-common/components/modal/modal";
-import { Controller, useForm } from "react-hook-form";
-import { DEPARTMENT_CREATE, DEPARTMENT_GET, STORE_LIST } from "../../../../api/routing/routes/backend.app";
-import { Input } from "../../../../app-common/components/input/input";
-import { Button } from "../../../../app-common/components/input/button";
-import { HttpException, UnprocessableEntityException } from "../../../../lib/http/exception/http.exception";
-import { ConstraintViolation, ValidationResult } from "../../../../lib/validator/validation.result";
-import { Department } from "../../../../api/model/department";
-import { jsonRequest } from "../../../../api/request/request";
-import { getErrorClass, getErrors, hasErrors } from "../../../../lib/error/error";
+import React, {FC, useEffect, useState} from "react";
+import {Modal} from "../../../../app-common/components/modal/modal";
+import {useForm} from "react-hook-form";
+import {Input} from "../../../../app-common/components/input/input";
+import {Button} from "../../../../app-common/components/input/button";
+import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
+import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
+import {Department} from "../../../../api/model/department";
+import {jsonRequest} from "../../../../api/request/request";
+import {getErrors, hasErrors} from "../../../../lib/error/error";
 import * as yup from "yup";
-import { ValidationMessage } from "../../../../api/model/validation";
-import { yupResolver } from "@hookform/resolvers/yup";
-import { ReactSelect } from "../../../../app-common/components/input/custom.react.select";
-import { Store } from "../../../../api/model/store";
-import { notify } from "../../../../app-common/components/confirm/notification";
-import useApi from "../../../../api/hooks/use.api";
-import { HydraCollection } from "../../../../api/model/hydra";
+import {ValidationMessage} from "../../../../api/model/validation";
+import {yupResolver} from "@hookform/resolvers/yup";
+import {notify} from "../../../../app-common/components/confirm/notification";
+import {useDB} from "../../../../api/db/db";
+import {StringRecordId} from "surrealdb";
+import {Tables} from "../../../../api/db/tables";
+import {StoreInput} from "../../../../app-common/components/input/store";
 
 interface CreateDepartmentProps {
   entity?: Department;
@@ -27,7 +26,7 @@ interface CreateDepartmentProps {
 
 const ValidationSchema = yup.object({
   name: yup.string().required(ValidationMessage.Required),
-  description: yup.string().required(ValidationMessage.Required),
+  description: yup.string(),
   store: yup.object().required(ValidationMessage.Required)
 }).required();
 
@@ -40,11 +39,7 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
   });
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
-  const { data: stores, fetchData: loadStores } = useApi<HydraCollection<Store>>('stores', STORE_LIST);
-
-  useEffect(() => {
-    loadStores();
-  }, []);
+  const db = useDB();
 
   useEffect(() => {
     setModal(addModal);
@@ -55,7 +50,7 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
       reset({
         ...entity,
         store: {
-          value: entity?.store?.['@id'],
+          value: entity?.store?.['id'],
           label: entity?.store?.name
         }
       });
@@ -65,26 +60,19 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
   const createDepartment = async (values: any) => {
     setCreating(true);
     try {
-      let url, method = 'POST';
-      if( values.id ) {
-        method = 'PUT';
-        url = DEPARTMENT_GET.replace(':id', values.id);
-      } else {
-        url = DEPARTMENT_CREATE;
-        delete values.id;
-      }
-
       if( values.store ) {
-        values.store = values.store.value;
+        values.store = new StringRecordId(values.store.value);
       }
 
-      await jsonRequest(url, {
-        method: method,
-        body: JSON.stringify({
-          ...values,
-          isActive: true
-        })
-      });
+      if( entity?.id ) {
+        await db.merge(new StringRecordId(entity.id), {
+          ...values
+        });
+      } else {
+        await db.insert(Tables.department, {
+          ...values
+        });
+      }
 
       onModalClose();
 
@@ -145,7 +133,6 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
       size="sm"
     >
       <form onSubmit={handleSubmit(createDepartment)} className="mb-5">
-        <input type="hidden" {...register('id')}/>
         <div className="grid grid-cols-1 gap-4 mb-3">
           <div>
             <label htmlFor="name">Name</label>
@@ -161,26 +148,7 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
           </div>
 
           <div>
-            <label htmlFor="store">Store</label>
-            <Controller
-              name="store"
-              control={control}
-              render={(props) => (
-                <ReactSelect
-                  onChange={props.field.onChange}
-                  value={props.field.value}
-                  options={stores?.['hydra:member']?.map(item => {
-                    return {
-                      label: item.name,
-                      value: item['@id']
-                    }
-                  })}
-                  className={getErrorClass(errors.store)}
-                />
-              )}
-            />
-
-            {getErrors(errors.store)}
+            <StoreInput control={control} errors={errors} />
           </div>
 
           <div>

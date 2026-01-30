@@ -1,7 +1,7 @@
 import {Order} from "./order";
 import {HydraId, HydraType} from "./hydra";
 
-export interface CustomerPayment extends HydraId, HydraType {
+export interface CustomerPayment  {
   id: string;
   amount: number;
   description: string;

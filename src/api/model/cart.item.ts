@@ -3,7 +3,7 @@ import {ProductVariant} from "./product.variant";
 import {Tax} from "./tax";
 import {HydraId, HydraType} from "./hydra";
 
-export interface CartItem extends HydraId, HydraType{
+export interface CartItem {
   item: Product;
   quantity: number;
   price: number;

@@ -16,6 +16,9 @@ import {ValidationMessage} from "../../../../api/model/validation";
 import {yupResolver} from "@hookform/resolvers/yup";
 import {hasErrors} from "../../../../lib/error/error";
 import {notify} from "../../../../app-common/components/confirm/notification";
+import {useDB} from "../../../../api/db/db";
+import {Tables} from "../../../../api/db/tables";
+import {StringRecordId} from "surrealdb";
 
 interface CreateBrandProps{
   entity?: Brand;
@@ -37,6 +40,7 @@ export const CreateBrand: FC<CreateBrandProps> = ({
   });
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
+  const db = useDB();
 
   useEffect(() => {
     setModal(addModal);
@@ -49,7 +53,7 @@ export const CreateBrand: FC<CreateBrandProps> = ({
         stores: entity.stores.map(item => {
           return {
             label: item.name,
-            value: item['@id']
+            value: item['id']
           }
         })
       });
@@ -59,26 +63,20 @@ export const CreateBrand: FC<CreateBrandProps> = ({
   const createBrand = async (values: any) => {
     setCreating(true);
     try {
-      let url, method = 'POST';
-      if (values.id) {
-        method = 'PUT';
-        url = BRAND_EDIT.replace(':id', values.id);
-      } else {
-        url = BRAND_CREATE;
-        delete values.id;
-      }
-
       if(values.stores){
-        values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value);
+        values.stores = values.stores.map((item: ReactSelectOptionProps) => new StringRecordId(item.value));
       }
 
-      await fetchJson(url, {
-        method: method,
-        body: JSON.stringify({
+      if (entity?.id) {
+        await db.merge(new StringRecordId(entity.id), {
           ...values,
-          isActive: true
-        })
-      });
+        });
+      } else {
+        await db.insert(Tables.brand, {
+          ...values,
+          is_active: true
+        });
+      }
 
       onModalClose();
 
@@ -138,7 +136,6 @@ export const CreateBrand: FC<CreateBrandProps> = ({
       title={operation === 'create' ? 'Create brand' : 'Update brand'}
     >
       <form onSubmit={handleSubmit(createBrand)} className="mb-5">
-        <input type="hidden" {...register('id')}/>
         <div className="grid grid-cols-1 gap-4 mb-3">
           <div>
             <label htmlFor="name">Name</label>

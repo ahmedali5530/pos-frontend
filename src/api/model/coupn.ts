@@ -1,5 +1,5 @@
 import { HydraId, HydraType } from "./hydra";
 
-export interface Coupon extends HydraId, HydraType {
+export interface Coupon  {
   id: string;
 }

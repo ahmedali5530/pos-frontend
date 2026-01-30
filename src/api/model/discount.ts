@@ -1,14 +1,14 @@
 import {Store} from "./store";
 import {HydraId, HydraType} from "./hydra";
 
-export interface Discount extends HydraId, HydraType {
-  id: number;
+export interface Discount  {
+  id: string;
   name: string;
   rate?: number;
-  rateType?: string;
+  rate_type?: string;
   scope?: string;
   stores: Store[];
-  isActive: boolean;
+  is_active: boolean;
 }
 
 export enum DiscountRate {

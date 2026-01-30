@@ -84,16 +84,18 @@ interface TabProps
   extends PropsWithChildren,
     ButtonHTMLAttributes<HTMLButtonElement> {
   isActive: boolean;
+  justified?: boolean
 }
 export const Tab = (props: TabProps) => {
-  const { isActive, ...rest } = props;
+  const { isActive, justified, ...rest } = props;
   return (
     <button
       {...rest}
       type="button"
       className={classNames(
         "p-3 px-5 flex-shrink-0 text-left rounded-full relative sidebar-btn",
-        isActive ? "text-primary-500 bg-white active shadow shadow-lg" : "text-white"
+        isActive ? "text-primary-500 bg-white active shadow border-primary-500 border-2" : "text-white border-transparent border-2",
+        justified ? 'flex flex-1 justify-center' : ''
       )}>
       <span></span>
       {props.children}

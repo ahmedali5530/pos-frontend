@@ -35,13 +35,14 @@ import * as yup from "yup";
 import { ValidationMessage } from "../../../api/model/validation";
 import { getErrors, hasErrors } from "../../../lib/error/error";
 import { yupResolver } from "@hookform/resolvers/yup";
-import useApi from "../../../api/hooks/use.api";
 import { HydraCollection } from "../../../api/model/hydra";
 import { notify } from "../../../app-common/components/confirm/notification";
 import { withCurrency } from "../../../lib/currency/currency";
 import { useAtom } from "jotai";
 import { defaultState } from "../../../store/jotai";
 import { Switch } from "../../../app-common/components/input/switch";
+import useApi from "../../../api/db/use.api";
+import {Tables} from "../../../api/db/tables";
 
 interface Props extends PropsWithChildren {
   className?: string;
@@ -69,10 +70,7 @@ export const Customers: FC<Props> = ({ children, className }) => {
   const [modal, setModal] = useState(false);
   const [operation, setOperation] = useState("create");
 
-  const useLoadHook = useApi<HydraCollection<Customer>>(
-    "customers",
-    CUSTOMER_LIST
-  );
+  const useLoadHook = useApi<Customer[]>(Tables.customer);
   const { fetchData } = useLoadHook;
 
   const { t } = useTranslation();

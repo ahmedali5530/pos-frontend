@@ -1,6 +1,6 @@
 import {HydraId, HydraType} from "./hydra";
 
-export interface Media extends HydraId, HydraType{
+export interface Media {
   id: string;
   name: string;
   originalName: string;

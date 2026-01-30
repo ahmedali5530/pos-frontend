@@ -5,17 +5,14 @@ import { CartItem as CartItemModel } from "../../../api/model/cart.item";
 import { getRowTotal } from "../../containers/dashboard/pos";
 import { Checkbox } from "../../../app-common/components/input/checkbox";
 import { useAtom } from "jotai";
-import { defaultState } from "../../../store/jotai";
+import { defaultState, appState as AppState } from "../../../store/jotai";
 import { formatNumber, withCurrency } from "../../../lib/currency/currency";
 import QueryString from "qs";
 import { jsonRequest } from "../../../api/request/request";
 import { PRODUCT_QUANTITIES } from "../../../api/routing/routes/backend.app";
-import { useSelector } from "react-redux";
-import { getStore } from "../../../duck/store/store.selector";
 // @ts-ignore
 import Spinner from "../../../assets/images/spinner.svg";
 import { CartItemType } from "./cart.container";
-import { KeyboardInput } from "../../../app-common/components/input/keyboard.input";
 
 interface CartItemProps {
   onQuantityChange: (item: CartItemModel, quantity: any) => void;
@@ -50,7 +47,8 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
     );
   }, [item]);
 
-  const store = useSelector(getStore);
+  const [appSt] = useAtom(AppState);
+  const {store} = appSt;
 
   const getItemsMetadata = async (itemId: number, variantId?: number) => {
     setLoading(true);

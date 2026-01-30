@@ -6,6 +6,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   active?: boolean;
   variant?: 'primary'|'secondary'|'danger'|'warning'|'success'|string;
   iconButton?: boolean;
+  key?: any
 }
 
 export const Button = (props: ButtonProps) => {

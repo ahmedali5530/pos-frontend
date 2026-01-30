@@ -1,4 +1,4 @@
-export interface HydraCollection<T = any> extends HydraId, HydraType{
+export interface HydraCollection<T = any> {
   '@context': string;
   'hydra:totalItems': number;
   'hydra:member': T[];

@@ -56,10 +56,10 @@ export const CreateVariants = ({
     }
 
     replace(sets.map((item, index) => ({
-      price: getValues('basePrice'),
-      attributeValue: item.join('-'),
-      barcode: (getValues('barcode') + index + 1).toString(),
-      quantity: '10'
+      price: getValues('base_price'),
+      cost: getValues('cost'),
+      attribute_value: item.join('-'),
+      barcode: (getValues('barcode') + (index + 1).toString()).toString(),
     })));
   }
 
@@ -92,12 +92,13 @@ export const CreateVariants = ({
               />
             )}
             name={`groups.${index}.variants`}
+            key={index}
           />
         ))}
       </div>
 
       {variants.length > 0 && (
-        <div>
+        <div className="my-5">
           <Input onChange={(event) => setFilter(event.target.value)} value={filter} placeholder="Filter variants" />
         </div>
       )}
@@ -105,20 +106,31 @@ export const CreateVariants = ({
       <div>
         {variants.filter((item: any) => {
           if(filter.trim().length > 0){
-            return item.attributeValue.toLowerCase().indexOf(filter.trim().toLowerCase()) !== -1;
+            return item.attribute_value.toLowerCase().indexOf(filter.trim().toLowerCase()) !== -1;
           }
 
           return true;
         }).map((item: any, index) => (
-          <div className="grid grid-cols-5 mb-5 gap-3" key={index}>
+          <div className="grid grid-cols-4 mb-5 gap-3" key={index}>
             <div>
               <label>Variant</label>
               <Controller
                 render={(props) => (
-                  <Input onChange={props.field.onChange} value={item.attributeValue} readOnly className="w-full"/>
+                  <Input onChange={props.field.onChange} value={item.attribute_value} readOnly className="w-full"/>
                 )}
                 control={useForm.control}
-                name={`variants.${index}.attributeValue`}
+                name={`variants.${index}.attribute_value`}
+              />
+            </div>
+            <div>
+              <label>Cost</label>
+              <Controller
+                render={(props) => (
+                  <Input onChange={props.field.onChange} value={props.field.value} className="w-full"/>
+                )}
+                control={useForm.control}
+                name={`variants.${index}.cost`}
+                defaultValue={item.cost}
               />
             </div>
             <div>
@@ -130,17 +142,6 @@ export const CreateVariants = ({
                 control={useForm.control}
                 name={`variants.${index}.price`}
                 defaultValue={item.price}
-              />
-            </div>
-            <div>
-              <label>Quantity in stock</label>
-              <Controller
-                render={(props) => (
-                  <Input onChange={props.field.onChange} value={props.field.value} className="w-full"/>
-                )}
-                control={useForm.control}
-                name={`variants.${index}.quantity`}
-                defaultValue={item.quantity}
               />
             </div>
             <div>

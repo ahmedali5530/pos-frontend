@@ -1,25 +1,17 @@
 import {useEffect, useState} from "react";
-import {
-  DEVICE_LIST,
-  DISCOUNT_LIST,
-  PAYMENT_TYPE_LIST,
-  PRODUCT_LIST,
-  SETTING_LIST,
-  TAX_LIST
-} from "../routing/routes/backend.app";
 import localforage from '../../lib/localforage/localforage';
-import {jsonRequest} from "../request/request";
 import {Product} from "../model/product";
 import {Discount} from "../model/discount";
 import {Tax} from "../model/tax";
 import {PaymentType} from "../model/payment.type";
 import {Device} from "../model/device";
 import {Setting} from "../model/setting";
-import { message as AntMessage} from 'antd';
-import {useDispatch} from "react-redux";
-import {progressAction} from "../../duck/progress/progress.action";
+import {useAtom} from "jotai";
+import {appState as AppState} from "../../store/jotai";
+import {useDB} from "../db/db";
+import {Tables} from "../db/tables";
 
-interface ReturnAction{
+interface ReturnAction {
   load: () => void;
 }
 
@@ -44,7 +36,7 @@ export interface HomeProps {
   }
 }
 
-interface ReturnState{
+interface ReturnState {
   list: HomeProps['list'];
   discountList: HomeProps['discountList'];
   taxList: HomeProps['taxList'];
@@ -64,37 +56,39 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
   const [paymentTypesList, setPaymentTypesList] = useState<HomeProps['paymentTypesList']>(initialData);
   const [deviceList, setDeviceList] = useState<HomeProps['deviceList']>(initialData);
   const [settingList, setSettingList] = useState<HomeProps['settingList']>(initialData);
-  const dispatch = useDispatch();
+  const [, setAppSt] = useAtom(AppState);
+  const db = useDB();
+
+  // const dispatch = useDispatch();
 
   const loadProducts = async (offset = 1, limit = 100) => {
-    const res = await jsonRequest(`${PRODUCT_LIST}?itemsPerPage=${limit}&page=${offset}&isActive=true`);
-    const l = await res.json();
+    // const res = await jsonRequest(`${PRODUCT_LIST}?itemsPerPage=${limit}&page=${offset}&isActive=true`);
+    // const l = await res.json();
 
-    offset += 1;
+    const [products] = await db.query<Product[]>(`SELECT * FROM ${Tables.product} fetch department, categories, suppliers, brands, variants, taxes, terminals, stores, stores.store`);
 
     setList(prev => {
       localforage.setItem('list', {
-        list: [...prev.list, ...l['hydra:member']]
+        list: products
       });
 
       return {
         ...prev,
-        list: [...prev.list, ...l['hydra:member']]
+        list: products
       }
     });
-
-    if(l['hydra:member'].length > 0) {
-      await loadProducts(offset);
-    }
   };
 
   const loadData = async () => {
     const localList: HomeProps['list'] | null = await localforage.getItem('list');
     if (localList === null) {
-      dispatch(progressAction('Products'))
+      setAppSt(prev => ({
+        ...prev,
+        progress: 'Products'
+      }))
       try {
         await loadProducts();
-      }catch (e) {
+      } catch (e) {
         throw e;
       }
     } else {
@@ -103,17 +97,17 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
 
     const localDiscountList: HomeProps['discountList'] | null = await localforage.getItem('discountList');
     if (localDiscountList === null) {
-      dispatch(progressAction('Discounts'))
+      setAppSt(prev => ({
+        ...prev,
+        progress: 'Discounts'
+      }))
       try {
-        const discount = await jsonRequest(`${DISCOUNT_LIST}?isActive=true`);
-        const discountList = await discount.json();
 
-        discountList.list = discountList['hydra:member'];
-        delete discountList['hydra:member'];
+        const [discounts] = await db.query<Discount[]>(`SELECT * FROM ${Tables.discount}`);
 
-        setDiscountList(discountList);
-        await localforage.setItem('discountList', discountList);
-      }catch(e){
+        setDiscountList({list: discounts});
+        await localforage.setItem('discountList', {list: discounts});
+      } catch (e) {
         throw e;
       }
     } else {
@@ -122,17 +116,17 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
 
     const localTaxList: HomeProps['taxList'] | null = await localforage.getItem('taxList');
     if (localTaxList === null) {
-      dispatch(progressAction('Taxes'))
+      setAppSt(prev => ({
+        ...prev,
+        progress: 'Taxes'
+      }));
+
       try {
-        const taxList = await jsonRequest(`${TAX_LIST}?isActive=true`);
-        const json = await taxList.json();
+        const [taxes] = await db.query<Tax[]>(`SELECT * FROM ${Tables.tax}`);
 
-        json.list = json['hydra:member'];
-        delete json['hydra:member'];
-        setTaxList(json);
-
-        await localforage.setItem('taxList', json);
-      }catch (e) {
+        setTaxList({list: taxes});
+        await localforage.setItem('taxList', {list: taxes});
+      } catch (e) {
         throw e;
       }
     } else {
@@ -141,62 +135,65 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
 
     const localPaymentTypesList: HomeProps['paymentTypesList'] | null = await localforage.getItem('paymentTypesList');
     if (localPaymentTypesList === null) {
-      dispatch(progressAction('Payment types'))
+      setAppSt(prev => ({
+        ...prev,
+        progress: 'Payment types'
+      }));
+
       try {
-        const paymentTypesList = await jsonRequest(`${PAYMENT_TYPE_LIST}?isActive=true`);
-        const json = await paymentTypesList.json();
+        const [paymentTypes] = await db.query<PaymentType[]>(`SELECT * FROM ${Tables.payment}`);
 
-        json.list = json['hydra:member'];
-        delete json['hydra:member'];
-
-        setPaymentTypesList(json);
-        await localforage.setItem('paymentTypesList', json);
-      }catch (e) {
+        setPaymentTypesList({list: paymentTypes});
+        await localforage.setItem('paymentTypesList', {list: paymentTypes});
+      } catch (e) {
         throw e;
       }
     } else {
       setPaymentTypesList(localPaymentTypesList);
     }
 
-    const localDeviceList: HomeProps['deviceList']|null = await localforage.getItem('deviceList');
+    const localDeviceList: HomeProps['deviceList'] | null = await localforage.getItem('deviceList');
     if (localDeviceList === null) {
-      dispatch(progressAction('Devices'))
+      setAppSt(prev => ({
+        ...prev,
+        progress: 'Devices'
+      }));
+
       try {
-        const deviceList = await jsonRequest(`${DEVICE_LIST}?isActive=true`);
-        const json = await deviceList.json();
+        const [devices] = await db.query<Device[]>(`SELECT * FROM ${Tables.device}`);
 
-        json.list = json['hydra:member'];
-        delete json['hydra:member'];
-
-        setDeviceList(json);
-        await localforage.setItem('deviceList', json);
-      }catch (e) {
+        setDeviceList({list: devices});
+        await localforage.setItem('deviceList', {list: devices});
+      } catch (e) {
         throw e;
       }
     } else {
       setDeviceList(localDeviceList);
     }
 
-    const localSettingList: HomeProps['settingList']|null = await localforage.getItem('settingList');
+    const localSettingList: HomeProps['settingList'] | null = await localforage.getItem('settingList');
     if (localSettingList === null) {
-      dispatch(progressAction('Settings'))
+      setAppSt(prev => ({
+        ...prev,
+        progress: 'Settings'
+      }))
+
       try {
-        const settingList = await jsonRequest(SETTING_LIST);
-        const json = await settingList.json();
+        const [settings] = await db.query<Setting[]>(`SELECT * FROM ${Tables.setting}`);
 
-        json.list = json['hydra:member'];
-        delete json['hydra:member'];
-
-        setSettingList(json);
-        await localforage.setItem('settingList', json);
-      }catch (e) {
+        setSettingList({list: settings});
+        await localforage.setItem('settingList', {list: settings});
+      } catch (e) {
         throw e;
       }
     } else {
       setSettingList(localSettingList);
     }
 
-    dispatch(progressAction('Done'))
+    setAppSt(prev => ({
+      ...prev,
+      progress: 'Done'
+    }))
   };
 
   useEffect(() => {

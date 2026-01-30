@@ -1,5 +1,5 @@
 import { Button } from "../../../app-common/components/input/button";
-import React, { FC, useCallback, useEffect, useMemo, useRef, useState, } from "react";
+import React, {FC, Ref, useCallback, useEffect, useMemo, useRef, useState,} from "react";
 import { OrderTotals } from "../cart/order.totals";
 import { Textarea } from "../../../app-common/components/input/textarea";
 import { Controller, useForm } from "react-hook-form";
@@ -23,7 +23,7 @@ import { notify } from "../../../app-common/components/confirm/notification";
 import { withCurrency } from "../../../lib/currency/currency";
 import { useAtom } from "jotai";
 import { CartItemType } from "../cart/cart.container";
-import { defaultData, defaultState, PosModes } from "../../../store/jotai";
+import {appState as AppState, defaultData, defaultState, PosModes} from "../../../store/jotai";
 import { discountTotal, finalTotal, taxTotal } from "../../containers/dashboard/pos";
 import { OrderStatus } from "../../../api/model/order";
 
@@ -33,6 +33,7 @@ interface Props {
   saleModal?: boolean;
   setSaleModal?: (state: boolean) => void;
   onSale?: () => void;
+  customerInput?: any
 }
 
 export const CloseSaleInline: FC<Props> = ({
@@ -41,6 +42,7 @@ export const CloseSaleInline: FC<Props> = ({
   saleModal,
   setSaleModal,
   onSale,
+  customerInput
 }) => {
   const [appState, setAppState] = useAtom(defaultState);
   const {
@@ -61,6 +63,8 @@ export const CloseSaleInline: FC<Props> = ({
     useForm();
 
   const [defaultAppState, setDefaultAppState] = useAtom(defaultData);
+  const [appSt] = useAtom(AppState);
+  const {store, terminal} = appSt;
 
   const { defaultMode, defaultDiscount, defaultPaymentType, defaultTax, requireCustomerBox } =
     defaultAppState;
@@ -76,8 +80,6 @@ export const CloseSaleInline: FC<Props> = ({
     5000, 1000, 500, 100, 50, 20, 10, 5, 2, 1,
   ]);
 
-  const store = useSelector(getStore);
-  const terminal = useSelector(getTerminal);
 
   const resetFields = () => {
     setAppState((prev) => ({
@@ -142,12 +144,13 @@ export const CloseSaleInline: FC<Props> = ({
 
   const onSaleSubmit = async (values: any) => {
     let paymentsAdded: OrderPayment[] = [...payments];
-    if(requireCustomerBox && !customerName){
+    if(requireCustomerBox && !customerName && defaultMode !== PosModes.payment){
       notify({
         type: "error",
         description: 'Add customer name',
-        placement: 'topRight'
       });
+
+      customerInput?.current?.focus();
       return ;
     }
     setSaleClosing(true);
@@ -205,22 +208,6 @@ export const CloseSaleInline: FC<Props> = ({
 
       resetFields();
       setPayments([]);
-
-      // reset app state
-      // setAppState((prev) => ({
-      //   ...prev,
-      //   cartItem: undefined,
-      //   cartItemType: CartItemType.quantity,
-      //   latest: undefined,
-      //   quantity: 1,
-      //   q: "",
-      //   orderId: undefined,
-      //   latestQuantity: undefined,
-      //   latestRate: undefined,
-      //   latestVariant: undefined,
-      //   added: [],
-      //   customer: undefined
-      // }));
 
       if( json.order.status === OrderStatus.COMPLETED ) {
         onSale && onSale();

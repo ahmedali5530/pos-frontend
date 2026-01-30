@@ -42,14 +42,13 @@ import { ResponsiveBar as Bar } from "@nivo/bar";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Shortcut } from "../../../app-common/components/input/shortcut";
 import { SalePrint } from "./sale.print";
-import { useSelector } from "react-redux";
-import { getStore } from "../../../duck/store/store.selector";
 import { TableComponent } from "../../../app-common/components/table/table";
-import useApi from "../../../api/hooks/use.api";
 import { Tooltip } from "antd";
 import { withCurrency } from "../../../lib/currency/currency";
 import { useAtom } from "jotai";
-import { defaultState } from "../../../store/jotai";
+import { defaultState, appState as AppState } from "../../../store/jotai";
+import {Tables} from "../../../api/db/tables";
+import useApi from "../../../api/db/use.api";
 
 interface Props {}
 
@@ -57,12 +56,15 @@ export const SaleHistory: FC<Props> = ({}) => {
   const [appState, setAppState] = useAtom(defaultState);
   const { customer } = appState;
 
+  const [appSt] = useAtom(AppState);
+  const {store} = appSt;
+
   const [modal, setModal] = useState(false);
   const [list, setList] = useState<Order[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [payments, setPayments] = useState<{ [key: string]: number }>({});
 
-  const useLoadHook = useApi<any>("orders", ORDER_LIST);
+  const useLoadHook = useApi<any>(Tables.order);
   const {
     fetchData: loadList,
     data,
@@ -71,8 +73,6 @@ export const SaleHistory: FC<Props> = ({}) => {
     isFetching,
     resetFilters,
   } = useLoadHook;
-
-  const store = useSelector(getStore);
 
   const columnHelper = createColumnHelper<Order>();
 
@@ -95,19 +95,17 @@ export const SaleHistory: FC<Props> = ({}) => {
       cell: (info) => (
         <>
           {!!info.getValue() ? (
-            <Tooltip title="View this customer">
-              <span className="text-primary-500 cursor-pointer">
-                <CustomerPayments customer={info.getValue()!}>
-                  <FontAwesomeIcon icon={faEye} className="mr-2" />
-                  {info.getValue()?.name}
-                </CustomerPayments>
-                {customer?.id === info.getValue()?.id && (
-                  <span className="ml-3 btn btn-success">
-                    <FontAwesomeIcon icon={faCheck} />
-                  </span>
-                )}
-              </span>
-            </Tooltip>
+            <span className="text-primary-500 cursor-pointer">
+              <CustomerPayments customer={info.getValue()!}>
+                <FontAwesomeIcon icon={faEye} className="mr-2" />
+                {info.getValue()?.name}
+              </CustomerPayments>
+              {customer?.id === info.getValue()?.id && (
+                <span className="ml-3 btn btn-success">
+                  <FontAwesomeIcon icon={faCheck} />
+                </span>
+              )}
+            </span>
           ) : (
             "Cash Sale"
           )}
@@ -540,6 +538,60 @@ export const SaleHistory: FC<Props> = ({}) => {
     return expenses.reduce((prev, item) => prev + item.amount, 0);
   }, [expenses]);
 
+  const storesChartData = useMemo(() => {
+    const stores: { [name: string]: number } = {};
+    list.forEach((order) => {
+      if (order?.store) {
+        const storeName = `${order?.store?.name}`;
+        if (!stores[storeName]) {
+          stores[storeName] = 0;
+        }
+
+        stores[storeName] += order.payments.reduce(
+          (p, payment) => p + payment.total,
+          0
+        );
+      }
+    });
+
+    const data: { id: string; value: number }[] = [];
+    Object.keys(stores).forEach((c) => {
+      data.push({
+        id: c,
+        value: stores[c],
+      });
+    });
+
+    return data;
+  }, [list])
+
+  const terminalsChartData = useMemo(() => {
+    const terminals: { [name: string]: number } = {};
+    list.forEach((order) => {
+      if (order?.terminal) {
+        const terminalName = `${order?.store?.name} - ${order?.terminal?.code}`;
+        if (!terminals[terminalName]) {
+          terminals[terminalName] = 0;
+        }
+
+        terminals[terminalName] += order.payments.reduce(
+          (p, payment) => p + payment.total,
+          0
+        );
+      }
+    });
+
+    const data: { id: string; value: number }[] = [];
+    Object.keys(terminals).forEach((c) => {
+      data.push({
+        id: c,
+        value: terminals[c],
+      });
+    });
+
+    return data;
+  }, [list]);
+
   const customerChartData = useMemo(() => {
     const customers: { [name: string]: number } = {};
     list.forEach((order) => {
@@ -553,15 +605,16 @@ export const SaleHistory: FC<Props> = ({}) => {
           0
         );
       } else {
-        const cash = "Cash";
-        if (!customers[cash]) {
-          customers[cash] = 0;
-        }
-
-        customers[cash] += order.payments.reduce(
-          (p, payment) => p + payment.total,
-          0
-        );
+        // only show customers and remove cash from chart
+        // const cash = "Cash";
+        // if (!customers[cash]) {
+        //   customers[cash] = 0;
+        // }
+        //
+        // customers[cash] += order.payments.reduce(
+        //   (p, payment) => p + payment.total,
+        //   0
+        // );
       }
     });
 
@@ -746,6 +799,52 @@ export const SaleHistory: FC<Props> = ({}) => {
                   <div className="h-[300px]">
                     <Bar
                       data={customerChartData}
+                      // keys={['value']}
+                      margin={{
+                        bottom: 50,
+                        left: 50,
+                        top: 20,
+                      }}
+                      valueScale={{ type: "linear" }}
+                      tooltip={({ indexValue, value }) => {
+                        return (
+                          <span className="bg-white rounded p-1 text-sm shadow">
+                            {indexValue}: {value}
+                          </span>
+                        );
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-lg">Stores</h4>
+                  <div className="h-[300px]">
+                    <Bar
+                      data={storesChartData}
+                      // keys={['value']}
+                      margin={{
+                        bottom: 50,
+                        left: 50,
+                        top: 20,
+                      }}
+                      valueScale={{ type: "linear" }}
+                      tooltip={({ indexValue, value }) => {
+                        return (
+                          <span className="bg-white rounded p-1 text-sm shadow">
+                            {indexValue}: {value}
+                          </span>
+                        );
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-lg">Terminals</h4>
+                  <div className="h-[300px]">
+                    <Bar
+                      data={terminalsChartData}
                       // keys={['value']}
                       margin={{
                         bottom: 50,

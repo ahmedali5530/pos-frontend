@@ -1,8 +1,4 @@
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
-import { getStore } from "../../../../duck/store/store.selector";
-import useApi from "../../../../api/hooks/use.api";
-import { HydraCollection } from "../../../../api/model/hydra";
 import { BARCODE_LIST, DISCOUNT_GET, } from "../../../../api/routing/routes/backend.app";
 import { createColumnHelper } from "@tanstack/react-table";
 import { jsonRequest } from "../../../../api/request/request";
@@ -11,14 +7,18 @@ import { Barcode } from "../../../../api/model/barcode";
 import { Button } from "../../../../app-common/components/input/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy } from "@fortawesome/free-solid-svg-icons";
+import {useAtom} from "jotai";
+import {appState} from "../../../../store/jotai";
+import useApi, {SettingsData} from "../../../../api/db/use.api";
+import {Tables} from "../../../../api/db/tables";
 
 export const DynamicBarcodes = () => {
 
 
-  const store = useSelector(getStore);
-  const useLoadHook = useApi<HydraCollection<Barcode>>(
-    "barcodes",
-    `${BARCODE_LIST}?store=${store?.id}`
+  const [{store}] = useAtom(appState);
+  const useLoadHook = useApi<SettingsData<Barcode>>(
+    Tables.barcode,
+    [], [], 0, 10, ['store', 'item', 'variant']
   );
 
   const columnHelper = createColumnHelper<Barcode>();
@@ -46,43 +46,14 @@ export const DynamicBarcodes = () => {
     columnHelper.accessor("measurement", {
       header: "Measurement",
       cell: (info) => `${info.getValue()} ${info.row.original.unit}`,
-    }),
-    columnHelper.accessor("id", {
-      header: "Actions",
-      enableSorting: false,
-      enableColumnFilter: false,
-      cell: (info) => {
-        return (
-          <>
-            {/*<Button type="button" variant="primary" className="w-[40px]" onClick={() => {
-              setEntity(info.row.original);
-              setOperation('update');
-              setModal(true);
-            }} tabIndex={-1}>
-              <FontAwesomeIcon icon={faPencilAlt}/>
-            </Button>*/}
-          </>
-        );
-      },
-    }),
+    })
   ];
-
-  async function deleteDiscount(id: string, status: boolean) {
-    await jsonRequest(DISCOUNT_GET.replace(":id", id), {
-      method: "PUT",
-      body: JSON.stringify({
-        isActive: status,
-      }),
-    });
-
-    await useLoadHook.fetchData();
-  }
 
   return (
     <>
       <TableComponent
         columns={columns}
-        useLoadList={useLoadHook}
+        loaderHook={useLoadHook}
         loaderLineItems={6}
       />
     </>

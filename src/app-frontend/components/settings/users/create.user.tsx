@@ -16,6 +16,9 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { getErrorClass, getErrors, hasErrors } from "../../../../lib/error/error";
 import { notify } from "../../../../app-common/components/confirm/notification";
 import { StoresInput } from "../../../../app-common/components/input/stores";
+import {useDB} from "../../../../api/db/db";
+import {Tables} from "../../../../api/db/tables";
+import {StringRecordId} from "surrealdb";
 
 interface CreateUserProps {
   entity?: User;
@@ -28,7 +31,7 @@ export const CreateUser: FC<CreateUserProps> = ({
   entity, onClose, operation, addModal
 }) => {
   let schema: any = {
-    displayName: yup.string().required(ValidationMessage.Required),
+    display_name: yup.string().required(ValidationMessage.Required),
     username: yup.string().required(ValidationMessage.Required),
     email: yup.string().required(ValidationMessage.Required).email(ValidationMessage.Email),
     roles: yup.array().required(ValidationMessage.Required),
@@ -46,6 +49,7 @@ export const CreateUser: FC<CreateUserProps> = ({
   });
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
+  const db = useDB();
 
   useEffect(() => {
     setModal(addModal);
@@ -66,7 +70,8 @@ export const CreateUser: FC<CreateUserProps> = ({
             label: item.name,
             value: item.id
           }
-        })
+        }),
+        password: undefined
       });
     }
   }, [entity]);
@@ -74,28 +79,27 @@ export const CreateUser: FC<CreateUserProps> = ({
   const createUser = async (values: any) => {
     setCreating(true);
     try {
-      let url, method = 'POST';
-      if( values.id ) {
-        method = 'PUT';
-        url = USER_EDIT.replace(':id', values.id);
-      } else {
-        url = USER_CREATE;
-        delete values.id;
-      }
-
       if( values.roles ) {
         values.roles = values.roles.map((item: ReactSelectOptionProps) => item.value);
       }
       if( values.stores ) {
-        values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value.toString());
+        values.stores = values.stores.map((item: ReactSelectOptionProps) => new StringRecordId(item.value));
       }
 
-      await jsonRequest(url, {
-        method: method,
-        body: JSON.stringify({
+      if( entity?.id ) {
+        if(values.password){
+          values.password = `crypto::bcrypt::generate(${values.password})`;
+        }
+
+        await db.merge(new StringRecordId(entity.id), {
           ...values,
-        })
-      });
+        });
+      } else {
+        await db.insert(Tables.user_account, {
+          ...values,
+          password: `crypto::bcrypt::generate(${values.password})`
+        });
+      }
 
       onModalClose();
     } catch ( exception: any ) {
@@ -135,7 +139,7 @@ export const CreateUser: FC<CreateUserProps> = ({
 
   const resetForm = () => {
     reset({
-      displayName: null,
+      display_name: null,
       email: null,
       username: null,
       password: null,
@@ -158,14 +162,13 @@ export const CreateUser: FC<CreateUserProps> = ({
       title={operation === 'create' ? 'Create user' : 'Update user'}
     >
       <form onSubmit={handleSubmit(createUser)} className="mb-5">
-        <input type="hidden" {...register('id')}/>
         <div className="grid grid-cols-1 gap-4 mb-3">
           <div>
-            <label htmlFor="displayName">Name</label>
-            <Input {...register('displayName')} id="displayName" className="w-full"
-                   hasError={hasErrors(errors.displayName)}/>
+            <label htmlFor="display_name">Name</label>
+            <Input {...register('display_name')} id="display_name" className="w-full"
+                   hasError={hasErrors(errors.display_name)}/>
 
-            {getErrors(errors.displayName)}
+            {getErrors(errors.display_name)}
           </div>
           <div>
             <label htmlFor="username">Username</label>

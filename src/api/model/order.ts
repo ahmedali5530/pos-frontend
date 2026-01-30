@@ -8,7 +8,7 @@ import { Store } from "./store";
 import { Terminal } from "./terminal";
 import { HydraId, HydraType } from "./hydra";
 
-export interface Order extends HydraId, HydraType {
+export interface Order  {
   id: string;
   orderId?: string;
   customer?: Customer;

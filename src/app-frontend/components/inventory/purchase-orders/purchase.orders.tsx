@@ -25,9 +25,7 @@ export const PurchaseOrders = () => {
   const store = useSelector(getStore);
 
 
-  const useLoadHook = useApi<HydraCollection<PurchaseOrder>>('purchaseOrders', PURCHASE_ORDER_LIST, {
-    store: store?.id
-  });
+  const useLoadHook = useApi<HydraCollection<PurchaseOrder>>('purchaseOrders', `${PURCHASE_ORDER_LIST}?store=${store?.id}`);
   const [purchaseOrder, setPurchaseOrder] = useState<PurchaseOrder | undefined>();
 
 

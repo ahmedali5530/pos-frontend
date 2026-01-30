@@ -10,25 +10,29 @@ import { TableComponent } from "../../../../app-common/components/table/table";
 import { useSelector } from "react-redux";
 import { getStore } from "../../../../duck/store/store.selector";
 import { CreateBrand } from "./create.brand";
-import useApi from "../../../../api/hooks/use.api";
 import { HydraCollection } from "../../../../api/model/hydra";
 import { jsonRequest } from "../../../../api/request/request";
 import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
 import { Switch } from "../../../../app-common/components/input/switch";
+import {useAtom} from "jotai";
+import {appState as AppState} from '../../../../store/jotai';
+import {Tables} from "../../../../api/db/tables";
+import useApi, {SettingsData} from "../../../../api/db/use.api";
+import {useDB} from "../../../../api/db/db";
+import {StringRecordId} from "surrealdb";
 
 export const Brands = () => {
   const [operation, setOperation] = useState("create");
   const [brand, setBrand] = useState<Brand>();
   const [modal, setModal] = useState(false);
 
-  const store = useSelector(getStore);
-  const useLoadHook = useApi<HydraCollection<Brand>>(
-    "brands",
-    `${BRAND_LIST}?store=${store?.id}`
+  const useLoadHook = useApi<SettingsData<Brand>>(
+    Tables.brand,
+    [], [], 0, 10, ['stores']
   );
   const { fetchData } = useLoadHook;
 
-  const { t } = useTranslation();
+  const db = useDB();
 
   const columnHelper = createColumnHelper<Brand>();
 
@@ -71,15 +75,15 @@ export const Brands = () => {
               onConfirm={() => {
                 deleteBrand(
                   info.getValue().toString(),
-                  !info.row.original.isActive
+                  !info.row.original.is_active
                 );
               }}
               confirmText="Yes, please"
               cancelText="No, wait"
               title="Confirmation"
-              description={`Are you sure to ${info.row.original.isActive ? 'de-' : ''}activate this brand?`}
+              description={`Are you sure to ${info.row.original.is_active ? 'de-' : ''}activate this brand?`}
             >
-              <Switch checked={info.row.original.isActive} readOnly/>
+              <Switch checked={info.row.original.is_active} readOnly/>
             </ConfirmAlert>
           </>
         );
@@ -88,12 +92,9 @@ export const Brands = () => {
   ];
 
   async function deleteBrand(id: string, status: boolean) {
-    await jsonRequest(BRAND_EDIT.replace(":id", id), {
-      method: "PUT",
-      body: JSON.stringify({
-        isActive: status,
-      }),
-    });
+    await db.merge(new StringRecordId(id), {
+      is_active: status
+    })
 
     await useLoadHook.fetchData();
   }
@@ -102,35 +103,34 @@ export const Brands = () => {
     <>
       <TableComponent
         columns={columns}
-        useLoadList={useLoadHook}
+        loaderHook={useLoadHook}
         loaderLineItems={3}
         buttons={[
-          {
-            html: (
-              <Button
-                variant="primary"
-                onClick={() => {
-                  setModal(true);
-                  setOperation("create");
-                }}>
-                <FontAwesomeIcon icon={faPlus} className="mr-2"/> Brand
-              </Button>
-            ),
-          },
+          <Button
+            variant="primary"
+            onClick={() => {
+              setModal(true);
+              setOperation("create");
+            }}>
+            <FontAwesomeIcon icon={faPlus} className="mr-2"/> Brand
+          </Button>
         ]}
       />
 
-      <CreateBrand
-        entity={brand}
-        onClose={() => {
-          setBrand(undefined);
-          setOperation("create");
-          setModal(false);
-          fetchData();
-        }}
-        operation={operation}
-        addModal={modal}
-      />
+      {modal && (
+        <CreateBrand
+          entity={brand}
+          onClose={() => {
+            setBrand(undefined);
+            setOperation("create");
+            setModal(false);
+            fetchData();
+          }}
+          operation={operation}
+          addModal={modal}
+        />
+      )}
+
     </>
   );
 };

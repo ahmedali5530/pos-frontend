@@ -23,9 +23,7 @@ export const Purchases = () => {
   const [purchase, setPurchase] = useState<Purchase>();
   const store = useSelector(getStore);
 
-  const useLoadHook = useApi<HydraCollection<Purchase>>('purchases', PURCHASE_LIST, {
-    store: store?.id
-  });
+  const useLoadHook = useApi<HydraCollection<Purchase>>('purchases', `${PURCHASE_LIST}?store=${store?.id}`);
 
   const { t } = useTranslation();
 

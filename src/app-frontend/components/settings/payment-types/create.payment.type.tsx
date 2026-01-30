@@ -6,7 +6,6 @@ import {ReactSelectOptionProps} from "../../../../api/model/common";
 import {fetchJson} from "../../../../api/request/request";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
-import {Trans} from "react-i18next";
 import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
 import {Switch} from "../../../../app-common/components/input/switch";
 import {StoresInput} from "../../../../app-common/components/input/stores";
@@ -18,6 +17,9 @@ import {Input} from "../../../../app-common/components/input/input";
 import {PaymentType} from "../../../../api/model/payment.type";
 import {notify} from "../../../../app-common/components/confirm/notification";
 import {getErrorClass, getErrors, hasErrors} from "../../../../lib/error/error";
+import {useDB} from "../../../../api/db/db";
+import {Tables} from "../../../../api/db/tables";
+import {StringRecordId} from "surrealdb";
 
 
 interface CreatePaymentTypeProps {
@@ -42,6 +44,8 @@ export const CreatePaymentType: FC<CreatePaymentTypeProps> = ({
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
 
+  const db = useDB();
+
   useEffect(() => {
     setModal(addModal);
   }, [addModal]);
@@ -57,7 +61,7 @@ export const CreatePaymentType: FC<CreatePaymentTypeProps> = ({
         stores: entity.stores.map(item => {
           return {
             label: item.name,
-            value: item['@id']
+            value: item['id']
           }
         })
       });
@@ -67,29 +71,24 @@ export const CreatePaymentType: FC<CreatePaymentTypeProps> = ({
   const createPaymentType = async (values: any) => {
     setCreating(true);
     try {
-      let url, method = 'POST';
-      if (values.id) {
-        method = 'PUT';
-        url = PAYMENT_TYPE_GET.replace(':id', values.id);
-      } else {
-        url = PAYMENT_TYPE_CREATE;
-        delete values.id;
-      }
 
       if (values.type) {
         values.type = values.type.value;
       }
 
       if (values.stores) {
-        values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value);
+        values.stores = values.stores.map((item: ReactSelectOptionProps) => new StringRecordId(item.value));
       }
 
-      await fetchJson(url, {
-        method: method,
-        body: JSON.stringify({
+      if (entity?.id) {
+        await db.merge(new StringRecordId(entity.id), {
           ...values,
-        })
-      });
+        });
+      } else {
+        await db.insert(Tables.payment, {
+          ...values,
+        });
+      }
 
       onModalClose();
 
@@ -149,7 +148,6 @@ export const CreatePaymentType: FC<CreatePaymentTypeProps> = ({
       title={operation === 'create' ? 'Create payment type' : 'Update payment type'}
     >
       <form onSubmit={handleSubmit(createPaymentType)} className="mb-5">
-        <input type="hidden" {...register('id')}/>
         <div className="grid grid-cols-1 gap-4 mb-3">
           <div>
             <label htmlFor="name">Name</label>
@@ -185,7 +183,7 @@ export const CreatePaymentType: FC<CreatePaymentTypeProps> = ({
             <label className="w-full block">&nbsp;</label>
             <Controller
               control={control}
-              name="canHaveChangeDue"
+              name="can_have_change_due"
               render={(props) => (
                 <Switch
                   checked={props.field.value}
@@ -195,7 +193,7 @@ export const CreatePaymentType: FC<CreatePaymentTypeProps> = ({
                 </Switch>
               )}
             />
-            {getErrors(errors.canHaveChangeDue)}
+            {getErrors(errors.can_have_change_due)}
           </div>
           <StoresInput control={control} errors={errors}/>
 

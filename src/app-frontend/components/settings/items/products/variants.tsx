@@ -29,7 +29,9 @@ export const ProductVariants: FC<ProductVariantsProps> = ({
           id={item.id}
           useForm={useForm}
           index={index}
-          remove={remove} />
+          remove={remove}
+          key={item.id}
+        />
       ))}
     </>
   );
@@ -40,6 +42,7 @@ interface ProductVariantProps {
   useForm: UseFormReturn;
   index?: number;
   remove?: (index: number) => void;
+  key?: any
 }
 export const ProductVariant = ({
   id, useForm, index, remove
@@ -53,7 +56,7 @@ export const ProductVariant = ({
             <Input onChange={props.field.onChange} value={props.field.value} className="w-full"/>
           )}
           control={useForm.control}
-          name={`variants.${index}.attributeValue`}
+          name={`variants.${index}.attribute_value`}
         />
       </div>
       <div>

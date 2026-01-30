@@ -233,7 +233,7 @@ export const ItemSales = ({
   return (
     <TableComponent
       columns={columns}
-      useLoadList={useLoadHook}
+      loaderHook={useLoadHook}
       loaderLineItems={7}
       loaderLines={10}
     />
@@ -281,7 +281,7 @@ export const ItemPurchases = ({
   return (
     <TableComponent
       columns={columns}
-      useLoadList={useLoadHook}
+      loaderHook={useLoadHook}
       loaderLineItems={6}
       loaderLines={10}
     />

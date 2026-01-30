@@ -21,9 +21,7 @@ export const Suppliers = () => {
   const [operation, setOperation] = useState('create');
 
   const store = useSelector(getStore);
-  const useLoadHook = useApi<HydraCollection<Supplier>>('suppliers', SUPPLIER_LIST, {
-    store: store?.id
-  })
+  const useLoadHook = useApi<HydraCollection<Supplier>>('suppliers', `${SUPPLIER_LIST}?store=${store?.id}`)
   const [supplier, setSupplier] = useState<Supplier>();
   const [modal, setModal] = useState(false);
 

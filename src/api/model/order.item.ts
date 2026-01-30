@@ -3,7 +3,7 @@ import {ProductVariant} from "./product.variant";
 import {Tax} from "./tax";
 import {HydraId, HydraType} from "./hydra";
 
-export interface OrderItem extends HydraId, HydraType {
+export interface OrderItem  {
   id: string;
   product: Product;
   variant?: ProductVariant;
@@ -19,7 +19,7 @@ export interface OrderItem extends HydraId, HydraType {
   updatedAt: string;
 }
 
-export interface OrderItemSimple extends HydraId, HydraType {
+export interface OrderItemSimple  {
   id: string;
   product?: string;
   variant?: string;

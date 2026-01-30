@@ -16,6 +16,9 @@ import {ValidationMessage} from "../../../../api/model/validation";
 import {yupResolver} from "@hookform/resolvers/yup";
 import {hasErrors} from "../../../../lib/error/error";
 import {notify} from "../../../../app-common/components/confirm/notification";
+import {useDB} from "../../../../api/db/db";
+import {StringRecordId} from "surrealdb";
+import {Tables} from "../../../../api/db/tables";
 
 interface CreateTaxProps {
   entity?: Tax;
@@ -38,6 +41,7 @@ export const CreateTax: FC<CreateTaxProps> = ({
   });
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
+  const db = useDB();
 
   useEffect(() => {
     setModal(addModal);
@@ -50,7 +54,7 @@ export const CreateTax: FC<CreateTaxProps> = ({
         stores: entity.stores.map(item => {
           return {
             label: item.name,
-            value: item['@id']
+            value: item['id']
           }
         })
       });
@@ -60,25 +64,22 @@ export const CreateTax: FC<CreateTaxProps> = ({
   const createTax = async (values: any) => {
     setCreating(true);
     try {
-      let url, method = 'POST';
-      if (values.id) {
-        method = 'PUT';
-        url = TAX_GET.replace(':id', values.id);
-      } else {
-        url = TAX_CREATE;
-        delete values.id;
-      }
-
       if (values.stores) {
-        values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value);
+        values.stores = values.stores.map((item: ReactSelectOptionProps) => new StringRecordId(item.value));
       }
 
-      await fetchJson(url, {
-        method: method,
-        body: JSON.stringify({
+      values.rate = Number(values.rate);
+
+      let url, method = 'POST';
+      if (entity?.id) {
+        await db.merge(new StringRecordId(entity.id), {
           ...values,
-        })
-      });
+        });
+      } else {
+        await db.insert(Tables.tax, {
+          ...values,
+        });
+      }
 
       onModalClose();
 
@@ -139,7 +140,6 @@ export const CreateTax: FC<CreateTaxProps> = ({
       title={operation === 'create' ? 'Create tax' : 'Update tax'}
     >
       <form onSubmit={handleSubmit(createTax)} className="mb-5">
-        <input type="hidden" {...register('id')}/>
         <div className="grid grid-cols-1 gap-4 mb-3">
           <div>
             <label htmlFor="name">Name</label>

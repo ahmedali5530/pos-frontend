@@ -1,12 +1,12 @@
 import {Store} from "./store";
 import {HydraId, HydraType} from "./hydra";
 
-export interface User extends HydraId, HydraType {
+export interface User  {
   username: string;
-  displayName: string;
-  id: number;
+  display_name: string;
+  id: string;
   email: string;
   roles: string[];
   stores: Store[];
-  isActive: boolean
+  is_active: boolean
 }

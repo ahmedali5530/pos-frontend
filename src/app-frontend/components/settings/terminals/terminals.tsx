@@ -115,7 +115,7 @@ export const Terminals = () => {
     <>
       <TableComponent
         columns={columns}
-        useLoadList={useLoadHook}
+        loaderHook={useLoadHook}
         loaderLineItems={4}
         buttons={[{
           html: <Button variant="primary" onClick={() => {

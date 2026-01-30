@@ -1,13 +1,12 @@
 import React, {FC, useEffect, useState} from "react";
 import {Store} from "../../../api/model/store";
-import {fetchJson} from "../../../api/request/request";
-import {STORE_LIST} from "../../../api/routing/routes/backend.app";
 import {Controller, UseFormReturn} from "react-hook-form";
 import {ReactSelect} from "./custom.react.select";
-import {Trans} from "react-i18next";
-import {getErrorClass, getErrors, hasErrors} from "../../../lib/error/error";
+import {getErrorClass, getErrors} from "../../../lib/error/error";
+import {useDB} from "../../../api/db/db";
+import {Tables} from "../../../api/db/tables";
 
-interface StoresInputProps{
+interface StoresInputProps {
   control: UseFormReturn['control'];
   errors: UseFormReturn['formState']['errors'];
   valueAsNumber?: boolean;
@@ -18,10 +17,12 @@ export const StoresInput: FC<StoresInputProps> = ({
   control, errors, valueAsNumber, name
 }) => {
   const [stores, setStores] = useState<Store[]>([]);
+  const db = useDB();
   const loadStores = async () => {
     try {
-      const res = await fetchJson(STORE_LIST);
-      setStores(res['hydra:member']);
+      const [stores] = await db.query(`SELECT *
+                                       FROM ${Tables.store}`)
+      setStores(stores);
     } catch (e) {
       throw e;
     }
@@ -44,16 +45,16 @@ export const StoresInput: FC<StoresInputProps> = ({
             options={stores.map(item => {
               return {
                 label: item.name,
-                value: valueAsNumber ? item.id : item['@id']
+                value: item.id
               }
             })}
             isMulti
-            className={getErrorClass(errors.stores)}
+            className={getErrorClass(errors[name || "stores"])}
           />
         )}
       />
 
-      {getErrors(errors.stores)}
+      {getErrors(errors[name || "stores"])}
     </div>
   );
 }

@@ -8,26 +8,29 @@ import { faPencilAlt, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { TableComponent } from "../../../../app-common/components/table/table";
 import { User } from "../../../../api/model/user";
 import { CreateUser } from "./create.user";
-import useApi from "../../../../api/hooks/use.api";
 import { HydraCollection } from "../../../../api/model/hydra";
 import { Switch } from "../../../../app-common/components/input/switch";
 import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
 import { jsonRequest } from "../../../../api/request/request";
+import useApi, {SettingsData} from "../../../../api/db/use.api";
+import {Tables} from "../../../../api/db/tables";
+import {useDB} from "../../../../api/db/db";
+import {StringRecordId} from "surrealdb";
 
 export const Users = () => {
   const [operation, setOperation] = useState('create');
 
-  const useLoadHook = useApi<HydraCollection<User>>('users', USER_LIST);
+  const useLoadHook = useApi<SettingsData<User>>(Tables.user_account, [], [], 0, 10, ['stores']);
   const { fetchData } = useLoadHook;
   const [user, setUser] = useState<User>();
   const [modal, setModal] = useState(false);
 
-  const { t } = useTranslation();
+  const db = useDB();
 
   const columnHelper = createColumnHelper<User>();
 
   const columns = [
-    columnHelper.accessor('displayName', {
+    columnHelper.accessor('display_name', {
       header: ('Name'),
     }),
     columnHelper.accessor('username', {
@@ -38,12 +41,12 @@ export const Users = () => {
     }),
     columnHelper.accessor('roles', {
       header: ('Roles'),
-      cell: info => info.getValue().join(', '),
+      cell: info => info.getValue()?.join(', '),
       enableColumnFilter: false,
     }),
     columnHelper.accessor('stores', {
       header: ('Stores'),
-      cell: info => info.getValue().map(item => item.name).join(', '),
+      cell: info => info.getValue()?.map(item => item.name).join(', '),
       enableColumnFilter: false,
     }),
     columnHelper.accessor('id', {
@@ -63,14 +66,14 @@ export const Users = () => {
             <span className="mx-2 text-gray-300">|</span>
             <ConfirmAlert
               onConfirm={() => {
-                deleteUser(info.getValue().toString(), !info.row.original.isActive);
+                deleteUser(info.getValue().toString(), !info.row.original.is_active);
               }}
               confirmText="Yes, please"
               cancelText="No, wait"
               title="Confirmation"
-              description={`Are you sure to ${info.row.original.isActive ? 'de-' : ''}activate this user?`}
+              description={`Are you sure to ${info.row.original.is_active ? 'de-' : ''}activate this user?`}
             >
-              <Switch checked={info.row.original.isActive} readOnly/>
+              <Switch checked={info.row.original.is_active} readOnly/>
             </ConfirmAlert>
           </>
         )
@@ -79,12 +82,10 @@ export const Users = () => {
   ];
 
   async function deleteUser(id: string, status: boolean) {
-    await jsonRequest(USER_GET.replace(':id', id), {
-      method: 'PUT',
-      body: JSON.stringify({
-        isActive: status
-      })
-    });
+
+    await db.merge(new StringRecordId(id), {
+      is_active: status
+    })
 
     await useLoadHook.fetchData();
   }
@@ -93,24 +94,32 @@ export const Users = () => {
     <>
       <TableComponent
         columns={columns}
-        useLoadList={useLoadHook}
+        loaderHook={useLoadHook}
         loaderLineItems={6}
-        buttons={[{
-          html: <Button variant="primary" onClick={() => {
+        buttons={[
+          <Button variant="primary" onClick={() => {
             setModal(true);
             setOperation('create');
           }}>
             <FontAwesomeIcon icon={faPlus} className="mr-2"/> User
           </Button>
-        }]}
+        ]}
       />
 
-      <CreateUser addModal={modal} onClose={() => {
-        setUser(undefined);
-        setOperation('create');
-        setModal(false);
-        fetchData();
-      }} entity={user} operation={operation}/>
+      {modal && (
+        <CreateUser
+          addModal={modal}
+          onClose={() => {
+            setUser(undefined);
+            setOperation('create');
+            setModal(false);
+            fetchData();
+          }}
+          entity={user}
+          operation={operation}
+        />
+      )}
+
     </>
   );
 };

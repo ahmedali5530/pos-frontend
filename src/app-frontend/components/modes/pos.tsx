@@ -37,6 +37,7 @@ import { TopbarRight } from "./topbar.right";
 import { Footer } from "./footer";
 import { TrapFocus } from "../../../app-common/components/container/trap.focus";
 import { SearchVariants } from "../search/search.variants";
+import {appState as UserState} from '../../../store/jotai';
 
 enum SearchModes {
   sale = "sale",
@@ -50,8 +51,10 @@ export const PosMode = () => {
   const [list, setList] = useState<HomeProps["list"]>(initialData);
   const [paymentTypesList, setPaymentTypesList] =
     useState<HomeProps["paymentTypesList"]>(initialData);
-  const store = useSelector(getStore);
-  const terminal = useSelector(getTerminal);
+  const [userState, ] = useAtom(UserState);
+
+  const store = userState.store;
+  const terminal = userState.terminal;
 
   const [state] = useLoadData();
   const [appState, setAppState] = useAtom(defaultState);
@@ -73,8 +76,8 @@ export const PosMode = () => {
     setPaymentTypesList(state.paymentTypesList);
   }, [state.list, state.paymentTypesList]);
 
-  const searchField = useRef<HTMLInputElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const searchField = useRef<HTMLInputElement|null>(null);
+  const containerRef = useRef<HTMLDivElement|null>(null);
 
   const [modal, setModal] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
@@ -481,6 +484,8 @@ export const PosMode = () => {
     }));
   };
 
+  const customerInputRef = useRef<HTMLInputElement|null>(null);
+
   return (
     <>
       <TrapFocus inputRef={searchField.current}>
@@ -574,7 +579,6 @@ export const PosMode = () => {
                     name="q"
                     control={control}
                     rules={{ required: true }}
-                    defaultValue=""
                   />
 
                   <Controller
@@ -606,6 +610,7 @@ export const PosMode = () => {
                     }))
                   }}
                   value={customerName}
+                  ref={customerInputRef}
                 />
               )}
 
@@ -630,21 +635,24 @@ export const PosMode = () => {
               <CloseSaleInline
                 paymentTypesList={paymentTypesList.list}
                 isInline={true}
+                customerInput={customerInputRef}
               />
             </div>
           </div>
         </div>
       </TrapFocus>
-      <SearchVariants
-        modal={modal}
-        onClose={() => {
-          setModal(false);
-          setVariants([]);
-        }}
-        variants={variants}
-        addItemVariant={addItemVariant}
-        items={items}
-      />
+      {modal && (
+        <SearchVariants
+          modal={modal}
+          onClose={() => {
+            setModal(false);
+            setVariants([]);
+          }}
+          variants={variants}
+          addItemVariant={addItemVariant}
+          items={items}
+        />
+      )}
     </>
   );
 };

@@ -4,12 +4,17 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faSignOut} from "@fortawesome/free-solid-svg-icons";
 import {useLogout} from "../../duck/auth/hooks/useLogout";
 import { Tooltip } from "antd";
+import {LOGIN, POS} from "../routes/frontend.routes";
+import {useNavigate} from "react-router";
 
 export const Logout: FC = () => {
-  const [state, action] = useLogout();
+  const [, action] = useLogout();
+  const navigate = useNavigate();
 
   const logoutAction = async () => {
-    action();
+    await action();
+
+    navigate(LOGIN);
   };
 
   return (

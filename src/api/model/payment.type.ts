@@ -1,11 +1,11 @@
 import {Store} from "./store";
 import {HydraId, HydraType} from "./hydra";
 
-export interface PaymentType extends HydraId, HydraType {
+export interface PaymentType  {
   id: string;
   name: string;
   type: string;
-  canHaveChangeDue?: boolean;
+  can_have_change_due?: boolean;
   stores: Store[];
-  isActive: boolean;
+  is_active: boolean;
 }

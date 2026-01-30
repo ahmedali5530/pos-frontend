@@ -17,25 +17,28 @@ import { Discount } from "../../../../api/model/discount";
 import { useSelector } from "react-redux";
 import { getStore } from "../../../../duck/store/store.selector";
 import { CreateDiscount } from "./create.discount";
-import useApi from "../../../../api/hooks/use.api";
-import { HydraCollection } from "../../../../api/model/hydra";
 import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
 import { jsonRequest } from "../../../../api/request/request";
 import { Switch } from "../../../../app-common/components/input/switch";
+import useApi, {SettingsData} from "../../../../api/db/use.api";
+import {useDB} from "../../../../api/db/db";
+import {StringRecordId} from "surrealdb";
+import {useAtom} from "jotai";
+import {appState} from "../../../../store/jotai";
+import {Tables} from "../../../../api/db/tables";
 
 export const DiscountTypes = () => {
   const [operation, setOperation] = useState("create");
 
-  const store = useSelector(getStore);
-  const useLoadHook = useApi<HydraCollection<Discount>>(
-    "discounts",
-    `${DISCOUNT_LIST}?store=${store?.id}`
+  const useLoadHook = useApi<SettingsData<Discount>>(
+    Tables.discount,
+    [], [], 0, 10, ['stores']
   );
   const { fetchData } = useLoadHook;
   const [discount, setDiscount] = useState<Discount>();
   const [modal, setModal] = useState(false);
 
-  const { t } = useTranslation();
+  const db = useDB();
 
   const columnHelper = createColumnHelper<Discount>();
 
@@ -46,7 +49,7 @@ export const DiscountTypes = () => {
     columnHelper.accessor("rate", {
       header: "Rate",
     }),
-    columnHelper.accessor("rateType", {
+    columnHelper.accessor("rate_type", {
       header: "Rate Type",
     }),
     columnHelper.accessor("scope", {
@@ -86,15 +89,15 @@ export const DiscountTypes = () => {
               onConfirm={() => {
                 deleteDiscount(
                   info.getValue().toString(),
-                  !info.row.original.isActive
+                  !info.row.original.is_active
                 );
               }}
               confirmText="Yes, please"
               cancelText="No, wait"
               title="Confirmation"
-              description={`Are you sure to ${info.row.original.isActive ? 'de-' : ''}activate this discount type?`}
+              description={`Are you sure to ${info.row.original.is_active ? 'de-' : ''}activate this discount type?`}
             >
-              <Switch checked={info.row.original.isActive} readOnly />
+              <Switch checked={info.row.original.is_active} readOnly />
             </ConfirmAlert>
           </>
         );
@@ -103,11 +106,8 @@ export const DiscountTypes = () => {
   ];
 
   async function deleteDiscount(id: string, status: boolean) {
-    await jsonRequest(DISCOUNT_GET.replace(":id", id), {
-      method: "PUT",
-      body: JSON.stringify({
-        isActive: status,
-      }),
+    await db.merge(new StringRecordId(id), {
+      is_active: status,
     });
 
     await useLoadHook.fetchData();
@@ -117,35 +117,34 @@ export const DiscountTypes = () => {
     <>
       <TableComponent
         columns={columns}
-        useLoadList={useLoadHook}
+        loaderHook={useLoadHook}
         loaderLineItems={6}
         buttons={[
-          {
-            html: (
-              <Button
-                variant="primary"
-                onClick={() => {
-                  setModal(true);
-                  setOperation("create");
-                }}>
-                <FontAwesomeIcon icon={faPlus} className="mr-2" /> Store
-              </Button>
-            ),
-          },
+          <Button
+            variant="primary"
+            onClick={() => {
+              setModal(true);
+              setOperation("create");
+            }}>
+            <FontAwesomeIcon icon={faPlus} className="mr-2" /> Discount type
+          </Button>
         ]}
       />
 
-      <CreateDiscount
-        addModal={modal}
-        onClose={() => {
-          setModal(false);
-          setOperation("create");
-          fetchData();
-          setDiscount(undefined);
-        }}
-        operation={operation}
-        entity={discount}
-      />
+      {modal && (
+        <CreateDiscount
+          addModal={modal}
+          onClose={() => {
+            setModal(false);
+            setOperation("create");
+            fetchData();
+            setDiscount(undefined);
+          }}
+          operation={operation}
+          entity={discount}
+        />
+      )}
+
     </>
   );
 };

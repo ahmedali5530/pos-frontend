@@ -2,8 +2,8 @@ import {HydraId, HydraType} from "./hydra";
 import {Product} from "./product";
 import {ProductVariant} from "./product.variant";
 
-export interface PurchaseOrderItem extends HydraId, HydraType {
-  id: number;
+export interface PurchaseOrderItem  {
+  id: string;
   item: Product;
   quantity: string;
   price: string;
@@ -12,8 +12,8 @@ export interface PurchaseOrderItem extends HydraId, HydraType {
   variants: PurchaseOrderItemVariant[];
 }
 
-export interface PurchaseOrderItemVariant extends HydraId, HydraType {
-  id: number;
+export interface PurchaseOrderItemVariant  {
+  id: string;
   quantity: string;
   variant: ProductVariant;
   purchasePrice: string;

@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import {resolve} from 'path'
 import envCompatible from 'vite-plugin-env-compatible';
 import svgr from 'vite-plugin-svgr'
+import path from "path"
 
 process.env = {...process.env, ...loadEnv('dev', process.cwd())};
 
@@ -11,12 +12,7 @@ export default defineConfig({
     port: 3000
   },
   resolve: {
-    alias: [
-      {
-        find: "common",
-        replacement: resolve(__dirname, "src/common"),
-      },
-    ],
+    alias: { "@": path.resolve(__dirname, "./src") }
   },
   plugins: [
     react(),

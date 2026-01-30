@@ -1,22 +1,25 @@
 import classNames from "classnames";
-import { getRealProductPrice } from "../../containers/dashboard/pos";
-import { Modal } from "../../../app-common/components/modal/modal";
-import { Product } from "../../../api/model/product";
-import { ProductVariant } from "../../../api/model/product.variant";
-import { useAtom } from "jotai";
-import { defaultState } from "../../../store/jotai";
+import {getRealProductPrice} from "../../containers/dashboard/pos";
+import {Modal} from "../../../app-common/components/modal/modal";
+import {Product} from "../../../api/model/product";
+import {ProductVariant} from "../../../api/model/product.variant";
+import {useAtom} from "jotai";
+import {defaultState} from "../../../store/jotai";
 import Mousetrap from "mousetrap";
+import {useEffect} from "react";
 
-interface Props{
+interface Props {
   modal: boolean;
   onClose: () => void;
   variants: ProductVariant[];
-  addItemVariant: (item: Product,
+  addItemVariant: (
+    item: Product,
     variant: ProductVariant,
     quantity: number,
     price?: number) => void;
   items: Product[];
 }
+
 export const SearchVariants = ({
   modal, onClose, variants, addItemVariant, items
 }: Props) => {
@@ -31,9 +34,9 @@ export const SearchVariants = ({
 
   const moveVariantsCursor = async (event: any) => {
     const itemsLength = variants.length;
-    if( event.key === "ArrowDown" ) {
+    if (event.key === "ArrowDown") {
       let newSelected = selectedVariant + 1;
-      if( newSelected === itemsLength ) {
+      if (newSelected === itemsLength) {
         newSelected = 0;
         setAppState((prev) => ({
           ...prev,
@@ -45,31 +48,37 @@ export const SearchVariants = ({
           selectedVariant: newSelected,
         }));
       }
-    } else if( event.key === "ArrowUp" ) {
+    } else if (event.key === "ArrowUp") {
       let newSelected = selectedVariant - 1;
-      if( newSelected === -1 ) {
+      if (newSelected === -1) {
         newSelected = itemsLength - 1;
       }
       setAppState((prev) => ({
         ...prev,
         selectedVariant: newSelected,
       }));
-    } else if( event.key === "Enter" ) {
+    } else if (event.key === "Enter") {
       addItemVariant(
         items[selected],
         items[selected].variants[selectedVariant],
-        1
+        quantity
       );
     }
   };
 
-  Mousetrap.bind(["up", "down", "enter"], function (e: Event) {
-    // e.preventDefault();
-    if( modal ) {
-      //move cursor in variant chooser modal
+
+
+  useEffect(() => {
+    function func(e){
       moveVariantsCursor(e);
     }
-  });
+
+    if (modal) {
+      Mousetrap.bind(["up", "down", "enter"], func);
+    }else{
+      Mousetrap.unbind(['up', 'down', 'enter'], func);
+    }
+  }, [selected, items, quantity, modal]);
 
   return (
     <Modal

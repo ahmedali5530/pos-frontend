@@ -1,13 +1,4 @@
-import {
-  createRef,
-  forwardRef,
-  InputHTMLAttributes,
-  MouseEventHandler,
-  Ref,
-  useCallback,
-  useImperativeHandle,
-  useRef
-} from "react";
+import {forwardRef, InputHTMLAttributes, Ref, useCallback} from "react";
 import classNames from "classnames";
 import {NumericFormat} from "react-number-format";
 
@@ -21,12 +12,12 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 export const Input = forwardRef((props: InputProps, ref: Ref<any>) => {
   const {selectable, inputSize, hasError, ...rest} = props;
   const onClick = useCallback((event: any) => {
-    if(selectable !== false){
+    if (selectable !== false) {
       event.currentTarget.select();
     }
   }, [selectable]);
 
-  if(props.type === 'number'){
+  if (props.type === 'number') {
     return (
       <NumericFormat
         name={props.name}
@@ -52,7 +43,7 @@ export const Input = forwardRef((props: InputProps, ref: Ref<any>) => {
         onBlur={props.onBlur}
       />
     );
-  }else {
+  } else {
     return (
       <input
         type="text"

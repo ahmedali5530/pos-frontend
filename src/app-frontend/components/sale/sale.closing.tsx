@@ -1,30 +1,31 @@
-import React, { FC, PropsWithChildren, useEffect, useLayoutEffect, useMemo, useState } from "react";
-import { Modal } from "../../../app-common/components/modal/modal";
-import { Closing } from "../../../api/model/closing";
-import { QueryString } from "../../../lib/location/query.string";
-import { fetchJson, jsonRequest } from "../../../api/request/request";
-import { CLOSING_EDIT, CLOSING_OPENED, EXPENSE_LIST, ORDER_LIST } from "../../../api/routing/routes/backend.app";
-import { Button } from "../../../app-common/components/input/button";
-import { Input } from "../../../app-common/components/input/input";
-import { Controller, useForm } from "react-hook-form";
-import { DateTime } from "luxon";
-import { Expenses } from "./expenses";
-import { Expense } from "../../../api/model/expense";
-import { useSelector } from "react-redux";
-import { getAuthorizedUser } from "../../../duck/auth/auth.selector";
+import React, {FC, PropsWithChildren, useEffect, useLayoutEffect, useMemo, useState} from "react";
+import {Modal} from "../../../app-common/components/modal/modal";
+import {Closing} from "../../../api/model/closing";
+import {fetchJson, jsonRequest} from "../../../api/request/request";
+import {CLOSING_EDIT, EXPENSE_LIST} from "../../../api/routing/routes/backend.app";
+import {Button} from "../../../app-common/components/input/button";
+import {Input} from "../../../app-common/components/input/input";
+import {Controller, useForm} from "react-hook-form";
+import {DateTime} from "luxon";
+import {Expenses} from "./expenses";
+import {Expense} from "../../../api/model/expense";
 import classNames from "classnames";
-import { KeyboardInput } from "../../../app-common/components/input/keyboard.input";
-import { getStore } from "../../../duck/store/store.selector";
-import { getTerminal } from "../../../duck/terminal/terminal.selector";
-import { HttpException, UnprocessableEntityException } from "../../../lib/http/exception/http.exception";
-import { notify } from "../../../app-common/components/confirm/notification";
-import { ValidationResult } from "../../../lib/validator/validation.result";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faShopLock } from "@fortawesome/free-solid-svg-icons";
-import { Tooltip } from "antd";
-import useApi from "../../../api/hooks/use.api";
-import { Order } from "../../../api/model/order";
-import { withCurrency } from "../../../lib/currency/currency";
+import {KeyboardInput} from "../../../app-common/components/input/keyboard.input";
+import {HttpException, UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
+import {notify} from "../../../app-common/components/confirm/notification";
+import {ValidationResult} from "../../../lib/validator/validation.result";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faShopLock} from "@fortawesome/free-solid-svg-icons";
+import {Tooltip} from "antd";
+import {Order} from "../../../api/model/order";
+import {withCurrency} from "../../../lib/currency/currency";
+import {useAtom} from "jotai";
+import {appState as AppState} from "../../../store/jotai";
+import useApi, {SettingsData} from "../../../api/db/use.api";
+import {Tables} from "../../../api/db/tables";
+import {useDB} from "../../../api/db/db";
+import {StringRecordId} from "surrealdb";
+import {PaymentMode} from "../modes/payment";
 
 interface TaxProps extends PropsWithChildren {
 
@@ -32,34 +33,40 @@ interface TaxProps extends PropsWithChildren {
 
 export const SaleClosing: FC<TaxProps> = (props) => {
   const [modal, setModal] = useState(false);
-  const store = useSelector(getStore);
-  const terminal = useSelector(getTerminal);
+  const [appSt] = useAtom(AppState);
+  const {store, terminal, user} = appSt;
 
-  const [payments, setPayments] = useState<{ [key: string]: number }>({});
+  const db = useDB();
 
-  const useLoadHook = useApi<{
-    count: number,
-    list: Order[],
-    payments: { [name: string]: number },
-    total: number
-  }>('orders', ORDER_LIST);
-  const { handleFilterChange, data, fetchData: fetchOrders } = useLoadHook;
+  // const [payments, setPayments] = useState<{ [key: string]: number }>({});
+
+  const {handleFilterChange, data: orders, fetchData: fetchOrders, handleParameterChange} = useApi<SettingsData<Order>>(Tables.order);
 
   //check for day closing
   const [closing, setClosing] = useState<Closing>();
   const checkDayOpening = async () => {
     try {
-      const queryString = QueryString.stringify({
-        store: store?.id,
-        terminal: terminal?.id
-      })
+      const [result] = await db.query(`SELECT * FROM ${Tables.closing} where store = $store and terminal = $terminal fetch store, terminal, opened_by`, {
+        store: new StringRecordId(store?.id),
+        terminal: new StringRecordId(terminal?.id)
+      });
 
-      const res = await jsonRequest(CLOSING_OPENED + '?' + queryString);
-      const json = await res.json();
+      if(result.length > 0){
+        setClosing(result[0]);
+      }else{
+        // create closing
+        const [cl] = await db.insert(Tables.closing, {
+          store: new StringRecordId(store?.id),
+          terminal: new StringRecordId(terminal?.id),
+          date_from: DateTime.now().toJSDate(),
+          opened_by: new StringRecordId(user?.id),
+          created_at: DateTime.now().toJSDate()
+        });
 
-      setClosing(json.closing);
+        await fetchClosing(cl.id);
+      }
 
-    } catch ( e ) {
+    } catch (e) {
       throw e;
     }
   };
@@ -68,34 +75,39 @@ export const SaleClosing: FC<TaxProps> = (props) => {
   const [hideCloseButton, setHideCloseButton] = useState(false);
 
   useEffect(() => {
-    if( closing ) {
+    if (closing) {
       reset({
-        openingBalance: closing.openingBalance,
-        cashAdded: closing.cashAdded || 0,
-        cashWithdrawn: closing.cashWithdrawn || 0,
-        id: closing.id
+        opening_balance: closing.opening_balance,
+        cash_added: closing.cash_added || 0,
+        cash_withdrawn: closing.cash_withdrawn || 0,
+        id: closing.id.toString()
       });
 
-      if( closing.openingBalance === null ) {
+      if (closing.opening_balance === undefined) {
         setModal(true);
         setHideCloseButton(true);
         setTitle('Start day');
       }
 
-      if( closing.openingBalance !== null && DateTime.now().diff(DateTime.fromISO(closing.createdAt.datetime), 'hours').hours > 24 ) {
+      if (closing.opening_balance && DateTime.now().diff(DateTime.fromJSDate(closing.created_at), 'hours').hours > 24) {
         setModal(true);
         setHideCloseButton(true);
         setTitle('Close previous day first');
       }
 
       loadExpenses({
-        dateTimeFrom: closing.dateFrom?.datetime
+        dateTimeFrom: closing.date_from
       });
 
-      handleFilterChange!({
-        dateTimeFrom: closing.dateFrom?.datetime,
+      handleFilterChange!([
+        'created_at >= $dateTimeFrom',
+        'store = $store'
+      ]);
+
+      handleParameterChange({
+        dateTimeFrom: closing?.date_from,
         store: store?.id
-      });
+      })
     }
   }, [closing]);
 
@@ -104,104 +116,99 @@ export const SaleClosing: FC<TaxProps> = (props) => {
   }, []);
 
   useEffect(() => {
-    if( modal ) {
+    if (modal) {
       fetchOrders();
       checkDayOpening();
     }
   }, [modal]);
 
-  const { reset, register, handleSubmit, control, watch, getValues } = useForm();
+  const {reset, register, handleSubmit, control, watch, getValues} = useForm();
   const [saving, setSaving] = useState(false);
   const [expenses, setExpenses] = useState(0);
 
-  const user = useSelector(getAuthorizedUser);
+  const payments = useMemo(() => {
+    const list = {};
+    let cash = 0;
+    orders?.data?.forEach(order => {
+      order?.payments?.forEach(payment => {
+        if(payment.type?.type === 'cash'){
+          cash += Number(payment.total);
+        }else{
+          if(!list[payment.type?.type]){
+            list[payment.type?.type] = 0;
+          }
 
-  useEffect(() => {
-    if( data?.payments ) {
-      setPayments(data?.payments);
-    }
-  }, [data]);
+          list[payment.type?.type] += Number(payment.total);
+        }
+      });
+    })
+
+    list['cash'] = cash;
+
+    return list;
+  }, [orders]);
 
   const onSubmit = async (values: any) => {
+    const vals = {
+      ...values
+    };
+
     setSaving(true);
     try {
-      if( values.openingBalance !== null ) {
-        values.dateTe = {
-          datetime: DateTime.now().toISO()
-        }
+      if (vals.opening_balance !== undefined) {
+        vals.date_to = DateTime.now().toJSDate();
 
-        values.closedBy = user?.id;
-        values.closingBalance = cashInHand;
+        vals.closed_by = new StringRecordId(user?.id);
+        vals.closing_balance = cashInHand;
       } else {
-        values.openingBalance = 0;
+        vals.opening_balance = 0;
       }
 
-      if( !values.updateOnly ) {
-        values.closedAt = {
-          datetime: DateTime.now().toISO()
-        }
+      if (!vals.updateOnly) {
+        vals.closed_at = DateTime.now().toJSDate();
       }
 
-      values.terminal = terminal?.id;
+      vals.terminal = new StringRecordId(terminal?.id);
+      vals.store = new StringRecordId(store?.id);
+      vals.opening_balance = Number(vals.opening_balance.toString().trim() === '' ?? 0);
 
-      const response = await jsonRequest(CLOSING_EDIT.replace(':id', closing?.id as string), {
-        method: 'POST',
-        body: JSON.stringify(values)
-      });
-      const json = await response.json();
+      await db.update(vals.id, vals);
 
-      setClosing(json.closing);
+      await fetchClosing(vals.id);
 
       setHideCloseButton(false);
       setModal(false);
 
-    } catch ( exception ) {
-      if( exception instanceof HttpException ) {
-        if( exception.message ) {
-          notify({
-            type: 'error',
-            description: exception.message
-          });
-        }
-      }
+    } catch (exception) {
+      notify({
+        type: 'error',
+        description: exception.toString()
+      });
 
-      if( exception instanceof UnprocessableEntityException ) {
-        const e: ValidationResult = await exception.response.json();
-        if( e.errorMessage ) {
-          notify({
-            type: 'error',
-            description: e.errorMessage
-          });
-        }
-
-        return false;
-      }
       throw exception;
     } finally {
       setSaving(false);
     }
   };
 
+  const fetchClosing = async (id: string) => {
+    const [newClosing] = await db.query(`SELECT * FROM ${id} fetch store, terminal, opened_by`);
+
+    setClosing(newClosing[0]);
+  }
+
   const loadExpenses = async (values?: any) => {
     try {
-      const url = new URL(EXPENSE_LIST);
-      const params = new URLSearchParams({
-        ...values,
-        orderBy: 'id',
-        orderMode: 'DESC',
-        store: store?.id
-      });
+      const [ex] = await db.query(`SELECT * FROM ${Tables.expense} where store = $store and created_at >= $dateTimeFrom`, {
+        store: new StringRecordId(store?.id),
+        dateTimeFrom: values.dateTimeFrom
+      })
 
-      url.search = params.toString();
-      const json = await fetchJson(url.toString());
-
-      const list: Expense[] = json.list;
-
-      setExpenses(list.reduce((prev: number, current) => {
+      setExpenses(ex.reduce((prev: number, current) => {
         return current.amount + prev
       }, 0));
 
-    } catch ( e ) {
+    } catch (e) {
 
       throw e;
     }
@@ -210,8 +217,8 @@ export const SaleClosing: FC<TaxProps> = (props) => {
   const cashInHand = useMemo(() => {
     let cash = payments['cash'] ?? 0;
 
-    return Number(watch('openingBalance')) + Number(watch('cashAdded')) - Number(watch('cashWithdrawn')) - expenses + cash;
-  }, [payments, expenses, watch('openingBalance'), watch('cashAdded'), watch('cashWithdrawn')]);
+    return Number(watch('opening_balance') || 0) + Number(watch('cash_added') || 0) - Number(watch('cash_withdrawn') || 0) - expenses + cash;
+  }, [payments, expenses, watch('opening_balance'), watch('cash_added'), watch('cash_withdrawn')]);
 
   return (
     <>
@@ -241,11 +248,11 @@ export const SaleClosing: FC<TaxProps> = (props) => {
             </tr>
             <tr>
               <th className="text-right">Day started by</th>
-              <td>{closing?.openedBy?.displayName}</td>
+              <td>{closing?.opened_by?.display_name}</td>
             </tr>
             <tr>
               <th className="text-right">Day started at</th>
-              <td>{closing?.createdAt?.datetime && DateTime.fromISO(closing?.createdAt?.datetime || '').toFormat(import.meta.env.VITE_DATE_TIME_FORMAT as string)}</td>
+              <td>{closing?.created_at && DateTime.fromISO(closing?.created_at || '').toFormat(import.meta.env.VITE_DATE_TIME_FORMAT as string)}</td>
             </tr>
             <tr>
               <th className="text-right">Previous closing</th>
@@ -264,7 +271,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
                       onChange={props.field.onChange}
                     />
                   )}
-                  name="openingBalance"
+                  name="opening_balance"
                   control={control}
                 />
               </td>
@@ -272,12 +279,12 @@ export const SaleClosing: FC<TaxProps> = (props) => {
             <tr>
               <th className="text-right">Cash added</th>
               <td>
-                <Input {...register('cashAdded', {
+                <Input {...register('cash_added', {
                   valueAsNumber: true
                 })} type="number" className="w-full" tabIndex={0} selectable={true}/>
               </td>
             </tr>
-            {closing?.openingBalance !== null && (
+            {closing?.opening_balance !== undefined && (
               <>
                 <tr>
                   <th className="text-right">
@@ -289,7 +296,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
                       name="expenses"
                       render={(props) => (
                         <Input
-                          {...register('expenses', { valueAsNumber: true })}
+                          {...register('expenses', {valueAsNumber: true})}
                           type="number"
                           className="w-full"
                           value={expenses.toString()}
@@ -305,7 +312,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
                 <tr>
                   <th className="text-right">Cash withdrawn</th>
                   <td>
-                    <Input {...register('cashWithdrawn', {
+                    <Input {...register('cash_withdrawn', {
                       valueAsNumber: true
                     })} type="number" className="w-full" tabIndex={0} selectable={true}/>
                   </td>
@@ -338,7 +345,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
             <tbody>
             <tr>
               <td colSpan={2}>
-                {closing?.openingBalance !== null && (
+                {closing?.opening_balance !== undefined && (
                   <div className="alert alert-info">
                     Click on Update button if you are only saving the closing.
                   </div>
@@ -350,9 +357,9 @@ export const SaleClosing: FC<TaxProps> = (props) => {
                       updateOnly: true
                     });
                   }} type="submit" variant="primary" tabIndex={0} disabled={saving}>
-                    {saving ? '...' : (closing?.openingBalance === null ? 'Start day' : 'Update')}
+                    {saving ? '...' : (closing?.opening_balance === undefined ? 'Start day' : 'Update')}
                   </Button>
-                  {closing?.openingBalance !== null && (
+                  {closing?.opening_balance !== undefined && (
                     <Button type="submit" variant="primary" tabIndex={0} disabled={saving}>
                       {saving ? '...' : 'Close day'}
                     </Button>
@@ -365,7 +372,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
         </form>
         <div className="text-center">
           <Expenses onClose={() => loadExpenses({
-            dateTimeFrom: closing?.dateFrom?.datetime
+            dateTimeFrom: closing?.date_from
           })}/>
         </div>
       </Modal>

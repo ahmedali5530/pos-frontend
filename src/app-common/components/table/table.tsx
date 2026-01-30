@@ -1,5 +1,4 @@
 import {
-  ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -8,93 +7,57 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import React, {
-  ChangeEventHandler,
-  FC,
-  ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import { Trans, useTranslation } from "react-i18next";
+import React, { FC, ReactNode, useEffect, useState, } from "react";
+import { useTranslation } from "react-i18next";
 import _ from "lodash";
-import { Loader } from "../loader/loader";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faClose,
-  faRefresh,
-  faSearch,
-} from "@fortawesome/free-solid-svg-icons";
-import { UseApiResult } from "../../../api/hooks/use.api";
+import { faClose, faRefresh, faSearch, } from "@fortawesome/free-solid-svg-icons";
 import { Input } from "../input/input";
-import { ReactSelect } from "../input/custom.react.select";
 import { Controller, useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
-import { getErrorClass, hasErrors } from "../../../lib/error/error";
 import classNames from "classnames";
+import { ReactSelect } from "../input/custom.react.select.tsx";
+import { Loader } from "../loader/loader.tsx";
+import {LabelValue} from "../../../api/model/common";
+import {UseApiResult} from "../../../api/db/use.api";
 
 interface ButtonProps {
   title?: ReactNode;
   html: ReactNode;
 }
 
+interface DropdownFilter {
+  name: string
+  options: LabelValue[]
+}
+
 interface TableComponentProps {
   columns: any;
   sort?: SortingState;
-  buttons?: ButtonProps[];
-  selectionButtons?: ButtonProps[];
-  loaderLineItems?: number;
-  loaderLines?: number;
-  useLoadList: UseApiResult;
-  dataKey?: string;
-  totalKey?: string;
+  buttons?: ReactNode[];
+  dropdownFilters?: DropdownFilter[]
+  // selectionButtons?: ButtonProps[];
   enableSearch?: boolean;
+  enableRefresh?: boolean
+  loaderHook: UseApiResult;
+  loaderLines?: number
+  loaderLineItems?: number
 }
 
 export const TableComponent: FC<TableComponentProps> = ({
   columns,
-  sort,
-  buttons,
-  selectionButtons,
-  loaderLineItems,
-  useLoadList,
-  loaderLines,
-  dataKey,
-  totalKey,
+  buttons, dropdownFilters,
   enableSearch,
+  loaderHook,
+  loaderLines, loaderLineItems, enableRefresh = true
 }) => {
   const { t } = useTranslation();
 
-  const {
-    handlePageChange,
-    handleFilterChange,
-    filters,
-    handlePageSizeChange: handleLimitChange,
-    handleSortChange,
-    handleSortModeChange,
-    data,
-    isFetching: loading,
-    fetchData,
-    fetch,
-    resetFilters,
-  } = useLoadList;
-
   const [sorting, setSorting] = useState<SortingState>([]);
-
-  // set initial sorting
   useEffect(() => {
-    if (sort) {
-      setSorting(sort);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (sorting.length > 0) {
-      handleSortChange!(sorting[0].id);
-      handleSortModeChange!(sorting[0].desc ? "desc" : "asc");
+    if( sorting.length === 1 && sorting[0]?.id !== '' ) {
+      handleSortChange!([`${sorting[0].id} ${sorting[0].desc === true ? 'DESC' : 'ASC'}`]);
+    } else {
+      handleSortChange!([]);
     }
   }, [sorting]);
 
@@ -103,6 +66,12 @@ export const TableComponent: FC<TableComponentProps> = ({
       pageIndex: 0,
       pageSize: 10,
     });
+
+  useEffect(() => {
+    handlePageChange!(pageIndex * pageSize);
+    handleLimitChange!(pageSize);
+  }, [pageIndex, pageSize]);
+
   const [rowSelection, setRowSelection] = React.useState({});
 
   const pagination = React.useMemo(
@@ -113,16 +82,24 @@ export const TableComponent: FC<TableComponentProps> = ({
     [pageIndex, pageSize]
   );
 
-  useEffect(() => {
-    handlePageChange!(pageIndex + 1);
-    handleLimitChange!(pageSize);
-  }, [pageIndex, pageSize]);
+  const {
+    data,
+    handlePageChange,
+    handleFilterChange,
+    handleParameterChange,
+    filters,
+    handlePageSizeChange: handleLimitChange,
+    handleSortChange,
+    fetchData,
+    resetFilters,
+    isLoading
+  } = loaderHook;
+
+  const total = data?.total || 0;
 
   const table = useReactTable({
-    data: data?.[dataKey || "hydra:member"] || [],
-    pageCount: Math.ceil(
-      (data?.[totalKey || "hydra:totalItems"] as number) / pageSize
-    ),
+    data: data?.data || [], //data.data[0],
+    pageCount: Math.ceil(total / pageSize), // total pages
     columns,
     getCoreRowModel: getCoreRowModel(),
     state: {
@@ -141,19 +118,17 @@ export const TableComponent: FC<TableComponentProps> = ({
     manualFiltering: true,
   });
 
-  const ids = useMemo(() => {
-    // return table.getSelectedRowModel().rows.map(item => (item.original as any).uuid)
+  // const ids = useMemo(() => {
+  // return table.getSelectedRowModel().rows.map(item => (item.original as any).uuid)
 
-    return [];
-  }, [rowSelection]);
+  // return [];
+  // }, [rowSelection]);
 
-  const [isLoading, setLoading] = useState(false);
-
-  const renderButton = (button: ButtonProps) => {
-    if (button.html) {
-      return button.html;
-    }
-  };
+  // const renderButton = (button: ButtonProps) => {
+  //   if( button.html ) {
+  //     return button.html;
+  //   }
+  // };
 
   const pageSizes: { [key: string | number]: any } = {
     10: 10,
@@ -163,68 +138,62 @@ export const TableComponent: FC<TableComponentProps> = ({
     100: 100,
   };
 
-  const [columnFilter, setColumnFilter] = useState({
-    column: "",
-    orgColumn: "",
-    value: "",
-  });
-
   const {
     handleSubmit,
     control,
-    setValue,
-    formState: { errors },
-  } = useForm({
-    resolver: yupResolver(
-      yup.object({
-        column: yup
-          .object({
-            label: yup.string(),
-            value: yup.string(),
-          })
-          .required(),
-        // value: yup.string().required()
-      })
-    ),
-  });
+    setValue
+  } = useForm();
+
   const filterOptions = table
     .getAllColumns()
     .filter((column) => column.getCanFilter())
     .map((column) => ({ label: column.columnDef.header, value: column.id }));
+
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    if (!loaded) {
+    if( !loaded ) {
       setValue("column", filterOptions[0]); // set first column as default
       setLoaded(true);
     }
   }, [table.getAllColumns()]);
 
   const handleColumnFilter = (values: any) => {
-    if (filters[values.column.value] === values.value) {
-      fetchData();
-    } else {
-      handleFilterChange({
-        ...filters,
-        [columnFilter.column]: undefined, // remove previous filter
-        [values.column.value.replace("_", ".")]: values.value, // replace _ with . to match the filters with API Platform
+    if( values.value && values.value.trim() !== '' ) {
+      handleFilterChange([
+        `string::lowercase($this[$column]) ~ $value`
+      ]);
+      handleParameterChange({
+        'column': values.column.value,
+        'value': values.value
       });
+    }
 
-      setColumnFilter({
-        column: values.column.value.replace("_", "."),
-        orgColumn: values.column.value,
-        value: values.value,
-      });
+    if(Object.values(values).length > 0) {
+      // for (const value of Object.values(values)) {
+      //   console.log(value)
+      //   if (value.value && value.value.trim() !== '') {
+      //     handleFilterChange([
+      //       `string::lowercase($this[$column]) ~ $value`
+      //     ]);
+      //     handleParameterChange({
+      //       'column': value.name,
+      //       'value': values.value
+      //     });
+      //   }
+      // }
+    }else{
+      handleFilterChange([]);
     }
   };
 
   return (
     <>
-      <div className="my-5 flex justify-between">
+      <div className="my-5 flex justify-between gap-3">
         <div className="inline-flex justify-start">
           {enableSearch !== false && (
             <form
-              className="input-group"
+              className="flex gap-3"
               onSubmit={handleSubmit(handleColumnFilter)}>
               <Controller
                 render={({ field }) => (
@@ -232,9 +201,7 @@ export const TableComponent: FC<TableComponentProps> = ({
                     value={field.value}
                     onChange={field.onChange}
                     placeholder="Search..."
-                    hasError={hasErrors(_.get(errors.value, "message"))}
                     type="search"
-                    className="w-72"
                   />
                 )}
                 name="value"
@@ -247,44 +214,63 @@ export const TableComponent: FC<TableComponentProps> = ({
                   <ReactSelect
                     onChange={field.onChange}
                     options={filterOptions}
-                    className={classNames(
-                      "rs-__container w-48",
-                      getErrorClass(_.get(errors.column, "message"))
-                    )}
+                    className="w-72"
                     value={field.value}
                   />
                 )}
                 control={control}
               />
+
+              {dropdownFilters && dropdownFilters.map(item => (
+                <Controller
+                  name={item.name}
+                  render={({ field }) => (
+                    <ReactSelect
+                      onChange={field.onChange}
+                      options={item.options}
+                      className="w-72"
+                      value={field.value}
+                    />
+                  )}
+                  control={control}
+                />
+              ))}
+
               <button className="btn btn-primary w-12" type="submit">
-                <FontAwesomeIcon icon={faSearch} />
+                <FontAwesomeIcon icon={faSearch}/>
               </button>
               {Object.keys(filters).length > 0 && (
                 <button
-                  className="btn btn-danger w-12"
+                  className="btn btn-danger"
                   type="button"
-                  onClick={resetFilters}>
-                  <FontAwesomeIcon icon={faClose} />
+                  onClick={() => {
+                    resetFilters()
+                    setValue('value', undefined)
+                  }}>
+                  <FontAwesomeIcon icon={faClose}/>
                 </button>
               )}
             </form>
           )}
         </div>
         <div className="inline-flex justify-end">
-          <div className="input-group">
-            <button className="btn btn-primary w-12" onClick={fetchData}>
-              <FontAwesomeIcon icon={faRefresh} />
-            </button>
+          <div className="flex gap-3">
+            {enableRefresh && (
+              <button className="btn btn-primary w-12" onClick={fetchData}>
+                <FontAwesomeIcon icon={faRefresh}/>
+              </button>
+            )}
+
             {Object.keys(rowSelection).length > 0 && (
               <>
-                {selectionButtons?.map((button) => (
-                  <>{renderButton(button)}</>
-                ))}
+                {/*{selectionButtons?.map((button) => (*/}
+                {/*  <>{button}</>*/}
+                {/*))}*/}
               </>
             )}
             <>
-              {buttons?.map((button) => (
-                <>{renderButton(button)}</>
+              {buttons?.map((button, buttonIdx) => (
+                <React.Fragment key={buttonIdx}>{button}</React.Fragment>
               ))}
             </>
           </div>
@@ -295,62 +281,64 @@ export const TableComponent: FC<TableComponentProps> = ({
         <table
           className={classNames(
             "table table-hover table-background table-sm",
-            loading || (isLoading && "table-fixed")
+            isLoading && "table-fixed table-loading"
           )}>
           <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr
-                key={Math.random() + headerGroup.id}
-                id={Math.random() + headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th key={header.id}>
-                    <div
-                      {...{
-                        className: header.column.getCanSort()
-                          ? "cursor-pointer select-none"
-                          : "",
-                        onClick: header.column.getToggleSortingHandler(),
-                      }}>
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      {{
-                        asc: " ▲",
-                        desc: " ▼",
-                      }[header.column.getIsSorted() as string] ?? null}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            ))}
+          {table.getHeaderGroups().map((headerGroup) => (
+            <tr
+              key={Math.random() + headerGroup.id}
+              id={Math.random() + headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <th key={header.id}>
+                  <div
+                    {...{
+                      className: header.column.getCanSort()
+                        ? "cursor-pointer select-none"
+                        : "",
+                      onClick: header.column.getToggleSortingHandler(),
+                    }}>
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                    {{
+                      asc: " ▲",
+                      desc: " ▼",
+                    }[header.column.getIsSorted() as string] ?? null}
+                  </div>
+                </th>
+              ))}
+            </tr>
+          ))}
           </thead>
           <tbody>
-            {loading || isLoading ? (
+          {isLoading ? (
+            <tr>
               <td colSpan={table.getFlatHeaders().length}>
                 <div className="flex justify-center items-center">
                   <Loader
-                    lines={loaderLines || 1}
+                    lines={loaderLines || 10}
                     lineItems={loaderLineItems || 5}
                   />
                 </div>
               </td>
-            ) : (
-              <>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={Math.random() + cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </>
-            )}
+            </tr>
+          ) : (
+            <>
+              {table.getRowModel().rows.map((row) => (
+                <tr key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={Math.random() + cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </>
+          )}
           </tbody>
         </table>
       </div>
@@ -389,7 +377,7 @@ export const TableComponent: FC<TableComponentProps> = ({
             {table.getPageCount()}
           </strong>
         </span>
-        &bull; {t("Go to page")}
+        &bull; <span>{t("Go to page")}</span>
         <span className="flex items-center gap-2">
           <select
             value={table.getState().pagination.pageIndex + 1}
@@ -418,8 +406,8 @@ export const TableComponent: FC<TableComponentProps> = ({
               </option>
             ))}
           </select>{" "}
-          &bull; {t("Total records")}{" "}
-          <strong>{data ? data[totalKey || "hydra:totalItems"] : 0}</strong>
+          &bull; <span className="flex-grow flex-shrink-0">{t("Total records")}</span>{" "}
+          <strong>{total}</strong>
         </span>
       </div>
     </>

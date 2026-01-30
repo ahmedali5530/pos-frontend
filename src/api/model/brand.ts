@@ -1,9 +1,9 @@
 import {Store} from "./store";
 import {HydraId, HydraType} from "./hydra";
 
-export interface Brand extends HydraId, HydraType{
+export interface Brand {
   id: string;
   name: string;
   stores: Store[];
-  isActive: boolean;
+  is_active: boolean;
 }

@@ -1,12 +1,11 @@
 import {Store} from "./store";
 import {HydraId, HydraType} from "./hydra";
 
-export interface Department extends HydraId, HydraType {
+export interface Department  {
   id: string;
   name: string;
   description?: string;
-  uuid: string;
-  createdAt: {datetime: string};
-  updatedAt: {datetime: string};
+  createdAt: string;
   store?: Store;
+  is_active?: boolean
 }

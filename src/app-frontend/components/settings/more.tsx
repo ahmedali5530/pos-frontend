@@ -1,33 +1,28 @@
-import React, { FC, useEffect, useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCog } from "@fortawesome/free-solid-svg-icons";
-import { Button } from "../../../app-common/components/input/button";
-import { Modal } from "../../../app-common/components/modal/modal";
+import React, {FC, useEffect, useState} from "react";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faCog} from "@fortawesome/free-solid-svg-icons";
+import {Button} from "../../../app-common/components/input/button";
+import {Modal} from "../../../app-common/components/modal/modal";
 import localforage from "../../../lib/localforage/localforage";
-import { useDispatch, useSelector } from "react-redux";
-import { getAuthorizedUser } from "../../../duck/auth/auth.selector";
-import { Switch } from "../../../app-common/components/input/switch";
-import { Tab, TabContent, TabControl, TabNav, } from "../../../app-common/components/tabs/tabs";
-import { ReactSelect } from "../../../app-common/components/input/custom.react.select";
-import { useLoadData } from "../../../api/hooks/use.load.data";
-import { Stores } from "./stores/stores";
-import { Users } from "./users/users";
-import { PaymentTypes } from "./payment-types/payment.types";
-import { DiscountTypes } from "./discounts/discount.types";
-import { TaxTypes } from "./taxes/tax.types";
-import { Terminals } from "./terminals/terminals";
-import { Departments } from "./departments/departments";
-import { Items } from "./items/items";
-import { Categories } from "./categories/categories";
-import { Brands } from "./brands/brands";
-import { useMediaQuery } from "react-responsive";
-import { message as AntMessage, Tooltip } from "antd";
-import { getProgress } from "../../../duck/progress/progress.selector";
-import { getStore } from "../../../duck/store/store.selector";
-import { getTerminal } from "../../../duck/terminal/terminal.selector";
-import { DynamicBarcodes } from "./dynamic-barcodes";
-import { useAtom } from "jotai";
-import { defaultData, defaultState } from "../../../store/jotai";
+import {Switch} from "../../../app-common/components/input/switch";
+import {Tab, TabContent, TabControl, TabNav,} from "../../../app-common/components/tabs/tabs";
+import {ReactSelect} from "../../../app-common/components/input/custom.react.select";
+import {useLoadData} from "../../../api/hooks/use.load.data";
+import {Stores} from "./stores/stores";
+import {Users} from "./users/users";
+import {PaymentTypes} from "./payment-types/payment.types";
+import {DiscountTypes} from "./discounts/discount.types";
+import {TaxTypes} from "./taxes/tax.types";
+import {Terminals} from "./terminals/terminals";
+import {Departments} from "./departments/departments";
+import {Items} from "./items/items";
+import {Categories} from "./categories/categories";
+import {Brands} from "./brands/brands";
+import {useMediaQuery} from "react-responsive";
+import {message as AntMessage, Tooltip} from "antd";
+import {DynamicBarcodes} from "./dynamic-barcodes";
+import {useAtom} from "jotai";
+import {appState as AppState, defaultData, defaultState} from "../../../store/jotai";
 
 interface Props {
 }
@@ -43,19 +38,14 @@ export const More: FC<Props> = ({}) => {
     customerBox, requireCustomerBox
   } = defaultOptions;
   const [modal, setModal] = useState(false);
-  const [state, action] = useLoadData();
+  const [state] = useLoadData();
   const [messageApi, contextHolder] = AntMessage.useMessage();
 
-  const dispatch = useDispatch();
-
-  const user = useSelector(getAuthorizedUser);
-  const store = useSelector(getStore);
-  const terminal = useSelector(getTerminal);
-
-  const progress = useSelector(getProgress);
+  const [appSt] = useAtom(AppState);
+  const {store, user, terminal, progress} = appSt;
 
   useEffect(() => {
-    if( progress === "Done" ) {
+    if (progress === "Done") {
       messageApi.open({
         key: "loading",
         type: "success",
@@ -120,7 +110,7 @@ export const More: FC<Props> = ({}) => {
         <TabControl
           defaultTab="profile"
           position={isMobile ? "top" : "left"}
-          render={({ isTabActive, setActiveTab }) => (
+          render={({isTabActive, setActiveTab}) => (
             <>
               <TabNav position={isMobile ? "top" : "left"}>
                 <Tab
@@ -225,7 +215,7 @@ export const More: FC<Props> = ({}) => {
                           customerBox: value.target.checked,
                         }));
 
-                        if(!value.target.checked) {
+                        if (!value.target.checked) {
                           setDefaultOptions((prev) => ({
                             ...prev,
                             requireCustomerBox: false
@@ -262,7 +252,7 @@ export const More: FC<Props> = ({}) => {
                       })}
                       isClearable
                       onChange={(value: any) => {
-                        if( value ) {
+                        if (value) {
                           setAppState((prev) => ({
                             ...prev,
                             tax: JSON.parse(value.value),
@@ -305,7 +295,7 @@ export const More: FC<Props> = ({}) => {
                       })}
                       isClearable
                       onChange={(value: any) => {
-                        if( value ) {
+                        if (value) {
                           setAppState((prev) => ({
                             ...prev,
                             discount: JSON.parse(value.value),
@@ -348,7 +338,7 @@ export const More: FC<Props> = ({}) => {
                       })}
                       isClearable
                       onChange={(value: any) => {
-                        if( value ) {
+                        if (value) {
                           setDefaultOptions((prev) => ({
                             ...prev,
                             defaultPaymentType: JSON.parse(value.value),
@@ -401,7 +391,7 @@ export const More: FC<Props> = ({}) => {
                   <tbody>
                   <tr>
                     <th className="text-end">User</th>
-                    <td>{user?.displayName}</td>
+                    <td>{user?.display_name}</td>
                   </tr>
                   <tr>
                     <th className="text-end">Store</th>

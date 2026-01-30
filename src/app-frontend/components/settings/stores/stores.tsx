@@ -8,25 +8,30 @@ import {faPencilAlt, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {TableComponent} from "../../../../app-common/components/table/table";
 import {Store} from "../../../../api/model/store";
 import {CreateStore} from "./create.store";
-import useApi from "../../../../api/hooks/use.api";
 import {HydraCollection} from "../../../../api/model/hydra";
 import { Switch } from "../../../../app-common/components/input/switch";
 import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
 import { jsonRequest } from "../../../../api/request/request";
+import useApi, {SettingsData} from "../../../../api/db/use.api";
+import {Tables} from "../../../../api/db/tables";
+import {useDB} from "../../../../api/db/db";
+import {StringRecordId} from "surrealdb";
 
 export const Stores = () => {
   const [operation, setOperation] = useState('create');
   const [store, setStore] = useState<Store>();
   const [modal, setModal] = useState(false);
 
-  const useLoadHook = useApi<HydraCollection<Store>>('stores', STORE_LIST);
+  const useLoadHook = useApi<SettingsData<Store>>(Tables.store);
   const {fetchData} = useLoadHook;
+
+  const db = useDB();
 
   const {t} = useTranslation();
 
   const columnHelper = createColumnHelper<Store>();
 
-  const columns = [
+  const columns: any = [
     columnHelper.accessor('name', {
       header: ('Name'),
     }),
@@ -50,14 +55,14 @@ export const Stores = () => {
             <span className="mx-2 text-gray-300">|</span>
             <ConfirmAlert
               onConfirm={() => {
-                deleteStore(info.getValue().toString(), !info.row.original.isActive);
+                deleteStore(info.getValue().toString(), !info.row.original.is_active);
               }}
               confirmText="Yes, please"
               cancelText="No, wait"
               title="Confirmation"
-              description={`Are you sure to ${info.row.original.isActive ? 'de-' : ''}activate this store?`}
+              description={`Are you sure to ${info.row.original.is_active ? 'de-' : ''}activate this store?`}
             >
-              <Switch checked={info.row.original.isActive} readOnly />
+              <Switch checked={info.row.original.is_active} readOnly />
             </ConfirmAlert>
           </>
         )
@@ -66,11 +71,8 @@ export const Stores = () => {
   ];
 
   async function deleteStore(id: string, status: boolean) {
-    await jsonRequest(STORE_EDIT.replace(':id', id), {
-      method: 'PUT',
-      body: JSON.stringify({
-        isActive: status
-      })
+    await db.merge(new StringRecordId(id), {
+      is_active: status
     });
 
     await useLoadHook.fetchData();
@@ -80,24 +82,27 @@ export const Stores = () => {
     <>
       <TableComponent
         columns={columns}
-        useLoadList={useLoadHook}
+        loaderHook={useLoadHook}
         loaderLineItems={3}
-        buttons={[{
-          html: <Button variant="primary" onClick={() => {
+        buttons={[
+          <Button variant="primary" onClick={() => {
             setModal(true);
             setOperation('create');
           }}>
             <FontAwesomeIcon icon={faPlus} className="mr-2"/> Store
           </Button>
-        }]}
+        ]}
       />
 
-      <CreateStore addModal={modal} onClose={() => {
-        setModal(false);
-        setOperation('create');
-        fetchData();
-        setStore(undefined);
-      }} operation={operation} entity={store}/>
+      {modal && (
+        <CreateStore addModal={modal} onClose={() => {
+          setModal(false);
+          setOperation('create');
+          fetchData();
+          setStore(undefined);
+        }} operation={operation} entity={store}/>
+      )}
+
     </>
   );
 };

@@ -1,10 +1,10 @@
 import {Store} from "./store";
 import {HydraId, HydraType} from "./hydra";
 
-export interface Tax extends HydraId, HydraType {
-  id: number;
+export interface Tax  {
+  id: string;
   name: string;
   rate: number;
   stores: Store[];
-  isActive: boolean;
+  is_active: boolean;
 }

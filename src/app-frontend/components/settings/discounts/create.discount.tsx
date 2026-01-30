@@ -1,7 +1,6 @@
 import React, {FC, useEffect, useState} from "react";
 import {Modal} from "../../../../app-common/components/modal/modal";
 import {Controller, useForm} from "react-hook-form";
-import {DISCOUNT_CREATE, DISCOUNT_GET} from "../../../../api/routing/routes/backend.app";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
 import {fetchJson} from "../../../../api/request/request";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
@@ -17,6 +16,9 @@ import {ValidationMessage} from "../../../../api/model/validation";
 import {yupResolver} from "@hookform/resolvers/yup";
 import {hasErrors} from "../../../../lib/error/error";
 import {notify} from "../../../../app-common/components/confirm/notification";
+import {useDB} from "../../../../api/db/db";
+import {StringRecordId} from "surrealdb";
+import {Tables} from "../../../../api/db/tables";
 
 interface CreateDiscountProps {
   entity?: Discount;
@@ -47,6 +49,8 @@ export const CreateDiscount: FC<CreateDiscountProps> = ({
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
 
+  const db = useDB();
+
   useEffect(() => {
     setModal(addModal);
   }, [addModal]);
@@ -55,9 +59,9 @@ export const CreateDiscount: FC<CreateDiscountProps> = ({
     if (entity) {
       reset({
         ...entity,
-        rateType: {
-          label: entity.rateType,
-          value: entity.rateType
+        rate_type: {
+          label: entity.rate_type,
+          value: entity.rate_type
         },
         scope: {
           label: entity.scope,
@@ -65,7 +69,7 @@ export const CreateDiscount: FC<CreateDiscountProps> = ({
         },
         stores: entity.stores.map(item => ({
           label: item.name,
-          value: item['@id']
+          value: item['id']
         }))
       });
     }
@@ -75,21 +79,12 @@ export const CreateDiscount: FC<CreateDiscountProps> = ({
   const createDiscount = async (values: any) => {
     setCreating(true);
     try {
-      let url, method = 'POST';
-      if (values.id) {
-        method = 'PUT'
-        url = DISCOUNT_GET.replace(':id', values.id);
-      } else {
-        url = DISCOUNT_CREATE;
-        delete values.id;
-      }
-
       if (values.stores) {
-        values.stores = values.stores.map((item: ReactSelectOptionProps) => item.value);
+        values.stores = values.stores.map((item: ReactSelectOptionProps) => new StringRecordId(item.value));
       }
 
-      if (values.rateType) {
-        values.rateType = values.rateType.value;
+      if (values.rate_type) {
+        values.rate_type = values.rate_type.value;
       }
 
       if (values.scope) {
@@ -97,15 +92,22 @@ export const CreateDiscount: FC<CreateDiscountProps> = ({
       }
 
       if(values.rate === ''){
-        delete values.rate;
+        values.rate = undefined;
       }
 
-      await fetchJson(url, {
-        method: method,
-        body: JSON.stringify({
-          ...values,
-        })
-      });
+      if(values.rate){
+        values.rate = Number(values.rate);
+      }
+
+      if (entity?.id) {
+        await db.merge(new StringRecordId(entity.id), {
+          ...values
+        });
+      } else {
+        await db.insert(Tables.discount, {
+          ...values
+        });
+      }
 
       onModalClose();
 
@@ -148,7 +150,7 @@ export const CreateDiscount: FC<CreateDiscountProps> = ({
     reset({
       id: null,
       rate: null,
-      rateType: null,
+      rate_type: null,
       scope: null,
       name: null,
       stores: null
@@ -168,7 +170,6 @@ export const CreateDiscount: FC<CreateDiscountProps> = ({
       title={operation === 'create' ? 'Create discount' : 'Update discount'}
     >
       <form onSubmit={handleSubmit(createDiscount)} className="mb-5">
-        <input type="hidden" {...register('id')}/>
         <div className="grid grid-cols-1 gap-4 mb-3">
           <div>
             <label htmlFor="name">Name</label>
@@ -193,9 +194,9 @@ export const CreateDiscount: FC<CreateDiscountProps> = ({
             )}
           </div>
           <div>
-            <label htmlFor="rateType">Rate type</label>
+            <label htmlFor="rate_type">Rate type</label>
             <Controller
-              name="rateType"
+              name="rate_type"
               control={control}
               render={(props) => (
                 <ReactSelect
@@ -211,10 +212,10 @@ export const CreateDiscount: FC<CreateDiscountProps> = ({
                 />
               )}
             />
-            {errors.rateType && (
+            {errors.rate_type && (
               <div className="text-danger-500 text-sm">
                 <Trans>
-                  {errors.rateType.message}
+                  {errors.rate_type.message}
                 </Trans>
               </div>
             )}
