@@ -133,7 +133,7 @@ export const CreateItem = ({
 
           let variantRecord;
           if (variant.id) {
-            [variantRecord] = await db.merge(variant.id, variantData);
+            variantRecord = await db.merge(new StringRecordId(variant.id), variantData);
           } else {
             [variantRecord] = await db.insert(Tables.product_variant, variantData);
           }
@@ -155,12 +155,12 @@ export const CreateItem = ({
                 product: entity ? new StringRecordId(entity.id) : null
               };
 
-              let vsRecord;
-              if (storeVariant.id) {
-                [vsRecord] = await db.merge(storeVariant.id, vsData);
-              } else {
-                [vsRecord] = await db.insert(Tables.product_variant_store, vsData);
-              }
+                let vsRecord;
+                if (storeVariant.id) {
+                  vsRecord = await db.merge(storeVariant.id, vsData);
+                } else {
+                  [vsRecord] = await db.insert(Tables.product_variant_store, vsData);
+                }
               localVariantStoreIds.push(vsRecord.id);
               allVariantStoreIds.push(vsRecord.id);
             }
@@ -192,14 +192,13 @@ export const CreateItem = ({
         variants: variantIds
       };
 
-      let productId;
+      let productRecord;
       if (entity?.id) {
-        const [productRecord] = await db.merge(entity.id, productData);
-        productId = productRecord.id;
+        productRecord = await db.merge(entity.id, productData);
       } else {
-        const [productRecord] = await db.insert(Tables.product, productData);
-        productId = productRecord.id;
+        [productRecord] = await db.insert(Tables.product, productData);
       }
+      productId = productRecord.id;
 
       const productStoreIds = [];
       if (values.stores) {
@@ -212,12 +211,12 @@ export const CreateItem = ({
             store: s.store
           };
 
-          let psRecord;
-          if (s.id) {
-            [psRecord] = await db.merge(s.id, psData);
-          } else {
-            [psRecord] = await db.insert(Tables.product_store, psData);
-          }
+            let psRecord;
+            if (s.id) {
+              psRecord = await db.merge(s.id, psData);
+            } else {
+              [psRecord] = await db.insert(Tables.product_store, psData);
+            }
           productStoreIds.push(psRecord.id);
         }
       }

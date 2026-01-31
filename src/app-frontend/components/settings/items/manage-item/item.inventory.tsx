@@ -154,5 +154,4 @@ export const ItemInventory = ({
       </div>
     </>
   );
-};
 }
