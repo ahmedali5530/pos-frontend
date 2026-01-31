@@ -345,18 +345,18 @@ export const CreateItem = ({
       const variantStores = entity.stores.map((s) => {
         return entity.variants.map((v) => {
           const vs = v.stores?.find(item => {
-            const storeId = typeof item.store === 'string' ? item.store : item.store?.['id'];
-            const targetStoreId = typeof s.store === 'string' ? s.store : s.store?.['id'];
+            const storeId = (item.store?.id || item.store)?.toString();
+            const targetStoreId = (s.store?.id || s.store)?.toString();
             return storeId === targetStoreId;
           });
           return vs ? {
             id: vs.id,
-            store: typeof vs.store === 'string' ? vs.store : vs.store?.['id'],
+            store: (vs.store?.id || vs.store)?.toString(),
             quantity: vs.quantity,
             re_order_level: vs.re_order_level,
             location: vs.location
           } : {
-            store: typeof s.store === 'string' ? s.store : s.store?.['id'],
+            store: (s.store?.id || s.store)?.toString(),
             quantity: 0,
             re_order_level: 0,
             location: ''
@@ -368,39 +368,39 @@ export const CreateItem = ({
         ...entity,
         suppliers: entity.suppliers.map(item => ({
           label: item.name,
-          value: item['id']
+          value: item.id.toString()
         })),
         brands: entity.brands.map(item => ({
           label: item.name,
-          value: item['id']
+          value: item.id.toString()
         })),
         categories: entity.categories.map(item => ({
           label: item.name,
-          value: item['id']
+          value: item.id.toString()
         })),
         storesDropdown: entity.stores.map(item => ({
           label: item.store.name,
-          value: item.store["id"],
+          value: item.store.id.toString(),
         })),
         stores: entity.stores.map(item => ({
-          store: item.store['id'],
+          store: item.store.id.toString(),
           label: item.store.name,
           quantity: item.quantity,
           location: item.location,
           re_order_level: item.re_order_level,
-          id: item.id
+          id: item.id.toString()
         })),
         department: {
           label: entity?.department?.name,
-          value: entity?.department?.['id']
+          value: entity?.department?.id?.toString()
         },
         taxes: entity.taxes.map(item => ({
           label: `${item.name} ${item.rate}%`,
-          value: item['id']
+          value: item.id.toString()
         })),
         terminals: entity.terminals.map(item => ({
           label: item.code,
-          value: item['id']
+          value: item.id.toString()
         })),
         variant_stores: variantStores
       });
