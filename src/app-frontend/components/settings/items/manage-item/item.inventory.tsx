@@ -54,10 +54,11 @@ export const ItemInventory = ({
             {stores?.map((store: any, index: number) => (
               <div className="bg-gray-100 rounded p-3" key={index}>
                 <div key={index} className="grid grid-cols-4 mb-3 gap-3 hover:bg-gray-200">
-                  <div>
-                    <input type="hidden" {...register(`stores.${index}.store`)} value={store.id}/>
-                    {store.label}
-                  </div>
+                    <div>
+                      <input type="hidden" {...register(`stores.${index}.store`)} value={store.store}/>
+                      {store.label}
+                    </div>
+
                   <div>
                     <Controller
                       render={({field}) => (
@@ -98,11 +99,12 @@ export const ItemInventory = ({
                     <div className="col-span-4">
                       {variants?.map((variant: any, variantIndex: number) => (
                         <div key={index + variantIndex} className="grid grid-cols-4 mb-3 gap-3 hover:bg-gray-200">
-                          <div>
-                            <input type="hidden" {...register(`variant_stores.${index}.${variantIndex}.store`)}
-                                   value={store.value}/>
-                            {variant.attribute_value}
-                          </div>
+                            <div>
+                              <input type="hidden" {...register(`variant_stores.${index}.${variantIndex}.store`)}
+                                     value={store.store || store.value}/>
+                              {variant.attribute_value}
+                            </div>
+
                           <div>
                             <Controller
                               render={({field}) => (

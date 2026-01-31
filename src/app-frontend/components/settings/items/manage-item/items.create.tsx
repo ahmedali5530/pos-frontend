@@ -94,6 +94,7 @@ export const CreateItem = ({
         values.stores = values.stores
           .filter((item: any) => item.quantity !== undefined)
           .map((item: any) => ({
+          id: item.id,
           store: new StringRecordId(item.store),
           location: item.location,
           quantity: item.quantity,
@@ -116,150 +117,130 @@ export const CreateItem = ({
         values.terminals = values.terminals.map((item: ReactSelectOptionProps) => new StringRecordId(item.value))
       }
 
+      const variantIds = [];
+      const allVariantStoreIds = [];
 
+      if( values.variants ) {
+        for(let vIdx = 0; vIdx < values.variants.length; vIdx++) {
+          const variant = values.variants[vIdx];
+          const variantData = {
+            attribute_value: variant.attribute_value,
+            barcode: variant.barcode,
+            price: Number(variant.price),
+            cost: Number(variant.cost),
+            product: entity ? new StringRecordId(entity.id) : null
+          };
 
-
-      if( entity?.id ) {
-        console.log(values)
-        const variants = [];
-        const variantStores = [];
-        if( values.variants ) {
-          // for(const variant of values.variants){
-          //   const [variantId] = await db.insert(Tables.product_variant, {
-          //     attribute_value: variant.attribute_value,
-          //     barcode: variant.barcode,
-          //     price: Number(variant.price),
-          //     cost: Number(variant.cost)
-          //   });
-          //   variants.push(variantId.id);
-          //
-          //   // create variant_store
-          //   for(const storeVariants of values.variant_stores){
-          //     for(const storeVariant of storeVariants){
-          //       const [variantStoreId] = await db.insert(Tables.product_variant_store, {
-          //         quantity: Number(storeVariant.quantity),
-          //         re_order_level: Number(storeVariant.re_order_level),
-          //         store: new StringRecordId(storeVariant.store),
-          //         variant: variantId.id,
-          //       });
-          //
-          //       variantStores.push(variantStoreId.id);
-          //     }
-          //   }
-          // }
-        }
-
-        // const [productId] = await db.merge(entity.id, {
-        //   name: values.name,
-        //   barcode: values.barcode,
-        //   prices: [], // TODO: add prices
-        //   base_price: Number(values.base_price),
-        //   cost: Number(values.cost),
-        //   sale_unit: values.sale_unit,
-        //   purchase_unit: values.purchase_unit,
-        //   quantity: Number(values.quantity),
-        //   base_quantity: 1, // TODO: fix later
-        //   brands: values.brands,
-        //   categories: values.categories,
-        //   department: values.department,
-        //   manage_inventory: values.manage_inventory,
-        //   is_available: true,
-        //   is_expire: false,
-        //   suppliers: values.suppliers,
-        //   taxes: values.taxes,
-        //   terminals: values.terminals,
-        //   variants: variants
-        // });
-
-      } else {
-        // create variants and add their ids into product
-        const variants = [];
-        const variantStores = [];
-        if( values.variants ) {
-          for(const variant of values.variants){
-            const [variantId] = await db.insert(Tables.product_variant, {
-              attribute_value: variant.attribute_value,
-              barcode: variant.barcode,
-              price: Number(variant.price),
-              cost: Number(variant.cost)
-            });
-            variants.push(variantId.id);
-
-            // create variant_store
-            const localVariantStores = [];
-            for(const storeVariants of values.variant_stores){
-              for(const storeVariant of storeVariants){
-                const [variantStoreId] = await db.insert(Tables.product_variant_store, {
-                  quantity: Number(storeVariant.quantity),
-                  re_order_level: Number(storeVariant.re_order_level),
-                  store: new StringRecordId(storeVariant.store),
-                  variant: variantId.id,
-                });
-
-                variantStores.push(variantStoreId.id);
-                localVariantStores.push(variantStoreId.id);
-              }
-            }
-
-            await db.merge(variantId.id, {
-              stores: localVariantStores
-            });
+          let variantRecord;
+          if (variant.id) {
+            [variantRecord] = await db.merge(variant.id, variantData);
+          } else {
+            [variantRecord] = await db.insert(Tables.product_variant, variantData);
           }
-        }
+          const vId = variantRecord.id;
+          variantIds.push(vId);
 
-        const [productId] = await db.insert(Tables.product, {
-          name: values.name,
-          barcode: values.barcode,
-          prices: [], // TODO: add prices
-          base_price: Number(values.base_price),
-          cost: Number(values.cost),
-          sale_unit: values.sale_unit,
-          purchase_unit: values.purchase_unit,
-          quantity: Number(values.quantity),
-          base_quantity: 1, // TODO: fix later
-          brands: values.brands,
-          categories: values.categories,
-          department: values.department,
-          manage_inventory: values.manage_inventory,
-          is_available: true,
-          is_expire: false,
-          suppliers: values.suppliers,
-          taxes: values.taxes,
-          terminals: values.terminals,
-          variants: variants
-        });
+          const localVariantStoreIds = [];
+          if (values.variant_stores) {
+            for (let sIdx = 0; sIdx < values.variant_stores.length; sIdx++) {
+              const storeVariant = values.variant_stores[sIdx][vIdx];
+              if (!storeVariant) continue;
 
-        const stores = [];
-        for(const s of values.stores){
-          const [storeId] = await db.insert(Tables.product_store, {
-            location: s.location,
-            product: productId.id,
-            quantity: Number(s.quantity),
-            re_order_level: Number(s.re_order_level),
-            store: new StringRecordId(s.store)
-          });
+              const vsData = {
+                quantity: Number(storeVariant.quantity),
+                re_order_level: Number(storeVariant.re_order_level),
+                location: storeVariant.location,
+                store: new StringRecordId(storeVariant.store),
+                variant: vId,
+                product: entity ? new StringRecordId(entity.id) : null
+              };
 
-          stores.push(storeId.id);
-        }
+              let vsRecord;
+              if (storeVariant.id) {
+                [vsRecord] = await db.merge(storeVariant.id, vsData);
+              } else {
+                [vsRecord] = await db.insert(Tables.product_variant_store, vsData);
+              }
+              localVariantStoreIds.push(vsRecord.id);
+              allVariantStoreIds.push(vsRecord.id);
+            }
+          }
 
-        await db.merge(productId.id, {
-          stores: stores
-        });
-
-        for(const a of variants){
-          await db.merge(a, {
-            product: productId.id
-          });
-        }
-
-        for(const b of variantStores){
-          await db.merge(b, {
-            product: productId.id
-          });
+          await db.merge(vId, { stores: localVariantStoreIds });
         }
       }
 
-      // onModalClose();
+      const productData = {
+        name: values.name,
+        barcode: values.barcode,
+        prices: [],
+        base_price: Number(values.base_price),
+        cost: Number(values.cost),
+        sale_unit: values.sale_unit,
+        purchase_unit: values.purchase_unit,
+        quantity: Number(values.quantity),
+        base_quantity: 1,
+        brands: values.brands,
+        categories: values.categories,
+        department: values.department,
+        manage_inventory: values.manage_inventory,
+        is_available: true,
+        is_expire: false,
+        suppliers: values.suppliers,
+        taxes: values.taxes,
+        terminals: values.terminals,
+        variants: variantIds
+      };
+
+      let productId;
+      if (entity?.id) {
+        const [productRecord] = await db.merge(entity.id, productData);
+        productId = productRecord.id;
+      } else {
+        const [productRecord] = await db.insert(Tables.product, productData);
+        productId = productRecord.id;
+      }
+
+      const productStoreIds = [];
+      if (values.stores) {
+        for (const s of values.stores) {
+          const psData = {
+            location: s.location,
+            product: productId,
+            quantity: Number(s.quantity),
+            re_order_level: Number(s.re_order_level),
+            store: s.store
+          };
+
+          let psRecord;
+          if (s.id) {
+            [psRecord] = await db.merge(s.id, psData);
+          } else {
+            [psRecord] = await db.insert(Tables.product_store, psData);
+          }
+          productStoreIds.push(psRecord.id);
+        }
+      }
+
+      await db.merge(productId, { stores: productStoreIds });
+
+      // Link variants and variant stores to product if it was just created
+      if (!entity?.id) {
+        for (const vId of variantIds) {
+          await db.merge(vId, { product: productId });
+        }
+        for (const vsId of allVariantStoreIds) {
+          await db.merge(vsId, { product: productId });
+        }
+      }
+
+      notify({
+        type: 'success',
+        title: 'Success',
+        description: `Product ${entity ? 'updated' : 'created'} successfully`
+      });
+
+      onModalClose();
 
     } catch ( exception: any ) {
       if( exception instanceof HttpException ) {
@@ -361,7 +342,27 @@ export const CreateItem = ({
 
   useEffect(() => {
     if( entity ) {
-      const variantStores = entity.variants.map(item => item.stores);
+      const variantStores = entity.stores.map((s) => {
+        return entity.variants.map((v) => {
+          const vs = v.stores?.find(item => {
+            const storeId = typeof item.store === 'string' ? item.store : item.store?.['id'];
+            const targetStoreId = typeof s.store === 'string' ? s.store : s.store?.['id'];
+            return storeId === targetStoreId;
+          });
+          return vs ? {
+            id: vs.id,
+            store: typeof vs.store === 'string' ? vs.store : vs.store?.['id'],
+            quantity: vs.quantity,
+            re_order_level: vs.re_order_level,
+            location: vs.location
+          } : {
+            store: typeof s.store === 'string' ? s.store : s.store?.['id'],
+            quantity: 0,
+            re_order_level: 0,
+            location: ''
+          };
+        });
+      });
 
       reset({
         ...entity,
@@ -383,6 +384,7 @@ export const CreateItem = ({
         })),
         stores: entity.stores.map(item => ({
           store: item.store['id'],
+          label: item.store.name,
           quantity: item.quantity,
           location: item.location,
           re_order_level: item.re_order_level,
