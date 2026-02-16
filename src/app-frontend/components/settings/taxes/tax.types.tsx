@@ -1,16 +1,13 @@
-import React, { useState } from "react";
-import { TAX_GET, TAX_LIST } from "../../../../api/routing/routes/backend.app";
-import { useTranslation } from "react-i18next";
-import { createColumnHelper } from "@tanstack/react-table";
-import { Button } from "../../../../app-common/components/input/button";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPencilAlt, faPlus } from "@fortawesome/free-solid-svg-icons";
-import { TableComponent } from "../../../../app-common/components/table/table";
-import { Tax } from "../../../../api/model/tax";
-import { CreateTax } from "./create.tax";
-import { jsonRequest } from "../../../../api/request/request";
-import { Switch } from "../../../../app-common/components/input/switch";
-import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
+import React, {useState} from "react";
+import {createColumnHelper} from "@tanstack/react-table";
+import {Button} from "../../../../app-common/components/input/button";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faPencilAlt, faPlus} from "@fortawesome/free-solid-svg-icons";
+import {TableComponent} from "../../../../app-common/components/table/table";
+import {Tax} from "../../../../api/model/tax";
+import {CreateTax} from "./create.tax";
+import {Switch} from "../../../../app-common/components/input/switch";
+import {ConfirmAlert} from "../../../../app-common/components/confirm/confirm.alert";
 import {useAtom} from "jotai";
 import {appState} from "../../../../store/jotai";
 import {Tables} from "../../../../api/db/tables";
@@ -29,7 +26,7 @@ export const TaxTypes = () => {
     Tables.tax,
     [`stores ?= ${store?.id}`], [], 0, 10, ['stores']
   );
-  const { fetchData } = useLoadHook;
+  const {fetchData} = useLoadHook;
 
   const columnHelper = createColumnHelper<Tax>();
 
@@ -67,7 +64,7 @@ export const TaxTypes = () => {
                 setModal(true);
               }}
               tabIndex={-1}>
-              <FontAwesomeIcon icon={faPencilAlt} />
+              <FontAwesomeIcon icon={faPencilAlt}/>
             </Button>
             <span className="mx-2 text-gray-300">|</span>
             <ConfirmAlert
@@ -83,7 +80,7 @@ export const TaxTypes = () => {
               description={`Are you sure to ${
                 info.row.original.is_active ? "de-" : ""
               }activate this tax?`}>
-              <Switch checked={info.row.original.is_active} readOnly />
+              <Switch checked={info.row.original.is_active} readOnly/>
             </ConfirmAlert>
           </>
         );
@@ -112,7 +109,7 @@ export const TaxTypes = () => {
               setModal(true);
               setOperation("create");
             }}>
-            <FontAwesomeIcon icon={faPlus} className="mr-2" /> Tax
+            <FontAwesomeIcon icon={faPlus} className="mr-2"/> Tax
           </Button>
         ]}
       />

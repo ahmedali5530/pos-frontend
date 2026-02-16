@@ -1,6 +1,6 @@
 import React, {
   FunctionComponent,
-  useCallback,
+  useCallback, useEffect,
   useMemo,
   useState,
 } from "react";
@@ -11,9 +11,12 @@ import { Checkbox } from "../../../app-common/components/input/checkbox";
 import Mousetrap from "mousetrap";
 import { withCurrency } from "../../../lib/currency/currency";
 import { useAtom } from "jotai";
-import { defaultState } from "../../../store/jotai";
+import {appState as AppState, defaultState} from "../../../store/jotai";
 import { notify } from "../../../app-common/components/confirm/notification";
 import { subTotal } from "../../containers/dashboard/pos";
+import {useDB} from "../../../api/db/db";
+import {Tables} from "../../../api/db/tables";
+import {toRecordId} from "../../../api/model/common";
 
 interface CartContainerProps {
 
@@ -28,6 +31,8 @@ export enum CartItemType {
 export const CartContainer: FunctionComponent<CartContainerProps> = ({
 
 }) => {
+
+
   const [appState, setAppState] = useAtom(defaultState);
   const { added, cartItemType, cartItem } = appState;
   const onCheckAll = (e: any) => {

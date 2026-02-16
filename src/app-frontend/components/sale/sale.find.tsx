@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Tooltip } from "antd";
 import React, { useEffect, useState } from "react";
 import { Modal } from "../../../app-common/components/modal/modal";
-import { Order } from "../../../api/model/order";
+import {Order, ORDER_FETCHES} from "../../../api/model/order";
 import { Controller, useForm } from "react-hook-form";
 import { Input } from "../../../app-common/components/input/input";
 import { fetchJson } from "../../../api/request/request";
@@ -11,6 +11,8 @@ import { ORDERS_LIST } from "../../../api/routing/routes/backend.app";
 import { QueryString } from "../../../lib/location/query.string";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { DateTime } from "luxon";
+import {useDB} from "../../../api/db/db";
+import {Tables} from "../../../api/db/tables";
 
 interface Props {
   onSuccess: (order: Order) => void,
@@ -29,20 +31,20 @@ export const SaleFind = ({
   const [modal, setModal] = useState(false);
   const { control, handleSubmit, reset } = useForm();
   const [isLoading, setLoading] = useState(false);
+  const db = useDB();
 
   const onSubmit = async (values: any) => {
     setLoading(true)
     try {
       const query = QueryString.stringify(values);
-      const response = await fetchJson(`${ORDERS_LIST}?${query}`);
+      const [orders] = await db.query(`SELECT * FROM ${Tables.order} WHERE ${query} FETCH ${ORDER_FETCHES.join(', ')}`)
 
-      if( response?.['hydra:member'].length > 0 ) {
-        onSuccess(response?.['hydra:member'][0]);
+      if( orders.length > 0 ) {
+        onSuccess(orders[0]);
         setModal(false)
-      } else {
-        onError();
       }
     } catch ( e ) {
+      onError();
       throw e;
     } finally {
       setLoading(false)
@@ -51,7 +53,7 @@ export const SaleFind = ({
 
   useEffect(() => {
     reset({
-      orderId: ''
+      order_id: ''
     });
   }, [modal])
 
@@ -85,7 +87,7 @@ export const SaleFind = ({
                   type="number"
                 />
               )}
-              name="orderId"
+              name="order_id"
               control={control}
               defaultValue=""
             />

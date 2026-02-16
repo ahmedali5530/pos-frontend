@@ -3,8 +3,8 @@ import {HydraId, HydraType} from "./hydra";
 export interface Media {
   id: string;
   name: string;
-  originalName: string;
+  original_name: string;
   size: number;
-  mimeType?: string;
+  mime_type?: string;
   extension?: string;
 }

@@ -1,37 +1,35 @@
-import { Input } from "../../../app-common/components/input/input";
-import { TopbarRight } from "./topbar.right";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Order, OrderStatus } from "../../../api/model/order";
-import { fetchJson } from "../../../api/request/request";
-import { ORDERS_LIST, TERMINAL_LIST } from "../../../api/routing/routes/backend.app";
-import { QueryString } from "../../../lib/location/query.string";
-import { DateTime } from "luxon";
-import { withCurrency } from "../../../lib/currency/currency";
-import { useAtom } from "jotai";
-import { defaultState } from "../../../store/jotai";
-import { CartItem } from "../../../api/model/cart.item";
-import { CartContainer } from "../cart/cart.container";
-import { CloseSaleInline } from "../sale/sale.inline";
-import { HomeProps, initialData, useLoadData, } from "../../../api/hooks/use.load.data";
-import { Footer } from "./footer";
-import { OrderPayment } from "../../../api/model/order.payment";
+import {Input} from "../../../app-common/components/input/input";
+import {TopbarRight} from "./topbar.right";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {Order, ORDER_FETCHES, OrderStatus} from "../../../api/model/order";
+import {QueryString} from "../../../lib/location/query.string";
+import {DateTime} from "luxon";
+import {withCurrency} from "../../../lib/currency/currency";
+import {useAtom} from "jotai";
+import {appState as AppState, defaultState} from "../../../store/jotai";
+import {CartItem} from "../../../api/model/cart.item";
+import {CartContainer} from "../cart/cart.container";
+import {CloseSaleInline} from "../sale/sale.inline";
+import {HomeProps, initialData, useLoadData,} from "../../../api/hooks/use.load.data";
+import {OrderPayment} from "../../../api/model/order.payment";
 import Mousetrap from "mousetrap";
-import { TrapFocus } from "../../../app-common/components/container/trap.focus";
-import { KeyboardTable } from "../../../app-common/components/table/keyboard.table";
+import {TrapFocus} from "../../../app-common/components/container/trap.focus";
+import {KeyboardTable} from "../../../app-common/components/table/keyboard.table";
 import classNames from "classnames";
-import { Row } from "react-table";
-import { useSelector } from "react-redux";
-import { getStore } from "../../../duck/store/store.selector";
-import { ReactSelect } from "../../../app-common/components/input/custom.react.select";
-import useApi from "../../../api/hooks/use.api";
-import { HydraCollection } from "../../../api/model/hydra";
-import { Terminal } from "../../../api/model/terminal";
+import {Row} from "react-table";
+import {ReactSelect} from "../../../app-common/components/input/custom.react.select";
+import {Terminal} from "../../../api/model/terminal";
+import useApi, {SettingsData} from "../../../api/db/use.api";
+import {Tables} from "../../../api/db/tables";
+import {useDB} from "../../../api/db/db";
+import {useQueryBuilder} from "../../../api/db/query-builder";
+import {toRecordId} from "../../../api/model/common";
 
 export const PaymentMode = () => {
   const [appState, setAppState] = useAtom(defaultState);
 
   const [paymentTypesList, setPaymentTypesList] = useState<HomeProps["paymentTypesList"]>(initialData);
-  const store = useSelector(getStore);
+  const [{store, terminal}] = useAtom(AppState);
 
   const [state] = useLoadData();
 
@@ -45,51 +43,81 @@ export const PaymentMode = () => {
 
   const [filters, setFilters] = useState({
     status: OrderStatus.PENDING,
-    "store.id": store?.id
+    store: toRecordId(store?.id),
+    terminal: toRecordId(terminal?.id)
   });
+
   const [isLoading, setLoading] = useState(false);
-  const {
-    data: terminals
-  } = useApi<HydraCollection<Terminal>>('terminals', `${TERMINAL_LIST}?store.id=${store?.id}`);
+
+  // const {
+  //   data: terminals
+  // } = useApi<SettingsData<Terminal>>(Tables.terminal, [`store = ${store?.id}`]);
+
+  const db = useDB();
+  const qb = useQueryBuilder(Tables.order, '*', [`status = "${OrderStatus.PENDING}"`, ` and store = ${toRecordId(store?.id)}`], 100, 0, ['created_at ASC'], ORDER_FETCHES);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
+
     try {
-      const query = QueryString.stringify({
-        ...filters,
-        itemsPerPage: 100,
+      qb.setWheres([]);
+      qb.setParameters({});
+
+      Object.keys(filters).forEach(item => {
+        qb.addWhere(`${item} = $${item}`);
+        qb.addParameter(item, filters[item]);
       });
 
-      const response = await fetchJson(`${ORDERS_LIST}?${query}`);
+      const [list] = await db.query(qb.queryString, {
+        ...qb.parameters
+      });
 
-      const prevIds = orders.map(item => item.id);
-      const newIds = response['hydra:member'].map((item: Order) => item.id);
-
-      if( prevIds.toString() !== newIds.toString()) {
-        setOrders(response["hydra:member"]);
-      }
-    } catch ( e ) {
+      setOrders(list);
+    } catch (e) {
       throw e;
     } finally {
       setLoading(false);
     }
-  }, [orders, filters]);
+  }, [filters])
 
   useEffect(() => {
+    let isMounted = true;
+    let queryId: any = null;
+
+    const runLiveQuery = async () => {
+      try {
+        const result = await db.live(Tables.order, (action, result) => {
+          if (!isMounted) return;
+
+          loadOrders();
+        });
+
+        if (isMounted) {
+          queryId = result;
+        }
+      } catch (e) {
+        throw e;
+      }
+    }
+
+    // Set up live query
+    runLiveQuery();
+
     loadOrders();
 
-    const timer = setInterval(() => {
-      loadOrders();
-    }, 5000);
-
-    return () => clearInterval(timer);
-  }, [filters]);
+    return () => {
+      isMounted = false;
+      if (queryId) {
+        db.db.kill(queryId).catch(console.error);
+      }
+    };
+  }, []);
 
   useEffect(() => {
-    if( order ) {
-      const items: CartItem[] = [];
-      order.items.forEach((item) => {
-        items.push({
+    if (order) {
+      setAppState((prev) => ({
+        ...prev,
+        added: order.items.map(item => ({
           quantity: item.quantity,
           price: item.price,
           discount: item.discount,
@@ -97,12 +125,9 @@ export const PaymentMode = () => {
           item: item.product,
           taxes: item.taxes,
           taxIncluded: true,
-        });
-      });
-
-      setAppState((prev) => ({
-        ...prev,
-        added: items,
+          stock: 0,
+          discountIncluded: false
+        })),
         discount: order.discount?.type,
         tax: order.tax?.type,
         discountAmount: order.discount?.amount,
@@ -120,10 +145,10 @@ export const PaymentMode = () => {
 
   const ordersList = useMemo(() => {
     let list = orders;
-    if( q.trim().length > 0 ) {
+    if (q.trim().length > 0) {
       list = list.filter((item) => {
         return (
-          item?.orderId?.toString().includes(q) ||
+          item?.order_id?.toString().includes(q) ||
           item?.store?.name.toLowerCase().includes(q.toLowerCase()) ||
           item?.terminal?.code?.toLowerCase()?.includes(q.toLowerCase()) ||
           orderTotal(item.payments).toString().includes(q)
@@ -135,9 +160,9 @@ export const PaymentMode = () => {
   }, [q, filters, orders]);
 
   useEffect(() => {
-    if(
+    if (
       (!order && ordersList.length > 0) ||
-      (order && ordersList.find((item) => item.id === order.id) === null)
+      (order && ordersList.find((item) => item.id.toString() === order.id.toString()) === undefined)
     ) {
       setOrder(ordersList[0]);
     }
@@ -147,14 +172,14 @@ export const PaymentMode = () => {
 
   Mousetrap.bind(["/"], function (e: any) {
     e.preventDefault();
-    if( searchField.current !== null ) {
+    if (searchField.current !== null) {
       searchField.current.focus();
     }
   });
 
   const [windowHeight, setWindowHeight] = useState(0);
   useEffect(() => {
-    if( typeof window !== "undefined" ) {
+    if (typeof window !== "undefined") {
       setWindowHeight(window.innerHeight - 150);
     }
   }, []);
@@ -217,9 +242,10 @@ export const PaymentMode = () => {
           onClick && onClick();
         }}
       >
-        <div className="basis-auto p-2 w-[70px]">{item.orderId}</div>
+        <div className="basis-auto p-2 w-[70px]">{item.order_id}</div>
         <div className="basis-auto p-2 w-[75px]">{item.terminal.code}</div>
-        <div className="basis-auto p-2 w-[190px] max-w-[190px] whitespace-nowrap overflow-hidden overflow-ellipsis" title={item?.customer?.name}>{item?.customer?.name}</div>
+        <div className="basis-auto p-2 w-[190px] max-w-[190px] whitespace-nowrap overflow-hidden overflow-ellipsis"
+             title={item?.customer?.name}>{item?.customer?.name}</div>
         <div className="basis-auto p-2 flex-1 text-right">{withCurrency(orderTotal(item.payments))}</div>
       </div>
     );
@@ -240,23 +266,22 @@ export const PaymentMode = () => {
               ref={searchField}
             />
           </div>
-          <div>
+          {/*<div>
             <ReactSelect
               onChange={(value) => {
-                console.log(value)
-                if(value !== null) {
+                if (value !== null) {
                   setFilters(prev => ({
                     ...prev,
-                    'terminal.id': value.value
+                    'terminal': value.value
                   }))
-                }else{
+                } else {
                   setFilters(prev => ({
                     ...prev,
-                    'terminal.id': undefined
+                    'terminal': undefined
                   }))
                 }
               }}
-              options={terminals?.['hydra:member']?.map(terminal => ({
+              options={terminals?.data?.map(terminal => ({
                 label: terminal.code,
                 value: terminal.id
               }))}
@@ -269,7 +294,7 @@ export const PaymentMode = () => {
               isSearchable={false}
               size="lg"
             />
-          </div>
+          </div>*/}
           <div className="ml-auto">
             <TopbarRight/>
           </div>
@@ -291,12 +316,12 @@ export const PaymentMode = () => {
             <div className="col-span-2 bg-white p-3 overflow-auto h-[calc(100vh-80px)]">
               {order && (
                 <>
-                  <h4 className="text-3xl">Order# {order.orderId}</h4>
+                  <h4 className="text-3xl">Order# {order.order_id}</h4>
                   <table className="table table-fixed table-bordered">
                     <tbody>
                     <tr>
                       <th className="text-left text-xl">
-                        {DateTime.fromISO(order.createdAt).toFormat(
+                        {DateTime.fromJSDate(order.created_at).toFormat(
                           import.meta.env.VITE_DATE_TIME_FORMAT
                         )}
                       </th>
@@ -307,7 +332,7 @@ export const PaymentMode = () => {
                         {order.terminal?.code}
                       </th>
                       <th className="text-right text-xl">
-                        {order.user?.displayName}
+                        {order.user?.display_name}
                       </th>
                     </tr>
                     </tbody>

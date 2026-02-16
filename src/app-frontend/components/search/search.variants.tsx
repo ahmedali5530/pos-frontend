@@ -6,7 +6,7 @@ import {ProductVariant} from "../../../api/model/product.variant";
 import {useAtom} from "jotai";
 import {defaultState} from "../../../store/jotai";
 import Mousetrap from "mousetrap";
-import {useEffect} from "react";
+import {useEffect, useRef} from "react";
 
 interface Props {
   modal: boolean;
@@ -17,74 +17,82 @@ interface Props {
     variant: ProductVariant,
     quantity: number,
     price?: number) => void;
-  items: Product[];
 }
 
 export const SearchVariants = ({
-  modal, onClose, variants, addItemVariant, items
+  modal, onClose, variants, addItemVariant
 }: Props) => {
   const [appState, setAppState] = useAtom(defaultState);
 
-  const {
-    selectedVariant,
-    latest,
-    quantity,
-    selected
-  } = appState;
+  const handlerRef = useRef(null);
 
-  const moveVariantsCursor = async (event: any) => {
-    const itemsLength = variants.length;
+  useEffect(() => {
+    handlerRef.current = (event: any) => {
+      event.preventDefault();
+
+      moveVariantsCursor(event);
+    };
+  }, [appState.selected, appState.quantity, appState.selectedVariant, appState.latest, variants]);
+
+  const moveVariantsCursor = (event: any) => {
+    console.log('getting keyboard events')
+    const variantsLength = variants.length;
     if (event.key === "ArrowDown") {
-      let newSelected = selectedVariant + 1;
-      if (newSelected === itemsLength) {
-        newSelected = 0;
-        setAppState((prev) => ({
+      setAppState(prev => {
+        let newSelected = prev.selectedVariant + 1;
+        if (newSelected === variantsLength) {
+          newSelected = 0;
+          return {
+            ...prev,
+            selectedVariant: newSelected
+          };
+        }
+
+        return {
           ...prev,
-          selectedVariant: newSelected,
-        }));
-      } else {
-        setAppState((prev) => ({
-          ...prev,
-          selectedVariant: newSelected,
-        }));
-      }
+          selectedVariant: newSelected
+        };
+      })
+
     } else if (event.key === "ArrowUp") {
-      let newSelected = selectedVariant - 1;
-      if (newSelected === -1) {
-        newSelected = itemsLength - 1;
-      }
-      setAppState((prev) => ({
-        ...prev,
-        selectedVariant: newSelected,
-      }));
+      setAppState(prev => {
+        let newSelected = prev.selectedVariant - 1;
+        if (newSelected === -1) {
+          newSelected = variantsLength - 1;
+        }
+        return {
+          ...prev,
+          selectedVariant: newSelected,
+        }
+      })
+
     } else if (event.key === "Enter") {
-      addItemVariant(
-        items[selected],
-        items[selected].variants[selectedVariant],
-        quantity
-      );
+      if(appState.latest) {
+        addItemVariant(
+          appState.latest,
+          variants[appState.selectedVariant],
+          appState.quantity
+        );
+      }
     }
   };
 
 
-
   useEffect(() => {
-    function func(e){
-      moveVariantsCursor(e);
-    }
+    const func = (e) => handlerRef.current?.(e);
 
-    if (modal) {
-      Mousetrap.bind(["up", "down", "enter"], func);
-    }else{
-      Mousetrap.unbind(['up', 'down', 'enter'], func);
-    }
-  }, [selected, items, quantity, modal]);
+    Mousetrap.bind(["up", "down", "enter"], func);
+
+    return () => {
+      Mousetrap.reset();
+    };
+  }, []);
 
   return (
     <Modal
       open={modal}
       onClose={onClose}
-      title={`Choose a variant for ${latest?.name}`}
+      title={`Choose a variant for ${appState.latest?.name}`}
       hideCloseButton={true}
       shouldCloseOnOverlayClick={false}
     >
@@ -104,9 +112,9 @@ export const SearchVariants = ({
               <div
                 className={classNames(
                   "table-row hover:bg-gray-200 cursor-pointer",
-                  selectedVariant === index ? "bg-gray-300" : ""
+                  appState.selectedVariant === index ? "bg-gray-300" : ""
                 )}
-                onClick={() => addItemVariant(latest!, item, quantity)}
+                onClick={() => addItemVariant(appState.latest!, item, appState.quantity)}
                 key={index}>
                 <div className="table-cell p-5">
                   {item.name}
@@ -114,12 +122,12 @@ export const SearchVariants = ({
                     <div className="text-gray-400">{item.barcode}</div>
                   )}
                 </div>
-                <div className="table-cell p-5">{item.attributeValue}</div>
+                <div className="table-cell p-5">{item.attribute_value}</div>
                 <div className="table-cell p-5 text-right">
-                  {item.price === null ? (
-                    <>{getRealProductPrice(latest!)}</>
-                  ) : (
+                  {item.price ? (
                     <>{item.price}</>
+                  ) : (
+                    <>{getRealProductPrice(appState.latest!)}</>
                   )}
                 </div>
               </div>

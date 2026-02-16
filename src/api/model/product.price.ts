@@ -4,14 +4,14 @@ export interface ProductPrice  {
   id: string;
   date?: string;
   time?: string;
-  timeTo?: string;
+  time_to?: string;
   day?: string;
   week?: number;
   month?: number;
   quarter?: number;
   rate?: number;
-  minQuantity?: number;
-  maxQuantity?: number;
-  basePrice?: number;
-  baseQuantity?: number;
+  min_quantity?: number;
+  max_quantity?: number;
+  base_price?: number;
+  base_quantity?: number;
 }

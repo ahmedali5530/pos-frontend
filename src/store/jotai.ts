@@ -24,6 +24,8 @@ export interface AppStateInterface {
   store?: Store
   terminal?: Terminal
   progress?: string
+  appConnected?: boolean
+  connectedDevice?: string
 }
 
 export const appState = atomWithStorage<AppStateInterface>(
@@ -51,7 +53,7 @@ export interface DefaultStateInterface {
   tax?: Tax;
   coupon?: Coupon;
   customer?: Customer;
-  refundingFrom?: number;
+  refundingFrom?: string;
   adjustment: number;
   cartItem?: number;
   cartItemType: string;

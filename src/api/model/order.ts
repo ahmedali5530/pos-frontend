@@ -10,24 +10,24 @@ import { HydraId, HydraType } from "./hydra";
 
 export interface Order  {
   id: string;
-  orderId?: string;
+  order_id?: string;
   customer?: Customer;
-  isSuspended?: boolean;
-  isDeleted?: boolean;
-  isReturned?: boolean;
-  isDispatched?: boolean;
+  is_suspended?: boolean;
+  is_deleted?: boolean;
+  is_returned?: boolean;
+  is_dispatched?: boolean;
   user?: User;
   items: OrderItem[];
   discount?: OrderDiscount;
   tax?: OrderTax;
   payments: OrderPayment[];
-  createdAt: string;
+  created_at: Date;
   status: string;
-  returnedFrom?: Pick<Order, "id" | "orderId" | "createdAt">;
+  returned_from?: Pick<Order, "id" | "orderId" | "created_at">;
   notes?: string;
   store: Store;
   terminal: Terminal;
-  itemTaxes: number;
+  // item_taxes: number;
   adjustment?: number;
 }
 
@@ -39,3 +39,15 @@ export enum OrderStatus {
   PENDING = "Pending",
   RETURNED = "Returned",
 }
+
+export const ORDER_FETCHES = [
+  'customer', 'customer.orders', 'customer.payments',
+  'discount', 'discount.type',
+  'items', 'items.product', 'items.taxes', 'items.variant',
+  'payments', 'payments.type',
+  'store',
+  'returned_from',
+  'tax', 'tax.type',
+  'terminal',
+  'user'
+];

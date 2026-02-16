@@ -13,11 +13,7 @@ export interface Supplier {
   whatsApp?: string;
   address?: string;
   stores: Store[];
-  openingBalance?: number;
-  payments: SupplierPayment[];
-  purchases: Purchase[];
-  purchaseOrder: PurchaseOrder[];
-  outstanding: number;
-  purchaseTotal: number;
-  paid: number;
+  opening_balance?: number;
+  payments?: SupplierPayment[];
+  purchases?: Purchase[]
 }

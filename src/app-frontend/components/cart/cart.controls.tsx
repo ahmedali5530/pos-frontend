@@ -181,7 +181,7 @@ export const CartControls = ({ containerRef }: CartControlsProps) => {
             <>
               <span className="text-danger-500">
                 {latest?.name}
-                {latestVariant && <> ({latestVariant?.attributeValue})</>}
+                {latestVariant && <> ({latestVariant?.attribute_value})</>}
               </span>
               <div className="flex gap-2 items-center">
                 <span className="text-primary-500">{latestQuantity}</span>

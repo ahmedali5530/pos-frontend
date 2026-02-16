@@ -5,10 +5,11 @@ import {Store} from "./store";
 export interface ProductVariant  {
   id: string;
   name?: string;
-  attributeName?: string;
-  attributeValue?: string;
+  attribute_name?: string;
+  attribute_value?: string;
   barcode?: string;
   price?: number;
+  cost?: number;
   prices?: ProductPrice[];
   quantity?: number;
   stores: ProductVariantStore[]

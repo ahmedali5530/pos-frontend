@@ -1,48 +1,32 @@
-import React, { FC, PropsWithChildren, useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faPencilAlt,
-  faTrash,
-  faUsers,
-  faHistory
-} from "@fortawesome/free-solid-svg-icons";
-import { Button } from "../../../app-common/components/input/button";
-import { Modal } from "../../../app-common/components/modal/modal";
-import { Customer } from "../../../api/model/customer";
-import { fetchJson } from "../../../api/request/request";
-import { useForm } from "react-hook-form";
-import { Input } from "../../../app-common/components/input/input";
-import { faSquare, faSquareCheck } from "@fortawesome/free-regular-svg-icons";
-import { CustomerPayments } from "./customer.payments";
-import {
-  CUSTOMER_CREATE,
-  CUSTOMER_EDIT,
-  CUSTOMER_LIST,
-} from "../../../api/routing/routes/backend.app";
-import {
-  ConstraintViolation,
-  ValidationResult,
-} from "../../../lib/validator/validation.result";
-import { useTranslation } from "react-i18next";
-import {
-  HttpException,
-  UnprocessableEntityException,
-} from "../../../lib/http/exception/http.exception";
-import { createColumnHelper } from "@tanstack/react-table";
-import { TableComponent } from "../../../app-common/components/table/table";
-import { Shortcut } from "../../../app-common/components/input/shortcut";
+import React, {FC, PropsWithChildren, useState} from "react";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faHistory, faPencilAlt, faTrash, faUsers} from "@fortawesome/free-solid-svg-icons";
+import {Button} from "../../../app-common/components/input/button";
+import {Modal} from "../../../app-common/components/modal/modal";
+import {Controller, useForm} from "react-hook-form";
+import {Input} from "../../../app-common/components/input/input";
+import {faSquare, faSquareCheck} from "@fortawesome/free-regular-svg-icons";
+import {CustomerPayments} from "./customer.payments";
+import {ConstraintViolation, ValidationResult,} from "../../../lib/validator/validation.result";
+import {HttpException, UnprocessableEntityException,} from "../../../lib/http/exception/http.exception";
+import {createColumnHelper} from "@tanstack/react-table";
+import {TableComponent} from "../../../app-common/components/table/table";
+import {Shortcut} from "../../../app-common/components/input/shortcut";
 import * as yup from "yup";
-import { ValidationMessage } from "../../../api/model/validation";
-import { getErrors, hasErrors } from "../../../lib/error/error";
-import { yupResolver } from "@hookform/resolvers/yup";
-import { HydraCollection } from "../../../api/model/hydra";
-import { notify } from "../../../app-common/components/confirm/notification";
-import { withCurrency } from "../../../lib/currency/currency";
-import { useAtom } from "jotai";
-import { defaultState } from "../../../store/jotai";
-import { Switch } from "../../../app-common/components/input/switch";
-import useApi from "../../../api/db/use.api";
+import {ValidationMessage} from "../../../api/model/validation";
+import {getErrors, hasErrors} from "../../../lib/error/error";
+import {yupResolver} from "@hookform/resolvers/yup";
+import {notify} from "../../../app-common/components/confirm/notification";
+import {withCurrency} from "../../../lib/currency/currency";
+import {useAtom} from "jotai";
+import {defaultState} from "../../../store/jotai";
+import {Switch} from "../../../app-common/components/input/switch";
+import useApi, {SettingsData} from "../../../api/db/use.api";
 import {Tables} from "../../../api/db/tables";
+import {useDB} from "../../../api/db/db";
+import {toRecordId} from "../../../api/model/common";
+import {Customer, CUSTOMER_FETCHES} from "../../../api/model/customer";
+import {useCustomer} from "../../../api/hooks/use.customer";
 
 interface Props extends PropsWithChildren {
   className?: string;
@@ -51,15 +35,17 @@ interface Props extends PropsWithChildren {
 const ValidationSchema = yup.object({
   name: yup.string().required(ValidationMessage.Required),
   phone: yup.string().required(ValidationMessage.Required),
-  openingBalance: yup
+  opening_balance: yup
     .number()
     .typeError(ValidationMessage.Number)
     .required(ValidationMessage.Required),
 });
 
-export const Customers: FC<Props> = ({ children, className }) => {
+export const Customers: FC<Props> = ({children, className}) => {
+  const db = useDB();
+  const customerHook = useCustomer();
   const [appState, setAppState] = useAtom(defaultState);
-  const { customer } = appState;
+  const {customer} = appState;
   const setCustomer = (customer?: Customer) => {
     setAppState((prev) => ({
       ...prev,
@@ -70,14 +56,12 @@ export const Customers: FC<Props> = ({ children, className }) => {
   const [modal, setModal] = useState(false);
   const [operation, setOperation] = useState("create");
 
-  const useLoadHook = useApi<Customer[]>(Tables.customer);
-  const { fetchData } = useLoadHook;
-
-  const { t } = useTranslation();
+  const useLoadHook = useApi<SettingsData<Customer>>(Tables.customer, [], [], 0, 10, CUSTOMER_FETCHES);
+  const {fetchData} = useLoadHook;
 
   const columnHelper = createColumnHelper<Customer>();
 
-  const columns = [
+  const columns: any = [
     columnHelper.accessor("name", {
       header: "Name",
     }),
@@ -87,30 +71,31 @@ export const Customers: FC<Props> = ({ children, className }) => {
     columnHelper.accessor("cnic", {
       header: "National ID",
     }),
-    columnHelper.accessor("openingBalance", {
+    columnHelper.accessor("opening_balance", {
       header: "Opening balance",
       cell: info => withCurrency(info.getValue())
     }),
-    columnHelper.accessor("sale", {
+    columnHelper.accessor("id", {
+      'id': 'sale',
       header: "Credit Sale",
       enableSorting: false,
       enableColumnFilter: false,
-      cell: info => withCurrency(info.getValue())
+      cell: info => withCurrency(customerHook.calculateCustomerSale(info.row.original))
     }),
-    columnHelper.accessor("paid", {
+    columnHelper.accessor("id", {
+      id: 'payments',
       header: "Payments",
       enableSorting: false,
       enableColumnFilter: false,
-      cell: info => withCurrency(info.getValue())
+      cell: info => withCurrency(customerHook.calculateCustomerPayment(info.row.original))
     }),
     columnHelper.accessor("outstanding", {
       header: "Balance",
       enableSorting: false,
       enableColumnFilter: false,
-      cell: (info) =>
-        withCurrency(
-          info.getValue() + Number(info.row.original.openingBalance)
-        ),
+      cell: (info) => withCurrency(
+        customerHook.calculateCustomerSale(info.row.original) - customerHook.calculateCustomerPayment(info.row.original) + Number(info.row.original.opening_balance)
+      )
     }),
     columnHelper.accessor("id", {
       id: "customerSelector",
@@ -125,7 +110,7 @@ export const Customers: FC<Props> = ({ children, className }) => {
               onClick={() => setCustomer(undefined)}
               className="w-[40px]"
               type="button">
-              <FontAwesomeIcon icon={faSquareCheck} size="lg" />
+              <FontAwesomeIcon icon={faSquareCheck} size="lg"/>
             </Button>
           ) : (
             <Button
@@ -135,7 +120,7 @@ export const Customers: FC<Props> = ({ children, className }) => {
               }}
               disabled={customer?.id === info.getValue()}
               className="w-[40px]">
-              <FontAwesomeIcon icon={faSquare} size="lg" />
+              <FontAwesomeIcon icon={faSquare} size="lg"/>
             </Button>
           )}
         </>
@@ -158,25 +143,25 @@ export const Customers: FC<Props> = ({ children, className }) => {
                   name: info.row.original.name,
                   phone: info.row.original.phone,
                   cnic: info.row.original.cnic,
-                  openingBalance: info.row.original.openingBalance,
-                  allowCreditSale: info.row.original.allowCreditSale,
-                  creditLimit: info.row.original.creditLimit,
+                  opening_balance: info.row.original.opening_balance,
+                  allow_credit_sale: info.row.original.allow_credit_sale,
+                  credit_limit: info.row.original.credit_limit,
                   id: info.row.original.id
                 });
                 setOperation("update");
               }}>
-              <FontAwesomeIcon icon={faPencilAlt} />
+              <FontAwesomeIcon icon={faPencilAlt}/>
             </Button>
             <span className="mx-2 text-gray-300">|</span>
             <Button variant="danger" type="button">
-              <FontAwesomeIcon icon={faTrash} />
+              <FontAwesomeIcon icon={faTrash}/>
             </Button>
             <span className="mx-2 text-gray-300">|</span>
             <CustomerPayments
               customer={info.row.original}
               onCreate={fetchData}
             >
-              <FontAwesomeIcon icon={faHistory} />
+              <FontAwesomeIcon icon={faHistory}/>
             </CustomerPayments>
           </>
         );
@@ -188,8 +173,9 @@ export const Customers: FC<Props> = ({ children, className }) => {
     register,
     handleSubmit,
     setError,
-    formState: { errors },
+    formState: {errors},
     reset,
+    control
   } = useForm({
     resolver: yupResolver(ValidationSchema),
   });
@@ -199,24 +185,24 @@ export const Customers: FC<Props> = ({ children, className }) => {
     event.preventDefault();
 
     setCreating(true);
+    // values.opening_balance = values.opening_balance.toString();
+
+    values.credit_limit = Number(values.credit_limit);
+
     try {
-      let url,
-        method = "POST";
-      if (values.id) {
-        method = "PUT";
-        url = CUSTOMER_EDIT.replace(":id", values.id);
+      if (values?.id) {
+        await db.merge(toRecordId(values.id), {
+          ...values,
+        });
       } else {
-        url = CUSTOMER_CREATE;
+        const [customer] = await db.insert(Tables.customer, {
+          ...values,
+          orders: [],
+          payments: []
+        });
+
+        setCustomer(customer);
       }
-
-      values.openingBalance = values.openingBalance.toString();
-
-      const response = await fetchJson(url, {
-        method: method,
-        body: JSON.stringify(values),
-      });
-
-      setCustomer(response.customer);
 
       fetchData!();
 
@@ -262,9 +248,9 @@ export const Customers: FC<Props> = ({ children, className }) => {
       name: null,
       phone: null,
       cnic: null,
-      openingBalance: null,
-      allowCreditSale: null,
-      creditLimit: null
+      opening_balance: null,
+      allow_credit_sale: null,
+      credit_limit: null
     });
   };
 
@@ -280,11 +266,12 @@ export const Customers: FC<Props> = ({ children, className }) => {
         tabIndex={-1}>
         {children || (
           <>
-            <FontAwesomeIcon icon={faUsers} className="mr-2" /> Customers
+            <FontAwesomeIcon icon={faUsers} className="mr-2"/> Customers
           </>
         )}
-        <Shortcut shortcut="ctrl+shift+c" handler={() => setModal(true)} />
+        <Shortcut shortcut="ctrl+shift+c" handler={() => setModal(true)}/>
       </button>
+
 
       <Modal
         shouldCloseOnEsc={true}
@@ -297,62 +284,107 @@ export const Customers: FC<Props> = ({ children, className }) => {
           <div className="grid lg:grid-cols-4 gap-4 gap-y-2 mb-3 md:grid-cols-3 sm:grid-cols-1">
             <div>
               <label htmlFor="name">Name</label>
-              <Input
-                {...register("name")}
-                id="name"
-                className="w-full"
-                hasError={hasErrors(errors.name)}
+              <Controller
+                render={({field}) => (
+                  <Input
+                    value={field.value}
+                    onChange={field.onChange}
+                    id="name"
+                    className="w-full"
+                    hasError={hasErrors(errors.name)}
+                  />
+                )}
+                control={control}
+                name="name"
               />
               {getErrors(errors.name)}
             </div>
             <div>
               <label htmlFor="phone">Phone</label>
-              <Input
-                {...register("phone")}
-                id="phone"
-                className="w-full"
-                hasError={hasErrors(errors.phone)}
+              <Controller
+                render={({field}) => (
+                  <Input
+                    value={field.value}
+                    onChange={field.onChange}
+                    id="phone"
+                    className="w-full"
+                    hasError={hasErrors(errors.phone)}
+                  />
+                )}
+                name="phone"
+                control={control}
               />
               {getErrors(errors.phone)}
             </div>
             <div>
               <label htmlFor="cnic">National ID</label>
-              <Input
-                {...register("cnic")}
-                id="cnic"
-                className="w-full"
-                hasError={hasErrors(errors.cnic)}
+              <Controller
+                render={({field}) => (
+                  <Input
+                    value={field.value}
+                    onChange={field.onChange}
+                    id="cnic"
+                    className="w-full"
+                    hasError={hasErrors(errors.cnic)}
+                  />
+                )}
+                name="cnic"
+                control={control}
               />
               {getErrors(errors.cnic)}
             </div>
             <div>
-              <label htmlFor="openingBalance">Opening balance</label>
-              <Input
-                {...register("openingBalance")}
-                id="openingBalance"
-                className="w-full"
-                hasError={hasErrors(errors.openingBalance)}
-                type="number"
+              <label htmlFor="opening_balance">Opening balance</label>
+              <Controller
+                render={({field}) => (
+                  <Input
+                    value={field.value}
+                    onChange={field.onChange}
+                    id="opening_balance"
+                    className="w-full"
+                    hasError={hasErrors(errors.opening_balance)}
+                    type="number"
+                  />
+                )}
+                name="opening_balance"
+                control={control}
               />
-              {getErrors(errors.openingBalance)}
+              {getErrors(errors.opening_balance)}
             </div>
             <div>
               <label className="md:block w-full sm:hidden">&nbsp;</label>
-              <Switch {...register('allowCredit')}>
-                Allow credit
-              </Switch>
-              {getErrors(errors.allowCredit)}
+              <Controller
+                render={({field}) => (
+                  <Switch
+                    value={field.value}
+                    onChange={field.onChange}
+                  >
+                    Allow credit
+                  </Switch>
+                )}
+                name="allow_credit"
+                control={control}
+              />
+
+              {getErrors(errors.allow_credit)}
             </div>
             <div>
-              <label htmlFor="creditLimit">Credit Limit</label>
-              <Input
-                {...register("creditLimit")}
-                id="creditLimit"
-                className="w-full"
-                hasError={hasErrors(errors.creditLimit)}
-                type="number"
+              <label htmlFor="credit_limit">Credit Limit</label>
+              <Controller
+                render={({field}) => (
+                  <Input
+                    value={field.value}
+                    onChange={field.onChange}
+                    id="credit_limit"
+                    className="w-full"
+                    hasError={hasErrors(errors.credit_limit)}
+                    type="number"
+                  />
+                )}
+                name="credit_limit"
+                control={control}
               />
-              {getErrors(errors.creditLimit)}
+              {getErrors(errors.credit_limit)}
             </div>
             <div>
               <label className="md:block w-full sm:hidden">&nbsp;</label>
@@ -384,9 +416,8 @@ export const Customers: FC<Props> = ({ children, className }) => {
 
         <TableComponent
           columns={columns}
-          useLoadList={useLoadHook}
+          loaderHook={useLoadHook}
           loaderLineItems={9}
-          // setFilters={mergeFilters}
         />
       </Modal>
     </>

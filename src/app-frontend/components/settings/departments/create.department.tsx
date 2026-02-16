@@ -6,7 +6,6 @@ import {Button} from "../../../../app-common/components/input/button";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
 import {Department} from "../../../../api/model/department";
-import {jsonRequest} from "../../../../api/request/request";
 import {getErrors, hasErrors} from "../../../../lib/error/error";
 import * as yup from "yup";
 import {ValidationMessage} from "../../../../api/model/validation";
@@ -34,7 +33,7 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
   entity, operation, addModal, onClose
 
 }) => {
-  const { register, handleSubmit, setError, formState: { errors }, reset, control } = useForm({
+  const {register, handleSubmit, setError, formState: {errors}, reset, control} = useForm({
     resolver: yupResolver(ValidationSchema)
   });
   const [creating, setCreating] = useState(false);
@@ -46,7 +45,7 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
   }, [addModal]);
 
   useEffect(() => {
-    if( entity ) {
+    if (entity) {
       reset({
         ...entity,
         store: {
@@ -60,11 +59,11 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
   const createDepartment = async (values: any) => {
     setCreating(true);
     try {
-      if( values.store ) {
+      if (values.store) {
         values.store = new StringRecordId(values.store.value);
       }
 
-      if( entity?.id ) {
+      if (entity?.id) {
         await db.merge(new StringRecordId(entity.id), {
           ...values
         });
@@ -76,9 +75,9 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
 
       onModalClose();
 
-    } catch ( exception: any ) {
-      if( exception instanceof HttpException ) {
-        if( exception.message ) {
+    } catch (exception: any) {
+      if (exception instanceof HttpException) {
+        if (exception.message) {
           notify({
             type: 'error',
             description: exception.message
@@ -86,7 +85,7 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
         }
       }
 
-      if( exception instanceof UnprocessableEntityException ) {
+      if (exception instanceof UnprocessableEntityException) {
         const e: ValidationResult = await exception.response.json();
         e.violations.forEach((item: ConstraintViolation) => {
           setError(item.propertyPath, {
@@ -95,7 +94,7 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
           });
         });
 
-        if( e.errorMessage ) {
+        if (e.errorMessage) {
           notify({
             type: 'error',
             description: e.errorMessage
@@ -148,7 +147,7 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
           </div>
 
           <div>
-            <StoreInput control={control} errors={errors} />
+            <StoreInput control={control} errors={errors}/>
           </div>
 
           <div>

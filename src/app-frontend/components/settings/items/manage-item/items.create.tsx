@@ -198,7 +198,8 @@ export const CreateItem = ({
       } else {
         [productRecord] = await db.insert(Tables.product, productData);
       }
-      productId = productRecord.id;
+
+      let productId = productRecord.id;
 
       const productStoreIds = [];
       if (values.stores) {
@@ -213,15 +214,24 @@ export const CreateItem = ({
 
             let psRecord;
             if (s.id) {
-              psRecord = await db.merge(s.id, psData);
+              psRecord = s;
+              await db.merge(s.id, psData);
             } else {
               [psRecord] = await db.insert(Tables.product_store, psData);
             }
-          productStoreIds.push(psRecord.id);
+          productStoreIds.push(new StringRecordId(psRecord.id));
         }
       }
 
       await db.merge(productId, { stores: productStoreIds });
+
+      // update terminals to include products
+      for(const t of productData.terminals){
+        const [terminal] = await db.query(`SELECT * FROM ${t}`);
+        await db.merge(t, {
+          products: Array.from(new Set([...(terminal[0]?.products || []), productId])),
+        });
+      }
 
       // Link variants and variant stores to product if it was just created
       if (!entity?.id) {

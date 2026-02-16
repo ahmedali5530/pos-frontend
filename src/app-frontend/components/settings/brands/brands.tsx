@@ -1,21 +1,13 @@
-import { useTranslation } from "react-i18next";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPencilAlt, faPlus, } from "@fortawesome/free-solid-svg-icons";
-import { Button } from "../../../../app-common/components/input/button";
-import React, { useState } from "react";
-import { BRAND_EDIT, BRAND_LIST, } from "../../../../api/routing/routes/backend.app";
-import { Brand } from "../../../../api/model/brand";
-import { createColumnHelper } from "@tanstack/react-table";
-import { TableComponent } from "../../../../app-common/components/table/table";
-import { useSelector } from "react-redux";
-import { getStore } from "../../../../duck/store/store.selector";
-import { CreateBrand } from "./create.brand";
-import { HydraCollection } from "../../../../api/model/hydra";
-import { jsonRequest } from "../../../../api/request/request";
-import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
-import { Switch } from "../../../../app-common/components/input/switch";
-import {useAtom} from "jotai";
-import {appState as AppState} from '../../../../store/jotai';
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faPencilAlt, faPlus,} from "@fortawesome/free-solid-svg-icons";
+import {Button} from "../../../../app-common/components/input/button";
+import React, {useState} from "react";
+import {Brand} from "../../../../api/model/brand";
+import {createColumnHelper} from "@tanstack/react-table";
+import {TableComponent} from "../../../../app-common/components/table/table";
+import {CreateBrand} from "./create.brand";
+import {ConfirmAlert} from "../../../../app-common/components/confirm/confirm.alert";
+import {Switch} from "../../../../app-common/components/input/switch";
 import {Tables} from "../../../../api/db/tables";
 import useApi, {SettingsData} from "../../../../api/db/use.api";
 import {useDB} from "../../../../api/db/db";
@@ -30,7 +22,7 @@ export const Brands = () => {
     Tables.brand,
     [], [], 0, 10, ['stores']
   );
-  const { fetchData } = useLoadHook;
+  const {fetchData} = useLoadHook;
 
   const db = useDB();
 

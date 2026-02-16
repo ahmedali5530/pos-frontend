@@ -10,6 +10,7 @@ import { withCurrency } from "../../../lib/currency/currency";
 import { ConfirmAlert } from "../../../app-common/components/confirm/confirm.alert";
 import { useAtom } from "jotai";
 import { defaultState } from "../../../store/jotai";
+import {useCustomer} from "../../../api/hooks/use.customer";
 
 interface OrderTotalsProps extends PropsWithChildren {
   inSale?: boolean;
@@ -20,6 +21,7 @@ export const OrderTotals: FC<OrderTotalsProps> = ({
 }) => {
   const [appState, setAppState] = useAtom(defaultState);
   const { added, tax, discount, customer, discountAmount, discountRateType } = appState;
+  const customerHook = useCustomer();
 
   const exclusiveSubTotal = useMemo(() => {
     return added.reduce((prev, item) => prev + getExclusiveRowTotal(item), 0);
@@ -105,14 +107,14 @@ export const OrderTotals: FC<OrderTotalsProps> = ({
                     <span
                       className={classNames(
                         "float-right",
-                        customer.outstanding <= 0
+                        customerHook.calculateCustomerOutstanding(customer) <= 0
                           ? "text-success-700"
                           : "text-danger-500"
                       )}>
                       {withCurrency(
-                        customer.outstanding < 0
-                          ? customer.outstanding * -1
-                          : customer.outstanding
+                        customerHook.calculateCustomerOutstanding(customer) < 0
+                          ? customerHook.calculateCustomerOutstanding(customer) * -1
+                          : customerHook.calculateCustomerOutstanding(customer)
                       )}
                     </span>
                   )}

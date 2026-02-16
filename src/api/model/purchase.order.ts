@@ -5,10 +5,10 @@ import {Store} from "./store";
 
 export interface PurchaseOrder  {
   id: string;
-  createdAt: string;
+  created_at: Date;
   supplier?: Supplier;
   items: PurchaseOrderItem[];
   store?: Store;
-  poNumber?: string;
-  isUsed?: boolean;
+  po_number?: string;
+  is_used?: boolean;
 }

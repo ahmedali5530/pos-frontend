@@ -42,3 +42,8 @@ export interface SearchableProduct {
   variant?: ProductVariant;
   item: Product
 }
+
+export const ITEM_FETCHES = [
+  'department', 'categories', 'suppliers', 'brands', 'variants', 'taxes', 'terminals',
+  'stores', 'stores.store', 'variants.stores', 'variants.stores.store'
+];

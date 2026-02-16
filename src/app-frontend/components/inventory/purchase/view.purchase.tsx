@@ -5,6 +5,7 @@ import { Modal } from "../../../../app-common/components/modal/modal";
 import { withCurrency } from "../../../../lib/currency/currency";
 import { PurchaseItemVariant } from "../../../../api/model/purchase.item";
 import { PrintService } from "../../print";
+import {usePurchase} from "../../../../api/hooks/use.purchase";
 
 interface ViewPurchaseProps extends PropsWithChildren {
   purchase: Purchase;
@@ -24,7 +25,7 @@ export const ViewPurchase: FC<ViewPurchaseProps> = ({
 
       <Modal open={modal} onClose={() => {
         setModal(false);
-      }} title={`Purchase no. ${purchase.purchaseNumber}`}>
+      }} title={`Purchase no. ${purchase.purchase_number}`}>
         <div className="float-right">
           <Button type="button" variant="secondary" onClick={() => {
             PrintService(
@@ -48,11 +49,11 @@ const PurchaseTable = ({
 }: PurchaseTableProps) => {
   const itemsTotal = useMemo(() => {
     const iTotal = purchase.items.reduce((prev, item) => (
-      (prev + (Number(item.quantity) * Number(item.purchasePrice)))
+      (prev + (Number(item.quantity) * Number(item.purchase_price)))
     ), 0);
 
     const variantsTotal = purchase.items.reduce((prev, item) => (
-      item.variants.reduce((p, v) => p + (Number(v.purchasePrice) * Number(v.quantity)), 0)
+      item.variants.reduce((p, v) => p + (Number(v.purchase_price) * Number(v.quantity)), 0)
     ), 0);
 
     return iTotal + variantsTotal;
@@ -68,7 +69,7 @@ const PurchaseTable = ({
   }, [purchase]);
 
   const variantsTotal = (variants: PurchaseItemVariant[]) => {
-    return variants.reduce((prev, variant) => prev + (Number(variant.purchasePrice) * Number(variant.quantity)), 0)
+    return variants.reduce((prev, variant) => prev + (Number(variant.purchase_price) * Number(variant.quantity)), 0)
   };
 
   const purchaseTotal = useMemo(() => {
@@ -76,13 +77,15 @@ const PurchaseTable = ({
   }, [purchase, itemsTotal]);
 
   const totalRequested = useMemo(() => {
-    const itemsQty = purchase.items.reduce((prev, item) => prev + Number(item.quantityRequested), 0);
+    const itemsQty = purchase.items.reduce((prev, item) => prev + Number(item.quantity_requested), 0);
     const variantsQty = purchase.items.reduce((prev, item) => (
-      item.variants.reduce((p, v) => p + Number(v.quantityRequested), 0) + prev
+      item.variants.reduce((p, v) => p + Number(v.quantity_requested), 0) + prev
     ), 0);
 
     return itemsQty + variantsQty;
   }, [purchase]);
+
+  const purchaseHook = usePurchase();
 
   return (
     <>
@@ -98,7 +101,7 @@ const PurchaseTable = ({
         <div className="border border-primary-500 p-5 text-primary-500 rounded">
           <div className="text-2xl">Payments</div>
           <ul className="font-normal">
-            <li>{purchase?.paymentType?.name}: <span className="float-right">{withCurrency(purchase.total)}</span></li>
+            <li>{purchase?.payment_type?.name}: <span className="float-right">{withCurrency(purchaseHook.calculatePurchaseTotal(purchase))}</span></li>
           </ul>
         </div>
       </div>
@@ -106,7 +109,7 @@ const PurchaseTable = ({
         <thead>
         <tr>
           <th className="text-left">Item</th>
-          {purchase.purchaseOrder && (
+          {purchase.purchase_order && (
             <th className="text-right">Quantity Requested</th>
           )}
           <th className="text-right">Quantity</th>
@@ -120,22 +123,22 @@ const PurchaseTable = ({
           <React.Fragment key={index}>
             <tr className="hover:bg-gray-100">
               <td>{item.item.name}</td>
-              {purchase.purchaseOrder && (
-                <td className="text-right">{item.quantityRequested} {item.purchaseUnit}</td>
+              {purchase.purchase_order && (
+                <td className="text-right">{item.quantity_requested} {item.purchase_unit}</td>
               )}
-              <td className="text-right">{item.quantity} {item.purchaseUnit}</td>
-              <td className="text-right">{withCurrency(item.purchasePrice)}</td>
+              <td className="text-right">{item.quantity} {item.purchase_unit}</td>
+              <td className="text-right">{withCurrency(item.purchase_price)}</td>
               <td className="text-center">{item.comments}</td>
-              <td className="text-right">{withCurrency(Number(item.purchasePrice) * Number(item.quantity))}</td>
+              <td className="text-right">{withCurrency(Number(item.purchase_price) * Number(item.quantity))}</td>
             </tr>
             {item.variants.length > 0 && (
               <tr>
-                <td colSpan={purchase.purchaseOrder ? 6 : 5} className="p-5 bg-gray-100">
+                <td colSpan={purchase.purchase_order ? 6 : 5} className="p-5 bg-gray-100">
                   <table className="table table-fixed bg-white">
                     <thead>
                     <tr>
                       <th>Variant</th>
-                      {purchase.purchaseOrder && (
+                      {purchase.purchase_order && (
                         <th className={'text-right'}>Quantity requested</th>
                       )}
                       <th className={'text-right'}>Variant Quantity</th>
@@ -147,20 +150,20 @@ const PurchaseTable = ({
                     <tbody>
                     {item.variants.map(variant => (
                       <tr className="hover:bg-gray-100">
-                        <td>{variant.variant.attributeValue}</td>
-                        {purchase.purchaseOrder && (
-                          <td className={'text-right'}>{variant.quantityRequested}</td>
+                        <td>{variant.variant.attribute_value}</td>
+                        {purchase.purchase_order && (
+                          <td className={'text-right'}>{variant.quantity_requested}</td>
                         )}
                         <td className={'text-right'}>{variant.quantity}</td>
-                        <td className={'text-right'}>{withCurrency(variant.purchasePrice)}</td>
+                        <td className={'text-right'}>{withCurrency(variant.purchase_price)}</td>
                         <td className="text-center">{variant.comments}</td>
-                        <td className={'text-right'}>{withCurrency(Number(variant.quantity) * Number(variant.purchasePrice))}</td>
+                        <td className={'text-right'}>{withCurrency(Number(variant.quantity) * Number(variant.purchase_price))}</td>
                       </tr>
                     ))}
                     </tbody>
                     <tfoot>
                     <tr>
-                      <th colSpan={purchase.purchaseOrder ? 5 : 4} className={'text-left'}>Total</th>
+                      <th colSpan={purchase.purchase_order ? 5 : 4} className={'text-left'}>Total</th>
                       <th className={'text-right'}>{withCurrency(variantsTotal(item.variants))}</th>
                     </tr>
                     </tfoot>
@@ -174,7 +177,7 @@ const PurchaseTable = ({
         <tfoot>
         <tr>
           <th className="text-left">Total</th>
-          {purchase.purchaseOrder && (
+          {purchase.purchase_order && (
             <th className="text-right">{totalRequested}</th>
           )}
           <th className="text-right">{itemsQuantity}</th>

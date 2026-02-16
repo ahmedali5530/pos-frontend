@@ -16,7 +16,7 @@ export interface PurchaseOrderItemVariant  {
   id: string;
   quantity: string;
   variant: ProductVariant;
-  purchasePrice: string;
-  purchaseUnit?: string;
+  purchase_price: string;
+  purchase_unit?: string;
   comments?: string;
 }

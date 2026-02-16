@@ -5,6 +5,6 @@ export interface Expense  {
   id: string;
   description: string;
   amount: number;
-  createdAt: string;
+  created_at: Date;
   store: Store;
 }

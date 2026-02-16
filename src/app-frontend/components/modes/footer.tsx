@@ -5,10 +5,12 @@ import { SaleClosing } from "../sale/sale.closing";
 import { SaleHistory } from "../sale/sale.history";
 import { More } from "../settings/more";
 import { Shortcuts } from "../shortcuts";
+import {Customers} from "../customers/customers";
 
 export const Footer = () => {
   return (
     <>
+      <Customers />
       <Expenses />
       <PurchaseTabs />
       <More />

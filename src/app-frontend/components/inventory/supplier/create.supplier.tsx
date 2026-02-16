@@ -5,7 +5,6 @@ import {Button} from "../../../../app-common/components/input/button";
 import React, {FC, useEffect, useState} from "react";
 import {useForm} from "react-hook-form";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
-import {jsonRequest} from "../../../../api/request/request";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
 import {Modal} from "../../../../app-common/components/modal/modal";
@@ -19,7 +18,7 @@ import {useDB} from "../../../../api/db/db";
 import {StringRecordId} from "surrealdb";
 import {Tables} from "../../../../api/db/tables";
 
-interface CreateSupplierProps{
+interface CreateSupplierProps {
   operation: string;
   onClose?: () => void;
   supplier?: Supplier;
@@ -45,7 +44,7 @@ export const CreateSupplier: FC<CreateSupplierProps> = ({
   const db = useDB();
 
   useEffect(() => {
-    if(supplier){
+    if (supplier) {
       reset({
         ...supplier,
         stores: supplier?.stores?.map(item => {
@@ -69,7 +68,7 @@ export const CreateSupplier: FC<CreateSupplierProps> = ({
         values.stores = values.stores.map((item: ReactSelectOptionProps) => new StringRecordId(item?.value));
       }
 
-      if(values.opening_balance){
+      if (values.opening_balance) {
         values.opening_balance = Number(values.opening_balance);
       }
 
@@ -181,7 +180,8 @@ export const CreateSupplier: FC<CreateSupplierProps> = ({
           </div>
           <div>
             <label htmlFor="opening_balance">Opening balance</label>
-            <Input {...register('opening_balance')} type="number" id="opening_balance" className="w-full" hasError={hasErrors(errors.opening_balance)}/>
+            <Input {...register('opening_balance')} type="number" id="opening_balance" className="w-full"
+                   hasError={hasErrors(errors.opening_balance)}/>
             {errors.opening_balance && (
               <div className="text-danger-500 text-sm">
                 <Trans>

@@ -1,65 +1,68 @@
-import React, { useState } from "react";
-import { PURCHASE_DELETE, PURCHASE_LIST } from "../../../../api/routing/routes/backend.app";
-import { useSelector } from "react-redux";
-import { getStore } from "../../../../duck/store/store.selector";
-import { useTranslation } from "react-i18next";
-import { createColumnHelper } from "@tanstack/react-table";
-import { Button } from "../../../../app-common/components/input/button";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye, faPencilAlt, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
-import { TableComponent } from "../../../../app-common/components/table/table";
-import { Purchase } from "../../../../api/model/purchase";
-import { CreatePurchase as CreatePurchase } from "./create.purchase";
-import { jsonRequest } from "../../../../api/request/request";
-import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
-import { withCurrency } from "../../../../lib/currency/currency";
-import { DateTime } from "luxon";
-import { ViewPurchase } from "./view.purchase";
-import useApi from "../../../../api/hooks/use.api";
-import { HydraCollection } from "../../../../api/model/hydra";
+import React, {useState} from "react";
+import {createColumnHelper} from "@tanstack/react-table";
+import {Button} from "../../../../app-common/components/input/button";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faEye, faPencilAlt, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
+import {TableComponent} from "../../../../app-common/components/table/table";
+import {Purchase, PURCHASE_FETCHES} from "../../../../api/model/purchase";
+import {CreatePurchase as CreatePurchase} from "./create.purchase";
+import {ConfirmAlert} from "../../../../app-common/components/confirm/confirm.alert";
+import {withCurrency} from "../../../../lib/currency/currency";
+import {DateTime} from "luxon";
+import {ViewPurchase} from "./view.purchase";
+import useApi, {SettingsData} from "../../../../api/db/use.api";
+import {Tables} from "../../../../api/db/tables";
+import {useAtom} from "jotai";
+import {appState} from "../../../../store/jotai";
+import {useDB} from "../../../../api/db/db";
+import {toRecordId} from "../../../../api/model/common";
+import {usePurchase} from "../../../../api/hooks/use.purchase";
 
 export const Purchases = () => {
   const [operation, setOperation] = useState('create');
   const [purchase, setPurchase] = useState<Purchase>();
-  const store = useSelector(getStore);
+  const [{store}] = useAtom(appState);
+  const db = useDB();
 
-  const useLoadHook = useApi<HydraCollection<Purchase>>('purchases', `${PURCHASE_LIST}?store=${store?.id}`);
-
-  const { t } = useTranslation();
+  const useLoadHook = useApi<SettingsData<Purchase>>(Tables.purchase, [`store = ${store?.id}`], [], 0, 10, [
+    PURCHASE_FETCHES
+  ]);
 
   const columnHelper = createColumnHelper<Purchase>();
+  const purchaseHook = usePurchase();
 
   const columns: any = [
-    columnHelper.accessor('purchaseNumber', {
+    columnHelper.accessor('purchase_number', {
       header: ('Purchase number'),
       cell: info => <ViewPurchase purchase={info.row.original}>
         <FontAwesomeIcon icon={faEye} className="mr-2"/>
         {info.getValue()}
       </ViewPurchase>
     }),
-    columnHelper.accessor('purchaseOrder.poNumber', {
+    columnHelper.accessor('purchase_order.po_number', {
       header: ('Purchase order'),
     }),
     columnHelper.accessor('supplier.name', {
       header: ('Supplier'),
     }),
-    columnHelper.accessor('purchaseMode', {
+    columnHelper.accessor('purchase_mode', {
       header: ('Purchase mode'),
       enableColumnFilter: false,
       enableSorting: false
     }),
-    columnHelper.accessor('total', {
+    columnHelper.accessor('id', {
+      id: 'total',
       header: ('Purchase total'),
-      cell: info => withCurrency(info.getValue()),
+      cell: info => withCurrency(purchaseHook.calculatePurchaseTotal(info.row.original)),
       enableColumnFilter: false,
       enableSorting: false
     }),
-    columnHelper.accessor('paymentType.name', {
+    columnHelper.accessor('payment_type.name', {
       header: ('Payment type'),
     }),
-    columnHelper.accessor('createdAt', {
-      header: ('Created at'),
-      cell: info => DateTime.fromISO(info.getValue()).toFormat(import.meta.env.VITE_DATE_FORMAT)
+    columnHelper.accessor('created_at', {
+      header: 'Purchase time',
+      cell: info => DateTime.fromJSDate(info.getValue()).toFormat(import.meta.env.VITE_DATE_TIME_HUMAN_FORMAT)
     }),
     columnHelper.accessor('store', {
       header: ('Store'),
@@ -68,6 +71,7 @@ export const Purchases = () => {
       cell: (info) => info.getValue()?.name
     }),
     columnHelper.accessor('id', {
+      id: 'actions',
       header: ('Actions'),
       enableSorting: false,
       enableColumnFilter: false,
@@ -102,8 +106,8 @@ export const Purchases = () => {
   ];
 
   async function deletePurchase(id: string) {
-    await jsonRequest(PURCHASE_DELETE.replace(':id', id), {
-      method: 'DELETE'
+    await db.merge(toRecordId(id), {
+      deleted_at: DateTime.now().toJSDate()
     });
 
     await useLoadHook.fetchData();
@@ -116,27 +120,31 @@ export const Purchases = () => {
       <TableComponent
         columns={columns}
         loaderLineItems={10}
-        buttons={[{
-          html: <Button variant="primary" onClick={() => {
+        buttons={[
+          <Button variant="primary" onClick={() => {
             setAddModal(true);
             setOperation('create');
           }}>
             <FontAwesomeIcon icon={faPlus} className="mr-2"/> Purchase
           </Button>
-        }]}
-        useLoadList={useLoadHook}
+        ]}
+        loaderHook={useLoadHook}
       />
 
-      <CreatePurchase
-        purchase={purchase}
-        addModal={addModal}
-        operation={operation}
-        onClose={() => {
-          setAddModal(false);
-          useLoadHook.fetchData();
-          setOperation('create');
-        }}
-      />
+      {addModal && (
+        <CreatePurchase
+          purchase={purchase}
+          addModal={addModal}
+          operation={operation}
+          onClose={() => {
+            setAddModal(false);
+            useLoadHook.fetchData();
+            setOperation('create');
+            setPurchase(undefined);
+          }}
+        />
+      )}
+
     </>
   );
 }

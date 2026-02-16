@@ -85,7 +85,7 @@ export const ApplyDiscount: FC<Props> = ({ children }) => {
         }}
         title="Apply Discount"
         shouldCloseOnEsc={true}
-        size="sm"
+        size="md"
       >
         <Button
           variant="danger"

@@ -1,18 +1,18 @@
-import React, { FunctionComponent, useEffect, useMemo, useRef, useState } from "react";
+import React, {FunctionComponent, useEffect, useMemo, useRef, useState} from "react";
 import classNames from "classnames";
-import { Input } from "../../../app-common/components/input/input";
-import { CartItem as CartItemModel } from "../../../api/model/cart.item";
-import { getRowTotal } from "../../containers/dashboard/pos";
-import { Checkbox } from "../../../app-common/components/input/checkbox";
-import { useAtom } from "jotai";
-import { defaultState, appState as AppState } from "../../../store/jotai";
-import { formatNumber, withCurrency } from "../../../lib/currency/currency";
-import QueryString from "qs";
-import { jsonRequest } from "../../../api/request/request";
-import { PRODUCT_QUANTITIES } from "../../../api/routing/routes/backend.app";
+import {Input} from "../../../app-common/components/input/input";
+import {CartItem as CartItemModel} from "../../../api/model/cart.item";
+import {getRowTotal} from "../../containers/dashboard/pos";
+import {Checkbox} from "../../../app-common/components/input/checkbox";
+import {useAtom} from "jotai";
+import {appState as AppState, defaultState} from "../../../store/jotai";
+import {formatNumber, withCurrency} from "../../../lib/currency/currency";
 // @ts-ignore
 import Spinner from "../../../assets/images/spinner.svg";
-import { CartItemType } from "./cart.container";
+import {CartItemType} from "./cart.container";
+import {useDB} from "../../../api/db/db";
+import {Tables} from "../../../api/db/tables";
+import {toRecordId} from "../../../api/model/common";
 
 interface CartItemProps {
   onQuantityChange: (item: CartItemModel, quantity: any) => void;
@@ -25,7 +25,7 @@ interface CartItemProps {
 }
 
 interface ItemInfo {
-  quantity: string;
+  quantity: number;
 }
 
 export const CartItem: FunctionComponent<CartItemProps> = ({
@@ -36,10 +36,12 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
   item,
   index,
 }) => {
+  const db = useDB();
+
   const [isLoading, setLoading] = useState(false);
   const [itemInfo, setItemInfo] = useState<ItemInfo>();
   const [appState, setAppState] = useAtom(defaultState);
-  const { cartItemType, cartItem } = appState;
+  const {cartItemType, cartItem} = appState;
   const taxTotal = useMemo(() => {
     return item.taxes.reduce(
       (prev, tax) => prev + (tax.rate * item.price) / 100,
@@ -50,20 +52,44 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
   const [appSt] = useAtom(AppState);
   const {store} = appSt;
 
-  const getItemsMetadata = async (itemId: number, variantId?: number) => {
+  const getItemsMetadata = async (itemId: string, variantId?: string) => {
     setLoading(true);
     try {
-      const search = QueryString.stringify({
-        itemId,
-        variantId,
-        store: store?.id,
-      });
-      const response = await jsonRequest(`${PRODUCT_QUANTITIES}?${search}`);
-      const json = await response.json();
+      if (variantId) {
+        const [quantity] = await db.query(`SELECT quantity
+                                           FROM ${Tables.product_variant_store}
+                                           where store = $store
+                                             and variant = $variant`, {
+          store: toRecordId(store?.id),
+          variant: toRecordId(variantId)
+        });
 
-      setItemInfo(json);
+        if (quantity.length > 0) {
+          setItemInfo({
+            quantity: quantity[0].quantity
+          })
 
-    } catch ( e ) {
+          return;
+        }
+      }
+
+      if (itemId) {
+        const [quantity] = await db.query(`SELECT quantity
+                                           FROM ${Tables.product_store}
+                                           where store = $store
+                                             and product = $product`, {
+          store: toRecordId(store?.id),
+          product: toRecordId(itemId)
+        });
+
+        if (quantity.length > 0) {
+          setItemInfo({
+            quantity: quantity[0].quantity
+          })
+        }
+      }
+
+    } catch (e) {
       throw e;
     } finally {
       setLoading(false);
@@ -75,18 +101,18 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
   let rateRef = useRef<HTMLInputElement>();
 
   useEffect(() => {
-    if( cartItem === index ) {
-      if( cartItemType === "quantity" ) {
+    if (cartItem === index) {
+      if (cartItemType === "quantity") {
         qtyRef.current?.focus();
         qtyRef.current?.select();
       }
 
-      if( cartItemType === "discount" ) {
+      if (cartItemType === "discount") {
         discRef.current?.focus();
         discRef.current?.select();
       }
 
-      if( cartItemType === "rate" ) {
+      if (cartItemType === "rate") {
         rateRef.current?.focus();
         rateRef.current?.select();
       }
@@ -94,7 +120,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
   }, [cartItem, cartItemType, index]);
 
   useEffect(() => {
-    if( item.item.manageInventory ) {
+    if (item.item.manage_inventory) {
       getItemsMetadata(item.item.id, item?.variant?.id);
     }
   }, [item]);
@@ -115,21 +141,21 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
           <div>{item.item.name}</div>
           {item.variant && (
             <div className="text-sm text-primary-800">
-              {item.variant?.attributeValue && (
-                <>{item.variant?.attributeValue}</>
+              {item.variant?.attribute_value && (
+                <>{item.variant?.attribute_value}</>
               )}
             </div>
           )}
         </label>
       </div>
       <div className="table-cell p-1 text-center">
-        {item.item.manageInventory && (
+        {item.item.manage_inventory && (
           <>
             {isLoading ? (
               <img alt="loading..." src={Spinner} className="w-[16px]"/>
             ) : (
               <span
-                className={Number(itemInfo?.quantity) <= 0 ? 'text-danger-500 animated blink' : ''}>{itemInfo?.quantity}</span>
+                className={Number(itemInfo?.quantity) <= 0 ? 'text-danger-100 animate-pulse duration-500 font-extrabold bg-danger-500 rounded px-1' : ''}>{itemInfo?.quantity}</span>
             )}
           </>
         )}
@@ -150,7 +176,6 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
               value={item.quantity}
               className={"text-center w-full mousetrap"}
               onChange={(event) => {
-                console.log(event)
                 onQuantityChange(item, event.currentTarget.value)
               }}
               onFocus={() => {

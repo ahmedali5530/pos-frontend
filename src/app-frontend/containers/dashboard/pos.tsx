@@ -14,31 +14,31 @@ export const getRealProductPrice = (item: Product) => {
 
   if( !item ) return price;
 
-  if( item.basePrice ) {
-    price = item.basePrice;
+  if( item.base_price ) {
+    price = item.base_price;
   }
 
   if( item.prices.length > 0 ) {
     for ( let index in item.prices ) {
       const itemPrice = item.prices[index];
 
-      if( !itemPrice.basePrice ) {
+      if( !itemPrice.base_price ) {
         continue;
       }
 
       //based on date
       if( itemPrice.date ) {
         if( DateTime.fromISO(itemPrice.date).toFormat('d') === DateTime.now().toFormat('d') ) {
-          price = itemPrice.basePrice;
+          price = itemPrice.base_price;
           break;
         }
       }
 
       //based on time
-      if( itemPrice.time && itemPrice.timeTo ) {
+      if( itemPrice.time && itemPrice.time_to ) {
         if( DateTime.fromISO(itemPrice.time).toFormat('HH:mm') >= DateTime.now().toFormat('HH:mm') &&
-          DateTime.fromISO(itemPrice.timeTo).toFormat('HH:mm') <= DateTime.now().toFormat('HH:mm') ) {
-          price = itemPrice.basePrice;
+          DateTime.fromISO(itemPrice.time_to).toFormat('HH:mm') <= DateTime.now().toFormat('HH:mm') ) {
+          price = itemPrice.base_price;
           break;
         }
       }
@@ -46,7 +46,7 @@ export const getRealProductPrice = (item: Product) => {
       //based on day
       if( itemPrice.day ) {
         if( itemPrice.day === DateTime.now().toFormat('cccc') ) {
-          price = itemPrice.basePrice;
+          price = itemPrice.base_price;
           break;
         }
       }
@@ -54,7 +54,7 @@ export const getRealProductPrice = (item: Product) => {
       //based on week
       if( itemPrice.week ) {
         if( itemPrice.week === +DateTime.now().toFormat('W') ) {
-          price = itemPrice.basePrice;
+          price = itemPrice.base_price;
           break;
         }
       }
@@ -62,7 +62,7 @@ export const getRealProductPrice = (item: Product) => {
       //based on month
       if( itemPrice.month ) {
         if( itemPrice.month === +DateTime.now().toFormat('L') ) {
-          price = itemPrice.basePrice;
+          price = itemPrice.base_price;
           break;
         }
       }
@@ -70,7 +70,7 @@ export const getRealProductPrice = (item: Product) => {
       //based on quarter
       if( itemPrice.quarter ) {
         if( itemPrice.quarter === +DateTime.now().toFormat('q') ) {
-          price = itemPrice.basePrice;
+          price = itemPrice.base_price;
           break;
         }
       }
@@ -136,10 +136,10 @@ export const discountTotal = (added: CartItem[], tax?: Tax, discountAmount?: num
 
   if( !discount ) return 0;
 
-  if( discount.rateType === DiscountRate.RATE_FIXED && discount.rate ) {
+  if( discount.rate_type === DiscountRate.RATE_FIXED && discount.rate ) {
     return discount.rate;
   } else if(
-    discount.rateType === DiscountRate.RATE_PERCENT &&
+    discount.rate_type === DiscountRate.RATE_PERCENT &&
     discount.rate
   ) {
     return ((subTotal(added) + taxTotal(added, tax)) * Number(discount?.rate)) / 100;

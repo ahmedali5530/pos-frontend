@@ -1,42 +1,35 @@
-import { Input } from "../../../../app-common/components/input/input";
-import { Trans } from "react-i18next";
-import { Controller, useFieldArray, useForm, UseFormRegister } from "react-hook-form";
-import { ReactSelect } from "../../../../app-common/components/input/custom.react.select";
-import { Button } from "../../../../app-common/components/input/button";
-import React, { FC, FunctionComponent, useCallback, useEffect, useMemo, useState } from "react";
-import { Supplier } from "../../../../api/model/supplier";
-import {
-  PRODUCT_GET,
-  PRODUCT_KEYWORDS,
-  PURCHASE_ORDER_CREATE,
-  PURCHASE_ORDER_EDIT,
-  SUPPLIER_LIST
-} from "../../../../api/routing/routes/backend.app";
-import { fetchJson, jsonRequest } from "../../../../api/request/request";
-import { HttpException, UnprocessableEntityException } from "../../../../lib/http/exception/http.exception";
-import { ConstraintViolation, ValidationResult } from "../../../../lib/validator/validation.result";
-import { useSelector } from "react-redux";
-import { getStore } from "../../../../duck/store/store.selector";
-import { Product } from "../../../../api/model/product";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowDown, faArrowRight, faPlus, faRemove } from "@fortawesome/free-solid-svg-icons";
-import { DateTime } from "luxon";
-import { Modal } from "../../../../app-common/components/modal/modal";
+import {Input} from "../../../../app-common/components/input/input";
+import {Trans} from "react-i18next";
+import {Controller, useFieldArray, useForm, UseFormRegister} from "react-hook-form";
+import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
+import {Button} from "../../../../app-common/components/input/button";
+import React, {FC, FunctionComponent, useCallback, useEffect, useMemo, useState} from "react";
+import {Supplier} from "../../../../api/model/supplier";
+import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
+import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
+import {ITEM_FETCHES, Product} from "../../../../api/model/product";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faArrowDown, faArrowRight, faPlus, faRemove} from "@fortawesome/free-solid-svg-icons";
+import {DateTime} from "luxon";
+import {Modal} from "../../../../app-common/components/modal/modal";
 import classNames from "classnames";
-import { getErrorClass, getErrors, hasErrors } from "../../../../lib/error/error";
-import { SelectedItem } from "../purchase/create.purchase";
-import { PurchaseOrder } from "../../../../api/model/purchase.order";
-import { CreateSupplier } from "../supplier/create.supplier";
+import {getErrorClass, getErrors, hasErrors} from "../../../../lib/error/error";
+import {PurchaseOrder} from "../../../../api/model/purchase.order";
+import {CreateSupplier} from "../supplier/create.supplier";
 import * as yup from 'yup';
-import { yupResolver } from "@hookform/resolvers/yup";
-import { ValidationMessage } from "../../../../api/model/validation";
-import { notify } from "../../../../app-common/components/confirm/notification";
+import {yupResolver} from "@hookform/resolvers/yup";
+import {ValidationMessage} from "../../../../api/model/validation";
+import {notify} from "../../../../app-common/components/confirm/notification";
 import _ from "lodash";
-import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
-import { ProductVariant } from "../../../../api/model/product.variant";
-import { withCurrency } from "../../../../lib/currency/currency";
-import useApi from "../../../../api/hooks/use.api";
-import { HydraCollection } from "../../../../api/model/hydra";
+import {ConfirmAlert} from "../../../../app-common/components/confirm/confirm.alert";
+import {ProductVariant} from "../../../../api/model/product.variant";
+import {withCurrency} from "../../../../lib/currency/currency";
+import {useAtom} from "jotai";
+import {appState} from "../../../../store/jotai";
+import useApi, {SettingsData} from "../../../../api/db/use.api";
+import {Tables} from "../../../../api/db/tables";
+import {useDB} from "../../../../api/db/db";
+import {toRecordId} from "../../../../api/model/common";
 
 export interface CreatePurchaseOrderProps {
   operation: string;
@@ -46,8 +39,8 @@ export interface CreatePurchaseOrderProps {
 }
 
 const ValidationSchema = yup.object({
-  createdAt: yup.string().required(ValidationMessage.Required),
-  poNumber: yup.string().required(ValidationMessage.Required),
+  created_at: yup.string().required(ValidationMessage.Required),
+  po_number: yup.string().required(ValidationMessage.Required),
   supplier: yup.object().required(ValidationMessage.Required),
   items: yup.array(yup.object({
     quantity: yup.number().typeError(ValidationMessage.Number).positive(ValidationMessage.Positive).required(ValidationMessage.Required),
@@ -62,12 +55,13 @@ const ValidationSchema = yup.object({
 export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = ({
   operation, showModal, onClose, purchaseOrder
 }) => {
-  const store = useSelector(getStore);
+  const [{store}] = useAtom(appState)
+  const db = useDB();
 
-  const { register, handleSubmit, setError, formState: { errors }, reset, control, watch, getValues } = useForm({
+  const {register, handleSubmit, setError, formState: {errors}, reset, control, watch, getValues} = useForm({
     resolver: yupResolver(ValidationSchema)
   });
-  const { fields, append, remove, update } = useFieldArray({
+  const {fields, append, remove, update} = useFieldArray({
     control: control,
     name: 'items'
   });
@@ -77,47 +71,57 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
     fetchData: loadSuppliers,
     data: suppliers,
     isFetching: loadingSuppliers
-  } = useApi<HydraCollection<Supplier>>('suppliers', SUPPLIER_LIST, {}, '', 'asc', 1, 9999999, {}, { enabled: false });
+  } = useApi<SettingsData<Supplier>>(Tables.supplier, [`stores ?= ${store?.id}`], ['name ASC'], 0, undefined, [], {
+    enabled: false
+  });
 
   const {
     data: items,
     isFetching: loadingProducts,
-    fetchData: loadProducts
-  } = useApi<{ list: Product[] }>(
-    'productKeywords', PRODUCT_KEYWORDS, {}, '', 'asc', 1, 9999999,
-    {}, { enabled: false }
-  );
+    fetchData: loadProducts,
+  } = useApi<SettingsData<Product>>(Tables.product, [`array::any(stores, |$s| $s.product_store.store = $store)`], ['name ASC'], 0, undefined, ITEM_FETCHES, {
+    enabled: false
+  }, ['*'], {
+    store: store?.id
+  });
+
   const [modal, setModal] = useState(false);
   const [supplierModal, setSupplierModal] = useState(false);
 
   useEffect(() => {
     setModal(showModal);
-    if( showModal ) {
-      loadSuppliers();
-      loadProducts();
+    if (showModal) {
+      setTimeout(() => {
+        loadSuppliers();
+        loadProducts();
+      }, 300);
     }
   }, [showModal]);
 
   useEffect(() => {
-    if( purchaseOrder ) {
+    if (purchaseOrder) {
       reset({
         ...purchaseOrder,
         supplier: {
           label: purchaseOrder?.supplier?.name,
-          value: purchaseOrder?.supplier?.["@id"]
+          value: purchaseOrder?.supplier?.["id"]
         },
-        createdAt: DateTime.fromISO(purchaseOrder.createdAt).toFormat("yyyy-MM-dd'T'HH:mm"),
+        created_at: DateTime.fromJSDate(purchaseOrder.created_at).toFormat("yyyy-MM-dd'T'HH:mm"),
         items: purchaseOrder.items.map(purchaseItem => ({
+          id: purchaseItem.id,
           item: purchaseItem.item,
           quantity: purchaseItem.quantity,
           cost: purchaseItem.price,
           comments: purchaseItem.comments,
           variants: purchaseItem.variants.map(variant => ({
-            attributeName: variant.variant.attributeName,
-            attributeValue: variant.variant.attributeValue,
-            id: variant['@id'],
-            cost: variant.purchasePrice,
-            quantity: variant.quantity
+            attribute_name: variant.variant.attribute_name,
+            attribute_value: variant.variant.attribute_value,
+            id: variant['id'],
+            cost: variant.purchase_price,
+            quantity: variant.quantity,
+            variant: {
+              id: variant.variant.id
+            }
           }))
         }))
       });
@@ -126,67 +130,104 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
 
 
   const createPurchaseOrder = async (values: any) => {
+
     setCreating(true);
     try {
       let url: string, method: string = 'POST';
-      if( values.id ) {
-        method = 'PUT';
-        url = PURCHASE_ORDER_EDIT.replace(':id', values.id);
-        if( values.store ) {
-          values.store = values.store['@id'];
-        }
+      const items = [];
+      if (values.items) {
+        for (const item of values.items) {
+          const variants = [];
+          if (item.variants) {
+            for (const variant of item.variants) {
+              if (variant?.id) {
+                await db.merge(toRecordId(variant.id), {
+                  comments: variant.comments,
+                  purchase_price: Number(variant.cost),
+                  purchase_unit: item.item.purchase_unit,
+                  quantity: Number(variant.quantity),
+                  variant: toRecordId(variant.variant.id)
+                });
 
-        if( values.items ) {
-          values.items = values.items.map((item: SelectedItem) => ({
-            item: item.item["@id"],
-            quantity: item.quantity.toString(),
-            price: item.cost.toString(),
-            comments: item.comments,
-            unit: item.item.purchaseUnit,
-            variants: item.variants.map(variant => ({
-              variant: variant['@id'],
-              quantity: variant.quantity.toString(),
-              purchasePrice: variant.cost.toString(),
-              id: variant.id
-            }))
-          }));
+                variants.push(toRecordId(variant.id));
+              } else {
+                const [v] = await db.insert(Tables.purchase_order_item_variant, {
+                  comments: variant.comments,
+                  purchase_price: Number(variant.cost),
+                  purchase_unit: item.item.purchase_unit,
+                  quantity: Number(variant.quantity),
+                  variant: toRecordId(variant.id)
+                });
+
+                variants.push(v.id);
+              }
+            }
+          }
+
+          if (item?.id) {
+            // merge things
+            await db.merge(toRecordId(item.id), {
+              comments: item.comments,
+              item: toRecordId(item.item.id),
+              price: Number(item.cost ?? 0),
+              quantity: Number(item.quantity),
+              unit: item.item.purchase_unit,
+              variants: variants
+            });
+
+            items.push(toRecordId(item.id));
+          } else {
+            // create item
+            const [i] = await db.insert(Tables.purchase_order_item, {
+              comments: item.comments,
+              item: toRecordId(item.item.id),
+              price: Number(item.cost ?? 0),
+              quantity: Number(item.quantity),
+              unit: item.item.purchase_unit,
+              variants: variants
+            });
+
+            items.push(i.id);
+          }
+        }
+      }
+
+      if (purchaseOrder?.id) {
+        await db.merge(toRecordId(purchaseOrder.id), {
+          created_at: DateTime.fromFormat(values.created_at, "yyyy-MM-dd'T'hh:mm").toJSDate(),
+          is_used: null,
+          items: items,
+          po_number: values.po_number,
+          store: toRecordId(store?.id),
+          supplier: toRecordId(values.supplier.value)
+        });
+
+        for (const i of items) {
+          await db.merge(i, {
+            purchase_order: toRecordId(purchaseOrder.id)
+          });
         }
       } else {
-        delete values.id;
-        url = PURCHASE_ORDER_CREATE;
-        values.store = `/api/stores/${store?.id}`;
+        const [po] = await db.insert(Tables.purchase_order, {
+          created_at: DateTime.fromFormat(values.created_at, "yyyy-MM-dd'T'hh:mm").toJSDate(),
+          is_used: null,
+          items: items,
+          po_number: values.po_number,
+          store: toRecordId(store?.id),
+          supplier: toRecordId(values.supplier.value)
+        });
 
-        if( values.items ) {
-          values.items = values.items.map((item: SelectedItem) => ({
-            item: item.item["@id"],
-            quantity: item.quantity.toString(),
-            price: item.cost.toString(),
-            comments: item.comments,
-            unit: item.item.purchaseUnit,
-            variants: item.variants.map(variant => ({
-              variant: variant['@id'],
-              quantity: variant.quantity.toString(),
-              purchasePrice: variant.cost.toString(),
-            }))
-          }));
+        for (const i of items) {
+          await db.merge(i, {
+            purchase_order: po.id
+          });
         }
       }
 
-      if( values.supplier ) {
-        values.supplier = values.supplier.value;
-      }
-
-      await fetchJson(url, {
-        method: method,
-        body: JSON.stringify({
-          ...values,
-        })
-      });
-
       onModalClose();
-    } catch ( exception: any ) {
-      if( exception instanceof HttpException ) {
-        if( exception.message ) {
+    } catch (exception: any) {
+      if (exception instanceof HttpException) {
+        if (exception.message) {
           notify({
             type: 'error',
             description: exception.message
@@ -194,7 +235,7 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
         }
       }
 
-      if( exception instanceof UnprocessableEntityException ) {
+      if (exception instanceof UnprocessableEntityException) {
         const e: ValidationResult = await exception.response.json();
         e.violations.forEach((item: ConstraintViolation) => {
           setError(item.propertyPath, {
@@ -203,7 +244,7 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
           });
         });
 
-        if( e.errorMessage ) {
+        if (e.errorMessage) {
           notify({
             type: 'error',
             description: e.errorMessage
@@ -223,28 +264,23 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
     reset({
       id: null,
       store: null,
-      createdAt: null,
-      poNumber: null,
+      created_at: null,
+      po_number: null,
       items: [],
       supplier: null
     });
   };
 
-  const addSelectedItem = (itemId: number) => {
-    jsonRequest(PRODUCT_GET.replace(':id', itemId.toString()))
-      .then(response => response.json())
-      .then(json => {
-        const item = json;
-
-        append({
-          item: json,
-          quantity: 1,
-          comments: '',
-          cost: item?.cost || 0,
-          createdAt: null,
-          variants: item?.variants
-        });
-      })
+  const addSelectedItem = (itemId: string) => {
+    const item = items?.data?.find(a => a.id.toString() === itemId);
+    append({
+      item: item,
+      quantity: 1,
+      comments: '',
+      cost: item?.cost || 0,
+      created_at: null,
+      variants: item?.variants
+    });
   }
 
   const itemsWatch = getValues();
@@ -301,21 +337,22 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
         onClose={onModalClose}
       >
         <form onSubmit={handleSubmit(createPurchaseOrder)} className="mb-5">
-          <input type="hidden" {...register('id')}/>
+          <h3 className="text-xl mb-3">Store: {store?.name}</h3>
           <div className="grid lg:grid-cols-4 gap-4 mb-3 md:grid-cols-3 sm:grid-cols-1">
             <div>
-              <label htmlFor="createdAt">Date</label>
-              <Input {...register('createdAt')} type="datetime-local" id="createdAt" className={
+              <label htmlFor="created_at">Date</label>
+              <Input {...register('created_at')} type="datetime-local" id="created_at" className={
                 classNames(
                   "w-full"
                 )
-              } hasError={hasErrors(errors.createdAt)}/>
-              {getErrors(errors.createdAt)}
+              } hasError={hasErrors(errors.created_at)}/>
+              {getErrors(errors.created_at)}
             </div>
             <div>
-              <label htmlFor="poNumber">PO Number</label>
-              <Input {...register('poNumber')} id="poNumber" className="w-full" hasError={hasErrors(errors.poNumber)}/>
-              {getErrors(errors.poNumber)}
+              <label htmlFor="po_number">PO Number</label>
+              <Input {...register('po_number')} id="po_number" className="w-full"
+                     hasError={hasErrors(errors.po_number)}/>
+              {getErrors(errors.po_number)}
             </div>
             <div>
               <label htmlFor="supplier">Select a supplier</label>
@@ -325,10 +362,10 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
                     <ReactSelect
                       onChange={props.field.onChange}
                       value={props.field.value}
-                      options={suppliers?.['hydra:member']?.map(item => {
+                      options={suppliers?.data?.map(item => {
                         return {
                           label: item.name,
-                          value: item['@id']
+                          value: item['id']
                         }
                       })}
                       id="supplier"
@@ -348,7 +385,7 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
                 )}
                 name="supplier"
                 control={control}
-                rules={{ required: true }}
+                rules={{required: true}}
               />
 
               {getErrors(errors.supplier)}
@@ -357,14 +394,14 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
               <label htmlFor="items">Items</label>
               <ReactSelect
                 onChange={(value) => {
-                  if( value ) {
+                  if (value) {
                     addSelectedItem(value.value);
                   }
                 }}
-                options={items?.list?.map(item => {
+                options={items?.data?.map(item => {
                   return {
                     label: item.name,
-                    value: item.id
+                    value: item.id.toString()
                   }
                 })}
                 id="items"
@@ -395,7 +432,7 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
                        variantTotal={variantTotal} removeVariant={removeVariant} errors={errors}/>
             ))}
             <div className="grid grid-cols-6 mb-1 gap-3">
-              <div className="p-3 bg-gray-200 font-bold">{fields.length}</div>
+              <div className="p-3 bg-gray-200 font-bold">{fields.length} items</div>
               <div
                 className="p-3 bg-gray-200 font-bold">{totalQuantity}</div>
               <div></div>
@@ -412,10 +449,16 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
         </form>
       </Modal>
 
-      <CreateSupplier operation={'create'} showModal={supplierModal} onClose={() => {
-        setSupplierModal(false);
-        loadSuppliers();
-      }}/>
+      {supplierModal && (
+        <CreateSupplier
+          operation={'create'}
+          showModal={supplierModal}
+          onClose={() => {
+            setSupplierModal(false);
+            loadSuppliers();
+          }}/>
+      )}
+
     </>
   );
 }
@@ -495,16 +538,16 @@ const ItemRow: FC<ItemRowProps> = ({
           </div>
         )}
         {item.variants.map((variant: ProductVariant, variantIndex: number) => (
-          <div className="grid grid-cols-5 gap-3 mb-1 px-5 hover:bg-gray-200">
-            <div className="inline-flex items-center">{variant.attributeValue}</div>
+          <div className="grid grid-cols-5 gap-3 mb-1 px-5 hover:bg-gray-200" key={variantIndex}>
+            <div className="inline-flex items-center">{variant.attribute_value}</div>
             <div>
               <input type="hidden" {...register(`items.${index}.variants.${variantIndex}.id`)}
-                     value={variant["@id"]}/>
+                     value={variant["id"]}/>
               <Input
                 type="number"
                 className="form-control w-full"
-                {...register(`items.${index}.variants.${variantIndex}.cost`, { valueAsNumber: true })}
-                defaultValue={variant.price || 0}
+                {...register(`items.${index}.variants.${variantIndex}.cost`, {valueAsNumber: true})}
+                defaultValue={variant.cost || 0}
                 selectable={true}
                 hasError={hasErrors(_.get(errors.items?.[index]?.variants?.[variantIndex], `cost`))}
               />
@@ -515,7 +558,7 @@ const ItemRow: FC<ItemRowProps> = ({
                 type="number"
                 className="form-control w-full"
                 {...register(`items.${index}.variants.${variantIndex}.quantity`)}
-                defaultValue={1}
+                defaultValue={variant.quantity || 1}
                 selectable={true}
                 hasError={hasErrors(_.get(errors.items?.[index]?.variants?.[variantIndex], `quantity`))}
               />
@@ -527,7 +570,7 @@ const ItemRow: FC<ItemRowProps> = ({
             <div className="inline-flex items-center">
               <ConfirmAlert
                 onConfirm={() => removeVariant(index, variantIndex)}
-                title={`Remove ${item.item.name} > ${variant.attributeName}?`}
+                title={`Remove ${item.item.name} > ${variant.attribute_name}?`}
                 confirmText="Remove"
               >
                 <button className="btn btn-danger" type="button">

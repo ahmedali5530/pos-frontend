@@ -7,23 +7,23 @@ export interface PurchaseItem  {
   id: string;
   item: Product;
   quantity: string;
-  quantityRequested?: string;
-  purchasePrice: string;
-  purchaseUnit?: string;
+  quantity_requested?: string;
+  purchase_price: string;
+  purchase_unit?: string;
   barcode?: string;
   comments?: string;
   variants: PurchaseItemVariant[];
-  createdAt: string;
-  purchase: Pick<Purchase, "@id"|"createdAt">
+  created_at: string;
+  purchase: Pick<Purchase, "@id"|"created_at">
 }
 
 export interface PurchaseItemVariant {
   id: string;
   variant: ProductVariant;
   quantity: string;
-  quantityRequested?: string;
-  purchasePrice: string;
-  purchaseUnit?: string;
+  quantity_requested?: string;
+  purchase_price: string;
+  purchase_unit?: string;
   barcode?: string;
   comments?: string;
 }

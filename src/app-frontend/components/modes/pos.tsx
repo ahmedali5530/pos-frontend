@@ -1,43 +1,49 @@
-import { useEffect, useMemo, useRef, useState, } from "react";
-import { HomeProps, initialData, useLoadData, } from "../../../api/hooks/use.load.data";
-import { getStore } from "../../../duck/store/store.selector";
-import { getTerminal } from "../../../duck/terminal/terminal.selector";
-import { useSelector } from "react-redux";
-import { defaultData, defaultState } from "../../../store/jotai";
-import { faBarcode, faCubesStacked, faFlag, faIcons, faReply, faRotateRight, } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useAtom } from "jotai";
+import {useEffect, useMemo, useRef, useState,} from "react";
+import {HomeProps, initialData, useLoadData,} from "../../../api/hooks/use.load.data";
+import {appState as AppState, defaultData, defaultState} from "../../../store/jotai";
+import {
+  faBarcode,
+  faCubesStacked,
+  faFlag,
+  faIcons,
+  faMagnifyingGlass,
+  faReply,
+  faRotateRight,
+} from "@fortawesome/free-solid-svg-icons";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {useAtom} from "jotai";
 import localforage from "localforage";
-import { Controller, useForm } from "react-hook-form";
-import { CartItem } from "../../../api/model/cart.item";
-import { fetchJson } from "../../../api/request/request";
-import { BARCODE_LIST, } from "../../../api/routing/routes/backend.app";
-import { notify } from "../../../app-common/components/confirm/notification";
-import { getRealProductPrice, scrollToBottom, } from "../../containers/dashboard/pos";
-import { CartContainer } from "../cart/cart.container";
-import { CartControls } from "../cart/cart.controls";
-import { SaleFind } from "../sale/sale.find";
-import { CloseSaleInline } from "../sale/sale.inline";
-import { SaleBrands } from "../search/sale.brands";
-import { SaleCategories } from "../search/sale.categories";
-import { SaleDepartments } from "../search/sale.departments";
-import { SearchTable } from "../search/search.table";
-import { Product } from "../../../api/model/product";
-import { ProductVariant } from "../../../api/model/product.variant";
-import { Brand } from "../../../api/model/brand";
-import { Category } from "../../../api/model/category";
-import { Department } from "../../../api/model/department";
-import { Barcode } from "../../../api/model/barcode";
+import {Controller, useForm} from "react-hook-form";
+import {CartItem} from "../../../api/model/cart.item";
+import {notify} from "../../../app-common/components/confirm/notification";
+import {getRealProductPrice, scrollToBottom,} from "../../containers/dashboard/pos";
+import {CartContainer} from "../cart/cart.container";
+import {CartControls} from "../cart/cart.controls";
+import {SaleFind} from "../sale/sale.find";
+import {CloseSaleInline} from "../sale/sale.inline";
+import {SaleBrands} from "../search/sale.brands";
+import {SaleCategories} from "../search/sale.categories";
+import {SaleDepartments} from "../search/sale.departments";
+import {SearchTable} from "../search/search.table";
+import {Product} from "../../../api/model/product";
+import {ProductVariant} from "../../../api/model/product.variant";
+import {Brand} from "../../../api/model/brand";
+import {Category} from "../../../api/model/category";
+import {Department} from "../../../api/model/department";
 import Mousetrap from "mousetrap";
-import { Order } from "../../../api/model/order";
-import { Tooltip } from "antd";
-import { Button } from "../../../app-common/components/input/button";
-import { Input } from "../../../app-common/components/input/input";
-import { TopbarRight } from "./topbar.right";
-import { Footer } from "./footer";
-import { TrapFocus } from "../../../app-common/components/container/trap.focus";
-import { SearchVariants } from "../search/search.variants";
-import {appState as UserState} from '../../../store/jotai';
+import {Order} from "../../../api/model/order";
+import {Tooltip} from "antd";
+import {Button} from "../../../app-common/components/input/button";
+import {Input} from "../../../app-common/components/input/input";
+import {TopbarRight} from "./topbar.right";
+import {Footer} from "./footer";
+import {TrapFocus} from "../../../app-common/components/container/trap.focus";
+import {SearchVariants} from "../search/search.variants";
+import {RecordId} from "surrealdb";
+import {toRecordId} from "../../../api/model/common";
+import {Tables} from "../../../api/db/tables";
+import {useDB} from "../../../api/db/db";
+import {Shortcut} from "../../../app-common/components/input/shortcut";
 
 enum SearchModes {
   sale = "sale",
@@ -49,15 +55,12 @@ export const PosMode = () => {
   const [mode, setMode] = useState(SearchModes.sale);
 
   const [list, setList] = useState<HomeProps["list"]>(initialData);
-  const [paymentTypesList, setPaymentTypesList] =
-    useState<HomeProps["paymentTypesList"]>(initialData);
-  const [userState, ] = useAtom(UserState);
-
-  const store = userState.store;
-  const terminal = userState.terminal;
+  const [paymentTypesList, setPaymentTypesList] = useState<HomeProps["paymentTypesList"]>(initialData);
 
   const [state] = useLoadData();
   const [appState, setAppState] = useAtom(defaultState);
+
+  const [{user, store, terminal}] = useAtom(AppState);
 
   const [appSettings] = useAtom(defaultData);
   const {
@@ -76,8 +79,8 @@ export const PosMode = () => {
     setPaymentTypesList(state.paymentTypesList);
   }, [state.list, state.paymentTypesList]);
 
-  const searchField = useRef<HTMLInputElement|null>(null);
-  const containerRef = useRef<HTMLDivElement|null>(null);
+  const searchField = useRef<HTMLInputElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const [modal, setModal] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
@@ -91,21 +94,19 @@ export const PosMode = () => {
   const items = useMemo(() => {
     let filtered = list?.list || [];
 
-    if( !filtered ) {
+    if (!filtered) {
       return [];
     }
 
     // filter products by store
-    if( store && filtered ) {
+    if (store && filtered) {
       filtered = filtered.filter((item) => {
-        if( item?.stores?.length > 0 ) {
-          const stores = item.stores.map((item) => {
-            if( item.store ) {
-              return item.store.id;
-            }
+        if (item?.stores?.length > 0) {
+          const stores = item.stores.map((s) => {
+            return new RecordId(s.store.id.tb, s.store.id.id).toString();
           });
 
-          return stores.includes(store.id);
+          return stores.includes(store.id.toString());
         } else {
           return true;
         }
@@ -113,12 +114,14 @@ export const PosMode = () => {
     }
 
     //filter products by terminal
-    if( terminal && filtered ) {
+    if (terminal && filtered) {
       filtered = filtered.filter((item) => {
-        if( item?.terminals?.length > 0 ) {
-          const terminals = item.terminals.map((item) => item.id);
+        if (item?.terminals?.length > 0) {
+          const terminals = item.terminals.map((item) => {
+            return new RecordId(item.id.tb, item.id.id).toString()
+          });
 
-          return terminals.includes(terminal.id);
+          return terminals.includes(terminal.id.toString());
         } else {
           return true;
         }
@@ -126,9 +129,9 @@ export const PosMode = () => {
     }
 
     const brandIds = Object.keys(brands);
-    if( brandIds.length > 0 ) {
+    if (brandIds.length > 0) {
       filtered = filtered.filter((item) => {
-        if( item?.brands?.length > 0 ) {
+        if (item?.brands?.length > 0) {
           const brandsFilter = item.brands.filter((b) => {
             return brandIds.includes(b.id.toString());
           });
@@ -141,9 +144,9 @@ export const PosMode = () => {
     }
 
     const categoryIds = Object.keys(categories);
-    if( categoryIds.length > 0 ) {
+    if (categoryIds.length > 0) {
       filtered = filtered.filter((item) => {
-        if( item?.categories?.length > 0 ) {
+        if (item?.categories?.length > 0) {
           const categoriesFilter = item.categories.filter((c) => {
             return categoryIds.includes(c.id.toString());
           });
@@ -156,9 +159,9 @@ export const PosMode = () => {
     }
 
     const departmentIds = Object.keys(departments);
-    if( departmentIds.length > 0 ) {
+    if (departmentIds.length > 0) {
       filtered = filtered.filter((item) => {
-        if( item?.department ) {
+        if (item?.department) {
           return departmentIds.includes(item.department.id.toString());
         }
 
@@ -166,9 +169,9 @@ export const PosMode = () => {
       });
     }
 
-    if( filtered ) {
+    if (filtered) {
       filtered = filtered.filter((item) => {
-        if(
+        if (
           item?.barcode &&
           item?.barcode.toLowerCase().startsWith(q.toLowerCase())
         ) {
@@ -194,9 +197,9 @@ export const PosMode = () => {
       map.set(item.barcode, i);
       map.set(item.name, i);
 
-      if( item.variants.length > 0 ) {
+      if (item.variants.length > 0) {
         item.variants.forEach((variant) => {
-          if( variant.barcode ) {
+          if (variant.barcode) {
             const v = {
               isVariant: true,
               variant,
@@ -212,19 +215,24 @@ export const PosMode = () => {
     return map;
   }, [items]);
 
-  const { handleSubmit, control, reset } = useForm();
+  const {handleSubmit, control, reset} = useForm();
 
   const searchAction = async (values: any) => {
-
     const item = itemsMap.get(values.q);
 
-    if( item === undefined ) {
+    if (item === undefined) {
       // check in DB for dynamic barcode item
       try {
-        const response = await fetchJson(`${BARCODE_LIST}?barcode=${values.q}`);
-        if( response["hydra:member"].length > 0 ) {
-          const item: Barcode = response["hydra:member"][0];
-          if( item.variant ) {
+        const [items] = await db.query(`SELECT *
+                                        FROM ${Tables.barcode}
+                                        where barcode = $barcode FETCH item, variant`, {
+          barcode: values.q
+        });
+
+        if (items.length > 0) {
+          const item = items[0];
+
+          if (item.variant) {
             await addItemVariant(
               item.item,
               item.variant,
@@ -233,7 +241,7 @@ export const PosMode = () => {
             );
           }
 
-          if( !item.variant ) {
+          if (!item.variant) {
             await addItem(
               item.item,
               Number(item.measurement),
@@ -248,19 +256,19 @@ export const PosMode = () => {
             duration: 1,
           });
         }
-      } catch ( e ) {
+      } catch (e) {
         console.log(e);
       }
     }
 
-    if( item !== undefined ) {
+    if (item !== undefined) {
       // if main item, add it
-      if( !item.isVariant ) {
+      if (!item.isVariant) {
         await addItem(item.item, Number(values.quantity));
       }
 
       // if variant add it
-      if( item.isVariant ) {
+      if (item.isVariant) {
         await addItemVariant(item.item, item.variant, Number(values.quantity));
       }
     }
@@ -273,15 +281,15 @@ export const PosMode = () => {
 
   const addItem = async (item: Product, quantity: number, price?: number) => {
     let newPrice = 0;
-    if( item.basePrice ) {
-      newPrice = item.basePrice;
+    if (item.base_price) {
+      newPrice = item.base_price;
     }
 
-    if( price ) {
+    if (price) {
       newPrice = price;
     }
 
-    if( rate ) {
+    if (rate) {
       newPrice = rate;
     }
 
@@ -292,7 +300,7 @@ export const PosMode = () => {
       latestVariant: undefined
     }));
 
-    if( item.variants.length > 0 ) {
+    if (item.variants.length > 0) {
       //choose from variants
       setModal(true);
       setModalTitle(`Choose a variant for ${item.name}`);
@@ -304,42 +312,81 @@ export const PosMode = () => {
         quantity: quantity,
       }));
 
-      return false;
+      return;
     }
 
 
-    const oldItems = added;
-    let index = oldItems.findIndex((addItem) => addItem.item.id === item.id);
-    if( index !== -1 ) {
-      oldItems[index].quantity += quantity;
-      setAppState((prev) => ({
-        ...prev,
-        latestIndex: index,
-      }));
-    } else {
-      oldItems.push({
-        quantity: quantity,
-        item: item,
-        price: newPrice,
-        discount: 0,
-        taxes: item.taxes,
-        taxIncluded: true,
-        stock: 0,
-      });
+    // const oldItems = added;
+    // let index = oldItems.findIndex((addItem) => addItem.item.id === item.id);
+    // if( index !== -1 ) {
+    //   oldItems[index].quantity += quantity;
+    //   setAppState((prev) => ({
+    //     ...prev,
+    //     latestIndex: index,
+    //   }));
+    // } else {
+    //   oldItems.push({
+    //     quantity: quantity,
+    //     item: item,
+    //     price: newPrice,
+    //     discount: 0,
+    //     taxes: item.taxes,
+    //     taxIncluded: true,
+    //     stock: 0,
+    //   });
+    //
+    //   setAppState((prev) => ({
+    //     ...prev,
+    //     latestIndex: oldItems.length - 1,
+    //   }));
+    // }
 
-      setAppState((prev) => ({
-        ...prev,
-        latestIndex: oldItems.length - 1,
-      }));
-    }
+    setAppState(prev => {
+      const otherState = {
+        q: "",
+        quantity: 1,
+      };
 
-    setAppState((prev) => ({
-      ...prev,
-      added: oldItems,
-      q: "",
-      quantity: 1,
-      // selected: items.findIndex((i) => i.id === item.id),
-    }));
+      const exists = prev.added.find(i => toRecordId(i.item.id).toString() === toRecordId(item.id).toString());
+      let index = prev.added.findIndex((addItem) => toRecordId(addItem.item.id).toString() === toRecordId(item.id).toString());
+      if (exists) {
+        return {
+          ...prev,
+          ...otherState,
+          latestIndex: index,
+          added: prev.added.map(a => {
+            if (toRecordId(a.item.id).toString() === toRecordId(item.id).toString()) {
+              return {...a, quantity: a.quantity + quantity};
+            } else {
+              return a;
+            }
+          })
+        };
+      }
+
+      return {
+        ...prev,
+        ...otherState,
+        added: [...prev.added, {
+          quantity: quantity,
+          item: item,
+          price: newPrice,
+          discount: 0,
+          taxes: item.taxes,
+          taxIncluded: true,
+          stock: 0,
+        }],
+        latestIndex: prev.added.length - 1,
+      };
+    })
+
+    // setAppState((prev) => ({
+    //   ...prev,
+    //   added: oldItems,
+    //   q: "",
+    //   quantity: 1,
+    //   // selected: items.findIndex((i) => i.id === item.id),
+    // }));
 
     scrollToBottom(containerRef.current);
   };
@@ -350,42 +397,110 @@ export const PosMode = () => {
     quantity: number,
     price?: number
   ) => {
-    const oldItems = added;
-    let index = oldItems.findIndex((addItem) => {
-      return addItem.item.id === item.id && addItem.variant === variant;
-    });
+    // const oldItems = added;
+    // let index = oldItems.findIndex((addItem) => {
+    //   return addItem.item.id?.toString() === item.id?.toString() && addItem.variant === variant;
+    // });
+    //
+    //
+    // if( index !== -1 ) {
+    //   oldItems[index].quantity += quantity;
+    // } else {
+    //   oldItems.push({
+    //     quantity: quantity,
+    //     item: item,
+    //     price: variantPrice,
+    //     variant: variant,
+    //     discount: 0,
+    //     taxes: item.taxes,
+    //     taxIncluded: true,
+    //     stock: 0,
+    //   });
+    // }
 
-    const variantPrice = price ? price : (variant?.price
-      ? variant.price
-      : getRealProductPrice(item));
+    const variantPrice = price ? price : (
+      variant?.price
+        ? variant.price
+        : getRealProductPrice(item)
+    );
 
-    if( index !== -1 ) {
-      oldItems[index].quantity += quantity;
-    } else {
-      oldItems.push({
-        quantity: quantity,
-        item: item,
-        price: variantPrice,
-        variant: variant,
-        discount: 0,
-        taxes: item.taxes,
-        taxIncluded: true,
-        stock: 0,
-      });
-    }
+    setAppState(prev => {
+      const otherState = {
+        selected: items.findIndex((i) => i.id.toString() === item.id.toString()),
+        quantity: 1,
+        selectedVariant: 0,
+        q: "",
+        latestQuantity: quantity,
+        latestRate: variantPrice,
+        latestVariant: variant,
+      };
 
-    setAppState((prev) => ({
-      ...prev,
-      latest: item,
-      added: oldItems,
-      selected: items.findIndex((i) => i.id === item.id),
-      quantity: 1,
-      selectedVariant: 0,
-      q: "",
-      latestQuantity: quantity,
-      latestRate: variantPrice,
-      latestVariant: variant,
-    }));
+      const exists = prev.added.find(i => toRecordId(i.item.id).toString() === toRecordId(item.id).toString() && toRecordId(variant.id).toString() === toRecordId(i.variant?.id)?.toString());
+      if (exists) {
+        return {
+          ...prev,
+          ...otherState,
+          added: prev.added.map(i => {
+            if (toRecordId(i.item.id).toString() === toRecordId(item.id).toString() && toRecordId(variant.id).toString() === toRecordId(i.variant?.id)?.toString()) {
+              return {
+                ...i,
+                quantity: i.quantity + quantity
+              }
+            }
+
+            return i;
+          })
+        };
+      }
+
+      return {
+        ...prev,
+        ...otherState,
+        added: [...prev.added, {
+          quantity: quantity,
+          item: item,
+          price: variantPrice,
+          variant: variant,
+          discount: 0,
+          taxes: item.taxes,
+          taxIncluded: true,
+          stock: 0,
+        }]
+      };
+    })
+
+    // setAppState((prev) => ({
+    //   ...prev,
+    //   latest: item,
+    //   added: [
+    //     ...prev.added.map(addItem => {
+    //       if(
+    //         addItem.item.id.toString() === item.id.toString()
+    //         && addItem.variant?.id?.toString() === variant.id.toString()
+    //       ){
+    //         addItem.quantity += quantity;
+    //       }
+    //
+    //       return addItem;
+    //     }), {
+    //       quantity: quantity,
+    //       item: item,
+    //       price: variantPrice,
+    //       variant: variant,
+    //       discount: 0,
+    //       taxes: item.taxes,
+    //       taxIncluded: true,
+    //       stock: 0,
+    //     }
+    //   ],
+    //   selected: items.findIndex((i) => i.id.toString() === item.id.toString()),
+    //   quantity: 1,
+    //   selectedVariant: 0,
+    //   q: "",
+    //   latestQuantity: quantity,
+    //   latestRate: variantPrice,
+    //   latestVariant: variant,
+    // }));
 
     setModal(false);
     setVariants([]);
@@ -393,8 +508,70 @@ export const PosMode = () => {
     scrollToBottom(containerRef.current);
   };
 
+  const db = useDB();
+
   useEffect(() => {
-    if( added.length === 0 ) {
+    let isMounted = true;
+    let queryId: any = null;
+
+    const runLiveQuery = async () => {
+      try {
+        const result = await db.live(Tables.cart, async (action: string, result) => {
+          if (!isMounted) return;
+
+          if (
+            result.store.toString() === store?.id.toString() &&
+            result.terminal.toString() === terminal?.id?.toString() &&
+            result.user.toString() === user?.id?.toString()
+          ) {
+            // Only process CREATE actions for new orders
+            if (action === "CREATE") {
+              const [item] = await db.query<Product>(`SELECT *
+                                                      FROM ONLY ${Tables.product}
+                                                      where id = $barcode LIMIT 1 fetch department, categories, suppliers, brands, variants, taxes, terminals, stores, stores.store`, {
+                barcode: toRecordId(result.item)
+              });
+
+              if (result.variant) {
+                const [variant] = await db.query<ProductVariant>(`SELECT *
+                                                                  FROM ONLY ${Tables.product_variant}
+                                                                  where id = $variant LIMIT 1 fetch department, categories, suppliers, brands, variants, taxes, terminals, stores, stores.store`, {
+                  variant: toRecordId(result.variant)
+                });
+
+                await addItemVariant(item, variant, result.quantity, result.price)
+              } else {
+                await addItem(item, result.quantity, result.price);
+              }
+
+              // remove from cart db
+              await db.delete(result.id);
+            }
+          }
+        });
+
+        if (isMounted) {
+          queryId = result;
+          // setLiveQuery(result);
+        }
+      } catch (error) {
+        console.error("Error setting up live query:", error);
+      }
+    };
+
+    // Set up live query
+    runLiveQuery();
+
+    return () => {
+      isMounted = false;
+      if (queryId) {
+        db.db.kill(queryId).catch(console.error);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (added.length === 0) {
       setAppState((prev) => ({
         ...prev,
         adjustment: 0,
@@ -429,11 +606,22 @@ export const PosMode = () => {
   // useEffect(() => {
   Mousetrap.bind("f3", function (e: any) {
     e.preventDefault();
-    if( searchField.current !== null ) {
+    if (searchField.current !== null) {
       searchField.current.focus();
     }
   });
   // }, [searchField.current]);
+
+  useEffect(() => {
+    if(!modal){
+      setVariants([]);
+      setAppState(prev => ({
+        ...prev,
+        selectedVariant: 0,
+        latestVariant: undefined
+      }))
+    }
+  }, [modal]);
 
   const refundOrder = async (order: Order) => {
     const items: CartItem[] = [];
@@ -457,6 +645,9 @@ export const PosMode = () => {
       discountAmount: order.discount?.amount,
       customer: order?.customer,
       refundingFrom: Number(order.id),
+      quantity: 1,
+      q: '',
+
     }));
   };
 
@@ -484,7 +675,9 @@ export const PosMode = () => {
     }));
   };
 
-  const customerInputRef = useRef<HTMLInputElement|null>(null);
+  const customerInputRef = useRef<HTMLInputElement | null>(null);
+  const [searchModal, setSearchModal] = useState(false);
+
 
   return (
     <>
@@ -521,11 +714,17 @@ export const PosMode = () => {
                     <FontAwesomeIcon icon={faBarcode}/>
                   </Button>
                 </Tooltip>
-                <SearchTable
-                  items={items}
-                  addItem={addItem}
-                  onClick={() => setMode(SearchModes.sale)}
-                />
+                <Tooltip title="Search by name">
+                  <Button
+                    variant="primary"
+                    iconButton
+                    type="button"
+                    size="lg"
+                    onClick={() => setSearchModal(true)}>
+                    <FontAwesomeIcon icon={faMagnifyingGlass}/>
+                    <Shortcut shortcut="ctrl+f" handler={() => setSearchModal(true)} invisible={true}/>
+                  </Button>
+                </Tooltip>
               </div>
               <div className="input-group">
                 {/*TODO: add voice search here*/}
@@ -565,7 +764,7 @@ export const PosMode = () => {
                 onSubmit={handleSubmit(searchAction)}>
                 <div className="input-group">
                   <Controller
-                    render={({ field }) => (
+                    render={({field}) => (
                       <Input
                         placeholder="Scan barcode or search by name"
                         ref={searchField}
@@ -578,11 +777,12 @@ export const PosMode = () => {
                     )}
                     name="q"
                     control={control}
-                    rules={{ required: true }}
+                    rules={{required: true}}
+                    defaultValue={""}
                   />
 
                   <Controller
-                    render={({ field }) => (
+                    render={({field}) => (
                       <Input
                         type="number"
                         placeholder="Quantity"
@@ -594,10 +794,10 @@ export const PosMode = () => {
                     name="quantity"
                     control={control}
                     defaultValue={1}
-                    rules={{ required: true }}
+                    rules={{required: true}}
                   />
                 </div>
-                <button className="hidden">submit</button>
+                <button type="submit" className="hidden">submit</button>
               </form>
               {customerBox && (
                 <Input
@@ -641,16 +841,23 @@ export const PosMode = () => {
           </div>
         </div>
       </TrapFocus>
+      {searchModal && (
+        <SearchTable
+          items={items}
+          addItem={addItem}
+          onClick={() => setMode(SearchModes.sale)}
+          onClose={() => setSearchModal(false)}
+        />
+      )}
+
       {modal && (
         <SearchVariants
-          modal={modal}
+          modal={true}
           onClose={() => {
             setModal(false);
-            setVariants([]);
           }}
           variants={variants}
           addItemVariant={addItemVariant}
-          items={items}
         />
       )}
     </>

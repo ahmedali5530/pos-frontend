@@ -6,12 +6,6 @@ import {yupResolver} from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import {ConstraintViolation, ValidationMessage} from "../../../../api/model/validation";
 import {Supplier} from "../../../../api/model/supplier";
-import {
-  SUPPLIER_PAYMENT_CREATE,
-  SUPPLIER_PAYMENT_LIST,
-  SUPPLIER_PURCHASE_LIST
-} from "../../../../api/routing/routes/backend.app";
-import {fetchJson} from "../../../../api/request/request";
 import {UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import * as _ from "lodash";
 import {Input} from "../../../../app-common/components/input/input";
@@ -25,9 +19,11 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faEye} from "@fortawesome/free-solid-svg-icons";
 import {ViewPurchase} from "../purchase/view.purchase";
 import {SupplierPayment} from "../../../../api/model/supplier.payment";
-import {Purchase} from "../../../../api/model/purchase";
-import useApi from "../../../../api/hooks/use.api";
-import { HydraCollection } from "../../../../api/model/hydra";
+import {Purchase, PURCHASE_FETCHES} from "../../../../api/model/purchase";
+import {useDB} from "../../../../api/db/db";
+import {Tables} from "../../../../api/db/tables";
+import {toRecordId} from "../../../../api/model/common";
+import {usePurchase} from "../../../../api/hooks/use.purchase";
 
 interface SupplierLedgerProps extends PropsWithChildren {
   supplier: Supplier;
@@ -41,32 +37,42 @@ const ValidationSchema = yup.object({
 export const SupplierLedger: FC<SupplierLedgerProps> = ({
   children, supplier: supplierProp
 }) => {
+  const db = useDB();
   const [modal, setModal] = useState(false);
   const {register, handleSubmit, setError, formState: {errors}, reset, control} = useForm({
     resolver: yupResolver(ValidationSchema)
   });
   const [creating, setCreating] = useState(false);
   const [supplier, setSupplier] = useState<Supplier>(supplierProp);
-  const {
-    data: payments,
-    fetchData: loadPayments
-  } = useApi<HydraCollection<SupplierPayment>>('supplierPayments', SUPPLIER_PAYMENT_LIST.replace(':id', supplier.id), {
-    limit: 9999999
-  });
+  const [payments, setPayments] = useState<SupplierPayment[]>([]);
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
 
-  const {
-    data: purchases,
-    fetchData: loadPurchases,
-  } = useApi<HydraCollection<Purchase>>('supplierPurchases', SUPPLIER_PURCHASE_LIST.replace(':id', supplier.id), {
-    limit: 9999999
-  });
+  const loadPayments = async () => {
+    const [sp] = await db.query(`SELECT *
+                                 FROM ${Tables.supplier_payment}
+                                 where supplier = $supplier`, {
+      supplier: toRecordId(supplier.id)
+    });
+
+    setPayments(sp);
+  }
+
+  const loadPurchases = async () => {
+    const [p] = await db.query(`SELECT *
+                                FROM ${Tables.purchase}
+                                where supplier = $supplier FETCH ${PURCHASE_FETCHES.join(', ')}`, {
+      supplier: toRecordId(supplier.id)
+    });
+
+    setPurchases(p);
+  }
 
   useEffect(() => {
     setSupplier(supplierProp);
   }, [supplierProp]);
 
   useEffect(() => {
-    if(modal){
+    if (modal) {
       loadPayments();
       loadPurchases();
     }
@@ -75,21 +81,12 @@ export const SupplierLedger: FC<SupplierLedgerProps> = ({
   const createPayment = async (values: any) => {
     setCreating(true);
     try {
-      const url = SUPPLIER_PAYMENT_CREATE;
-
-      if (values.purchase) {
-        values.purchase = values.purchase.value;
-      }
-      delete values.id;
-      values.supplier = supplier['@id'];
-      values.amount = values.amount.toString();
-
-      const response = await fetchJson(url, {
-        method: 'POST',
-        body: JSON.stringify({
-          ...values
-        })
-      });
+      await db.insert(Tables.supplier_payment, {
+        amount: Number(values.amount),
+        description: values?.description,
+        purchase: values.purchase ? toRecordId(values.purchase.value) : null,
+        supplier: toRecordId(supplier.id)
+      })
 
       await loadPayments();
 
@@ -98,6 +95,7 @@ export const SupplierLedger: FC<SupplierLedgerProps> = ({
         description: null,
         purchase: null
       });
+
     } catch (exception: any) {
       if (exception instanceof UnprocessableEntityException) {
         const e = await exception.response.json();
@@ -117,28 +115,31 @@ export const SupplierLedger: FC<SupplierLedgerProps> = ({
     }
   };
 
+  const purchaseHook = usePurchase();
+
   const purchaseTotal = useMemo(() => {
-    return purchases?.['hydra:member']?.reduce((prev, item) => {
-      if(item.paymentType && item.paymentType.type === 'credit'){
-        return prev + item.total;
+    return purchases?.reduce((prev, item) => {
+      if (item.payment_type && item.payment_type.type === 'credit') {
+        return prev + purchaseHook.calculatePurchaseTotal(item);
       }
+
       return prev;
     }, 0);
   }, [purchases]);
   const paymentTotal = useMemo(() => {
-    return payments?.['hydra:member']?.reduce((prev, item) => prev + Number(item.amount), 0);
+    return payments?.reduce((prev, item) => prev + Number(item.amount), 0);
   }, [payments]);
 
   const diff = useMemo(() => {
-    return Number(purchaseTotal) - Number(paymentTotal) + Number(supplier.openingBalance);
+    return Number(purchaseTotal) - Number(paymentTotal) + Number(supplier.opening_balance);
   }, [purchaseTotal, paymentTotal, supplier]);
 
   const list = useMemo(() => {
     let list: any = [];
-    payments?.['hydra:member']?.forEach(item => {
+    payments?.forEach(item => {
       list.push(item);
     });
-    purchases?.['hydra:member']?.forEach(item => {
+    purchases?.forEach(item => {
       list.push(item);
     });
 
@@ -165,7 +166,6 @@ export const SupplierLedger: FC<SupplierLedgerProps> = ({
         }}
       >
         <form onSubmit={handleSubmit(createPayment)} className="mb-5">
-          <input type="hidden" {...register('id')}/>
           <div className="grid grid-cols-5 gap-4 mb-3">
             <div className="col-span-1">
               <label htmlFor="amount">Amount</label>
@@ -185,12 +185,12 @@ export const SupplierLedger: FC<SupplierLedgerProps> = ({
                 name="purchase"
                 render={(props) => (
                   <ReactSelect
-                    options={purchases?.['hydra:member']?.reverse().map(item => {
+                    options={purchases?.reverse().map(item => {
                       return {
-                        label: `${item.purchaseNumber} (${DateTime.fromISO(item.createdAt).toFormat(
+                        label: `${item.purchase_number} (${DateTime.fromJSDate(item.created_at).toFormat(
                           import.meta.env.VITE_DATE_TIME_HUMAN_FORMAT
                         )})`,
-                        value: item['@id']
+                        value: item['id']
                       };
                     })}
                     isClearable
@@ -218,7 +218,7 @@ export const SupplierLedger: FC<SupplierLedgerProps> = ({
         <div className="grid grid-cols-4 gap-4 mb-5">
           <div className="border border-primary-500 p-5 font-bold text-primary-500 rounded">
             Opening Balance
-            <span className="float-right">{withCurrency(supplier.openingBalance)}</span>
+            <span className="float-right">{withCurrency(supplier.opening_balance)}</span>
           </div>
           <div className="border border-primary-500 p-5 font-bold text-primary-500 rounded">
             Total Credit Purchase
@@ -251,16 +251,16 @@ export const SupplierLedger: FC<SupplierLedgerProps> = ({
           <tbody>
           {list.map((item: any, index: number) => (
             <tr key={index} className="hover:bg-gray-100">
-              <td>{DateTime.fromISO(item.createdAt).toRelative()}</td>
+              <td>{DateTime.fromJSDate(item.created_at).toRelative()}</td>
               <td>
                 {item.amount && (
                   <>
                     Payment {withCurrency(item.amount)}
                   </>
                 )}
-                {item.purchaseNumber && (
+                {item.purchase_number && (
                   <>
-                    {item?.paymentType?.name} Sale: {withCurrency(item.total)}
+                    {item?.payment_type?.name} Sale: {withCurrency(purchaseHook.calculatePurchaseTotal(item))}
                   </>
                 )}
               </td>
@@ -268,17 +268,12 @@ export const SupplierLedger: FC<SupplierLedgerProps> = ({
                 {item.description && (
                   <>Receiving: {item.description}</>
                 )}
-                {item.purchaseNumber && 'Sale'}
+                {item.purchase_number && 'Sale'}
               </td>
               <td>
-                {item.purchaseNumber && (
+                {item.purchase_number && (
                   <ViewPurchase purchase={item}>
-                    <FontAwesomeIcon icon={faEye} className="mr-2"/> {item.purchaseNumber}
-                  </ViewPurchase>
-                )}
-                {item.purchase && (
-                  <ViewPurchase purchase={item.purchase}>
-                    <FontAwesomeIcon icon={faEye} className="mr-2"/> {item.purchase.purchaseNumber}
+                    <FontAwesomeIcon icon={faEye} className="mr-2"/> {item.purchase_number}
                   </ViewPurchase>
                 )}
               </td>

@@ -1,11 +1,4 @@
 import React, {useState} from "react";
-import {
-  PURCHASE_DELETE,
-  PURCHASE_ORDER_DELETE,
-  PURCHASE_ORDER_LIST
-} from "../../../../api/routing/routes/backend.app";
-import {useSelector} from "react-redux";
-import {getStore} from "../../../../duck/store/store.selector";
 import {useTranslation} from "react-i18next";
 import {createColumnHelper} from "@tanstack/react-table";
 import {Button} from "../../../../app-common/components/input/button";
@@ -14,19 +7,26 @@ import {faPencilAlt, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {TableComponent} from "../../../../app-common/components/table/table";
 import {PurchaseOrder} from "../../../../api/model/purchase.order";
 import {CreatePurchaseOrder} from "./create.purchase.order";
-import useApi from "../../../../api/hooks/use.api";
-import {HydraCollection} from "../../../../api/model/hydra";
-import { DateTime } from "luxon";
-import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
-import { jsonRequest } from "../../../../api/request/request";
+import {DateTime} from "luxon";
+import {ConfirmAlert} from "../../../../app-common/components/confirm/confirm.alert";
+import useApi, {SettingsData} from "../../../../api/db/use.api";
+import {Tables} from "../../../../api/db/tables";
+import {useAtom} from "jotai";
+import {appState} from "../../../../store/jotai";
+import {useDB} from "../../../../api/db/db";
+import {toRecordId} from "../../../../api/model/common";
 
 export const PurchaseOrders = () => {
   const [operation, setOperation] = useState('create');
-  const store = useSelector(getStore);
+  const [{store}] = useAtom(appState);
 
 
-  const useLoadHook = useApi<HydraCollection<PurchaseOrder>>('purchaseOrders', `${PURCHASE_ORDER_LIST}?store=${store?.id}`);
+  const useLoadHook = useApi<SettingsData<PurchaseOrder>>(Tables.purchase_order, [`store = ${store?.id}`, 'and deleted_at = NULL OR deleted_at = NONE'], [], 0, 10, [
+    'supplier', 'store', 'items', 'items.item', 'items.variants', 'items.variants.variant'
+  ]);
   const [purchaseOrder, setPurchaseOrder] = useState<PurchaseOrder | undefined>();
+
+  const db = useDB();
 
 
   const {t} = useTranslation();
@@ -34,19 +34,19 @@ export const PurchaseOrders = () => {
   const columnHelper = createColumnHelper<PurchaseOrder>();
 
   const columns: any = [
-    columnHelper.accessor('poNumber', {
+    columnHelper.accessor('po_number', {
       header: ('PO Number'),
     }),
     columnHelper.accessor('supplier.name', {
       header: ('Supplier'),
     }),
-    columnHelper.accessor('isUsed', {
+    columnHelper.accessor('is_used', {
       header: 'Status',
       cell: info => info.getValue() ? 'Used' : 'Open',
     }),
-    columnHelper.accessor('createdAt', {
+    columnHelper.accessor('created_at', {
       header: ('Created at'),
-      cell: info => DateTime.fromISO(info.getValue()).toFormat(import.meta.env.VITE_DATE_FORMAT)
+      cell: info => DateTime.fromJSDate(info.getValue()).toFormat(import.meta.env.VITE_DATE_TIME_HUMAN_FORMAT)
     }),
     columnHelper.accessor('store', {
       header: ('Store'),
@@ -63,7 +63,7 @@ export const PurchaseOrders = () => {
     cell: (info) => {
       return (
         <>
-          {!info.row.original.isUsed && (
+          {!info.row.original.is_used && (
             <>
               <Button type="button" variant="primary" className="w-[40px]" onClick={() => {
                 setOperation('update');
@@ -94,8 +94,8 @@ export const PurchaseOrders = () => {
   }));
 
   async function deletePurchaseOrder(id: string) {
-    await jsonRequest(PURCHASE_ORDER_DELETE.replace(':id', id), {
-      method: 'DELETE'
+    await db.merge(toRecordId(id), {
+      deleted_at: DateTime.now().toJSDate()
     });
 
     await useLoadHook.fetchData();
@@ -107,29 +107,31 @@ export const PurchaseOrders = () => {
     <>
       <TableComponent
         columns={columns}
-        useLoadList={useLoadHook}
+        loaderHook={useLoadHook}
         loaderLineItems={5}
-        buttons={[{
-          html: <Button variant="primary" onClick={() => {
+        buttons={[
+          <Button variant="primary" onClick={() => {
             setAddModal(true);
             setPurchaseOrder(undefined);
             setOperation('create')
           }}>
             <FontAwesomeIcon icon={faPlus} className="mr-2"/> Purchase order
           </Button>
-        }]}
+        ]}
       />
 
-      <CreatePurchaseOrder
-        operation={operation}
-        onClose={() => {
-          setAddModal(false);
-          useLoadHook.fetchData!();
-          setOperation('create');
-        }}
-        showModal={addModal}
-        purchaseOrder={purchaseOrder}
-      />
+      {addModal && (
+        <CreatePurchaseOrder
+          operation={operation}
+          onClose={() => {
+            setAddModal(false);
+            useLoadHook.fetchData!();
+            setOperation('create');
+          }}
+          showModal={addModal}
+          purchaseOrder={purchaseOrder}
+        />
+      )}
     </>
   );
 }

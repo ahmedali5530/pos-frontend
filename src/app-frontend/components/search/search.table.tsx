@@ -1,18 +1,16 @@
-import React, {createRef, useEffect, useMemo, useState} from "react";
+import React, {createRef, useEffect, useMemo, useRef, useState} from "react";
 import {Product} from "../../../api/model/product";
 import {useBlockLayout, useTable} from "react-table";
 import {FixedSizeList} from "react-window";
 import Highlighter from "react-highlight-words";
 import classNames from "classnames";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faBarcode, faCog, faMagnifyingGlass,} from "@fortawesome/free-solid-svg-icons";
+import {faBarcode, faCog,} from "@fortawesome/free-solid-svg-icons";
 import {getRealProductPrice} from "../../containers/dashboard/pos";
 import {Input} from "../../../app-common/components/input/input";
 import {Modal} from "../../../app-common/components/modal/modal";
 import {Button} from "../../../app-common/components/input/button";
-import {Tooltip} from "antd";
 import Mousetrap from "mousetrap";
-import {Shortcut} from "../../../app-common/components/input/shortcut";
 import {ItemComponent} from "../settings/items/item";
 import {Controller, useForm} from "react-hook-form";
 import Fuse from "fuse.js";
@@ -24,6 +22,7 @@ interface SearchTableProps {
   items: Product[];
   addItem: (item: Product, quantity: number, price?: number) => void;
   onClick?: () => void;
+  onClose: () => void
 }
 
 export const SearchTable = (props: SearchTableProps) => {
@@ -69,7 +68,7 @@ export const SearchTable = (props: SearchTableProps) => {
       ignoreLocation: searchParams.ignoreLocation,
       // ignoreFieldNorm: false,
       // fieldNormWeight: 1,
-      keys: ["name", "barcode", "basePrice"],
+      keys: ["name", "barcode", "base_price"],
     };
 
     const fuse = new Fuse(allItems, fuseOptions);
@@ -77,7 +76,6 @@ export const SearchTable = (props: SearchTableProps) => {
     return fuse.search(q).map((item) => item.item);
   }, [allItems, q, searchParams]);
 
-  const [modal, setModal] = useState(false);
 
   const defaultColumn = React.useMemo(
     () => ({
@@ -135,14 +133,14 @@ export const SearchTable = (props: SearchTableProps) => {
           role="option"
         >
           <div className="basis-auto p-2">
-            <ItemComponent product={item} />
+            <ItemComponent product={item}/>
           </div>
           <div
             className="basis-auto p-2"
             onClick={() => {
               addItem(item, quantity);
               if (searchBox) {
-                setModal(false);
+                props.onClose();
               }
             }}>
             <Highlighter
@@ -168,7 +166,7 @@ export const SearchTable = (props: SearchTableProps) => {
             onClick={() => {
               addItem(item, quantity);
               if (searchBox) {
-                setModal(false);
+                props.onClose();
               }
             }}>
             <Highlighter
@@ -177,9 +175,9 @@ export const SearchTable = (props: SearchTableProps) => {
               autoEscape={true}
               textToHighlight={getRealProductPrice(item).toString()}
             />
-            {item.basePrice !== getRealProductPrice(item) && (
+            {item.base_price !== getRealProductPrice(item) && (
               <div className="text-danger-500 font-normal text-sm">
-                <s>{item.basePrice}</s>
+                <s>{item.base_price}</s>
               </div>
             )}
           </div>
@@ -196,35 +194,52 @@ export const SearchTable = (props: SearchTableProps) => {
     }
   }, []);
 
+  const handlerRef = useRef(null);
+  // update handler when dependencies change
+  useEffect(() => {
+    handlerRef.current = (event: any) => {
+      event.preventDefault();
+
+      moveCursor(event);
+    };
+  }, [selected, items, quantity]);
+
   const moveCursor = (event: any) => {
+    console.log('listeners in product modeal')
     const itemsLength = items.length;
     if (event.key === "ArrowDown") {
-      let newSelected = selected + 1;
-      if (newSelected === itemsLength) {
-        newSelected = 0;
-      }
-      setAppState(prev => ({
-        ...prev,
-        selected: newSelected
-      }));
+      setAppState(prev => {
+        let newSelected = prev.selected + 1;
+        if (newSelected === itemsLength) {
+          newSelected = 0;
+        }
 
-      moveSearchList(newSelected);
+        moveSearchList(newSelected);
+
+        return {
+          ...prev,
+          selected: newSelected
+        };
+      });
     } else if (event.key === "ArrowUp") {
-      let newSelected = selected - 1;
-      if (newSelected === -1) {
-        newSelected = itemsLength - 1;
-      }
+      setAppState(prev => {
+        let newSelected = prev.selected - 1;
+        if (newSelected === -1) {
+          newSelected = itemsLength - 1;
+        }
 
-      setAppState(prev => ({
-        ...prev,
-        selected: newSelected
-      }));
+        moveSearchList(newSelected);
 
-      moveSearchList(newSelected);
+        return {
+          ...prev,
+          selected: newSelected
+        };
+
+      })
     } else if (event.key === "Enter") {
-      addItem(items[selected], quantity);
+      addItem(items[appState.selected], appState.quantity);
       if (searchBox) {
-        setModal(false);
+        props.onClose();
       }
     }
   };
@@ -235,7 +250,7 @@ export const SearchTable = (props: SearchTableProps) => {
     addItem(item, Number(values.quantity));
 
     if (searchBox) {
-      setModal(false);
+      props.onClose();
     }
     reset({
       q: "",
@@ -246,16 +261,14 @@ export const SearchTable = (props: SearchTableProps) => {
   };
 
   useEffect(() => {
-    function func(e: Event) {
-      moveCursor(e);
-    }
+    const func = (e) => handlerRef.current?.(e);
 
-    if (modal) {
-      Mousetrap.bind(["up", "down", "enter"], func);
-    } else {
-      Mousetrap.unbind(['up', 'down', 'enter'], func);
-    }
-  }, [selected, items, quantity, modal]);
+    Mousetrap.bind(["up", "down", "enter"], func);
+
+    return () => {
+      Mousetrap.reset();
+    };
+  }, []);
 
   const moveSearchList = (index: number) => {
     if (searchScrollContainer && searchScrollContainer.current) {
@@ -264,7 +277,10 @@ export const SearchTable = (props: SearchTableProps) => {
   };
 
   const onOpen = () => {
-    setModal(true);
+    // if (props.onClose) {
+    //   props.onClose();
+    // }
+
     setQ("");
 
     props.onClick && props.onClick();
@@ -276,121 +292,114 @@ export const SearchTable = (props: SearchTableProps) => {
     }));
   };
 
+  useEffect(() => {
+    onOpen()
+  }, []);
+
   const onClose = () => {
-    setModal(false);
+    props.onClose();
   };
 
   const [searchBoxModal, setSearchBoxModal] = useState(false);
 
   return (
     <>
-      <Tooltip title="Search by name">
-        <Button
-          variant="primary"
-          iconButton
-          type="button"
-          size="lg"
-          onClick={onOpen}>
-          <FontAwesomeIcon icon={faMagnifyingGlass}/>
-          <Shortcut shortcut="ctrl+f" handler={onOpen} invisible={true}/>
-        </Button>
-      </Tooltip>
-      {modal && (
-        <Modal
-          open={modal}
-          onClose={onClose}
-          title={`Search items ${rows.length}`}
-          shouldCloseOnEsc={true}>
-          <form onSubmit={handleSubmit(submitForm)}>
-            <div className="flex gap-3">
-              <div className="input-group flex-1">
-                <Input
-                  className="search-field w-full mousetrap lg"
-                  onChange={(event) => {
-                    setQ(event.currentTarget.value);
-                    setAppState(prev => ({
-                      ...prev,
-                      selected: 0
-                    }));
-                  }}
-                  autoFocus
-                  type="search"
-                  value={q}
-                  name="q"
-                />
-                <Controller
-                  name="quantity"
-                  render={({field}) => (
-                    <Input
-                      onChange={(event) => {
-                        field.onChange(event.target.value);
-                        setAppState(prev => ({
-                          ...prev,
-                          quantity: Number(event.target.value)
-                        }))
-                      }}
-                      type="number"
-                      value={quantity}
-                      placeholder="Quantity"
-                      className="mousetrap lg"
-                    />
-                  )}
-                  control={control}
-                />
-              </div>
-              <div className="search-behaviour">
-                <Button
-                  size="lg"
-                  iconButton
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setSearchBoxModal(!searchBoxModal)}
-                >
-                  <FontAwesomeIcon icon={faCog}/>
-                </Button>
-              </div>
+      <Modal
+        open={true}
+        onClose={onClose}
+        title={`Search items ${rows.length}`}
+        shouldCloseOnEsc={true}>
+        <form onSubmit={handleSubmit(submitForm)}>
+          <div className="flex gap-3">
+            <div className="input-group flex-1">
+              <Input
+                className="search-field w-full mousetrap lg"
+                onChange={(event) => {
+                  setQ(event.currentTarget.value);
+                  setAppState(prev => ({
+                    ...prev,
+                    selected: 0,
+                    q: event.currentTarget.value
+                  }));
+                }}
+                autoFocus
+                type="search"
+                value={q}
+                name="q"
+              />
+              <Controller
+                name="quantity"
+                render={({field}) => (
+                  <Input
+                    onChange={(event) => {
+                      field.onChange(event.target.value);
+                      setAppState(prev => ({
+                        ...prev,
+                        quantity: Number(event.target.value)
+                      }))
+                    }}
+                    type="number"
+                    value={quantity}
+                    placeholder="Quantity"
+                    className="mousetrap lg"
+                  />
+                )}
+                control={control}
+              />
             </div>
-            <button type="submit" className="none"></button>
-
-          </form>
-          <div {...getTableProps()} className="table">
-            <div>
-              {headerGroups.map((headerGroup, k) => (
-                <div {...headerGroup.getHeaderGroupProps()} key={k}>
-                  {headerGroup.headers.map((column, i) => {
-                    //@ts-ignore
-                    const style = column.style;
-                    return (
-                      <div
-                        {...column.getHeaderProps({
-                          style: style,
-                        })}
-                        className={classNames(
-                          "p-2 flex-1 font-bold",
-                          i === 0 ? "grow-0" : ""
-                        )}
-                        key={i}>
-                        {column.render("Header")}
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-
-            <div {...getTableBodyProps()}>
-              <FixedSizeList
-                height={windowHeight}
-                itemCount={rows.length}
-                itemSize={60}
-                width={"100%"}
-                ref={searchScrollContainer}>
-                {RenderRow}
-              </FixedSizeList>
+            <div className="search-behaviour">
+              <Button
+                size="lg"
+                iconButton
+                type="button"
+                variant="secondary"
+                onClick={() => setSearchBoxModal(!searchBoxModal)}
+              >
+                <FontAwesomeIcon icon={faCog}/>
+              </Button>
             </div>
           </div>
-        </Modal>
-      )}
+          <button type="submit" className="none"></button>
+
+        </form>
+        <div {...getTableProps()} className="table">
+          <div>
+            {headerGroups.map((headerGroup, k) => (
+              <div {...headerGroup.getHeaderGroupProps()} key={k}>
+                {headerGroup.headers.map((column, i) => {
+                  //@ts-ignore
+                  const style = column.style;
+                  return (
+                    <div
+                      {...column.getHeaderProps({
+                        style: style,
+                      })}
+                      className={classNames(
+                        "p-2 flex-1 font-bold",
+                        i === 0 ? "grow-0" : ""
+                      )}
+                      key={i}>
+                      {column.render("Header")}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+
+          <div {...getTableBodyProps()}>
+            <FixedSizeList
+              height={windowHeight}
+              itemCount={rows.length}
+              itemSize={60}
+              width={"100%"}
+              ref={searchScrollContainer}>
+              {RenderRow}
+            </FixedSizeList>
+          </div>
+        </div>
+      </Modal>
+
 
       {searchBoxModal && (
         <Modal

@@ -51,4 +51,7 @@ export enum Tables {
   user_account = "user_account",
   user_store = "user_store",
   product_variant_store = 'product_variant_store',
+
+  cart = 'cart',
+  app_connection = 'app_connection'
 }

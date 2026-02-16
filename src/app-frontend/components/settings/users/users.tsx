@@ -1,17 +1,13 @@
-import React, { useState } from "react";
-import { USER_LIST, USER_GET } from "../../../../api/routing/routes/backend.app";
-import { useTranslation } from "react-i18next";
-import { createColumnHelper } from "@tanstack/react-table";
-import { Button } from "../../../../app-common/components/input/button";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPencilAlt, faPlus } from "@fortawesome/free-solid-svg-icons";
-import { TableComponent } from "../../../../app-common/components/table/table";
-import { User } from "../../../../api/model/user";
-import { CreateUser } from "./create.user";
-import { HydraCollection } from "../../../../api/model/hydra";
-import { Switch } from "../../../../app-common/components/input/switch";
-import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
-import { jsonRequest } from "../../../../api/request/request";
+import React, {useState} from "react";
+import {createColumnHelper} from "@tanstack/react-table";
+import {Button} from "../../../../app-common/components/input/button";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faPencilAlt, faPlus} from "@fortawesome/free-solid-svg-icons";
+import {TableComponent} from "../../../../app-common/components/table/table";
+import {User} from "../../../../api/model/user";
+import {CreateUser} from "./create.user";
+import {Switch} from "../../../../app-common/components/input/switch";
+import {ConfirmAlert} from "../../../../app-common/components/confirm/confirm.alert";
 import useApi, {SettingsData} from "../../../../api/db/use.api";
 import {Tables} from "../../../../api/db/tables";
 import {useDB} from "../../../../api/db/db";
@@ -21,7 +17,7 @@ export const Users = () => {
   const [operation, setOperation] = useState('create');
 
   const useLoadHook = useApi<SettingsData<User>>(Tables.user_account, [], [], 0, 10, ['stores']);
-  const { fetchData } = useLoadHook;
+  const {fetchData} = useLoadHook;
   const [user, setUser] = useState<User>();
   const [modal, setModal] = useState(false);
 

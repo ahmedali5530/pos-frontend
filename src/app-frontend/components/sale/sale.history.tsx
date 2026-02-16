@@ -1,7 +1,7 @@
-import React, { FC, useEffect, useMemo, useState } from "react";
-import { Button } from "../../../app-common/components/input/button";
-import { Modal } from "../../../app-common/components/modal/modal";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import React, {FC, useEffect, useMemo, useState} from "react";
+import {Button} from "../../../app-common/components/input/button";
+import {Modal} from "../../../app-common/components/modal/modal";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {
   faBackward,
   faCheck,
@@ -16,79 +16,107 @@ import {
   faTrashRestoreAlt,
   faTruck,
 } from "@fortawesome/free-solid-svg-icons";
-import { fetchJson } from "../../../api/request/request";
-import {
-  EXPENSE_LIST,
-  ORDER_GET,
-  ORDER_LIST,
-  ORDER_REFUND,
-  ORDER_RESTORE,
-} from "../../../api/routing/routes/backend.app";
-import { Order, OrderStatus } from "../../../api/model/order";
-import { DateTime } from "luxon";
+import {Order, ORDER_FETCHES, OrderStatus} from "../../../api/model/order";
+import {DateTime} from "luxon";
 import classNames from "classnames";
-import { CartItem } from "../../../api/model/cart.item";
-import { Discount } from "../../../api/model/discount";
-import { Tax } from "../../../api/model/tax";
-import { Customer } from "../../../api/model/customer";
-import { Input } from "../../../app-common/components/input/input";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { Controller, useForm } from "react-hook-form";
-import { Expense } from "../../../api/model/expense";
-import { ViewOrder } from "./view.order";
-import { CustomerPayments } from "../customers/customer.payments";
-import { ResponsivePie as Pie } from "@nivo/pie";
-import { ResponsiveBar as Bar } from "@nivo/bar";
-import { createColumnHelper } from "@tanstack/react-table";
-import { Shortcut } from "../../../app-common/components/input/shortcut";
-import { SalePrint } from "./sale.print";
-import { TableComponent } from "../../../app-common/components/table/table";
-import { Tooltip } from "antd";
-import { withCurrency } from "../../../lib/currency/currency";
-import { useAtom } from "jotai";
-import { defaultState, appState as AppState } from "../../../store/jotai";
+import {CartItem} from "../../../api/model/cart.item";
+import {Discount} from "../../../api/model/discount";
+import {Tax} from "../../../api/model/tax";
+import {Customer} from "../../../api/model/customer";
+import {Input} from "../../../app-common/components/input/input";
+import {IconProp} from "@fortawesome/fontawesome-svg-core";
+import {Controller, useForm} from "react-hook-form";
+import {Expense} from "../../../api/model/expense";
+import {ViewOrder} from "./view.order";
+import {CustomerPayments} from "../customers/customer.payments";
+import {ResponsivePie as Pie} from "@nivo/pie";
+import {ResponsiveBar as Bar} from "@nivo/bar";
+import {createColumnHelper} from "@tanstack/react-table";
+import {Shortcut} from "../../../app-common/components/input/shortcut";
+import {SalePrint} from "./sale.print";
+import {TableComponent} from "../../../app-common/components/table/table";
+import {Tooltip} from "antd";
+import {withCurrency} from "../../../lib/currency/currency";
+import {useAtom} from "jotai";
+import {appState as AppState, defaultState} from "../../../store/jotai";
 import {Tables} from "../../../api/db/tables";
 import useApi from "../../../api/db/use.api";
+import {useDB} from "../../../api/db/db";
+import {toRecordId} from "../../../api/model/common";
+import {useQueryBuilder} from "../../../api/db/query-builder";
+import {useCustomer} from "../../../api/hooks/use.customer";
 
-interface Props {}
+interface Props {
+}
 
 export const SaleHistory: FC<Props> = ({}) => {
   const [appState, setAppState] = useAtom(defaultState);
-  const { customer } = appState;
+  const db = useDB();
+  const {customer} = appState;
 
   const [appSt] = useAtom(AppState);
   const {store} = appSt;
 
   const [modal, setModal] = useState(false);
-  const [list, setList] = useState<Order[]>([]);
+  // const [list, setList] = useState<Order[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [payments, setPayments] = useState<{ [key: string]: number }>({});
+  const startTime = DateTime.now()
+    .minus({day: 1})
+    .startOf("day")
+    .toFormat(import.meta.env.VITE_SURREAL_DB_DATE_TIME_FORMAT);
 
-  const useLoadHook = useApi<any>(Tables.order);
+  const endTime = DateTime.now().endOf("day").toFormat(import.meta.env.VITE_SURREAL_DB_DATE_TIME_FORMAT);
+
+  const useLoadHook = useApi<any>(Tables.order, [`created_at >= d"${startTime}" and created_at <= d"${endTime}"`], ['created_at DESC'], 0, 10, ORDER_FETCHES);
+
   const {
-    fetchData: loadList,
+    fetchData: fetchOrders,
     data,
     handleFilterChange,
-    filters,
-    isFetching,
+    handleParameterChange,
+    isLoading,
     resetFilters,
   } = useLoadHook;
 
+  const payments = useMemo(() => {
+    const list = {};
+    let cash = 0;
+    data?.data?.forEach(order => {
+      order?.payments?.forEach(payment => {
+        if (payment.type?.type === 'cash') {
+          cash += Number(payment.total);
+        } else {
+          if (!list[payment.type?.type]) {
+            list[payment.type?.type] = 0;
+          }
+
+          list[payment.type?.type] += Number(payment.total);
+        }
+      });
+    })
+
+    list['cash'] = cash;
+
+    return list;
+  }, [data]);
+
   const columnHelper = createColumnHelper<Order>();
+  const customerHook = useCustomer();
 
   const columns = [
-    columnHelper.accessor("orderId", {
+    columnHelper.accessor("order_id", {
       header: "Order#",
       cell: (info) => (
         <ViewOrder order={info.row.original}>
-          <FontAwesomeIcon icon={faEye} className="mr-2" /> {info.getValue()}
+          <FontAwesomeIcon icon={faEye} className="mr-2"/> {info.getValue()}
         </ViewOrder>
       ),
     }),
-    columnHelper.accessor("createdAt", {
+    columnHelper.accessor("created_at", {
       header: "Time",
-      cell: (info) =>
-        DateTime.fromISO(info.getValue()).toRelative({ base: DateTime.now() }),
+      cell: (info) => (<span title={info.getValue()}>
+        {DateTime.fromJSDate(info.getValue()).toRelative({base: DateTime.now()})}
+      </span>),
     }),
     columnHelper.accessor("customer", {
       header: "Customer",
@@ -96,13 +124,15 @@ export const SaleHistory: FC<Props> = ({}) => {
         <>
           {!!info.getValue() ? (
             <span className="text-primary-500 cursor-pointer">
-              <CustomerPayments customer={info.getValue()!}>
-                <FontAwesomeIcon icon={faEye} className="mr-2" />
+              <CustomerPayments
+                customer={info.getValue()}
+              >
+                <FontAwesomeIcon icon={faEye} className="mr-2"/>
                 {info.getValue()?.name}
               </CustomerPayments>
               {customer?.id === info.getValue()?.id && (
                 <span className="ml-3 btn btn-success">
-                  <FontAwesomeIcon icon={faCheck} />
+                  <FontAwesomeIcon icon={faCheck}/>
                 </span>
               )}
             </span>
@@ -116,15 +146,17 @@ export const SaleHistory: FC<Props> = ({}) => {
       header: "Order Tax",
       cell: (info) => <>+{withCurrency(info.getValue()?.amount || 0)}</>,
     }),
-    columnHelper.accessor("itemTaxes", {
+    columnHelper.accessor("items", {
+      id: "itemTax",
       header: "Items Tax",
-      cell: (info) => `+${withCurrency(info.getValue())}`,
+      cell: (info) => `+${withCurrency(0)}`,
     }),
     columnHelper.accessor("discount", {
       header: "Discount",
       cell: (info) => "-" + withCurrency(info.getValue()?.amount || 0),
     }),
     columnHelper.accessor("items", {
+      id: "rate",
       header: "Rate",
       cell: (info) =>
         "+" +
@@ -191,7 +223,7 @@ export const SaleHistory: FC<Props> = ({}) => {
               onClick={() => deleteOrder(info.row.original)}
               disabled={deleting}
               title="Delete">
-              <FontAwesomeIcon icon={faTrash} />
+              <FontAwesomeIcon icon={faTrash}/>
             </Button>
           )}
           {orderStatus(info.row.original) === OrderStatus.COMPLETED && (
@@ -204,7 +236,7 @@ export const SaleHistory: FC<Props> = ({}) => {
                     onClick={() => refundOrder(info.row.original)}
                     disabled={refunding}
                     title="Refund">
-                    <FontAwesomeIcon icon={faBackward} />
+                    <FontAwesomeIcon icon={faBackward}/>
                   </Button>
                   {/*<Button variant="success" className="ml-3 w-[40px]" onClick={() => dispatchOrder(info.row.original)}
                           disabled={dispatching} title="Dispatch">
@@ -218,7 +250,7 @@ export const SaleHistory: FC<Props> = ({}) => {
                 onClick={() => deleteOrder(info.row.original)}
                 disabled={deleting}
                 title="Delete">
-                <FontAwesomeIcon icon={faTrash} />
+                <FontAwesomeIcon icon={faTrash}/>
               </Button>
             </>
           )}
@@ -230,7 +262,7 @@ export const SaleHistory: FC<Props> = ({}) => {
                 onClick={() => unsuspendOrder(info.row.original)}
                 disabled={unsuspending}
                 title="Unsuspend">
-                <FontAwesomeIcon icon={faPlay} />
+                <FontAwesomeIcon icon={faPlay}/>
               </Button>
               <Button
                 variant="danger"
@@ -238,7 +270,7 @@ export const SaleHistory: FC<Props> = ({}) => {
                 onClick={() => deleteOrder(info.row.original)}
                 disabled={deleting}
                 title="Delete">
-                <FontAwesomeIcon icon={faTrash} />
+                <FontAwesomeIcon icon={faTrash}/>
               </Button>
             </>
           )}
@@ -250,40 +282,35 @@ export const SaleHistory: FC<Props> = ({}) => {
                 onClick={() => restoreOrder(info.row.original)}
                 disabled={restoring}
                 title="Restore">
-                <FontAwesomeIcon icon={faTrashRestoreAlt} />
+                <FontAwesomeIcon icon={faTrashRestoreAlt}/>
               </Button>
             </>
           )}
-          <SalePrint order={info.row.original} />
+          <SalePrint order={info.row.original}/>
         </div>
       ),
     }),
   ];
 
-  useEffect(() => {
-    if (data?.list) {
-      setList(data?.list);
-    }
-
-    if (data?.payments) {
-      setPayments(data?.payments);
-    }
-  }, [data?.list, data?.payments]);
+  const qb = useQueryBuilder(Tables.expense, '*', [], undefined, undefined, ['created_at DESC']);
 
   const loadExpenses = async (values?: any) => {
     try {
-      const url = new URL(EXPENSE_LIST);
-      const params = new URLSearchParams({
-        ...values,
-        orderBy: "id",
-        orderMode: "DESC",
-        store: store?.id,
-      });
+      qb.setWheres([]);
 
-      url.search = params.toString();
-      const json = await fetchJson(url.toString());
+      if (values.startTime) {
+        qb.addWhere(`created_at >= d"${values.startTime}"`);
+      }
+      if (values.endTime) {
+        qb.addWhere(`created_at <= d"${values.endTime}"`);
+      }
 
-      setExpenses(json.list);
+      qb.addWhere('store = $store');
+      qb.addParameter('store', toRecordId(store?.id));
+
+      const [data] = await db.query(qb.queryString);
+
+      setExpenses(data);
     } catch (e) {
       throw e;
     }
@@ -360,8 +387,8 @@ export const SaleHistory: FC<Props> = ({}) => {
     if (!window.confirm("Unsuspend order?")) return false;
     setUnsuspending(true);
     try {
-      await fetchJson(ORDER_GET.replace(":id", order.id), {
-        method: "DELETE",
+      await db.merge(order.id, {
+        status: OrderStatus.PENDING
       });
 
       const items: CartItem[] = [];
@@ -383,6 +410,7 @@ export const SaleHistory: FC<Props> = ({}) => {
         tax: order.tax?.type,
         discountAmount: order.discount?.amount,
         customer: order?.customer,
+        orderId: order.id
       }));
 
       setModal(false);
@@ -398,8 +426,8 @@ export const SaleHistory: FC<Props> = ({}) => {
     if (!window.confirm("Refund order?")) return false;
     setRefunding(true);
     try {
-      await fetchJson(ORDER_REFUND.replace(":id", order.id), {
-        method: "POST",
+      await db.merge(order.id, {
+        status: OrderStatus.RETURNED
       });
 
       const items: CartItem[] = [];
@@ -421,8 +449,10 @@ export const SaleHistory: FC<Props> = ({}) => {
         tax: order.tax?.type,
         discountAmount: order.discount?.amount,
         customer: order?.customer,
-        refundingFrom: Number(order.id),
+        refundingFrom: order.id
       }));
+
+      fetchOrders();
 
       setModal(false);
     } catch (e) {
@@ -456,11 +486,11 @@ export const SaleHistory: FC<Props> = ({}) => {
     if (!window.confirm("Delete order?")) return false;
     setDeleting(true);
     try {
-      await fetchJson(ORDER_GET.replace(":id", order.id), {
-        method: "DELETE",
+      await db.merge(order.id, {
+        status: OrderStatus.DELETED
       });
 
-      loadList();
+      fetchOrders();
     } catch (e) {
       throw e;
     } finally {
@@ -473,10 +503,11 @@ export const SaleHistory: FC<Props> = ({}) => {
     if (!window.confirm("Restore order?")) return false;
     setRestoring(true);
     try {
-      await fetchJson(ORDER_RESTORE.replace(":id", order.id), {
-        method: "POST",
+      await db.merge(order.id, {
+        status: OrderStatus.COMPLETED
       });
-      loadList();
+
+      fetchOrders();
     } catch (e) {
       throw e;
     } finally {
@@ -485,28 +516,28 @@ export const SaleHistory: FC<Props> = ({}) => {
   };
 
   const discountTotal = useMemo(() => {
-    return list.reduce((prev, order) => {
+    return data?.data?.reduce((prev, order) => {
       if (order?.discount && order?.discount?.amount) {
         return order?.discount?.amount + prev;
       }
 
       return prev;
     }, 0);
-  }, [list]);
+  }, [data]);
 
   const taxTotal = useMemo(() => {
-    return list.reduce((prev, order) => {
+    return data?.data?.reduce((prev, order) => {
       if (order?.tax && order?.tax?.amount) {
         return order?.tax?.amount + prev;
       }
 
       return prev;
     }, 0);
-  }, [list]);
+  }, [data]);
 
   const totalAmount = useMemo(() => {
-    return list.reduce((prev, order) => {
-      if (order.status !== "Deleted") {
+    return data?.data?.reduce((prev, order) => {
+      if (order.status !== OrderStatus.DELETED && order.status !== OrderStatus.PENDING) {
         return (
           prev + order.payments.reduce((p, payment) => p + payment.received, 0)
         );
@@ -514,10 +545,10 @@ export const SaleHistory: FC<Props> = ({}) => {
 
       return prev;
     }, 0);
-  }, [list]);
+  }, [data]);
 
   const totalCost = useMemo(() => {
-    return list.reduce((prev, order) => {
+    return data?.data?.reduce((prev, order) => {
       if (order.status !== "Deleted") {
         return (
           prev +
@@ -532,7 +563,7 @@ export const SaleHistory: FC<Props> = ({}) => {
       }
       return prev;
     }, 0);
-  }, [list]);
+  }, [data]);
 
   const totalExpenses = useMemo(() => {
     return expenses.reduce((prev, item) => prev + item.amount, 0);
@@ -540,7 +571,7 @@ export const SaleHistory: FC<Props> = ({}) => {
 
   const storesChartData = useMemo(() => {
     const stores: { [name: string]: number } = {};
-    list.forEach((order) => {
+    data?.data?.forEach((order) => {
       if (order?.store) {
         const storeName = `${order?.store?.name}`;
         if (!stores[storeName]) {
@@ -554,20 +585,20 @@ export const SaleHistory: FC<Props> = ({}) => {
       }
     });
 
-    const data: { id: string; value: number }[] = [];
+    const d: { id: string; value: number }[] = [];
     Object.keys(stores).forEach((c) => {
-      data.push({
+      d.push({
         id: c,
         value: stores[c],
       });
     });
 
-    return data;
-  }, [list])
+    return d;
+  }, [data])
 
   const terminalsChartData = useMemo(() => {
     const terminals: { [name: string]: number } = {};
-    list.forEach((order) => {
+    data?.data?.forEach((order) => {
       if (order?.terminal) {
         const terminalName = `${order?.store?.name} - ${order?.terminal?.code}`;
         if (!terminals[terminalName]) {
@@ -581,20 +612,20 @@ export const SaleHistory: FC<Props> = ({}) => {
       }
     });
 
-    const data: { id: string; value: number }[] = [];
+    const d: { id: string; value: number }[] = [];
     Object.keys(terminals).forEach((c) => {
-      data.push({
+      d.push({
         id: c,
         value: terminals[c],
       });
     });
 
-    return data;
-  }, [list]);
+    return d;
+  }, [data]);
 
   const customerChartData = useMemo(() => {
     const customers: { [name: string]: number } = {};
-    list.forEach((order) => {
+    data?.data?.forEach((order) => {
       if (order?.customer) {
         if (!customers[order?.customer?.name]) {
           customers[order?.customer?.name] = 0;
@@ -618,34 +649,89 @@ export const SaleHistory: FC<Props> = ({}) => {
       }
     });
 
-    const data: { id: string; value: number }[] = [];
+    const d: { id: string; value: number }[] = [];
     Object.keys(customers).forEach((c) => {
-      data.push({
+      d.push({
         id: c,
         value: customers[c],
       });
     });
 
-    return data;
-  }, [list]);
+    return d;
+  }, [data]);
 
-  const { register, handleSubmit, reset, control } = useForm();
+  const statusChartData = useMemo(() => {
+    const statuses: { [name: string]: number } = {};
+    data?.data?.forEach((order) => {
+      if (order?.terminal) {
+        const status = order.status;
+        if (!statuses[status]) {
+          statuses[status] = 0;
+        }
 
-  useEffect(() => {
-    reset({
-      dateTimeFrom: DateTime.now()
-        .minus({ day: 1 })
-        .startOf("day")
-        .toFormat("yyyy-MM-dd'T'HH:mm"),
-      dateTimeTo: DateTime.now().endOf("day").toFormat("yyyy-MM-dd'T'HH:mm"),
+        statuses[status] += order.payments.reduce(
+          (p, payment) => p + payment.total,
+          0
+        );
+      }
     });
-  }, [modal, reset]);
+
+    const d: { id: string; value: number }[] = [];
+    Object.keys(statuses).forEach((c) => {
+      d.push({
+        id: c,
+        value: statuses[c],
+      });
+    });
+
+    return d;
+  }, [data]);
+
+  const {handleSubmit, reset, control} = useForm();
 
   const [areChartsOpen, setChartsOpen] = useState(false);
 
   const searchSale = async (values: any) => {
-    handleFilterChange(values);
+    resetFilters();
+
+    const newFilters = [];
+    const newParameters = {};
+    const dates = {};
+
+    if (values.q && values.q.trim() !== '') {
+      newFilters.push(`customer.name = $q or order_id = $q or status = $q`);
+      newParameters['q'] = values.q;
+    }
+
+    if (values.dateTimeFrom) {
+      const toDbDate = DateTime.fromFormat(values.dateTimeFrom, "yyyy-MM-dd'T'HH:mm").toFormat(import.meta.env.VITE_SURREAL_DB_DATE_TIME_FORMAT);
+      newFilters.push(`created_at >= d"${toDbDate}"`);
+      dates['startTime'] = toDbDate;
+    }
+
+    if (values.dateTimeTo) {
+      const toDbDate = DateTime.fromFormat(values.dateTimeTo, "yyyy-MM-dd'T'HH:mm").toFormat(import.meta.env.VITE_SURREAL_DB_DATE_TIME_FORMAT);
+      newFilters.push(`created_at <= d"${toDbDate}"`);
+      dates['endTime'] = toDbDate;
+    }
+
+    handleFilterChange(newFilters);
+    handleParameterChange(newParameters);
+
+    await loadExpenses(dates)
   };
+
+  useEffect(() => {
+    if (modal) {
+      setTimeout(() => {
+        fetchOrders();
+        loadExpenses({
+          startTime,
+          endTime
+        })
+      }, 100);
+    }
+  }, [modal]);
 
   return (
     <>
@@ -659,264 +745,296 @@ export const SaleHistory: FC<Props> = ({}) => {
           tabIndex={-1}
           iconButton
         >
-          <FontAwesomeIcon icon={faClockRotateLeft} />
-          <Shortcut shortcut="ctrl+h" handler={() => setModal(true)} />
+          <FontAwesomeIcon icon={faClockRotateLeft}/>
+          <Shortcut shortcut="ctrl+h" handler={() => setModal(true)}/>
         </Button>
       </Tooltip>
 
-      <Modal
-        open={modal}
-        onClose={() => {
-          setModal(false);
-        }}
-        title="Sale history"
-        size="full">
-        <form onSubmit={handleSubmit(searchSale)}>
-          <div className="grid grid-cols-6 gap-4 mb-5">
-            <div className="col-span-3">
-              <Input
-                type="search"
-                placeholder="Search in Order#, Status, Customer"
-                className="search-field w-full"
-                {...register("q")}
-              />
+      {modal && (
+        <Modal
+          open={modal}
+          onClose={() => {
+            setModal(false);
+          }}
+          title="Sale history"
+          size="full">
+          <form onSubmit={handleSubmit(searchSale)}>
+            <div className="grid grid-cols-6 gap-4 mb-5">
+              <div className="col-span-3">
+                <Controller
+                  render={({field}) => (
+                    <Input
+                      type="search"
+                      placeholder="Search in Order#, Status, Customer"
+                      className="search-field w-full"
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                  name="q"
+                  control={control}
+                />
+              </div>
+              <div>
+                <Controller
+                  name="dateTimeFrom"
+                  render={({field}) => (
+                    <Input
+                      value={field.value}
+                      onChange={field.onChange}
+                      type="datetime-local"
+                      placeholder="Start time"
+                      className=" w-full"
+                    />
+                  )}
+                  control={control}
+                />
+              </div>
+              <div>
+                <Controller
+                  name="dateTimeTo"
+                  render={({field}) => (
+                    <Input
+                      value={field.value}
+                      onChange={field.onChange}
+                      type="datetime-local"
+                      placeholder="End time"
+                      className=" w-full"
+                    />
+                  )}
+                  control={control}
+                />
+              </div>
+              <div>
+                <Button
+                  variant="primary"
+                  className="w-full"
+                  type="submit"
+                  disabled={isLoading}>
+                  {isLoading ? (
+                    "Searching..."
+                  ) : (
+                    <>
+                      <FontAwesomeIcon icon={faSearch} className="mr-2"/> Search
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
-            <div>
-              <Controller
-                name="dateTimeFrom"
-                render={(props) => (
-                  <Input
-                    {...props.field}
-                    type="datetime-local"
-                    placeholder="Start time"
-                    className=" w-full"
-                  />
-                )}
-                control={control}
-              />
-            </div>
-            <div>
-              <Controller
-                name="dateTimeTo"
-                render={(props) => (
-                  <Input
-                    {...props.field}
-                    type="datetime-local"
-                    placeholder="End time"
-                    className=" w-full"
-                  />
-                )}
-                control={control}
-              />
-            </div>
-            <div>
-              <Button
-                variant="primary"
-                className="w-full"
-                type="submit"
-                disabled={isFetching}>
-                {isFetching ? (
-                  "Searching..."
-                ) : (
-                  <>
-                    <FontAwesomeIcon icon={faSearch} className="mr-2" /> Search
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </form>
+          </form>
 
-        {!isFetching && (
-          <>
-            <h3
-              className="mb-3 text-lg cursor-pointer"
-              onClick={() => setChartsOpen(!areChartsOpen)}>
-              Charts{" "}
-              {areChartsOpen ? (
-                <FontAwesomeIcon icon={faChevronDown} />
-              ) : (
-                <FontAwesomeIcon icon={faChevronRight} />
-              )}
-            </h3>
-            {areChartsOpen && (
-              <div className="mb-5 grid grid-cols-3 gap-4">
-                <div>
-                  <h4 className="text-lg">Payment types</h4>
-                  <div className="h-[300px]">
-                    {payments && (
-                      <Pie
-                        data={Object.keys(payments).map((item) => {
-                          return { id: item, value: payments[item] };
-                        })}
-                        innerRadius={0.6}
-                        padAngle={0.5}
-                        cornerRadius={5}
-                        arcLinkLabel={(d) => `${d.id}: ${d.value}`}
-                        enableArcLabels={false}
-                        enableArcLinkLabels={false}
-                        colors={{ scheme: "purpleRed_green" }}
+          {!isLoading && (
+            <>
+              <h3
+                className="mb-3 text-lg cursor-pointer"
+                onClick={() => setChartsOpen(!areChartsOpen)}>
+                Charts{" "}
+                {areChartsOpen ? (
+                  <FontAwesomeIcon icon={faChevronDown}/>
+                ) : (
+                  <FontAwesomeIcon icon={faChevronRight}/>
+                )}
+              </h3>
+              {areChartsOpen && (
+                <div className="mb-5 grid grid-cols-3 gap-4">
+                  <div>
+                    <h4 className="text-lg">Payment types</h4>
+                    <div className="h-[300px]">
+                      {payments && (
+                        <Pie
+                          data={Object.keys(payments).map((item) => {
+                            return {id: item, value: payments[item]};
+                          })}
+                          innerRadius={0.6}
+                          padAngle={0.5}
+                          cornerRadius={5}
+                          arcLinkLabel={(d) => `${d.id}: ${withCurrency(d.value)}`}
+                          enableArcLabels={false}
+                          enableArcLinkLabels={false}
+                          colors={{scheme: "purpleRed_green"}}
+                          margin={{
+                            top: 20,
+                            bottom: 20,
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-lg">Sales</h4>
+                    <div className="h-[300px]">
+                      <Bar
+                        data={[
+                          {id: "Sale", value: totalAmount.toFixed(2)},
+                          {id: "Cost", value: totalCost.toFixed(2)},
+                          {id: "Discount", value: discountTotal.toFixed(2)},
+                          {id: "Tax", value: taxTotal.toFixed(2)},
+                          {id: "Expense", value: totalExpenses.toFixed(2)},
+                        ]}
+                        // keys={['value']}
                         margin={{
+                          bottom: 50,
+                          left: 50,
                           top: 20,
-                          bottom: 20,
+                        }}
+                        valueScale={{type: "linear"}}
+                        tooltip={({indexValue, value}) => {
+                          return (
+                            <span className="bg-white rounded p-1 text-sm shadow">
+                            {indexValue}: {withCurrency(value)}
+                          </span>
+                          );
                         }}
                       />
-                    )}
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <h4 className="text-lg">Sales</h4>
-                  <div className="h-[300px]">
-                    <Bar
-                      data={[
-                        { id: "Sale", value: totalAmount.toFixed(2) },
-                        { id: "Cost", value: totalCost.toFixed(2) },
-                        { id: "Discount", value: discountTotal.toFixed(2) },
-                        { id: "Tax", value: taxTotal.toFixed(2) },
-                        { id: "Expense", value: totalExpenses.toFixed(2) },
-                      ]}
-                      // keys={['value']}
-                      margin={{
-                        bottom: 50,
-                        left: 50,
-                        top: 20,
-                      }}
-                      valueScale={{ type: "linear" }}
-                      tooltip={({ indexValue, value }) => {
-                        return (
-                          <span className="bg-white rounded p-1 text-sm shadow">
-                            {indexValue}: {value}
+                  <div>
+                    <h4 className="text-lg">Customers</h4>
+                    <div className="h-[300px]">
+                      <Bar
+                        data={customerChartData}
+                        // keys={['value']}
+                        margin={{
+                          bottom: 50,
+                          left: 50,
+                          top: 20,
+                        }}
+                        valueScale={{type: "linear"}}
+                        tooltip={({indexValue, value}) => {
+                          return (
+                            <span className="bg-white rounded p-1 text-sm shadow">
+                            {indexValue}: {withCurrency(value)}
                           </span>
-                        );
-                      }}
-                    />
+                          );
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <h4 className="text-lg">Customers</h4>
-                  <div className="h-[300px]">
-                    <Bar
-                      data={customerChartData}
-                      // keys={['value']}
-                      margin={{
-                        bottom: 50,
-                        left: 50,
-                        top: 20,
-                      }}
-                      valueScale={{ type: "linear" }}
-                      tooltip={({ indexValue, value }) => {
-                        return (
-                          <span className="bg-white rounded p-1 text-sm shadow">
-                            {indexValue}: {value}
+                  <div>
+                    <h4 className="text-lg">Statuses</h4>
+                    <div className="h-[300px]">
+                      <Bar
+                        data={statusChartData}
+                        // keys={['value']}
+                        margin={{
+                          bottom: 50,
+                          left: 50,
+                          top: 20,
+                        }}
+                        valueScale={{type: "linear"}}
+                        tooltip={({indexValue, value}) => {
+                          return (
+                            <span className="bg-white rounded p-1 text-sm shadow">
+                            {indexValue}: {withCurrency(value)}
                           </span>
-                        );
-                      }}
-                    />
+                          );
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <h4 className="text-lg">Stores</h4>
-                  <div className="h-[300px]">
-                    <Bar
-                      data={storesChartData}
-                      // keys={['value']}
-                      margin={{
-                        bottom: 50,
-                        left: 50,
-                        top: 20,
-                      }}
-                      valueScale={{ type: "linear" }}
-                      tooltip={({ indexValue, value }) => {
-                        return (
-                          <span className="bg-white rounded p-1 text-sm shadow">
-                            {indexValue}: {value}
+                  <div>
+                    <h4 className="text-lg">Stores</h4>
+                    <div className="h-[300px]">
+                      <Bar
+                        data={storesChartData}
+                        // keys={['value']}
+                        margin={{
+                          bottom: 50,
+                          left: 50,
+                          top: 20,
+                        }}
+                        valueScale={{type: "linear"}}
+                        tooltip={({indexValue, value}) => {
+                          return (
+                            <span className="bg-white rounded p-1 text-sm shadow">
+                            {indexValue}: {withCurrency(value)}
                           </span>
-                        );
-                      }}
-                    />
+                          );
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <h4 className="text-lg">Terminals</h4>
-                  <div className="h-[300px]">
-                    <Bar
-                      data={terminalsChartData}
-                      // keys={['value']}
-                      margin={{
-                        bottom: 50,
-                        left: 50,
-                        top: 20,
-                      }}
-                      valueScale={{ type: "linear" }}
-                      tooltip={({ indexValue, value }) => {
-                        return (
-                          <span className="bg-white rounded p-1 text-sm shadow">
-                            {indexValue}: {value}
+                  <div>
+                    <h4 className="text-lg">Terminals</h4>
+                    <div className="h-[300px]">
+                      <Bar
+                        data={terminalsChartData}
+                        // keys={['value']}
+                        margin={{
+                          bottom: 50,
+                          left: 50,
+                          top: 20,
+                        }}
+                        valueScale={{type: "linear"}}
+                        tooltip={({indexValue, value}) => {
+                          return (
+                            <span className="bg-white rounded p-1 text-sm shadow">
+                            {indexValue}: {withCurrency(value)}
                           </span>
-                        );
-                      }}
-                    />
+                          );
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-            <div className="grid grid-cols-5 gap-4 mb-5">
-              <div className="border border-primary-500 p-5 font-bold text-primary-500 rounded">
-                Total Bills
-                <span className="float-right">{list.length}</span>
-              </div>
-              <div className="border border-primary-500 p-5 font-bold text-primary-500 rounded">
-                Total Amount
-                <span className="float-right">{withCurrency(totalAmount)}</span>
-              </div>
-              <div className="border border-warning-500 p-5 font-bold text-warning-500 rounded">
-                Total Cost
-                <span className="float-right">{withCurrency(totalCost)}</span>
-              </div>
-              <div className="border border-danger-500 p-5 font-bold text-danger-500 rounded">
-                Expenses
-                <span className="float-right">
+              )}
+              <div className="grid grid-cols-5 gap-4 mb-5">
+                <div className="border border-primary-500 p-5 font-bold text-primary-500 rounded">
+                  Total Bills
+                  <span className="float-right">{data?.data?.length ?? '-'}</span>
+                </div>
+                <div className="border border-primary-500 p-5 font-bold text-primary-500 rounded">
+                  Total Amount
+                  <span className="float-right">{withCurrency(totalAmount)}</span>
+                </div>
+                <div className="border border-warning-500 p-5 font-bold text-warning-500 rounded">
+                  Total Cost
+                  <span className="float-right">{withCurrency(totalCost)}</span>
+                </div>
+                <div className="border border-danger-500 p-5 font-bold text-danger-500 rounded">
+                  Expenses
+                  <span className="float-right">
                   {withCurrency(totalExpenses)}
                 </span>
-              </div>
-              <div
-                className={classNames(
-                  "border",
-                  "p-5 font-bold rounded",
-                  totalAmount - totalCost - totalExpenses <= 0
-                    ? "text-danger-500 border-danger-500"
-                    : "text-success-500 border-success-500"
-                )}>
-                {totalAmount - totalCost - totalExpenses <= 0
-                  ? "Loss"
-                  : "Profit"}
-                <span className="float-right">
+                </div>
+                <div
+                  className={classNames(
+                    "border",
+                    "p-5 font-bold rounded",
+                    totalAmount - totalCost - totalExpenses <= 0
+                      ? "text-danger-500 border-danger-500"
+                      : "text-success-500 border-success-500"
+                  )}>
+                  {totalAmount - totalCost - totalExpenses <= 0
+                    ? "Loss"
+                    : "Profit"}
+                  <span className="float-right">
                   {withCurrency(totalAmount - totalCost - totalExpenses)}
                 </span>
+                </div>
               </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
 
-        <TableComponent
-          columns={columns}
-          useLoadList={useLoadHook}
-          loaderLineItems={11}
-          dataKey="list"
-          totalKey="total"
-          enableSearch={false}
-          sort={[
-            {
-              id: "orderId",
-              desc: true,
-            },
-          ]}
-        />
-      </Modal>
+          <TableComponent
+            columns={columns}
+            loaderHook={useLoadHook}
+            loaderLineItems={11}
+            enableSearch={false}
+            sort={[
+              {
+                id: "created_at",
+                desc: true,
+              },
+            ]}
+          />
+        </Modal>
+      )}
     </>
   );
 };

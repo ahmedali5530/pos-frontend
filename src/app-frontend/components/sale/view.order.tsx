@@ -4,6 +4,7 @@ import {Button} from "../../../app-common/components/input/button";
 import {Modal} from "../../../app-common/components/modal/modal";
 import {OrderItem} from "../../../api/model/order.item";
 import { withCurrency } from "../../../lib/currency/currency";
+import {useOrder} from "../../../api/hooks/use.order";
 
 interface ViewOrderProps extends PropsWithChildren{
   order: Order;
@@ -13,14 +14,11 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
   order, children
 }) => {
   const [modal, setModal] = useState(false);
-
-  const itemTax = (item: OrderItem) => {
-    return item.taxesTotal
-  };
+  const orderHook = useOrder();
 
   const itemsTotal = useMemo(() => {
     return order.items.reduce((prev, item) => (
-      (prev + (Number(item.quantity) * Number(item.price))) + item.taxesTotal - Number(item.discount)
+      (prev + (Number(item.quantity) * Number(item.price))) + orderHook.itemTaxes(item) - Number(item.discount)
     ), 0);
   }, [order]);
 
@@ -35,7 +33,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
       </Button>
       <Modal open={modal} onClose={() => {
         setModal(false);
-      }} title={`Order# ${order.orderId}`}>
+      }} title={`Order# ${order.order_id}`}>
         <div className="grid grid-cols-6 md:grid-cols-4 gap-3 mb-5">
           <div className="border border-gray-500 p-5 rounded">
             <div className="text-2xl">+{withCurrency(itemsTotal)}</div>
@@ -61,7 +59,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
             <div className="text-sm font-bold uppercase">Payments</div>
             <ul className="font-normal">
               {order.payments.map(item => (
-                <li key={item["@id"]} className="font-bold">{item.type?.name}: <span className="float-right">{withCurrency(item.received)}</span></li>
+                <li key={item["id"]} className="font-bold">{item.type?.name}: <span className="float-right">{withCurrency(item.received)}</span></li>
               ))}
             </ul>
           </div>
@@ -93,17 +91,17 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
                 {item.variant && (
                   <>
                     <br/>
-                    {item.variant?.attributeValue}
+                    {item.variant?.attribute_value}
                   </>
                 )}
               </td>
               <td className="text-right">{item.quantity}</td>
               <td className="text-right">
-                {withCurrency(itemTax(item))}
+                {withCurrency(orderHook.itemTaxes(item))}
               </td>
               <td className="text-right">{withCurrency(item.discount)}</td>
               <td className="text-right">{withCurrency(item.price)}</td>
-              <td className="text-right">{withCurrency((item.price * item.quantity) + itemTax(item) - item.discount)}</td>
+              <td className="text-right">{withCurrency((item.price * item.quantity) + orderHook.itemTaxes(item) - item.discount)}</td>
             </tr>
           ))}
           </tbody>

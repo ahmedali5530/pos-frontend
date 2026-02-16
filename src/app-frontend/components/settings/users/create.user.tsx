@@ -1,21 +1,19 @@
-import React, { FC, useEffect, useState } from "react";
-import { Modal } from "../../../../app-common/components/modal/modal";
-import { Input } from "../../../../app-common/components/input/input";
-import { Controller, useForm } from "react-hook-form";
-import { ReactSelect } from "../../../../app-common/components/input/custom.react.select";
-import { Button } from "../../../../app-common/components/input/button";
-import { USER_CREATE, USER_EDIT } from "../../../../api/routing/routes/backend.app";
-import { ReactSelectOptionProps } from "../../../../api/model/common";
-import { jsonRequest } from "../../../../api/request/request";
-import { HttpException, UnprocessableEntityException } from "../../../../lib/http/exception/http.exception";
-import { ConstraintViolation, ValidationResult } from "../../../../lib/validator/validation.result";
-import { User } from "../../../../api/model/user";
+import React, {FC, useEffect, useState} from "react";
+import {Modal} from "../../../../app-common/components/modal/modal";
+import {Input} from "../../../../app-common/components/input/input";
+import {Controller, useForm} from "react-hook-form";
+import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
+import {Button} from "../../../../app-common/components/input/button";
+import {ReactSelectOptionProps} from "../../../../api/model/common";
+import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
+import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
+import {User} from "../../../../api/model/user";
 import * as yup from 'yup';
-import { ValidationMessage } from "../../../../api/model/validation";
-import { yupResolver } from "@hookform/resolvers/yup";
-import { getErrorClass, getErrors, hasErrors } from "../../../../lib/error/error";
-import { notify } from "../../../../app-common/components/confirm/notification";
-import { StoresInput } from "../../../../app-common/components/input/stores";
+import {ValidationMessage} from "../../../../api/model/validation";
+import {yupResolver} from "@hookform/resolvers/yup";
+import {getErrorClass, getErrors, hasErrors} from "../../../../lib/error/error";
+import {notify} from "../../../../app-common/components/confirm/notification";
+import {StoresInput} from "../../../../app-common/components/input/stores";
 import {useDB} from "../../../../api/db/db";
 import {Tables} from "../../../../api/db/tables";
 import {StringRecordId} from "surrealdb";
@@ -38,13 +36,13 @@ export const CreateUser: FC<CreateUserProps> = ({
     stores: yup.array().min(1, 'Please add some stores').required(ValidationMessage.Required)
   }
 
-  if( !entity ) {
+  if (!entity) {
     schema['password'] = yup.string().required(ValidationMessage.Required)
   }
 
   const ValidationSchema = yup.object(schema);
 
-  const { register, handleSubmit, setError, formState: { errors }, reset, control } = useForm({
+  const {register, handleSubmit, setError, formState: {errors}, reset, control} = useForm({
     resolver: yupResolver(ValidationSchema)
   });
   const [creating, setCreating] = useState(false);
@@ -56,7 +54,7 @@ export const CreateUser: FC<CreateUserProps> = ({
   }, [addModal]);
 
   useEffect(() => {
-    if( entity ) {
+    if (entity) {
       reset({
         ...entity,
         roles: entity.roles.map(item => {
@@ -79,15 +77,15 @@ export const CreateUser: FC<CreateUserProps> = ({
   const createUser = async (values: any) => {
     setCreating(true);
     try {
-      if( values.roles ) {
+      if (values.roles) {
         values.roles = values.roles.map((item: ReactSelectOptionProps) => item.value);
       }
-      if( values.stores ) {
+      if (values.stores) {
         values.stores = values.stores.map((item: ReactSelectOptionProps) => new StringRecordId(item.value));
       }
 
-      if( entity?.id ) {
-        if(values.password){
+      if (entity?.id) {
+        if (values.password) {
           values.password = `crypto::bcrypt::generate(${values.password})`;
         }
 
@@ -102,9 +100,9 @@ export const CreateUser: FC<CreateUserProps> = ({
       }
 
       onModalClose();
-    } catch ( exception: any ) {
-      if( exception instanceof HttpException ) {
-        if( exception.message ) {
+    } catch (exception: any) {
+      if (exception instanceof HttpException) {
+        if (exception.message) {
           notify({
             type: 'error',
             description: exception.message
@@ -112,7 +110,7 @@ export const CreateUser: FC<CreateUserProps> = ({
         }
       }
 
-      if( exception instanceof UnprocessableEntityException ) {
+      if (exception instanceof UnprocessableEntityException) {
         const e: ValidationResult = await exception.response.json();
         e.violations.forEach((item: ConstraintViolation) => {
           setError(item.propertyPath, {
@@ -121,7 +119,7 @@ export const CreateUser: FC<CreateUserProps> = ({
           });
         });
 
-        if( e.errorMessage ) {
+        if (e.errorMessage) {
           notify({
             type: 'error',
             description: e.errorMessage

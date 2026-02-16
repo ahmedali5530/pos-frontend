@@ -1,22 +1,13 @@
-import React, { useState } from "react";
-import {
-  PAYMENT_TYPE_GET,
-  PAYMENT_TYPE_LIST,
-} from "../../../../api/routing/routes/backend.app";
-import { useTranslation } from "react-i18next";
-import { createColumnHelper } from "@tanstack/react-table";
-import { Button } from "../../../../app-common/components/input/button";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPencilAlt, faPlus } from "@fortawesome/free-solid-svg-icons";
-import { TableComponent } from "../../../../app-common/components/table/table";
-import { PaymentType } from "../../../../api/model/payment.type";
-import { useSelector } from "react-redux";
-import { getAuthorizedUser } from "../../../../duck/auth/auth.selector";
-import { getStore } from "../../../../duck/store/store.selector";
-import { CreatePaymentType } from "./create.payment.type";
-import { Switch } from "../../../../app-common/components/input/switch";
-import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
-import { jsonRequest } from "../../../../api/request/request";
+import React, {useState} from "react";
+import {createColumnHelper} from "@tanstack/react-table";
+import {Button} from "../../../../app-common/components/input/button";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faPencilAlt, faPlus} from "@fortawesome/free-solid-svg-icons";
+import {TableComponent} from "../../../../app-common/components/table/table";
+import {PaymentType} from "../../../../api/model/payment.type";
+import {CreatePaymentType} from "./create.payment.type";
+import {Switch} from "../../../../app-common/components/input/switch";
+import {ConfirmAlert} from "../../../../app-common/components/confirm/confirm.alert";
 import useApi, {SettingsData} from "../../../../api/db/use.api";
 import {Tables} from "../../../../api/db/tables";
 import {useAtom} from "jotai";
@@ -37,7 +28,7 @@ export const PaymentTypes = () => {
     [`stores ?= ${store?.id}`],
     [], 0, 10, ['stores']
   );
-  const { fetchData } = useLoadHook;
+  const {fetchData} = useLoadHook;
   const [paymentType, setPaymentType] = useState<PaymentType>();
   const [modal, setModal] = useState(false);
 
@@ -82,7 +73,7 @@ export const PaymentTypes = () => {
                 setModal(true);
               }}
               tabIndex={-1}>
-              <FontAwesomeIcon icon={faPencilAlt} />
+              <FontAwesomeIcon icon={faPencilAlt}/>
             </Button>
             <span className="mx-2 text-gray-300">|</span>
             <ConfirmAlert
@@ -98,7 +89,7 @@ export const PaymentTypes = () => {
               description={`Are you sure to ${
                 info.row.original.is_active ? "de-" : ""
               }activate this payment type?`}>
-              <Switch checked={info.row.original.is_active} readOnly />
+              <Switch checked={info.row.original.is_active} readOnly/>
             </ConfirmAlert>
           </>
         );
@@ -127,7 +118,7 @@ export const PaymentTypes = () => {
               setModal(true);
               setOperation("create");
             }}>
-            <FontAwesomeIcon icon={faPlus} className="mr-2" /> Payment type
+            <FontAwesomeIcon icon={faPlus} className="mr-2"/> Payment type
           </Button>
         ]}
       />

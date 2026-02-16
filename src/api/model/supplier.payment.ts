@@ -5,6 +5,6 @@ export interface SupplierPayment {
   id: string;
   amount: number;
   description?: string;
-  createdAt: string;
+  created_at: string;
   purchase?: Omit<Purchase, "supplier">
 }

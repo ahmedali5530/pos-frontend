@@ -1,7 +1,5 @@
 import React, {FC, useEffect, useState} from "react";
 import {useForm} from "react-hook-form";
-import {TAX_CREATE, TAX_GET} from "../../../../api/routing/routes/backend.app";
-import {fetchJson} from "../../../../api/request/request";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
 import {Modal} from "../../../../app-common/components/modal/modal";

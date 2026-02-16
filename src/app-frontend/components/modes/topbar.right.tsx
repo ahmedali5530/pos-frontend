@@ -2,17 +2,19 @@ import { useState } from "react";
 import { Button } from "../../../app-common/components/input/button";
 import { Modal } from "../../../app-common/components/modal/modal";
 import { useAtom } from "jotai";
-import { defaultData, defaultState, PosModes } from "../../../store/jotai";
+import {appState, defaultData, defaultState, PosModes} from "../../../store/jotai";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck } from "@fortawesome/free-solid-svg-icons";
 import classNames from "classnames";
 import { faPenToSquare } from "@fortawesome/free-regular-svg-icons";
+import {AppConnect} from "./app.connect";
+import {useDB} from "../../../api/db/db";
 
 export const TopbarRight = () => {
   const [defaultAppState, setDefaultAppState] = useAtom(defaultData);
   const { defaultMode } = defaultAppState;
 
-  const [appState, setAppState] = useAtom(defaultState);
+  const [, setAppState] = useAtom(defaultState);
 
   const [modal, setModal] = useState(false);
 
@@ -23,7 +25,11 @@ export const TopbarRight = () => {
   ];
 
   return (
-    <>
+    <div className="flex gap-3">
+      {(defaultMode === PosModes.pos || defaultMode === PosModes.order) && (
+        <AppConnect />
+      )}
+
       <Button size="lg" variant="primary" onClick={() => setModal(true)}>
         <FontAwesomeIcon icon={faPenToSquare} className="mr-3"/>
         {defaultMode} mode
@@ -49,7 +55,8 @@ export const TopbarRight = () => {
 
                 setAppState(prev => ({
                   ...prev,
-                  added: []
+                  added: [],
+                  orderId: undefined
                 }));
 
                 setModal(false);
@@ -63,6 +70,6 @@ export const TopbarRight = () => {
           ))}
         </div>
       </Modal>
-    </>
+    </div>
   );
 };

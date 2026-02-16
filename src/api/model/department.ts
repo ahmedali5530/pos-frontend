@@ -5,7 +5,7 @@ export interface Department  {
   id: string;
   name: string;
   description?: string;
-  createdAt: string;
+  created_at: string;
   store?: Store;
   is_active?: boolean
 }

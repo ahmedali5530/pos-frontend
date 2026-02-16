@@ -1,12 +1,10 @@
-import React, { useState } from "react";
-import { BARCODE_LIST, DISCOUNT_GET, } from "../../../../api/routing/routes/backend.app";
-import { createColumnHelper } from "@tanstack/react-table";
-import { jsonRequest } from "../../../../api/request/request";
-import { TableComponent } from "../../../../app-common/components/table/table";
-import { Barcode } from "../../../../api/model/barcode";
-import { Button } from "../../../../app-common/components/input/button";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCopy } from "@fortawesome/free-solid-svg-icons";
+import React from "react";
+import {createColumnHelper} from "@tanstack/react-table";
+import {TableComponent} from "../../../../app-common/components/table/table";
+import {Barcode} from "../../../../api/model/barcode";
+import {Button} from "../../../../app-common/components/input/button";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faCopy} from "@fortawesome/free-solid-svg-icons";
 import {useAtom} from "jotai";
 import {appState} from "../../../../store/jotai";
 import useApi, {SettingsData} from "../../../../api/db/use.api";
@@ -27,7 +25,7 @@ export const DynamicBarcodes = () => {
     columnHelper.accessor("item.name", {
       header: "Product",
     }),
-    columnHelper.accessor("variant.attributeValue", {
+    columnHelper.accessor("variant.attribute_value", {
       header: "Variant",
     }),
     columnHelper.accessor("barcode", {
@@ -38,7 +36,7 @@ export const DynamicBarcodes = () => {
           <Button onClick={async () => {
             await navigator.clipboard.writeText(info.getValue())
           }} variant="secondary" className="ml-2">
-            <FontAwesomeIcon icon={faCopy} />
+            <FontAwesomeIcon icon={faCopy}/>
           </Button>
         </>
       )

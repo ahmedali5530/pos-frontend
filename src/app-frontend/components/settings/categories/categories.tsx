@@ -1,29 +1,15 @@
-import { useTranslation } from "react-i18next";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faPencilAlt,
-  faPlus,
-  faTrash,
-} from "@fortawesome/free-solid-svg-icons";
-import { Button } from "../../../../app-common/components/input/button";
-import React, { useState } from "react";
-import { Category } from "../../../../api/model/category";
-import {
-  CATEGORY_GET,
-  CATEGORY_LIST,
-} from "../../../../api/routing/routes/backend.app";
-import { TableComponent } from "../../../../app-common/components/table/table";
-import { createColumnHelper } from "@tanstack/react-table";
-import { useSelector } from "react-redux";
-import { getStore } from "../../../../duck/store/store.selector";
-import { CreateCategory } from "./create.category";
-import { jsonRequest } from "../../../../api/request/request";
-import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
-import { Switch } from "../../../../app-common/components/input/switch";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faPencilAlt, faPlus,} from "@fortawesome/free-solid-svg-icons";
+import {Button} from "../../../../app-common/components/input/button";
+import React, {useState} from "react";
+import {Category} from "../../../../api/model/category";
+import {TableComponent} from "../../../../app-common/components/table/table";
+import {createColumnHelper} from "@tanstack/react-table";
+import {CreateCategory} from "./create.category";
+import {ConfirmAlert} from "../../../../app-common/components/confirm/confirm.alert";
+import {Switch} from "../../../../app-common/components/input/switch";
 import {Tables} from "../../../../api/db/tables";
 import useApi, {SettingsData} from "../../../../api/db/use.api";
-import {useAtom} from "jotai";
-import {appState as AppState} from "../../../../store/jotai";
 import {useDB} from "../../../../api/db/db";
 import {StringRecordId} from "surrealdb";
 
@@ -38,7 +24,7 @@ export const Categories = () => {
     Tables.category,
     [], [], 0, 10, ['stores']
   );
-  const { fetchData } = useLoadHook;
+  const {fetchData} = useLoadHook;
 
   const columnHelper = createColumnHelper<Category>();
 
@@ -72,7 +58,7 @@ export const Categories = () => {
                 setModal(true);
               }}
               tabIndex={-1}>
-              <FontAwesomeIcon icon={faPencilAlt} />
+              <FontAwesomeIcon icon={faPencilAlt}/>
             </Button>
             <span className="mx-2 text-gray-300">|</span>
             <ConfirmAlert
@@ -87,7 +73,7 @@ export const Categories = () => {
               title="Confirmation"
               description={`Are you sure to ${info.row.original.is_active ? 'de-' : ''}activate this category?`}
             >
-              <Switch checked={info.row.original.is_active} readOnly />
+              <Switch checked={info.row.original.is_active} readOnly/>
             </ConfirmAlert>
           </>
         );
@@ -116,7 +102,7 @@ export const Categories = () => {
               setModal(true);
               setOperation("create");
             }}>
-            <FontAwesomeIcon icon={faPlus} className="mr-2" /> Category
+            <FontAwesomeIcon icon={faPlus} className="mr-2"/> Category
           </Button>
         ]}
       />

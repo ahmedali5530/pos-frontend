@@ -1,19 +1,14 @@
 import React, {FC, PropsWithChildren, useEffect, useLayoutEffect, useMemo, useState} from "react";
 import {Modal} from "../../../app-common/components/modal/modal";
 import {Closing} from "../../../api/model/closing";
-import {fetchJson, jsonRequest} from "../../../api/request/request";
-import {CLOSING_EDIT, EXPENSE_LIST} from "../../../api/routing/routes/backend.app";
 import {Button} from "../../../app-common/components/input/button";
 import {Input} from "../../../app-common/components/input/input";
 import {Controller, useForm} from "react-hook-form";
 import {DateTime} from "luxon";
 import {Expenses} from "./expenses";
-import {Expense} from "../../../api/model/expense";
 import classNames from "classnames";
 import {KeyboardInput} from "../../../app-common/components/input/keyboard.input";
-import {HttpException, UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
 import {notify} from "../../../app-common/components/confirm/notification";
-import {ValidationResult} from "../../../lib/validator/validation.result";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faShopLock} from "@fortawesome/free-solid-svg-icons";
 import {Tooltip} from "antd";
@@ -25,7 +20,7 @@ import useApi, {SettingsData} from "../../../api/db/use.api";
 import {Tables} from "../../../api/db/tables";
 import {useDB} from "../../../api/db/db";
 import {StringRecordId} from "surrealdb";
-import {PaymentMode} from "../modes/payment";
+import {toRecordId} from "../../../api/model/common";
 
 interface TaxProps extends PropsWithChildren {
 
@@ -40,26 +35,36 @@ export const SaleClosing: FC<TaxProps> = (props) => {
 
   // const [payments, setPayments] = useState<{ [key: string]: number }>({});
 
-  const {handleFilterChange, data: orders, fetchData: fetchOrders, handleParameterChange} = useApi<SettingsData<Order>>(Tables.order);
+  const {
+    handleFilterChange,
+    data: orders,
+    fetchData: fetchOrders,
+    handleParameterChange
+  } = useApi<SettingsData<Order>>(Tables.order);
 
   //check for day closing
   const [closing, setClosing] = useState<Closing>();
   const checkDayOpening = async () => {
     try {
-      const [result] = await db.query(`SELECT * FROM ${Tables.closing} where store = $store and terminal = $terminal fetch store, terminal, opened_by`, {
-        store: new StringRecordId(store?.id),
-        terminal: new StringRecordId(terminal?.id)
+      const [result] = await db.query(`SELECT *
+                                       FROM ${Tables.closing}
+                                       where store = $store
+                                         and terminal = $terminal fetch store
+                                           , terminal
+                                           , opened_by`, {
+        store: toRecordId(store?.id),
+        terminal: toRecordId(terminal?.id)
       });
 
-      if(result.length > 0){
+      if (result.length > 0) {
         setClosing(result[0]);
-      }else{
+      } else {
         // create closing
         const [cl] = await db.insert(Tables.closing, {
-          store: new StringRecordId(store?.id),
-          terminal: new StringRecordId(terminal?.id),
+          store: toRecordId(store?.id),
+          terminal: toRecordId(terminal?.id),
           date_from: DateTime.now().toJSDate(),
-          opened_by: new StringRecordId(user?.id),
+          opened_by: toRecordId(user?.id),
           created_at: DateTime.now().toJSDate()
         });
 
@@ -131,10 +136,10 @@ export const SaleClosing: FC<TaxProps> = (props) => {
     let cash = 0;
     orders?.data?.forEach(order => {
       order?.payments?.forEach(payment => {
-        if(payment.type?.type === 'cash'){
+        if (payment.type?.type === 'cash') {
           cash += Number(payment.total);
-        }else{
-          if(!list[payment.type?.type]){
+        } else {
+          if (!list[payment.type?.type]) {
             list[payment.type?.type] = 0;
           }
 
@@ -158,7 +163,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
       if (vals.opening_balance !== undefined) {
         vals.date_to = DateTime.now().toJSDate();
 
-        vals.closed_by = new StringRecordId(user?.id);
+        vals.closed_by = toRecordId(user?.id);
         vals.closing_balance = cashInHand;
       } else {
         vals.opening_balance = 0;
@@ -168,11 +173,14 @@ export const SaleClosing: FC<TaxProps> = (props) => {
         vals.closed_at = DateTime.now().toJSDate();
       }
 
-      vals.terminal = new StringRecordId(terminal?.id);
-      vals.store = new StringRecordId(store?.id);
+      vals.terminal = toRecordId(terminal?.id);
+      vals.store = toRecordId(store?.id);
       vals.opening_balance = Number(vals.opening_balance.toString().trim() === '' ?? 0);
 
-      await db.update(vals.id, vals);
+      delete vals.updateOnly;
+      delete vals.id;
+
+      await db.merge(toRecordId(closing?.id), vals);
 
       await fetchClosing(vals.id);
 
@@ -192,15 +200,19 @@ export const SaleClosing: FC<TaxProps> = (props) => {
   };
 
   const fetchClosing = async (id: string) => {
-    const [newClosing] = await db.query(`SELECT * FROM ${id} fetch store, terminal, opened_by`);
+    const [newClosing] = await db.query(`SELECT *
+                                         FROM ${id} fetch store, terminal, opened_by`);
 
     setClosing(newClosing[0]);
   }
 
   const loadExpenses = async (values?: any) => {
     try {
-      const [ex] = await db.query(`SELECT * FROM ${Tables.expense} where store = $store and created_at >= $dateTimeFrom`, {
-        store: new StringRecordId(store?.id),
+      const [ex] = await db.query(`SELECT *
+                                   FROM ${Tables.expense}
+                                   where store = $store
+                                     and created_at >= $dateTimeFrom`, {
+        store: toRecordId(store?.id),
         dateTimeFrom: values.dateTimeFrom
       })
 

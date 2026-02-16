@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 import localforage from '../../lib/localforage/localforage';
-import {Product} from "../model/product";
+import {ITEM_FETCHES, Product} from "../model/product";
 import {Discount} from "../model/discount";
 import {Tax} from "../model/tax";
 import {PaymentType} from "../model/payment.type";
@@ -65,7 +65,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
     // const res = await jsonRequest(`${PRODUCT_LIST}?itemsPerPage=${limit}&page=${offset}&isActive=true`);
     // const l = await res.json();
 
-    const [products] = await db.query<Product[]>(`SELECT * FROM ${Tables.product} fetch department, categories, suppliers, brands, variants, taxes, terminals, stores, stores.store`);
+    const [products] = await db.query<Product[]>(`SELECT * FROM ${Tables.product} fetch ${ITEM_FETCHES.join(', ')} `);
 
     setList(prev => {
       localforage.setItem('list', {

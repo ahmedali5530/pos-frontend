@@ -3,7 +3,7 @@ import {HydraId, HydraType} from "./hydra";
 export interface Device  {
   id: string;
   name: string;
-  ipAddress: string;
+  ip_address: string;
   port: string;
   prints: number;
 }

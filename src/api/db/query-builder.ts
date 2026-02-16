@@ -31,7 +31,7 @@ export interface QueryBuilderReturnProps {
   addFetch
 }
 
-export const useQueryBuilder = (tb: string, cols: string|string[] = '*', conditions: string[] = [], initialLimit?: number, initialOffset = 0, initialOrders = [], initialFetches = []) => {
+export const useQueryBuilder = (tb: string, cols: string|string[] = '*', conditions: string[] = [], initialLimit?: number, initialOffset: number|undefined = 0, initialOrders = [], initialFetches = [], initialParameters = {}) => {
 
   const [selects, setSelects] = useState<string[]>(Array.isArray(cols) ? cols : [cols]);
   const [table, setTable] = useState(tb);
@@ -43,7 +43,7 @@ export const useQueryBuilder = (tb: string, cols: string|string[] = '*', conditi
   const [offset, setOffset] = useState(initialOffset);
   const [fetches, setFetches] = useState(initialFetches);
 
-  const [parameters, setParameters] = useState({});
+  const [parameters, setParameters] = useState(initialParameters);
 
   const queryString = useMemo(() => {
     const q = [];

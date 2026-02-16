@@ -1,31 +1,31 @@
-import { Button } from "../../../app-common/components/input/button";
-import React, {FC, Ref, useCallback, useEffect, useMemo, useRef, useState,} from "react";
-import { OrderTotals } from "../cart/order.totals";
-import { Textarea } from "../../../app-common/components/input/textarea";
-import { Controller, useForm } from "react-hook-form";
-import { jsonRequest } from "../../../api/request/request";
-import { ORDER_CREATE, ORDER_EDIT, } from "../../../api/routing/routes/backend.app";
-import { PaymentType } from "../../../api/model/payment.type";
+import {Button} from "../../../app-common/components/input/button";
+import React, {FC, useCallback, useEffect, useMemo, useRef, useState,} from "react";
+import {OrderTotals} from "../cart/order.totals";
+import {Textarea} from "../../../app-common/components/input/textarea";
+import {Controller, useForm} from "react-hook-form";
+import {PaymentType} from "../../../api/model/payment.type";
 import classNames from "classnames";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPause, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
-import { OrderPayment } from "../../../api/model/order.payment";
-import { UnprocessableEntityException } from "../../../lib/http/exception/http.exception";
-import { ValidationResult } from "../../../lib/validator/validation.result";
-import { Shortcut } from "../../../app-common/components/input/shortcut";
-import { ClearSale } from "./clear.sale";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faPause, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
+import {AddedPayment} from "../../../api/model/order.payment";
+import {UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
+import {ValidationResult} from "../../../lib/validator/validation.result";
+import {Shortcut} from "../../../app-common/components/input/shortcut";
+import {ClearSale} from "./clear.sale";
 import ScrollContainer from "react-indiana-drag-scroll";
-import { PrintOrder } from "./sale.print";
-import { useSelector } from "react-redux";
-import { getStore } from "../../../duck/store/store.selector";
-import { getTerminal } from "../../../duck/terminal/terminal.selector";
-import { notify } from "../../../app-common/components/confirm/notification";
-import { withCurrency } from "../../../lib/currency/currency";
-import { useAtom } from "jotai";
-import { CartItemType } from "../cart/cart.container";
+import {PrintOrder} from "./sale.print";
+import {notify} from "../../../app-common/components/confirm/notification";
+import {withCurrency} from "../../../lib/currency/currency";
+import {useAtom} from "jotai";
+import {CartItemType} from "../cart/cart.container";
 import {appState as AppState, defaultData, defaultState, PosModes} from "../../../store/jotai";
-import { discountTotal, finalTotal, taxTotal } from "../../containers/dashboard/pos";
-import { OrderStatus } from "../../../api/model/order";
+import {discountTotal, finalTotal, taxTotal} from "../../containers/dashboard/pos";
+import {OrderStatus} from "../../../api/model/order";
+import {StringRecordId} from "surrealdb";
+import {useDB} from "../../../api/db/db";
+import {Tables} from "../../../api/db/tables";
+import {useOrder} from "../../../api/hooks/use.order";
+import {toRecordId} from "../../../api/model/common";
 
 interface Props {
   paymentTypesList: PaymentType[];
@@ -59,19 +59,21 @@ export const CloseSaleInline: FC<Props> = ({
 
   const ft = finalTotal(added, tax, discountAmount, discountRateType, discount);
 
-  const { register, handleSubmit, watch, reset, control, getValues } =
+  const {register, handleSubmit, watch, reset, control, getValues} =
     useForm();
 
   const [defaultAppState, setDefaultAppState] = useAtom(defaultData);
   const [appSt] = useAtom(AppState);
-  const {store, terminal} = appSt;
+  const {store, terminal, user} = appSt;
+  const db = useDB();
+  const orderHook = useOrder();
 
-  const { defaultMode, defaultDiscount, defaultPaymentType, defaultTax, requireCustomerBox } =
+  const {defaultMode, defaultDiscount, defaultPaymentType, defaultTax, requireCustomerBox} =
     defaultAppState;
 
   const [isSaleClosing, setSaleClosing] = useState(false);
   const [payment, setPayment] = useState<PaymentType>();
-  const [payments, setPayments] = useState<OrderPayment[]>([]);
+  const [payments, setPayments] = useState<AddedPayment[]>([]);
   const [hold, setHold] = useState(false);
   const [quickCashOperation, setQuickCashOperation] = useState<
     "add" | "subtract" | "exact"
@@ -100,20 +102,20 @@ export const CloseSaleInline: FC<Props> = ({
       latestVariant: undefined,
     }));
 
-    if( typeof setSaleModal === 'function' ) {
+    if (typeof setSaleModal === 'function') {
       setSaleModal(false);
     }
     reset({
       received: undefined,
     });
 
-    if( defaultPaymentType ) {
+    if (defaultPaymentType) {
       setPayment(defaultPaymentType);
     } else {
       setPayment(undefined);
     }
 
-    if( defaultDiscount ) {
+    if (defaultDiscount) {
       setAppState((prev) => ({
         ...prev,
         discount: defaultDiscount,
@@ -127,7 +129,7 @@ export const CloseSaleInline: FC<Props> = ({
     }
 
     //set default options
-    if( defaultTax ) {
+    if (defaultTax) {
       setAppState((prev) => ({
         ...prev,
         tax: defaultTax,
@@ -142,80 +144,191 @@ export const CloseSaleInline: FC<Props> = ({
     setHold(false);
   };
 
+  const nextOrderId = async () => {
+    const [numbers] = await db.query(`SELECT math::max(order_id) as order_id
+                                      from ${Tables.order}
+                                      group all`);
+    if (numbers.length > 0) {
+      return numbers[0].order_id;
+    }
+
+    return 0;
+  }
+
   const onSaleSubmit = async (values: any) => {
-    let paymentsAdded: OrderPayment[] = [...payments];
-    if(requireCustomerBox && !customerName && defaultMode !== PosModes.payment){
+    let paymentsAdded: AddedPayment[] = [...payments];
+    if (requireCustomerBox && !customerName && defaultMode !== PosModes.payment) {
       notify({
         type: "error",
         description: 'Add customer name',
       });
 
       customerInput?.current?.focus();
-      return ;
+      return;
     }
-    setSaleClosing(true);
-    if( payments.length === 0 ) {
-      paymentsAdded = [
-        {
-          received: values.received,
-          type: payment,
-          total: ft + adjustment,
-          due: changeDue,
-        },
-      ];
-    }
+
     try {
+      setSaleClosing(true);
+
+      let customerFromDB = null;
+      if (customer) {
+        [[customerFromDB]] = await db.query(`SELECT id
+                                             FROM ${toRecordId(customer.id)}`);
+      }
+
+      if (customerName) {
+        [customerFromDB] = await db.insert(Tables.customer, {
+          name: customerName,
+        });
+      }
+
+      // add items
+      const items = [];
+      for (const add of added) {
+        const [item] = await db.insert(Tables.order_product, {
+          discount: add.discount,
+          is_deleted: false,
+          is_returned: false,
+          is_suspended: false,
+          price: add.price,
+          product: toRecordId(add.item.id),
+          quantity: add.quantity,
+          taxes: add.taxes.map(item => toRecordId(item.id)),
+          variant: add.variant ? toRecordId(add.variant.id) : null
+        });
+
+        items.push(item.id);
+
+        // if variant, then only cut variant quantity
+        if(add.variant) {
+          const [variantStore] = await db.query(`SELECT * FROM ${Tables.product_variant_store} where store = $store and variant = $variant`, {
+            store: toRecordId(store?.id),
+            variant: toRecordId(add.variant.id)
+          });
+
+          if (variantStore.length > 0) {
+            await db.merge(toRecordId(variantStore[0].id), {
+              quantity: variantStore[0].quantity - Number(add.quantity)
+            });
+          }
+        }else{
+          // update product stock
+          const [productStore] = await db.query(`SELECT * FROM ${Tables.product_store} where store = $store and product = $product`, {
+            store: toRecordId(store?.id),
+            product: toRecordId(add.item.id)
+          });
+
+          if(productStore.length > 0){
+            await db.merge(toRecordId(productStore[0].id), {
+              quantity: productStore[0].quantity - Number(add.quantity)
+            });
+          }
+        }
+      }
+
+      let orderDiscount = null;
+      if (discount) {
+        [orderDiscount] = await db.insert(Tables.order_discount, {
+          amount: discountAmount,
+          rate: discount.rate,
+          rate_type: discount.rate_type,
+          type: toRecordId(discount.id)
+        });
+      }
+
+      let orderTax = null;
+      if (tax) {
+        [orderTax] = await db.insert(Tables.order_tax, {
+          amount: taxTotal(added),
+          rate: tax.rate,
+          type: toRecordId(tax.id)
+        });
+      }
+
+      const order_id = await nextOrderId();
+
+
+      if (paymentsAdded.length === 0) {
+        paymentsAdded = [
+          {
+            received: values.received,
+            type: payment,
+            total: ft + adjustment,
+            due: changeDue,
+          },
+        ];
+      }
+
+      const orderPayments = [];
+      for (const op of paymentsAdded) {
+        const [{id}] = await db.insert(Tables.order_payment, {
+          due: Number(op.due),
+          received: Number(op.received),
+          total: Number(op.total),
+          type: op.type ? toRecordId(op.type.id) : null
+        });
+
+        orderPayments.push(id);
+      }
+
       const formValues: any = {
-        items: added,
-        discount: discount,
-        tax: tax,
-        taxAmount: taxTotal(added),
-        payments: paymentsAdded,
-        customerId: customer?.id,
-        customer: customerName,
-        discountAmount: discountTotal(added, tax, discountAmount, discountRateType, discount),
-        discountRateType: discountRateType,
-        refundingFrom: refundingFrom,
-        notes: values.notes,
-        store: store?.id,
-        total: ft,
-        terminal: terminal?.id,
         adjustment: adjustment,
+        customer: customerFromDB ? toRecordId(customerFromDB?.id) : null,
+        description: values.notes,
+        discount: orderDiscount ? toRecordId(orderDiscount.id) : null,
+        items: items,
+        order_id: (order_id ?? 0) + 1,
+        payments: orderPayments,
+        returned_from: refundingFrom ? toRecordId(refundingFrom) : null,
+        store: toRecordId(store?.id ?? ''),
+        tax: orderTax ? toRecordId(orderTax?.id) : null,
+        terminal: toRecordId(terminal?.id ?? ''),
+        user: user ? toRecordId(user.id) : null,
       };
 
-      if( hold ) {
-        formValues["isSuspended"] = true;
+      if (hold) {
+        formValues["is_suspended"] = true;
       }
 
-      if( defaultMode === PosModes.order ) {
+      if (defaultMode === PosModes.order) {
         formValues["status"] = OrderStatus.PENDING;
       } else {
-        formValues["status"] = OrderStatus.COMPLETED;
+        if (hold) {
+          formValues["status"] = OrderStatus.ON_HOLD;
+        } else {
+          formValues["status"] = OrderStatus.COMPLETED;
+        }
       }
 
-      let url = ORDER_CREATE;
-      let method = 'POST';
-      if( orderId ) {
-        url = ORDER_EDIT.replace(":id", orderId);
-        method = 'PUT';
-      }
-      const response = await jsonRequest(url, {
-        method: method,
-        body: JSON.stringify(formValues),
-      });
+      let order;
+      if (orderId) {
+        await db.merge(toRecordId(orderId), {
+          ...formValues
+        });
 
-      const json = await response.json();
+        [[order]] = await orderHook.fetchOrder(toRecordId(orderId).toString());
+      } else {
+        [order] = await db.insert(Tables.order, {
+          ...formValues
+        });
+      }
+
+      for (const item of items) {
+        await db.merge(toRecordId(item), {
+          order: toRecordId(order.id)
+        });
+      }
 
       resetFields();
       setPayments([]);
 
-      if( json.order.status === OrderStatus.COMPLETED ) {
+      if (order.status === OrderStatus.COMPLETED) {
         onSale && onSale();
         //print the order
-        PrintOrder(json.order);
+        PrintOrder(order);
       }
-    } catch ( e ) {
-      if( e instanceof UnprocessableEntityException ) {
+    } catch (e) {
+      if (e instanceof UnprocessableEntityException) {
         const res: ValidationResult = await e.response.json();
 
         const message = res.errorMessage;
@@ -223,14 +336,14 @@ export const CloseSaleInline: FC<Props> = ({
           return `${validation.message}`;
         });
 
-        if( message ) {
+        if (message) {
           notify({
             type: "error",
             description: message,
           });
         }
 
-        if( messages.length > 0 ) {
+        if (messages.length > 0) {
           notify({
             type: "error",
             description: messages.join(", "),
@@ -246,7 +359,7 @@ export const CloseSaleInline: FC<Props> = ({
 
   const changeDue = useMemo(() => {
     //get a total of payments
-    if( payments.length === 0 ) {
+    if (payments.length === 0) {
       return Number(watch("received")) - ft - adjustment;
     }
 
@@ -261,12 +374,12 @@ export const CloseSaleInline: FC<Props> = ({
   }, [payments, watch("received"), adjustment]);
 
   useEffect(() => {
-    if( payment === undefined ) {
+    if (payment === undefined) {
       //check for default payment
-      if( defaultPaymentType ) {
+      if (defaultPaymentType) {
         setPayment(defaultPaymentType);
       } else {
-        if( paymentTypesList.length > 0 ) {
+        if (paymentTypesList.length > 0) {
           setPayment(paymentTypesList[0]);
         }
       }
@@ -274,8 +387,8 @@ export const CloseSaleInline: FC<Props> = ({
   }, [paymentTypesList, payment, saleModal]);
 
   useEffect(() => {
-    if( payments.length === 0 && saleModal ) {
-      if( defaultPaymentType ) {
+    if (payments.length === 0 && saleModal) {
+      if (defaultPaymentType) {
         addSplitPayment(ft, defaultPaymentType);
       }
     }
@@ -300,11 +413,11 @@ export const CloseSaleInline: FC<Props> = ({
     (item: number, cashOperation?: string) => {
       let method = cashOperation || quickCashOperation;
 
-      if( method === "exact" ) {
+      if (method === "exact") {
         addSplitPayment(item, payment);
-      } else if( method === "add" ) {
+      } else if (method === "add") {
         addSplitPayment(item, payment);
-      } else if( method === "subtract" ) {
+      } else if (method === "subtract") {
         addSplitPayment(-item, payment);
       }
     },
@@ -312,7 +425,7 @@ export const CloseSaleInline: FC<Props> = ({
   );
 
   const shortcutHandler = useCallback(
-    (e: Event) => {
+    async (e: Event) => {
       //open sale modal
       // if (added.length > 0) {
       //   if (setSaleModal) {
@@ -327,8 +440,11 @@ export const CloseSaleInline: FC<Props> = ({
 
       const hasError = changeDue < 0 || isSaleClosing || added.length === 0;
 
-      if( isInline && !hasError ) {
-        onSaleSubmit(getValues());
+      if (isInline && !hasError) {
+        await onSaleSubmit(getValues());
+
+        resetFields();
+        setPayments([]);
       }
     },
     [
@@ -352,7 +468,7 @@ export const CloseSaleInline: FC<Props> = ({
   );
 
   const addSplitPayment = (amount: number, payment?: PaymentType) => {
-    if( amount === 0 ) {
+    if (amount === 0) {
       notify({
         type: "error",
         description: "Amount cannot be zero",
@@ -361,7 +477,7 @@ export const CloseSaleInline: FC<Props> = ({
       return false;
     }
 
-    if( !payment?.canHaveChangeDue && amount + received > ft ) {
+    if (!payment?.can_have_change_due && amount + received > ft) {
       notify({
         type: "error",
         description: `Please add exact amount for ${payment?.name}`,
@@ -418,7 +534,7 @@ export const CloseSaleInline: FC<Props> = ({
   const addAdjustment = () => {
     const adj = ft % 10;
 
-    if( adj < 5 ) {
+    if (adj < 5) {
       setAppState((prev) => ({
         ...prev,
         adjustment: -adj,
@@ -437,7 +553,7 @@ export const CloseSaleInline: FC<Props> = ({
 
   const paymentInputRef = useRef<HTMLInputElement>(null);
   const selectPaymentInput = () => {
-    if( paymentInputRef.current !== null ) {
+    if (paymentInputRef.current !== null) {
       paymentInputRef.current.select();
     }
   };
@@ -606,7 +722,7 @@ export const CloseSaleInline: FC<Props> = ({
                               className="w-full flex-1 lg input mousetrap form-control"
                               onClick={selectPaymentInput}
                               onKeyDown={(e) => {
-                                if( e.key === "Enter" ) {
+                                if (e.key === "Enter") {
                                   e.preventDefault();
 
                                   addSplitPayment(

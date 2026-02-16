@@ -6,5 +6,5 @@ export interface CustomerPayment  {
   amount: number;
   description: string;
   order?: Omit<Order, "customer"|"payments">;
-  createdAt: string;
+  created_at: string;
 }

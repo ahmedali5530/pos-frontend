@@ -1,20 +1,12 @@
-import {useTranslation} from "react-i18next";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPencilAlt, faPlus, faTrash,} from "@fortawesome/free-solid-svg-icons";
+import {faPencilAlt, faPlus,} from "@fortawesome/free-solid-svg-icons";
 import {Button} from "../../../../app-common/components/input/button";
 import React, {useState} from "react";
 import {Department} from "../../../../api/model/department";
-import {DEPARTMENT_GET, DEPARTMENT_LIST,} from "../../../../api/routing/routes/backend.app";
 import {TableComponent} from "../../../../app-common/components/table/table";
 import {createColumnHelper} from "@tanstack/react-table";
-import {useSelector} from "react-redux";
-import {getStore} from "../../../../duck/store/store.selector";
 import {CreateDepartment} from "./create.department";
-import {HydraCollection} from "../../../../api/model/hydra";
 import {ConfirmAlert} from "../../../../app-common/components/confirm/confirm.alert";
-import {jsonRequest} from "../../../../api/request/request";
-import {useAtom} from "jotai";
-import {appState as AppState} from "../../../../store/jotai";
 import {Tables} from "../../../../api/db/tables";
 import useApi, {SettingsData} from "../../../../api/db/use.api";
 import {useDB} from "../../../../api/db/db";
@@ -75,7 +67,7 @@ export const Departments = () => {
               title="Confirmation"
               description={`Are you sure to ${info.row.original.is_active ? 'de-' : ''}activate this department?`}
             >
-              <Switch checked={info.row.original.is_active} readOnly />
+              <Switch checked={info.row.original.is_active} readOnly/>
             </ConfirmAlert>
           </>
         );

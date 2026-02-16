@@ -1,21 +1,13 @@
 import React, {FC, useEffect, useState} from "react";
 import {Modal} from "../../../../app-common/components/modal/modal";
 import {Input} from "../../../../app-common/components/input/input";
-import {Trans} from "react-i18next";
-import {StoresInput} from "../../../../app-common/components/input/stores";
 import {Controller, useForm} from "react-hook-form";
 import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
 import {Button} from "../../../../app-common/components/input/button";
-import { notification } from 'antd';
 
-import {
-  CATEGORY_LIST,
-  PRODUCT_KEYWORDS, STORE_LIST,
-  TERMINAL_CREATE, TERMINAL_EDIT,
-  TERMINAL_GET
-} from "../../../../api/routing/routes/backend.app";
+import {CATEGORY_LIST, PRODUCT_KEYWORDS} from "../../../../api/routing/routes/backend.app";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
-import {fetchJson, jsonRequest} from "../../../../api/request/request";
+import {fetchJson} from "../../../../api/request/request";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
 import {Category} from "../../../../api/model/category";
@@ -26,9 +18,14 @@ import {yupResolver} from "@hookform/resolvers/yup";
 import {getErrorClass, getErrors, hasErrors} from "../../../../lib/error/error";
 import {Store} from "../../../../api/model/store";
 import {notify} from "../../../../app-common/components/confirm/notification";
-import useApi from "../../../../api/hooks/use.api";
-import { HydraCollection } from "../../../../api/model/hydra";
-import { Product } from "../../../../api/model/product";
+import {HydraCollection} from "../../../../api/model/hydra";
+import {Product} from "../../../../api/model/product";
+import useApi, {SettingsData} from "../../../../api/db/use.api";
+import {Tables} from "../../../../api/db/tables";
+import {useDB} from "../../../../api/db/db";
+import {StringRecordId} from "surrealdb";
+import {types} from "sass";
+import String = types.String;
 
 interface CreateTerminalProps{
   entity?: Terminal;
@@ -50,7 +47,10 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
   });
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
-  const {data: stores, fetchData: loadStores} = useApi<HydraCollection<Store>>('stores', STORE_LIST);
+  const {data: stores, fetchData: loadStores} = useApi<SettingsData<Store>>(
+    Tables.store
+  );
+  const db = useDB();
 
   useEffect(() => {
     setModal(addModal);
@@ -60,14 +60,12 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
     if (entity) {
       reset({
         ...entity,
-        products: entity.products.map(item => {
-          return {
-            label: item.name,
-            value: item.id
-          }
-        }),
+        products: entity.products.map(item => ({
+          label: item.name,
+          value: item.id.toString()
+        })),
         store: {
-          value: entity?.store?.id,
+          value: entity?.store?.id?.toString(),
           label: entity?.store?.name
         }
       });
@@ -77,36 +75,44 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
   const createTerminal = async (values: any) => {
     setCreating(true);
     try {
-      let url, method = 'POST';
-      if (values.id) {
-        method = 'PUT';
-        url = TERMINAL_EDIT.replace(':id', values.id);
-      } else {
-        url = TERMINAL_CREATE;
+      if(values.store){
+        values.store = new StringRecordId(values.store.value);
       }
 
-      if(values.store){
-        values.store = values.store.value;
-      }
+      // build products list
+      let products = [];
 
       if(values.products){
-        values.products = values.products.map((p: ReactSelectOptionProps) => p.value);
+        products = values.products.map((p: ReactSelectOptionProps) => p.value);
       }
 
       if(values.excludeProducts){
-        values.excludeProducts = values.excludeProducts.map((p: ReactSelectOptionProps) => p.value);
+        products = products.filter(item => {
+          return !values.excludeProducts.map(item => item.value).includes(item);
+        })
       }
 
       if(values.categories){
-        values.categories = values.categories.map((p: ReactSelectOptionProps) => p.value);
+        for(const c of values.categories){
+          const [categoryProducts] = await db.query(`SELECT <string>id as id FROM ${Tables.product} where categories ?= $category`, {
+            category: c.value
+          });
+
+          products = Array.from(new Set([...(categoryProducts.map(item => item.id) || []), ...products]));
+        }
       }
 
-      await jsonRequest(url, {
-        method: method,
-        body: JSON.stringify({
+      if (entity?.id) {
+        await db.merge(new StringRecordId(entity.id), {
           ...values,
-        })
-      });
+          products: products.map(item => new StringRecordId(item))
+        });
+      } else {
+        await db.insert(Tables.terminal, {
+          ...values,
+          products: products.map(item => new StringRecordId(item))
+        });
+      }
 
       onModalClose();
 
@@ -147,31 +153,17 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
     }
   };
 
-  const [isProductsLoading, setProductsLoading] = useState(false);
-  const [products, setProducts] = useState<ReactSelectOptionProps[]>([]);
-  const loadProducts = async () => {
-    setProductsLoading(true);
-
-    try{
-      const res: {list: Product[]} = await fetchJson(PRODUCT_KEYWORDS);
-      setProducts(res.list.map(item => ({
-        label: item.name,
-        value: item["@id"]!
-      })));
-    }catch (e){
-      throw e;
-    }finally {
-      setProductsLoading(false);
-    }
-  };
+  const {
+    data: products,
+    fetchData: loadProducts,
+    isLoading: isProductsLoading
+  } = useApi<SettingsData<Product>>(Tables.product, ['is_active = true'])
 
   const {
     data: categories,
     fetchData: loadCategories,
     isLoading: isCategoriesLoading
-  } = useApi<HydraCollection<Category>>('categories', CATEGORY_LIST, {
-    isActive: true
-  })
+  } = useApi<SettingsData<Category>>(Tables.category, ['is_active = true'])
 
   useEffect(() => {
     loadProducts();
@@ -201,7 +193,6 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
       title={operation === 'create' ? 'Create terminal' : 'Update terminal'}
     >
       <form onSubmit={handleSubmit(createTerminal)} className="mb-5">
-        <input type="hidden" {...register('id')}/>
         <div className="grid grid-cols-1 gap-4 mb-3">
           <div>
             <label htmlFor="code">Code</label>
@@ -239,7 +230,7 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
                 <ReactSelect
                   onChange={props.field.onChange}
                   value={props.field.value}
-                  options={categories?.['hydra:member']?.map(item => {
+                  options={categories?.data?.map(item => {
                     return {
                       label: item.name,
                       value: item.id
@@ -264,7 +255,10 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
                 <ReactSelect
                   onChange={props.field.onChange}
                   value={props.field.value}
-                  options={products}
+                  options={products?.data?.map(item => ({
+                    label: item.name,
+                    value: item.id?.toString()
+                  }))}
                   isMulti
                   isLoading={isProductsLoading}
                   closeMenuOnSelect={false}
@@ -284,7 +278,10 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
                 <ReactSelect
                   onChange={props.field.onChange}
                   value={props.field.value}
-                  options={products}
+                  options={products?.data?.map(item => ({
+                    label: item.name,
+                    value: item.id.toString()
+                  }))}
                   isMulti
                   isLoading={isProductsLoading}
                   closeMenuOnSelect={false}

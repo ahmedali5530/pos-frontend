@@ -48,11 +48,12 @@ export const TableComponent: FC<TableComponentProps> = ({
   buttons, dropdownFilters,
   enableSearch,
   loaderHook,
-  loaderLines, loaderLineItems, enableRefresh = true
+  loaderLines, loaderLineItems, enableRefresh = true,
+  sort
 }) => {
   const { t } = useTranslation();
 
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>(sort ?? []);
   useEffect(() => {
     if( sorting.length === 1 && sorting[0]?.id !== '' ) {
       handleSortChange!([`${sorting[0].id} ${sorting[0].desc === true ? 'DESC' : 'ASC'}`]);

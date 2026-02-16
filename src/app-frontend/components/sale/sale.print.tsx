@@ -3,21 +3,25 @@ import React, {FC, useEffect, useMemo, useState} from "react";
 import {Modal} from "../../../app-common/components/modal/modal";
 import {Button} from "../../../app-common/components/input/button";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPrint, faEnvelope} from "@fortawesome/free-solid-svg-icons";
+import {faEnvelope, faPrint} from "@fortawesome/free-solid-svg-icons";
 import {Setting, SettingTypes} from "../../../api/model/setting";
 import localforage from "../../../lib/localforage/localforage";
 import {DateTime} from "luxon";
-import ReactDOM from "react-dom";
 import {Input} from "../../../app-common/components/input/input";
-import { createRoot } from "react-dom/client";
+import {createRoot} from "react-dom/client";
+import {useOrder} from "../../../api/hooks/use.order";
+import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
+import {DatabaseProvider} from "../../../providers/database.provider";
 
 interface SalePrintProps {
   order: Order;
 }
 
+const queryClient = new QueryClient();
+
 export const PrintOrder = (order: Order) => {
   //open print window
-  const myWindow: any = window.open('','', 'height: 500;width:500');
+  const myWindow: any = window.open('', '', 'height: 500;width:500');
 
   const div = myWindow.document.createElement('div');
   div.id = 'print-root';
@@ -26,7 +30,13 @@ export const PrintOrder = (order: Order) => {
 
   const container = myWindow.document.querySelector('#print-root');
   const root = createRoot(container);
-  root.render(<SalePrintMarkup order={order} />);
+  root.render(
+    <QueryClientProvider client={queryClient}>
+      <DatabaseProvider>
+        <SalePrintMarkup order={order}/>
+      </DatabaseProvider>
+    </QueryClientProvider>
+  );
 
   myWindow.document.close();
   myWindow.focus();
@@ -51,14 +61,14 @@ export const SalePrint: FC<SalePrintProps> = (props) => {
         setShow(false)
       }} title="Duplicate Sale Receipt Print">
         <div className="flex justify-center flex-col items-center">
-          <SalePrintMarkup order={props.order} />
+          <SalePrintMarkup order={props.order}/>
 
           <div className="flex flex-row gap-3">
             <Button variant="success" onClick={() => PrintOrder(props.order)}>
-              <FontAwesomeIcon icon={faPrint} />
+              <FontAwesomeIcon icon={faPrint}/>
             </Button>
             <Button active={sendEmail} variant="secondary" onClick={() => setSendEmail(!sendEmail)}>
-              <FontAwesomeIcon icon={faEnvelope} />
+              <FontAwesomeIcon icon={faEnvelope}/>
             </Button>
           </div>
 
@@ -76,12 +86,12 @@ export const SalePrint: FC<SalePrintProps> = (props) => {
   );
 };
 
-export const SalePrintMarkup = ({order}: {order: Order}) => {
+export const SalePrintMarkup = ({order}: { order: Order }) => {
   const [settings, setSettings] = useState<Setting[]>([]);
 
   useEffect(() => {
     localforage.getItem('settings').then((data: any) => {
-      if(data) {
+      if (data) {
         let settings: Setting[] = JSON.parse(data);
         settings = settings.filter(item => item.type === SettingTypes.TYPE_RECEIPT);
         setSettings(settings)
@@ -89,18 +99,20 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
     });
   }, []);
 
+  const orderHook = useOrder();
+
   const itemsTotal = useMemo(() => {
-    return order.items.reduce((prev, item) => ((item.price * item.quantity) + item.taxesTotal - item.discount) + prev, 0)
+    return order.items.reduce((prev, item) => ((item.price * item.quantity) + orderHook.itemTaxes(item) - item.discount) + prev, 0)
   }, [order]);
 
   const netTotal = useMemo(() => {
     let amount = itemsTotal;
-    if(order?.discount && order?.discount?.amount) {
-      amount -= order?.discount?.amount
+    if (order?.discount && order?.discount?.amount) {
+      amount -= Number(order?.discount?.amount)
     }
 
-    if(order?.tax && order?.tax?.amount){
-      amount += order?.tax?.amount;
+    if (order?.tax && order?.tax?.amount) {
+      amount += Number(order?.tax?.amount);
     }
 
     return amount;
@@ -194,7 +206,7 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
             id="RegisterSection"
           >
             <span id="saleId3Inch" style={{float: "left"}}>
-              Receipt #: {order.orderId}
+              Receipt #: {order.order_id}
             </span>
             <span id="RegisterCode3Inch" style={{float: "right", display: 'none'}}>
               Register: RegDF01
@@ -210,7 +222,7 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
               clear: "both"
             }}
           >
-            Date: {DateTime.fromISO(order.createdAt).toFormat(import.meta.env.VITE_DATE_TIME_FORMAT as string)}
+            Date: {DateTime.fromJSDate(order.created_at).toFormat(import.meta.env.VITE_DATE_TIME_FORMAT as string)}
           </h4>
         </div>
         {order.customer && (
@@ -285,7 +297,7 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
                   {item.product.name}
                   {item.variant && (
                     <>
-                      <div className="ml-1">- {item.variant.attributeValue}</div>
+                      <div className="ml-1">- {item.variant.attribute_value}</div>
                     </>
                   )}
                 </td>
@@ -297,14 +309,15 @@ export const SalePrintMarkup = ({order}: {order: Order}) => {
                 />
                 <td
                   style={{textAlign: "right"}}
-                >{item.taxesTotal}</td>
+                >{orderHook.itemTaxes(item)}</td>
                 <td
                   className="DiscColumnData3Inch"
                   style={{textAlign: "right"}}
                 >
                   {item.discount}
                 </td>
-                <td style={{textAlign: "right"}}>{(item.price * item.quantity) + item.taxesTotal - item.discount}</td>
+                <td
+                  style={{textAlign: "right"}}>{(item.price * item.quantity) + orderHook.itemTaxes(item) - item.discount}</td>
               </tr>
             ))}
             <tr

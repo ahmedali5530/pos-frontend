@@ -2,6 +2,7 @@ import {Product} from "./product";
 import {ProductVariant} from "./product.variant";
 import {Tax} from "./tax";
 import {HydraId, HydraType} from "./hydra";
+import {Order} from "./order";
 
 export interface OrderItem  {
   id: string;
@@ -9,14 +10,15 @@ export interface OrderItem  {
   variant?: ProductVariant;
   quantity: number;
   price: number;
-  isSuspended?: boolean;
-  isDeleted?: boolean;
-  isReturned?: boolean;
+  is_suspended?: boolean;
+  is_deleted?: boolean;
+  is_returned?: boolean;
   taxes: Tax[];
-  taxesTotal: number;
+  taxes_total: number;
   discount: number;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
+  order?: Order
 }
 
 export interface OrderItemSimple  {
@@ -25,13 +27,13 @@ export interface OrderItemSimple  {
   variant?: string;
   quantity: number;
   price: number;
-  isSuspended?: boolean;
-  isDeleted?: boolean;
-  isReturned?: boolean;
+  is_suspended?: boolean;
+  is_deleted?: boolean;
+  is_returned?: boolean;
   taxes: string[];
-  taxesTotal: number;
+  taxes_total: number;
   discount: number;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
   order?: string;
 }

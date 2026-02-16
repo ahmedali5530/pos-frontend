@@ -44,11 +44,12 @@ function useApi<T>(
   table: string,
   initialFilters: string[] = [],
   initialSort: string[] = [],
-  initialOffset: number = 0,
+  initialOffset?: number,
   initialLimit?: number,
   initialFetches: string[] = [],
   useApiOptions?: any,
   initialSelects: string[] = ['*'],
+  initialParameters?: {}
 ): {
   splits: string[];
   handleSplitsChange: (newSplits: string[]) => void;
@@ -66,7 +67,7 @@ function useApi<T>(
   addFilter: (newFilter: string, condition?: string, params?: Record<string, any>) => void;
   sorts: string[];
   handleSortChange: (newSort: string[]) => void;
-  page: number;
+  page: number | undefined;
   pageSize: number | undefined;
   handlePageChange: (newPage: number) => void;
   handlePageSizeChange: (newPageSize: number) => void;
@@ -80,13 +81,13 @@ function useApi<T>(
 } {
   const [filters, setFilters] = useState<string[]>(initialFilters);
   const [sorts, setSorts] = useState<string[]>(initialSort);
-  const [page, setPage] = useState<number>(initialOffset);
+  const [page, setPage] = useState<number|undefined>(initialOffset);
   const [pageSize, setPageSize] = useState<number|undefined>(initialLimit);
   const [selects, setSelects] = useState<string[]>(initialSelects);
   const [splits, setSplits] = useState<string[]>([]);
   const [groups, setGroups] = useState<string[]>([]);
   const [fetches, setFetches] = useState<string[]>(initialFetches);
-  const [parameters, setParameters] = useState({});
+  const [parameters, setParameters] = useState(initialParameters);
 
   const queryClient = useQueryClient();
   const { isConnected } = useDatabase();
@@ -97,7 +98,7 @@ function useApi<T>(
     return queryBuilder.queryString;
   }, [filters, sorts, page, pageSize, selects, splits, groups, fetches, parameters]);
 
-  const queryKeys = [table, { filters, sorts, page, pageSize, selects, splits, groups, fetches, parameters, mainQuery }];
+  const queryKeys = [table, JSON.stringify({ filters, sorts, page, pageSize, selects, splits, groups, fetches, parameters, mainQuery })];
 
   const fetchFilteredData = async () => {
     // Ensure database is connected before executing queries
@@ -110,7 +111,12 @@ function useApi<T>(
     }
     
     try {
-      const totalQuery = await db.query(`Select count() from ${table} group all`);
+      let groupConditions = '';
+      if(Array.isArray(initialFilters) && initialFilters?.length > 0){
+        groupConditions = initialFilters.join(' ');
+      }
+
+      const totalQuery = await db.query(`Select count()from ${table} ${groupConditions.length > 0 ? `WHERE ${groupConditions}` : ''} group all`);
       const listQuery = await db.query(mainQuery, queryBuilder.parameters);
 
       return{

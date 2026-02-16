@@ -8,22 +8,24 @@ import {Modal} from "../../../app-common/components/modal/modal";
 import {fetchJson} from "../../../api/request/request";
 import {useForm} from "react-hook-form";
 import {Expense} from "../../../api/model/expense";
-import {EXPENSE_CREATE, EXPENSE_LIST} from "../../../api/routing/routes/backend.app";
+import {EXPENSE_CREATE} from "../../../api/routing/routes/backend.app";
 import {ConstraintViolation, ValidationResult} from "../../../lib/validator/validation.result";
 import {Trans} from "react-i18next";
 import {HttpException, UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
 import {Loader} from "../../../app-common/components/loader/loader";
 import {Shortcut} from "../../../app-common/components/input/shortcut";
-import {useSelector} from "react-redux";
-import {getStore} from "../../../duck/store/store.selector";
 import {hasErrors} from "../../../lib/error/error";
 import {yupResolver} from "@hookform/resolvers/yup";
 import * as yup from 'yup';
 import {ValidationMessage} from "../../../api/model/validation";
 import {notify} from "../../../app-common/components/confirm/notification";
-import { withCurrency } from "../../../lib/currency/currency";
+import {withCurrency} from "../../../lib/currency/currency";
 import {useAtom} from "jotai";
-import {appState, defaultState} from "../../../store/jotai";
+import {appState} from "../../../store/jotai";
+import {useDB} from "../../../api/db/db";
+import {Tables} from "../../../api/db/tables";
+import {toRecordId, toSurrealDBDate} from "../../../api/model/common";
+import {useQueryBuilder} from "../../../api/db/query-builder";
 
 interface ExpensesProps{
   onClose?: () => void;
@@ -35,32 +37,45 @@ const ValidationSchema = yup.object({
 });
 
 export const Expenses: FC<ExpensesProps> = (props) => {
+  const db = useDB();
+
   const [modal, setModal] = useState(false);
   const [isLoading, setLoading] = useState(false);
   const [list, setList] = useState<Expense[]>([]);
   const [filters, setFilters] = useState<any>();
 
   const [state, setState] = useAtom(appState);
-  const {store} = state;
+  const {store, user} = state;
 
-  const {register, handleSubmit, reset} = useForm();
+  const {register, handleSubmit, reset} = useForm({
+    defaultValues: {
+      startTime: DateTime.now().startOf('day').toFormat(import.meta.env.VITE_SURREAL_DB_DATE_TIME_FORMAT),
+      endTime: DateTime.now().endOf('day').toFormat(import.meta.env.VITE_SURREAL_DB_DATE_TIME_FORMAT)
+    }
+  });
+  const qb = useQueryBuilder(Tables.expense, '*', [], undefined, undefined, ['created_at DESC']);
+
   const loadExpenses = async (values?: any) => {
     setLoading(true);
 
     setFilters(values);
+
     try {
-      const url = new URL(EXPENSE_LIST);
-      const params = new URLSearchParams({
-        ...values,
-        orderBy: 'id',
-        orderMode: 'DESC',
-        store: store?.id
-      });
+      qb.setWheres([]);
 
-      url.search = params.toString();
-      const json = await fetchJson(url.toString());
+      if(values.startTime){
+        qb.addWhere(`created_at >= d"${values.startTime}"`);
+      }
+      if(values.endTime){
+        qb.addWhere(`created_at <= d"${values.endTime}"`);
+      }
 
-      setList(json.list);
+      qb.addWhere('store = $store');
+      qb.addParameter('store', toRecordId(store?.id));
+
+      const [data] = await db.query(qb.queryString);
+
+      setList(data);
     } catch (e) {
 
       throw e;
@@ -71,12 +86,8 @@ export const Expenses: FC<ExpensesProps> = (props) => {
   useEffect(() => {
     if (modal) {
       loadExpenses({
-        dateTimeFrom: DateTime.now().startOf('day').toFormat("yyyy-MM-dd'T'HH:mm"),
-        dateTimeTo: DateTime.now().endOf('day').toFormat("yyyy-MM-dd'T'HH:mm")
-      });
-      reset({
-        dateTimeFrom: DateTime.now().startOf('day').toFormat("yyyy-MM-dd'T'HH:mm"),
-        dateTimeTo: DateTime.now().endOf('day').toFormat("yyyy-MM-dd'T'HH:mm")
+        startTime: DateTime.now().startOf('day').toFormat(import.meta.env.VITE_SURREAL_DB_DATE_TIME_FORMAT),
+        endTime: DateTime.now().endOf('day').toFormat(import.meta.env.VITE_SURREAL_DB_DATE_TIME_FORMAT)
       });
 
       createReset();
@@ -93,16 +104,15 @@ export const Expenses: FC<ExpensesProps> = (props) => {
   const createExpense = async (values: any) => {
     setCreating(true);
     try {
-      await fetchJson(EXPENSE_CREATE, {
-        method: 'POST',
-        body: JSON.stringify({
-          ...values,
-          dateTime: DateTime.now().toISO(),
-          store: store?.id
-        })
+      await db.insert(Tables.expense, {
+        ...values,
+        amount: Number(values.amount),
+        created_at: DateTime.now().toJSDate(),
+        store: toRecordId(store?.id),
+        user: toRecordId(user?.id)
       });
 
-      loadExpenses(filters);
+      await loadExpenses(filters);
       createReset();
     } catch (exception: any) {
       if (exception instanceof HttpException) {
@@ -257,7 +267,7 @@ export const Expenses: FC<ExpensesProps> = (props) => {
               <tbody>
               {list.map((order, index) => (
                 <tr key={index} className="hover:bg-gray-100">
-                  <td title={order.createdAt}>{DateTime.fromISO(order.createdAt).toRelative({base: DateTime.now()})}</td>
+                  <td title={order.created_at}>{DateTime.fromJSDate(order.created_at).toRelative({base: DateTime.now()})}</td>
                   <td>{order.description}</td>
                   <td>{withCurrency(order.amount)}</td>
                 </tr>

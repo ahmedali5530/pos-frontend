@@ -1,30 +1,16 @@
-import React, { useState } from "react";
-import {
-  DISCOUNT_GET,
-  DISCOUNT_LIST,
-} from "../../../../api/routing/routes/backend.app";
-import { useTranslation } from "react-i18next";
-import { createColumnHelper } from "@tanstack/react-table";
-import { Button } from "../../../../app-common/components/input/button";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faPencilAlt,
-  faPlus,
-  faTrash,
-} from "@fortawesome/free-solid-svg-icons";
-import { TableComponent } from "../../../../app-common/components/table/table";
-import { Discount } from "../../../../api/model/discount";
-import { useSelector } from "react-redux";
-import { getStore } from "../../../../duck/store/store.selector";
-import { CreateDiscount } from "./create.discount";
-import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
-import { jsonRequest } from "../../../../api/request/request";
-import { Switch } from "../../../../app-common/components/input/switch";
+import React, {useState} from "react";
+import {createColumnHelper} from "@tanstack/react-table";
+import {Button} from "../../../../app-common/components/input/button";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faPencilAlt, faPlus,} from "@fortawesome/free-solid-svg-icons";
+import {TableComponent} from "../../../../app-common/components/table/table";
+import {Discount} from "../../../../api/model/discount";
+import {CreateDiscount} from "./create.discount";
+import {ConfirmAlert} from "../../../../app-common/components/confirm/confirm.alert";
+import {Switch} from "../../../../app-common/components/input/switch";
 import useApi, {SettingsData} from "../../../../api/db/use.api";
 import {useDB} from "../../../../api/db/db";
 import {StringRecordId} from "surrealdb";
-import {useAtom} from "jotai";
-import {appState} from "../../../../store/jotai";
 import {Tables} from "../../../../api/db/tables";
 
 export const DiscountTypes = () => {
@@ -34,7 +20,7 @@ export const DiscountTypes = () => {
     Tables.discount,
     [], [], 0, 10, ['stores']
   );
-  const { fetchData } = useLoadHook;
+  const {fetchData} = useLoadHook;
   const [discount, setDiscount] = useState<Discount>();
   const [modal, setModal] = useState(false);
 
@@ -82,7 +68,7 @@ export const DiscountTypes = () => {
                 setModal(true);
               }}
               tabIndex={-1}>
-              <FontAwesomeIcon icon={faPencilAlt} />
+              <FontAwesomeIcon icon={faPencilAlt}/>
             </Button>
             <span className="mx-2 text-gray-300">|</span>
             <ConfirmAlert
@@ -97,7 +83,7 @@ export const DiscountTypes = () => {
               title="Confirmation"
               description={`Are you sure to ${info.row.original.is_active ? 'de-' : ''}activate this discount type?`}
             >
-              <Switch checked={info.row.original.is_active} readOnly />
+              <Switch checked={info.row.original.is_active} readOnly/>
             </ConfirmAlert>
           </>
         );
@@ -126,7 +112,7 @@ export const DiscountTypes = () => {
               setModal(true);
               setOperation("create");
             }}>
-            <FontAwesomeIcon icon={faPlus} className="mr-2" /> Discount type
+            <FontAwesomeIcon icon={faPlus} className="mr-2"/> Discount type
           </Button>
         ]}
       />

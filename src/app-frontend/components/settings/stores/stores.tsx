@@ -1,17 +1,14 @@
 import React, {useState} from "react";
-import { PAYMENT_TYPE_GET, STORE_EDIT, STORE_LIST, } from "../../../../api/routing/routes/backend.app";
 import {useTranslation} from "react-i18next";
 import {createColumnHelper} from "@tanstack/react-table";
 import {Button} from "../../../../app-common/components/input/button";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPencilAlt, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
+import {faPencilAlt, faPlus} from "@fortawesome/free-solid-svg-icons";
 import {TableComponent} from "../../../../app-common/components/table/table";
 import {Store} from "../../../../api/model/store";
 import {CreateStore} from "./create.store";
-import {HydraCollection} from "../../../../api/model/hydra";
-import { Switch } from "../../../../app-common/components/input/switch";
-import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
-import { jsonRequest } from "../../../../api/request/request";
+import {Switch} from "../../../../app-common/components/input/switch";
+import {ConfirmAlert} from "../../../../app-common/components/confirm/confirm.alert";
 import useApi, {SettingsData} from "../../../../api/db/use.api";
 import {Tables} from "../../../../api/db/tables";
 import {useDB} from "../../../../api/db/db";
@@ -62,7 +59,7 @@ export const Stores = () => {
               title="Confirmation"
               description={`Are you sure to ${info.row.original.is_active ? 'de-' : ''}activate this store?`}
             >
-              <Switch checked={info.row.original.is_active} readOnly />
+              <Switch checked={info.row.original.is_active} readOnly/>
             </ConfirmAlert>
           </>
         )

@@ -4,8 +4,6 @@ import {Input} from "../../../../app-common/components/input/input";
 import {Trans} from "react-i18next";
 import {Button} from "../../../../app-common/components/input/button";
 import {useForm} from "react-hook-form";
-import {STORE_CREATE, STORE_EDIT} from "../../../../api/routing/routes/backend.app";
-import {jsonRequest} from "../../../../api/request/request";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
 import {Store} from "../../../../api/model/store";
@@ -16,7 +14,6 @@ import {hasErrors} from "../../../../lib/error/error";
 import {notify} from "../../../../app-common/components/confirm/notification";
 import {useDB} from "../../../../api/db/db";
 import {Tables} from "../../../../api/db/tables";
-import {StringRecordId} from "surrealdb";
 
 interface CreateStoreProps {
   entity?: Store;

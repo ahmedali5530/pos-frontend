@@ -159,11 +159,11 @@ const Login = () => {
                   Login
                 </button>
               </div>
-              <div className="col-12 mt-3 d-flex justify-content-between">
-                <Link to={FORGOT_PASSWORD} className="text-white">
-                  Forgot Password?
-                </Link>
-              </div>
+              {/*<div className="col-12 mt-3 d-flex justify-content-between">*/}
+              {/*  <Link to={FORGOT_PASSWORD} className="text-white">*/}
+              {/*    Forgot Password?*/}
+              {/*  </Link>*/}
+              {/*</div>*/}
             </form>
           </div>
         </div>

@@ -1,28 +1,17 @@
-import { Button } from "../../../../app-common/components/input/button";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faPencilAlt,
-  faPlus,
-  faEllipsis, faEye, faPencil, faTrash
-} from "@fortawesome/free-solid-svg-icons";
-import React, { useState } from "react";
-import { Product } from "../../../../api/model/product";
-import {
-  PRODUCT_GET,
-  PRODUCT_LIST,
-} from "../../../../api/routing/routes/backend.app";
-import { TableComponent } from "../../../../app-common/components/table/table";
-import { useTranslation } from "react-i18next";
-import { createColumnHelper } from "@tanstack/react-table";
-import { ImportItems } from "./import.items";
-import { ExportItems } from "./export.items";
-import { CreateItem } from "./manage-item/items.create";
-import { ConfirmAlert } from "../../../../app-common/components/confirm/confirm.alert";
-import { jsonRequest } from "../../../../api/request/request";
-import { Switch } from "../../../../app-common/components/input/switch";
-import { ItemComponent } from "./item";
-import { Menu, MenuItem } from "react-aria-components";
-import { DropdownMenu, DropdownMenuItem } from "../../../../app-common/components/react-aria/dropdown.menu";
+import {Button} from "../../../../app-common/components/input/button";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faEllipsis, faPencil, faPlus} from "@fortawesome/free-solid-svg-icons";
+import React, {useState} from "react";
+import {ITEM_FETCHES, Product} from "../../../../api/model/product";
+import {TableComponent} from "../../../../app-common/components/table/table";
+import {createColumnHelper} from "@tanstack/react-table";
+import {ImportItems} from "./import.items";
+import {ExportItems} from "./export.items";
+import {CreateItem} from "./manage-item/items.create";
+import {ConfirmAlert} from "../../../../app-common/components/confirm/confirm.alert";
+import {Switch} from "../../../../app-common/components/input/switch";
+import {ItemComponent} from "./item";
+import {DropdownMenu, DropdownMenuItem} from "../../../../app-common/components/react-aria/dropdown.menu";
 import useApi, {SettingsData} from "../../../../api/db/use.api";
 import {Tables} from "../../../../api/db/tables";
 import {useDB} from "../../../../api/db/db";
@@ -30,9 +19,7 @@ import {StringRecordId} from "surrealdb";
 
 export const Items = () => {
   const useLoadHook = useApi<SettingsData<Product>>(
-    Tables.product, [], [], 0, 10, ['department', 'categories', 'suppliers', 'brands', 'variants', 'taxes', 'terminals',
-      'stores', 'stores.store', 'variants.stores', 'variants.stores.store'
-    ]
+    Tables.product, [], [], 0, 10, ITEM_FETCHES
   );
   const [entity, setEntity] = useState<Product>();
   const [operation, setOperation] = useState("create");
@@ -141,18 +128,19 @@ export const Items = () => {
                 info.row.original.is_active ? "de-" : ""
               }activate this item?`}
             >
-              <Switch checked={info.row.original.is_active} onChange={() => {}}></Switch>
+              <Switch checked={info.row.original.is_active} onChange={() => {
+              }}></Switch>
             </ConfirmAlert>
             <ItemComponent product={info.row.original}/>
             <DropdownMenu label={
               <FontAwesomeIcon icon={faEllipsis}/>
             } onAction={key => {
-              if(key === 'edit'){
+              if (key === 'edit') {
                 setEntity(info.row.original);
                 setOperation("update");
                 setModal(true);
               }
-              if(key === 'view'){
+              if (key === 'view') {
                 // <ItemComponent product={info.row.original}/>
               }
             }}>
@@ -178,15 +166,15 @@ export const Items = () => {
         columns={columns}
         loaderHook={useLoadHook}
         buttons={[
-          <ImportItems />,
-          <ExportItems />,
+          <ImportItems/>,
+          <ExportItems/>,
           <Button
             variant="primary"
             onClick={() => {
               setModal(true);
               setOperation("create");
             }}>
-            <FontAwesomeIcon icon={faPlus} className="mr-2" /> Item
+            <FontAwesomeIcon icon={faPlus} className="mr-2"/> Item
           </Button>
         ]}
         loaderLineItems={12}
