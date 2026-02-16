@@ -24,4 +24,5 @@ yarn-error.log*
 
 .idea
 dist
-/database
+/database/clog
+/database/manifest
