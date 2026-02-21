@@ -15,7 +15,7 @@ import {ClearSale} from "./clear.sale";
 import ScrollContainer from "react-indiana-drag-scroll";
 import {PrintOrder} from "./sale.print";
 import {notify} from "../../../app-common/components/confirm/notification";
-import {withCurrency} from "../../../lib/currency/currency";
+import {formatNumber, withCurrency} from "../../../lib/currency/currency";
 import {useAtom} from "jotai";
 import {CartItemType} from "../cart/cart.container";
 import {appState as AppState, defaultData, defaultState, PosModes} from "../../../store/jotai";
@@ -26,6 +26,7 @@ import {useDB} from "../../../api/db/db";
 import {Tables} from "../../../api/db/tables";
 import {useOrder} from "../../../api/hooks/use.order";
 import {toRecordId} from "../../../api/model/common";
+import {dispatchPrint} from "../../../lib/print/print.service";
 
 interface Props {
   paymentTypesList: PaymentType[];
@@ -190,9 +191,9 @@ export const CloseSaleInline: FC<Props> = ({
           is_deleted: false,
           is_returned: false,
           is_suspended: false,
-          price: add.price,
+          price: Number(add.price),
           product: toRecordId(add.item.id),
-          quantity: add.quantity,
+          quantity: Number(add.quantity),
           taxes: add.taxes.map(item => toRecordId(item.id)),
           variant: add.variant ? toRecordId(add.variant.id) : null
         });
@@ -306,11 +307,13 @@ export const CloseSaleInline: FC<Props> = ({
           ...formValues
         });
 
-        [[order]] = await orderHook.fetchOrder(toRecordId(orderId).toString());
+        order = await orderHook.fetchOrder(toRecordId(orderId).toString());
       } else {
-        [order] = await db.insert(Tables.order, {
+        const [o] = await db.insert(Tables.order, {
           ...formValues
         });
+
+        order = await orderHook.fetchOrder(o.id.toString());
       }
 
       for (const item of items) {
@@ -324,8 +327,26 @@ export const CloseSaleInline: FC<Props> = ({
 
       if (order.status === OrderStatus.COMPLETED) {
         onSale && onSale();
+
+        let printers = [];
+
+        const [settings] = await db.query(`SELECT * FROM ${Tables.setting} where terminal = $terminal and name = $name FETCH values.printers.printers`, {
+          name: 'final_printers',
+          terminal: toRecordId(terminal?.id)
+        });
+
+        if(settings.length > 0 && settings[0].values.printers.length > 0){
+          printers = settings[0].values.printers;
+        }
+
         //print the order
-        PrintOrder(order);
+        await dispatchPrint(db, 'final', {
+          order: order
+        }, {
+          userId: user?.id,
+          printers: printers
+        })
+        // PrintOrder(order);
       }
     } catch (e) {
       if (e instanceof UnprocessableEntityException) {
@@ -360,17 +381,17 @@ export const CloseSaleInline: FC<Props> = ({
   const changeDue = useMemo(() => {
     //get a total of payments
     if (payments.length === 0) {
-      return Number(watch("received")) - ft - adjustment;
+      return Number((Number(watch("received")) - ft - adjustment));
     }
 
-    return (
+    return Number((
       payments.reduce(
         (prev, current) => Number(prev) + Number(current.received),
         0
       ) -
       ft +
       adjustment
-    );
+    ));
   }, [payments, watch("received"), adjustment]);
 
   useEffect(() => {

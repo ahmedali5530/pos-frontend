@@ -66,7 +66,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
 
         if (quantity.length > 0) {
           setItemInfo({
-            quantity: quantity[0].quantity
+            quantity: formatNumber(quantity[0].quantity)
           })
 
           return;
@@ -84,7 +84,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
 
         if (quantity.length > 0) {
           setItemInfo({
-            quantity: quantity[0].quantity
+            quantity: formatNumber(quantity[0].quantity)
           })
         }
       }

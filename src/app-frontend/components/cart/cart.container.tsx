@@ -1,22 +1,13 @@
-import React, {
-  FunctionComponent,
-  useCallback, useEffect,
-  useMemo,
-  useState,
-} from "react";
-import { CartItem as CartItemModel } from "../../../api/model/cart.item";
-import { Product } from "../../../api/model/product";
-import { CartItem } from "./cart.item";
-import { Checkbox } from "../../../app-common/components/input/checkbox";
+import React, {FunctionComponent, useCallback, useMemo,} from "react";
+import {CartItem as CartItemModel} from "../../../api/model/cart.item";
+import {CartItem} from "./cart.item";
+import {Checkbox} from "../../../app-common/components/input/checkbox";
 import Mousetrap from "mousetrap";
-import { withCurrency } from "../../../lib/currency/currency";
-import { useAtom } from "jotai";
-import {appState as AppState, defaultState} from "../../../store/jotai";
-import { notify } from "../../../app-common/components/confirm/notification";
-import { subTotal } from "../../containers/dashboard/pos";
-import {useDB} from "../../../api/db/db";
-import {Tables} from "../../../api/db/tables";
-import {toRecordId} from "../../../api/model/common";
+import {formatNumber, withCurrency} from "../../../lib/currency/currency";
+import {useAtom} from "jotai";
+import {defaultState} from "../../../store/jotai";
+import {notify} from "../../../app-common/components/confirm/notification";
+import {subTotal} from "../../containers/dashboard/pos";
 
 interface CartContainerProps {
 
@@ -28,31 +19,28 @@ export enum CartItemType {
   rate = "rate",
 }
 
-export const CartContainer: FunctionComponent<CartContainerProps> = ({
-
-}) => {
+export const CartContainer: FunctionComponent<CartContainerProps> = ({}) => {
 
 
   const [appState, setAppState] = useAtom(defaultState);
-  const { added, cartItemType, cartItem } = appState;
+  const {added, cartItemType, cartItem} = appState;
   const onCheckAll = (e: any) => {
-    const newAdded = [...added];
-    newAdded.map((item) => (item.checked = e.target.checked));
-
     setAppState((prev) => ({
       ...prev,
-      added: newAdded,
+      added: prev.added.map(item => item.checked = e.target.checked),
     }));
   };
 
   const onCheck = (state: boolean, index: number) => {
-    const items = [...added];
-
-    items[index].checked = state;
-
     setAppState((prev) => ({
       ...prev,
-      added: items,
+      added: prev.added.map((item, idx) => {
+        if(idx === index){
+          item.checked = state;
+        }
+
+        return item;
+      }),
     }));
   };
 
@@ -253,7 +241,7 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
         updateCartItem(e.code === "ArrowDown" ? "down" : "up");
       }
 
-      if(e.code === 'ArrowDown'){
+      if (e.code === 'ArrowDown') {
         copyLastItem();
       }
     }
@@ -314,9 +302,9 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({
           <div className="table-cell">items</div>
           <div className="table-cell"></div>
           <div className="table-cell text-center p-2">
-            {added.reduce((previous, item) => {
+            {formatNumber(added.reduce((previous, item) => {
               return parseFloat(item.quantity as unknown as string) + previous;
-            }, 0)}
+            }, 0))}
           </div>
           <div className="table-cell"></div>
           <div className="table-cell"></div>

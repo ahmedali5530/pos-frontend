@@ -4,7 +4,7 @@ import {Modal} from "../../../app-common/components/modal/modal";
 import {Button} from "../../../app-common/components/input/button";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faEnvelope, faPrint} from "@fortawesome/free-solid-svg-icons";
-import {Setting, SettingTypes} from "../../../api/model/setting";
+import {Setting} from "../../../api/model/setting";
 import localforage from "../../../lib/localforage/localforage";
 import {DateTime} from "luxon";
 import {Input} from "../../../app-common/components/input/input";
@@ -89,15 +89,15 @@ export const SalePrint: FC<SalePrintProps> = (props) => {
 export const SalePrintMarkup = ({order}: { order: Order }) => {
   const [settings, setSettings] = useState<Setting[]>([]);
 
-  useEffect(() => {
-    localforage.getItem('settings').then((data: any) => {
-      if (data) {
-        let settings: Setting[] = JSON.parse(data);
-        settings = settings.filter(item => item.type === SettingTypes.TYPE_RECEIPT);
-        setSettings(settings)
-      }
-    });
-  }, []);
+  // useEffect(() => {
+  //   localforage.getItem('settings').then((data: any) => {
+  //     if (data) {
+  //       let settings: Setting[] = JSON.parse(data);
+  //       settings = settings.filter(item => item.type === SettingTypes.TYPE_RECEIPT);
+  //       setSettings(settings)
+  //     }
+  //   });
+  // }, []);
 
   const orderHook = useOrder();
 

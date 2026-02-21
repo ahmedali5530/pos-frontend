@@ -6,7 +6,7 @@ export const useFetch = () => {
   const db = useDB();
 
   const fetchById = async (id: string, fetches: string[] = []) => {
-    const [record] =  await db.query(`SELECT * FROM ${toRecordId(id)} ${fetches.length > 0 ? `FETCH ${fetches.join(', ')}` : ''}`);
+    const [record] =  await db.query(`SELECT * FROM ONLY ${toRecordId(id)} ${fetches.length > 0 ? `FETCH ${fetches.join(', ')}` : ''}`);
 
     return record;
   }

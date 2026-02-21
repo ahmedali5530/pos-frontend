@@ -8,6 +8,7 @@ import { PosMode } from "../../components/modes/pos";
 import { PaymentMode } from "../../components/modes/payment";
 import { Discount, DiscountRate, DiscountScope } from "../../../api/model/discount";
 import { Tax } from "../../../api/model/tax";
+import {formatNumber} from "../../../lib/currency/currency";
 
 export const getRealProductPrice = (item: Product) => {
   let price = 0;
@@ -92,7 +93,7 @@ export const getExclusiveRowTotal = (item: CartItem) => {
 }
 
 export const getRowTotal = (item: CartItem) => {
-  const quantity = parseFloat(item.quantity as unknown as string);
+  const quantity = item.quantity;
 
   let total = item.price * quantity;
   if( item.discount ) {
@@ -156,7 +157,7 @@ export const discountTotal = (added: CartItem[], tax?: Tax, discountAmount?: num
 export const couponTotal = () => 0;
 
 export const finalTotal = (added: CartItem[], tax?: Tax, discountAmount?: number, discountRateType?: string, discount?: Discount ) => {
-  return subTotal(added) + taxTotal(added, tax) - discountTotal(added, tax, discountAmount, discountRateType, discount) - couponTotal();
+  return Number(formatNumber(subTotal(added) + taxTotal(added, tax) - discountTotal(added, tax, discountAmount, discountRateType, discount) - couponTotal()));
 }
 
 export const scrollToBottom = (container: HTMLDivElement | null) => {

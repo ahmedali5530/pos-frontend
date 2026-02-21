@@ -12,7 +12,7 @@ interface NotifyProps{
   duration?: number;
 }
 export const notify = ({
-  title, description, onClick, type, placement, duration
+  title, description, onClick, type = 'success', placement, duration
 }: NotifyProps) => {
   notification.open({
     message: title || type?.toUpperCase(),

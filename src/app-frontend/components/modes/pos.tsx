@@ -44,6 +44,7 @@ import {toRecordId} from "../../../api/model/common";
 import {Tables} from "../../../api/db/tables";
 import {useDB} from "../../../api/db/db";
 import {Shortcut} from "../../../app-common/components/input/shortcut";
+import {formatNumber} from "../../../lib/currency/currency";
 
 enum SearchModes {
   sale = "sale",
@@ -222,39 +223,70 @@ export const PosMode = () => {
 
     if (item === undefined) {
       // check in DB for dynamic barcode item
+      // direct product not found, try with dynamic barcode
+      // parse barcode for dynamic item
       try {
-        const [items] = await db.query(`SELECT *
+        const prefix = Number(values.q.substring(0, 2));
+        if (prefix >= 20 && prefix <= 29) {
+          // dynamic barcode
+          const itemId = values.q.substring(2, 7);
+          const item = itemsMap.get(itemId || '');
+          const qty = Number(values.q.substring(7, 12).padStart(5, '0')) / 1000;
+
+          if (item) {
+            if (item.isVariant) {
+              await addItemVariant(
+                item.item,
+                item.variant,
+                Number(qty),
+                Number(item.price)
+              );
+            }
+
+            if (!item.variant) {
+              await addItem(
+                item.item,
+                Number(qty),
+                Number(item.price)
+              );
+            }
+          }
+        }else{
+          const [items] = await db.query(`SELECT *
                                         FROM ${Tables.barcode}
                                         where barcode = $barcode FETCH item, variant`, {
-          barcode: values.q
-        });
-
-        if (items.length > 0) {
-          const item = items[0];
-
-          if (item.variant) {
-            await addItemVariant(
-              item.item,
-              item.variant,
-              Number(item.measurement),
-              Number(item.price)
-            );
-          }
-
-          if (!item.variant) {
-            await addItem(
-              item.item,
-              Number(item.measurement),
-              Number(item.price)
-            );
-          }
-        } else {
-          notify({
-            type: "error",
-            description: `${values.q} not found`,
-            placement: "top",
-            duration: 1,
+            barcode: values.q
           });
+
+          if (items.length > 0) {
+            const item = items[0];
+
+            if (item.variant) {
+              await addItemVariant(
+                item.item,
+                item.variant,
+                Number(item.measurement),
+                Number(item.price)
+              );
+            }
+
+            if (!item.variant) {
+              await addItem(
+                item.item,
+                Number(item.measurement),
+                Number(item.price)
+              );
+            }
+
+            return;
+          } else {
+            notify({
+              type: "error",
+              description: `${values.q} not found`,
+              placement: "top",
+              duration: 1,
+            });
+          }
         }
       } catch (e) {
         console.log(e);
@@ -315,32 +347,6 @@ export const PosMode = () => {
       return;
     }
 
-
-    // const oldItems = added;
-    // let index = oldItems.findIndex((addItem) => addItem.item.id === item.id);
-    // if( index !== -1 ) {
-    //   oldItems[index].quantity += quantity;
-    //   setAppState((prev) => ({
-    //     ...prev,
-    //     latestIndex: index,
-    //   }));
-    // } else {
-    //   oldItems.push({
-    //     quantity: quantity,
-    //     item: item,
-    //     price: newPrice,
-    //     discount: 0,
-    //     taxes: item.taxes,
-    //     taxIncluded: true,
-    //     stock: 0,
-    //   });
-    //
-    //   setAppState((prev) => ({
-    //     ...prev,
-    //     latestIndex: oldItems.length - 1,
-    //   }));
-    // }
-
     setAppState(prev => {
       const otherState = {
         q: "",
@@ -356,7 +362,7 @@ export const PosMode = () => {
           latestIndex: index,
           added: prev.added.map(a => {
             if (toRecordId(a.item.id).toString() === toRecordId(item.id).toString()) {
-              return {...a, quantity: a.quantity + quantity};
+              return {...a, quantity: formatNumber(a.quantity + quantity)};
             } else {
               return a;
             }
@@ -368,7 +374,7 @@ export const PosMode = () => {
         ...prev,
         ...otherState,
         added: [...prev.added, {
-          quantity: quantity,
+          quantity: formatNumber(quantity),
           item: item,
           price: newPrice,
           discount: 0,
@@ -397,27 +403,6 @@ export const PosMode = () => {
     quantity: number,
     price?: number
   ) => {
-    // const oldItems = added;
-    // let index = oldItems.findIndex((addItem) => {
-    //   return addItem.item.id?.toString() === item.id?.toString() && addItem.variant === variant;
-    // });
-    //
-    //
-    // if( index !== -1 ) {
-    //   oldItems[index].quantity += quantity;
-    // } else {
-    //   oldItems.push({
-    //     quantity: quantity,
-    //     item: item,
-    //     price: variantPrice,
-    //     variant: variant,
-    //     discount: 0,
-    //     taxes: item.taxes,
-    //     taxIncluded: true,
-    //     stock: 0,
-    //   });
-    // }
-
     const variantPrice = price ? price : (
       variant?.price
         ? variant.price
@@ -444,7 +429,7 @@ export const PosMode = () => {
             if (toRecordId(i.item.id).toString() === toRecordId(item.id).toString() && toRecordId(variant.id).toString() === toRecordId(i.variant?.id)?.toString()) {
               return {
                 ...i,
-                quantity: i.quantity + quantity
+                quantity: formatNumber(i.quantity + quantity)
               }
             }
 
@@ -457,7 +442,7 @@ export const PosMode = () => {
         ...prev,
         ...otherState,
         added: [...prev.added, {
-          quantity: quantity,
+          quantity: formatNumber(quantity),
           item: item,
           price: variantPrice,
           variant: variant,
@@ -468,39 +453,6 @@ export const PosMode = () => {
         }]
       };
     })
-
-    // setAppState((prev) => ({
-    //   ...prev,
-    //   latest: item,
-    //   added: [
-    //     ...prev.added.map(addItem => {
-    //       if(
-    //         addItem.item.id.toString() === item.id.toString()
-    //         && addItem.variant?.id?.toString() === variant.id.toString()
-    //       ){
-    //         addItem.quantity += quantity;
-    //       }
-    //
-    //       return addItem;
-    //     }), {
-    //       quantity: quantity,
-    //       item: item,
-    //       price: variantPrice,
-    //       variant: variant,
-    //       discount: 0,
-    //       taxes: item.taxes,
-    //       taxIncluded: true,
-    //       stock: 0,
-    //     }
-    //   ],
-    //   selected: items.findIndex((i) => i.id.toString() === item.id.toString()),
-    //   quantity: 1,
-    //   selectedVariant: 0,
-    //   q: "",
-    //   latestQuantity: quantity,
-    //   latestRate: variantPrice,
-    //   latestVariant: variant,
-    // }));
 
     setModal(false);
     setVariants([]);
@@ -640,14 +592,11 @@ export const PosMode = () => {
     setAppState((prev) => ({
       ...prev,
       added: items,
-      discount: order.discount?.type,
-      tax: order.tax?.type,
-      discountAmount: order.discount?.amount,
+      discount: order?.discount?.type,
+      tax: order?.tax?.type,
+      discountAmount: order?.discount?.amount,
       customer: order?.customer,
-      refundingFrom: Number(order.id),
-      quantity: 1,
-      q: '',
-
+      refundingFrom: order.id,
     }));
   };
 

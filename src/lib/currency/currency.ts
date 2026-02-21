@@ -14,17 +14,26 @@ export const withCurrency = (amount: string | number | undefined) => {
       .trim();
   }
 
-  return new Intl.NumberFormat(import.meta.env.VITE_LOCALE, {
+  return (new Intl.NumberFormat(import.meta.env.VITE_LOCALE, {
     style: "currency",
     currency: import.meta.env.VITE_CURRENCY,
     compactDisplay: "short",
     maximumFractionDigits: DECIMAL_PLACES,
-  }).format(Number(amount));
+  })).format(Number(amount));
 };
 
 export const formatNumber = (amount: string | number) => {
-  return new Intl.NumberFormat(import.meta.env.VITE_LOCALE, {
+  return (new Intl.NumberFormat(import.meta.env.VITE_LOCALE, {
     maximumFractionDigits: DECIMAL_PLACES,
     useGrouping: false
-  }).format(Number(amount));
+  })).format(Number(amount));
+}
+
+export const transformValue = {
+  input: (value) =>
+    value === null || isNaN(value) || value === 0 ? "" : value.toString(),
+  output: (e) => {
+    const output = parseInt(e.target.value);
+    return isNaN(output) ? 0 : output;
+  }
 }
