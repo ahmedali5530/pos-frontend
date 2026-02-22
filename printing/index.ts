@@ -3,14 +3,23 @@
  * POST http://localhost:3132/print
  *
  * Body: {
- *   printers: Array<{ type, ...driverConfig }>,
  *   data: {
- *     printType: 'temp'|'summary'|'kitchen'|'delivery'|'final',
- *     // temp, final, delivery, kitchen: order (Order from @/api/model/order)
- *     order?: Order,
- *     // summary only: title?, date?, orders?, subtotal?, tax?, total?, payments?
+ *     printType: 'temp'|'refund'|'final'|'delivery'|'kitchen'|'summary',
+ *     order?: Order (OrderModel from @/api/model/order)
  *   },
- *   config?: { bottomMargin?, topMargin?, leftMargin?, rightMargin?, companyName?, logo?, showCompanyName?, showItemName?, showItemPrice?, showItemQuantity?, showItemTotal?, showVatNumber?, vatName?, vatNumber? }
+ *   config?: {
+ *     currencySymbol?: string (default: "$"),
+ *     bottomMargin?, topMargin?, leftMargin?, rightMargin?,
+ *     companyName?, logo?, showCompanyName?, showItemName?,
+ *     showItemPrice?, showItemQuantity?, showItemTotal?,
+ *     showVatNumber?, vatName?, vatNumber?
+ *   },
+ *   printers: [
+ *     {
+ *       prints: number|string (number of copies, default: 1),
+ *       printers: [PrinterModel] (from @/api/model/printer)
+ *     }
+ *   ]
  * }
  */
 

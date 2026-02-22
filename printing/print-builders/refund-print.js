@@ -13,7 +13,7 @@ const { mapOrderToRefund } = require('../lib/order-mapping');
 /**
  * Refund print – REFUND RECEIPT. Matches refund.bill.tsx.
  * Expects data: { order: refundOrder, originalOrder }.
- * refundOrder: items (selected to refund), tax_amount, discount_amount, service_charge_amount, tip_amount, extras.
+ * refundOrder: items (selected to refund), tax, discount, adjustment.
  */
 function build(printer, data = {}, config = {}) {
   const refundOrder = data && data.order;
@@ -41,22 +41,13 @@ function build(printer, data = {}, config = {}) {
     });
     printer.drawLine();
 
-    // --- Summary: Items(n), Tax, Discount, Service, extras, Tip ---
+    // --- Summary: Items(n), Tax, Discount ---
     printLineLeftRight(printer, `Items (${bill.itemsCount || 0})`, formatMoney(bill.itemsTotal, cfg.currencySymbol || '$'));
     if (bill.tax != null && Number(bill.tax) !== 0) {
       printLineLeftRight(printer, `Tax (${bill.taxLabel || 'Tax'})`, formatMoney(bill.tax, cfg.currencySymbol || '$'));
     }
     if (bill.discount && bill.discountAmount != null && Number(bill.discountAmount) !== 0) {
       printLineLeftRight(printer, 'Discount', formatMoney(bill.discountAmount, cfg.currencySymbol || '$'));
-    }
-    if (bill.serviceChargeLabel && bill.serviceChargeAmount != null && Number(bill.serviceChargeAmount) !== 0) {
-      printLineLeftRight(printer, bill.serviceChargeLabel, formatMoney(bill.serviceChargeAmount, cfg.currencySymbol || '$'));
-    }
-    (bill.extras || []).forEach((e) => {
-      printLineLeftRight(printer, e.name || 'Extra', formatMoney(e.value, cfg.currencySymbol || '$'));
-    });
-    if (bill.tipAmount != null && Number(bill.tipAmount) !== 0) {
-      printLineLeftRight(printer, bill.tipLabel || 'Tip', formatMoney(bill.tipAmount, cfg.currencySymbol || '$'));
     }
     printer.drawLine();
 

@@ -29,7 +29,7 @@ app.post('/print/preview', (req, res) => {
 
 app.get('/print/preview', (req, res) => {
   const tool = `<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>Print preview</title>

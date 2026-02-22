@@ -23,7 +23,6 @@ function build(printer, data = {}, config = {}) {
       notes: bill.note || undefined,
       showPayments: false,
       showChange: false,
-      showDeliveryLine: false,
     });
     return printer;
   });

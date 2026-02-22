@@ -12,6 +12,12 @@ import {createRoot} from "react-dom/client";
 import {useOrder} from "../../../api/hooks/use.order";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import {DatabaseProvider} from "../../../providers/database.provider";
+import {useDB} from "../../../api/db/db";
+import {dispatchPrint} from "../../../lib/print/print.service";
+import {useAtom} from "jotai";
+import {appState} from "../../../store/jotai";
+import {Tables} from "../../../api/db/tables";
+import {toRecordId} from "../../../api/model/common";
 
 interface SalePrintProps {
   order: Order;
@@ -47,41 +53,62 @@ export const PrintOrder = (order: Order) => {
 };
 
 export const SalePrint: FC<SalePrintProps> = (props) => {
-  const [show, setShow] = useState(false);
+  // const [show, setShow] = useState(false);
 
-  const [sendEmail, setSendEmail] = useState(false);
+  // const [sendEmail, setSendEmail] = useState(false);
+  const [{user, terminal}] = useAtom(appState);
+  const db = useDB();
+  const print = async () => {
+    let printers = [];
+
+    const [settings] = await db.query(`SELECT * FROM ${Tables.setting} where terminal = $terminal and name = $name FETCH values.printers.printers`, {
+      name: 'final_printers',
+      terminal: toRecordId(terminal?.id)
+    });
+
+    if(settings.length > 0 && settings[0].values.printers.length > 0){
+      printers = settings[0].values.printers;
+    }
+
+    await dispatchPrint(db, 'final', {
+      order: props.order
+    }, {
+      userId: user?.id,
+      printers: printers
+    })
+  }
 
   return (
     <>
-      <Button onClick={() => setShow(true)} variant="secondary">
+      <Button onClick={print} variant="secondary">
         <FontAwesomeIcon icon={faPrint}/>
       </Button>
 
-      <Modal open={show} onClose={() => {
-        setShow(false)
-      }} title="Duplicate Sale Receipt Print">
-        <div className="flex justify-center flex-col items-center">
-          <SalePrintMarkup order={props.order}/>
+      {/*<Modal open={show} onClose={() => {*/}
+      {/*  setShow(false)*/}
+      {/*}} title="Duplicate Sale Receipt Print">*/}
+      {/*  <div className="flex justify-center flex-col items-center">*/}
+      {/*    <SalePrintMarkup order={props.order}/>*/}
 
-          <div className="flex flex-row gap-3">
-            <Button variant="success" onClick={() => PrintOrder(props.order)}>
-              <FontAwesomeIcon icon={faPrint}/>
-            </Button>
-            <Button active={sendEmail} variant="secondary" onClick={() => setSendEmail(!sendEmail)}>
-              <FontAwesomeIcon icon={faEnvelope}/>
-            </Button>
-          </div>
+      {/*    <div className="flex flex-row gap-3">*/}
+      {/*      <Button variant="success" onClick={() => PrintOrder(props.order)}>*/}
+      {/*        <FontAwesomeIcon icon={faPrint}/>*/}
+      {/*      </Button>*/}
+      {/*      <Button active={sendEmail} variant="secondary" onClick={() => setSendEmail(!sendEmail)}>*/}
+      {/*        <FontAwesomeIcon icon={faEnvelope}/>*/}
+      {/*      </Button>*/}
+      {/*    </div>*/}
 
-          {sendEmail && (
-            <form className="mt-3">
-              <div className="input-group w-full">
-                <Input placeholder="Enter comma separated emails"/>
-                <Button variant="primary" type="button">Send</Button>
-              </div>
-            </form>
-          )}
-        </div>
-      </Modal>
+      {/*    {sendEmail && (*/}
+      {/*      <form className="mt-3">*/}
+      {/*        <div className="input-group w-full">*/}
+      {/*          <Input placeholder="Enter comma separated emails"/>*/}
+      {/*          <Button variant="primary" type="button">Send</Button>*/}
+      {/*        </div>*/}
+      {/*      </form>*/}
+      {/*    )}*/}
+      {/*  </div>*/}
+      {/*</Modal>*/}
     </>
   );
 };

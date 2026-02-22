@@ -31,22 +31,17 @@ function printSummaryLayout(printer, data, config) {
   line('Gross', formatMoney(s.gross, sym));
   printer.text('  Amount collected + Refunds + Discounts');
   line('Refunds', formatMoney(s.refunds, sym));
-  line('Service charges', formatMoney(s.serviceCharges, sym));
   line('Discounts', formatMoney(s.discounts, sym));
   line('Taxes', formatMoney(s.taxes, sym));
   line('Net', formatMoney(s.net, sym));
-  printer.text('  Amount collected - Service charges - Taxes');
+  printer.text('  Amount collected - Taxes');
   line('Amount due', formatMoney(s.amountDue, sym));
-  printer.text('  Items total + Taxes + Service + Extras - Discounts');
+  printer.text('  Items total + Taxes - Discounts');
   line('Amount collected', formatMoney(s.amountCollected, sym));
-  line('Extras', formatMoney(s.totalExtras, sym));
   line('Rounding', formatMoney(s.rounding, sym));
   printer.text('  Amount collected - Amount due');
   line('Voids', formatMoney(s.voids, sym));
 
-  sect('Tips');
-  line('Total Tips', formatMoney(s.tips, sym));
-  printer.drawLine();
   line('Covers', formatNum(s.covers));
   line('Average cover', formatMoney(s.averageCover, sym));
   line('Orders/Checks', formatNum(s.ordersCount));
@@ -103,10 +98,6 @@ function printSummaryLayout(printer, data, config) {
     line(k, formatMoney(a, sym) + '  ' + p);
   });
 
-  sect('Extras');
-  Object.keys(s.extras || {}).forEach((k) => {
-    line(k, formatMoney(s.extras[k], sym));
-  });
 
   printVatLine(printer, cfg);
   feedBottomMargin(printer, cfg);

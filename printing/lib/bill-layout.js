@@ -12,7 +12,7 @@ const {
  * @param {Object} printer - escpos Printer
  * @param {Object} bill - from mapOrderToTemp/Final/Delivery
  * @param {Object} config - normalized config (currencySymbol, showVatNumber, vatName, vatNumber)
- * @param {Object} opts - { title, address?, phone?, notes?, thankYou?, showPayments?, showChange?, showDeliveryLine? }
+ * @param {Object} opts - { title, address?, phone?, notes?, thankYou?, showPayments?, showChange? }
  */
 function printBillLayout(printer, bill, config, opts) {
   const cfg = config || {};
@@ -45,25 +45,13 @@ function printBillLayout(printer, bill, config, opts) {
   });
   printer.drawLine();
 
-  // --- Summary (CommonBillParts order): Items(n), Tax, Discount, Service charges, extras, Tip; optionally Delivery ---
+  // --- Summary: Items(n), Tax, Discount ---
   printLineLeftRight(printer, `Items (${bill.itemsCount || 0})`, formatMoney(bill.itemsTotal, sym));
   if (bill.tax != null && Number(bill.tax) !== 0) {
     printLineLeftRight(printer, `Tax (${bill.taxLabel || 'Tax'})`, formatMoney(bill.tax, sym));
   }
   if (bill.discount && bill.discountAmount != null && Number(bill.discountAmount) !== 0) {
     printLineLeftRight(printer, 'Discount', formatMoney(bill.discountAmount, sym));
-  }
-  if (bill.serviceChargeLabel && bill.serviceChargeAmount != null && Number(bill.serviceChargeAmount) !== 0) {
-    printLineLeftRight(printer, bill.serviceChargeLabel, formatMoney(bill.serviceChargeAmount, sym));
-  }
-  (bill.extras || []).forEach((e) => {
-    printLineLeftRight(printer, e.name || 'Extra', formatMoney(e.value, sym));
-  });
-  if (bill.tipAmount != null && Number(bill.tipAmount) !== 0) {
-    printLineLeftRight(printer, bill.tipLabel || 'Tip', formatMoney(bill.tipAmount, sym));
-  }
-  if (showDeliveryLine && bill.deliveryCharges != null && Number(bill.deliveryCharges) !== 0) {
-    printLineLeftRight(printer, 'Delivery Charges', formatMoney(bill.deliveryCharges, sym));
   }
   printer.drawLine();
 

@@ -2,81 +2,82 @@
 
 /**
  * Map Order (from src/api/model/order.ts) plain object to print-builder shapes.
- * Order: { invoice_number, split, created_at, table, items, tax_amount, discount_amount, service_charge_amount, tip_amount, payments, customer, delivery, order_type, tags, ... }
- * OrderItem: { item (Dish), quantity, price, comments, deleted_at, is_refunded, is_suspended, modifiers, ... }
+ * Order: { id, order_id, created_at, items, discount, tax, payments, customer, user, store, terminal, notes, adjustment, ... }
+ * OrderItem: { id, product (Product), variant (ProductVariant), quantity, price, is_deleted, is_returned, is_suspended, taxes, taxes_total, discount, ... }
  */
 
 function getOrderId(order) {
   if (!order) return '';
-  const n = order.invoice_number;
-  const s = order.split;
-  return s != null && s !== '' ? `${n}/${s}` : `${n}`;
+  const orderId = order.order_id != null ? order.order_id : (order.id ? String(order.id).split(':').pop() : '');
+  return String(orderId || '');
 }
 
 /**
- * Filter order items: exclude deleted, refunded, suspended.
+ * Filter order items: exclude deleted, returned, suspended.
  * @param {Object} order
  * @returns {Array<{ name, qty, price, total, notes }>}
  */
 function getOrderItems(order) {
   if (!order || !Array.isArray(order.items)) return [];
   return order.items
-    .filter((it) => !it.deleted_at && it.is_refunded !== true && it.is_suspended !== true)
+    .filter((it) => !it.is_deleted && it.is_returned !== true && it.is_suspended !== true)
     .map((it) => {
-      const dish = it.item || it.dish;
-      const name = (dish && (dish.name || dish.title)) || '';
+      const product = it.product || {};
+      const variant = it.variant;
+      
+      // Product name: use variant name if available, otherwise product name
+      let name = '';
+      if (variant && variant.name) {
+        name = variant.name;
+      } else if (product && product.name) {
+        name = product.name;
+        // Append variant name if it's different from product name
+        if (variant && variant.name && variant.name !== product.name) {
+          name = `${product.name} - ${variant.name}`;
+        }
+      }
+      
       const qty = it.quantity != null ? it.quantity : 1;
       const price = it.price != null ? Number(it.price) : 0;
       const total = price * qty;
-      const notes = it.comments || '';
+      const notes = order.notes || '';
       return { name, qty, price, total, notes };
     });
 }
 
 /**
- * Delivery charges from order.delivery_charges or order.delivery. Not from extras (extras are in extrasTotal).
+ * Delivery charges - not available in new model, return 0.
  */
 function getOrderDeliveryCharges(order) {
-  // if (!order) return 0;
-  // if (order.delivery_charges != null) return Number(order.delivery_charges);
-  // const d = order.delivery;
-  // if (d && (d.delivery_charges != null || d.charges != null)) return Number(d.delivery_charges || d.charges || 0);
   return 0;
 }
 
 function getOrderTaxLabel(order) {
   if (!order || !order.tax) return 'Tax';
-  const t = order.tax;
-  const name = t.name || 'Tax';
-  const rate = t.rate;
+  const tax = order.tax;
+  const taxType = tax.type || {};
+  const name = taxType.name || 'Tax';
+  const rate = tax.rate != null ? tax.rate : (taxType.rate != null ? taxType.rate : null);
   return rate != null ? `${name} ${rate}%` : name;
 }
 
 /**
- * Service charge label to match _common.bill: "Service charges (X)" or "Service charges (X%)".
+ * Service charge label - not available in new model.
  */
 function getOrderServiceChargeLabel(order) {
   return '';
-  // if (!order || !(order.service_charge > 0)) return '';
-  // const val = order.service_charge;
-  // const isPercent = order.service_charge_type === 'Percent' || order.service_charge_type === '%';
-  // return `Service charges (${val}${isPercent ? '%' : ''})`;
 }
 
 /**
- * User display name (order.user to match CommonBillParts). _common.bill uses order.user.
+ * User display name from order.user.display_name.
  */
 function getOrderUserName(order) {
-  return order.user.display_name;
-  // if (!order || !order.user) return '';
-  // const u = order.user;
-  // const f = (u.first_name || '').trim();
-  // const l = (u.last_name || '').trim();
-  // return [f, l].filter(Boolean).join(' ') || (u.name || u.login || '');
+  if (!order || !order.user) return '';
+  return String(order.user.display_name || '');
 }
 
 /**
- * Payment summary. change = sum(payment.amount) - total to match final.bill.
+ * Payment summary. change = sum(payment.received) - total.
  * @param {Object} order
  * @param {number} total - bill total
  * @returns {{ payments: Array<{ method, amount }>, paymentsSum: number, change: number }}
@@ -85,32 +86,63 @@ function getOrderPaymentSummary(order, total) {
   const payTotal = Number(total || 0);
   if (!order) return { payments: [], paymentsSum: 0, change: -payTotal };
   const ps = order.payments || [];
-  const payments = ps.map((p) => ({
-    method: (p.payment_type && (p.payment_type.name || p.payment_type.title)) || 'Payment',
-    amount: Number(p.amount || 0),
-  }));
+  const payments = ps.map((p) => {
+    const paymentType = p.type || {};
+    const method = paymentType.name || 'Payment';
+    // Use received amount, fallback to total
+    const amount = Number(p.received != null ? p.received : (p.total != null ? p.total : 0));
+    return { method, amount };
+  });
   const paymentsSum = payments.reduce((s, p) => s + p.amount, 0);
   const change = paymentsSum - payTotal;
   return { payments, paymentsSum, change };
 }
 
 /**
- * Totals to match final.bill / _common.bill:
- * total = itemsTotal + extrasTotal - discount_amount + tax_amount + service_charge_amount + tip_amount.
- * totalWithDelivery = total + deliveryCharges (for delivery slip).
+ * Totals calculation:
+ * itemsTotal = sum of (item.price * item.quantity)
+ * discountAmount = order.discount.amount or 0
+ * tax = order.tax.amount or sum of item.taxes_total
+ * total = itemsTotal - discountAmount + tax + adjustment
  */
 function getOrderTotals(order) {
   const items = getOrderItems(order);
   const itemsTotal = items.reduce((s, it) => s + (it.price * it.qty), 0);
-  const discountAmount = Number(order.discount_amount || 0);
-  const extrasTotal = (order.extras || []).reduce((s, e) => s + Number(e.value || 0), 0);
-  const tax = Number(order.tax_amount || 0);
-  const service = Number(order.service_charge_amount || 0);
+  
+  // Discount amount from order.discount
+  let discountAmount = 0;
+  if (order.discount) {
+    if (order.discount.amount != null) {
+      discountAmount = Number(order.discount.amount);
+    } else if (order.discount.rate != null && order.discount.type) {
+      // Calculate discount from rate if type is percent
+      const discountType = order.discount.type;
+      if (discountType.rate_type === 'percent' || discountType.rate_type === 'Percent') {
+        discountAmount = itemsTotal * (Number(order.discount.rate) / 100);
+      } else {
+        discountAmount = Number(order.discount.rate);
+      }
+    }
+  }
+  
+  // Tax amount from order.tax or sum of item taxes
+  let tax = 0;
+  if (order.tax && order.tax.amount != null) {
+    tax = Number(order.tax.amount);
+  } else {
+    // Sum taxes from items
+    tax = (order.items || []).reduce((s, it) => s + Number(it.taxes_total || 0), 0);
+  }
+  
+  // Adjustment (can be positive or negative)
+  const adjustment = Number(order.adjustment || 0);
+  
+  const service = 0; // Not available in new model
   const deliveryCharges = getOrderDeliveryCharges(order);
-  // const tip = Number(order.tip_amount || 0);
-  const total = itemsTotal + extrasTotal - discountAmount + tax + service/* + tip*/;
+  const total = itemsTotal - discountAmount + tax + adjustment;
   const totalWithDelivery = total + deliveryCharges;
-  return { itemsTotal, discountAmount, extrasTotal, tax, service, deliveryCharges, /*tip,*/ total, totalWithDelivery };
+  
+  return { itemsTotal, discountAmount, extrasTotal: 0, tax, service, deliveryCharges, total, totalWithDelivery };
 }
 
 /**
@@ -122,19 +154,19 @@ function getOrderPaymentsString(order) {
   if (!order || !Array.isArray(order.payments) || order.payments.length === 0) return '';
   return order.payments
     .map((p) => {
-      const method = (p.payment_type && (p.payment_type.name || p.payment_type.title)) || 'Payment';
-      return `${method}: ${Number(p.amount || 0).toFixed(2)}`;
+      const paymentType = p.type || {};
+      const method = paymentType.name || 'Payment';
+      const amount = Number(p.received != null ? p.received : (p.total != null ? p.total : 0));
+      return `${method}: ${amount.toFixed(2)}`;
     })
     .join(', ');
 }
 
 /**
- * Table display to match _common.bill: table.name + table.number (no space).
+ * Table display - not available in new model.
  */
 function getOrderTable(order) {
-  if (!order || !order.table) return '';
-  const t = order.table;
-  return String(t.name || '') + String(t.number || '');
+  return '';
 }
 
 /**
@@ -142,10 +174,8 @@ function getOrderTable(order) {
  * @returns {string}
  */
 function getOrderDeliveryAddress(order) {
-  if (!order) return '';
-  const d = order.delivery;
-  const c = order.customer;
-  return (d && d.address) || (c && c.address) || '';
+  if (!order || !order.customer) return '';
+  return order.customer.address || '';
 }
 
 /**
@@ -164,8 +194,7 @@ function getOrderPhone(order) {
  */
 function getOrderDeliveryNotes(order) {
   if (!order) return '';
-  const d = order.delivery;
-  return (d && (d.notes || d.notes_extra)) || '';
+  return order.notes || '';
 }
 
 /**
@@ -194,13 +223,11 @@ function getOrderCreatedAt(order) {
 }
 
 /**
- * @param {Object} order - table.priority or tags[0]
+ * @param {Object} order
  * @returns {string}
  */
 function getOrderPriority(order) {
-  if (!order) return '';
-  if (order.table && (order.table.priority || order.table.priority === 0)) return String(order.table.priority);
-  if (Array.isArray(order.tags) && order.tags.length) return order.tags[0];
+  // Not available in new model
   return '';
 }
 
@@ -215,7 +242,6 @@ function mapOrderToBill(order, opts) {
   const total = forDelivery ? tot.totalWithDelivery : tot.total;
   const pay = getOrderPaymentSummary(order, total);
   const items = getOrderItems(order);
-  const tipLabel = order && order.tip_type === 'Percent' ? 'Tip %' : 'Tip';
   return {
     orderId: getOrderId(order),
     table: getOrderTable(order),
@@ -230,9 +256,9 @@ function mapOrderToBill(order, opts) {
     taxLabel: getOrderTaxLabel(order),
     serviceChargeLabel: getOrderServiceChargeLabel(order),
     serviceChargeAmount: tot.service,
-    extras: order.extras || [],
-    tipAmount: tot.tip,
-    tipLabel,
+    extras: [],
+    tipAmount: 0,
+    tipLabel: 'Tip',
     deliveryCharges: tot.deliveryCharges,
     total,
     payments: pay.payments,
@@ -287,14 +313,25 @@ function mapOrderToKitchen(order) {
 
 /**
  * Items from a refund order (selected items only, no filtering). Matches refund.bill.tsx.
- * @param {Object} order - refund order with items, tax_amount, discount_amount, etc.
+ * @param {Object} order - refund order with items
  * @returns {Array<{ name, qty, price, total }>}
  */
 function getRefundOrderItems(order) {
   if (!order || !Array.isArray(order.items)) return [];
   return order.items.map((it) => {
-    const dish = it.item || it.dish;
-    const name = (dish && (dish.name || dish.title)) || '';
+    const product = it.product || {};
+    const variant = it.variant;
+    
+    let name = '';
+    if (variant && variant.name) {
+      name = variant.name;
+    } else if (product && product.name) {
+      name = product.name;
+      if (variant && variant.name && variant.name !== product.name) {
+        name = `${product.name} - ${variant.name}`;
+      }
+    }
+    
     const qty = it.quantity != null ? it.quantity : 1;
     const price = it.price != null ? Number(it.price) : 0;
     const total = price * qty;
@@ -305,20 +342,39 @@ function getRefundOrderItems(order) {
 /**
  * Map refund order + originalOrder to refund receipt shape. Matches refund.bill.tsx.
  * data: { order: refundOrder, originalOrder }
- * refundOrder has: items (selected), tax_amount, discount_amount, service_charge_amount, tip_amount, extras.
+ * refundOrder has: items (selected), tax, discount, adjustment.
  */
 function mapOrderToRefund(refundOrder, originalOrder) {
   const items = getRefundOrderItems(refundOrder);
   const itemsTotal = items.reduce((s, it) => s + (it.price * it.qty), 0);
-  const taxAmount = Number(refundOrder.tax_amount ?? 0);
-  const discountAmount = Number(refundOrder.discount_amount ?? 0);
-  const serviceChargeAmount = Number(refundOrder.service_charge_amount ?? 0);
-  const tipAmount = Number(refundOrder.tip_amount ?? 0);
-  const extrasTotal = (refundOrder.extras || []).reduce((s, e) => s + Number(e.value || 0), 0);
-  const total = itemsTotal + taxAmount + serviceChargeAmount + tipAmount + extrasTotal + discountAmount;
+  
+  // Calculate amounts similar to getOrderTotals
+  let taxAmount = 0;
+  if (refundOrder.tax && refundOrder.tax.amount != null) {
+    taxAmount = Number(refundOrder.tax.amount);
+  } else {
+    taxAmount = (refundOrder.items || []).reduce((s, it) => s + Number(it.taxes_total || 0), 0);
+  }
+  
+  let discountAmount = 0;
+  if (refundOrder.discount) {
+    if (refundOrder.discount.amount != null) {
+      discountAmount = Number(refundOrder.discount.amount);
+    } else if (refundOrder.discount.rate != null && refundOrder.discount.type) {
+      const discountType = refundOrder.discount.type;
+      if (discountType.rate_type === 'percent' || discountType.rate_type === 'Percent') {
+        discountAmount = itemsTotal * (Number(refundOrder.discount.rate) / 100);
+      } else {
+        discountAmount = Number(refundOrder.discount.rate);
+      }
+    }
+  }
+  
+  const adjustment = Number(refundOrder.adjustment || 0);
+  const total = itemsTotal - discountAmount + taxAmount + adjustment;
   const orig = originalOrder || refundOrder;
   const serviceChargeLabel = getOrderServiceChargeLabel(refundOrder);
-  const tipLabel = refundOrder && refundOrder.tip_type === 'Percent' ? 'Tip %' : 'Tip';
+  
   return {
     originalOrderId: getOrderId(orig),
     refundDate: new Date().toLocaleString(),
@@ -330,10 +386,10 @@ function mapOrderToRefund(refundOrder, originalOrder) {
     discount: !!refundOrder.discount,
     discountAmount,
     serviceChargeLabel,
-    serviceChargeAmount,
-    extras: refundOrder.extras || [],
-    tipAmount,
-    tipLabel,
+    serviceChargeAmount: 0,
+    extras: [],
+    tipAmount: 0,
+    tipLabel: 'Tip',
     total,
   };
 }

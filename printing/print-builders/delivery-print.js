@@ -25,7 +25,6 @@ function build(printer, data = {}, config = {}) {
       notes: bill.notes || undefined,
       showPayments: true,
       showChange: true,
-      showDeliveryLine: true,
     });
     return printer;
   });

@@ -6,12 +6,12 @@ const safeNumber = (v) => {
 };
 
 /**
- * Filtered items (exclude deleted, refunded, suspended). Mirrors getOrderFilteredItems.
+ * Filtered items (exclude deleted, returned, suspended). Mirrors getOrderItems from order-mapping.
  */
 function getFilteredItems(order) {
   if (!order || !Array.isArray(order.items)) return [];
   return order.items.filter(
-    (it) => !it.deleted_at && it.is_refunded !== true && it.is_suspended !== true
+    (it) => !it.is_deleted && it.is_returned !== true && it.is_suspended !== true
   );
 }
 
@@ -23,12 +23,12 @@ function itemLineTotal(it) {
 }
 
 /**
- * Voided items (deleted, refunded, or suspended).
+ * Voided items (deleted, returned, or suspended).
  */
 function getVoidedItems(order) {
   if (!order || !Array.isArray(order.items)) return [];
   return order.items.filter(
-    (it) => !!it.deleted_at || it.is_refunded === true || it.is_suspended === true
+    (it) => !!it.is_deleted || it.is_returned === true || it.is_suspended === true
   );
 }
 
@@ -50,8 +50,14 @@ function computeSummary(props) {
   }, 0);
   const exclusive = salePriceWithoutTax;
 
-  const taxCollected = orders.reduce((s, o) => s + safeNumber(o.tax_amount), 0);
-  const serviceCharges = orders.reduce((s, o) => s + safeNumber(o.service_charge_amount), 0);
+  const taxCollected = orders.reduce((s, o) => {
+    // Sum tax from order.tax.amount or from items
+    if (o.tax && o.tax.amount != null) {
+      return s + safeNumber(o.tax.amount);
+    }
+    return s + (o.items || []).reduce((itemSum, item) => itemSum + safeNumber(item?.taxes_total || 0), 0);
+  }, 0);
+  const serviceCharges = 0; // Not available in new model
 
   const itemDiscounts = orders.reduce((s, order) => {
     return (
@@ -64,30 +70,39 @@ function computeSummary(props) {
 
   const subtotalDiscounts = orders.reduce((s, order) => {
     const lineDiscounts = (order.items || []).reduce(
-      (itemSum, item) => itemSum + safeNumber(item?.discount),
+      (itemSum, item) => itemSum + safeNumber(item?.discount || 0),
       0
     );
-    const orderDiscount = safeNumber(order.discount_amount);
+    let orderDiscount = 0;
+    if (order.discount) {
+      if (order.discount.amount != null) {
+        orderDiscount = safeNumber(order.discount.amount);
+      } else if (order.discount.rate != null && order.discount.type) {
+        const discountType = order.discount.type;
+        const itemsTotal = getFilteredItems(order).reduce((sum, item) => sum + itemLineTotal(item), 0);
+        if (discountType.rate_type === 'percent' || discountType.rate_type === 'Percent') {
+          orderDiscount = itemsTotal * (safeNumber(order.discount.rate) / 100);
+        } else {
+          orderDiscount = safeNumber(order.discount.rate);
+        }
+      }
+    }
     const extraDiscount = Math.max(0, orderDiscount - lineDiscounts);
     return s + extraDiscount;
   }, 0);
   const discounts = itemDiscounts + subtotalDiscounts;
 
-  const totalExtras = orders.reduce((s, order) => {
-    return (
-      s + (order?.extras || []).reduce((es, e) => es + safeNumber(e.value), 0)
-    );
-  }, 0);
+  const totalExtras = 0; // Not available in new model
 
-  const amountDue = salePriceWithoutTax + taxCollected + serviceCharges + totalExtras - itemDiscounts - subtotalDiscounts;
+  const amountDue = salePriceWithoutTax + taxCollected - itemDiscounts - subtotalDiscounts;
   const amountCollected = orders.reduce((s, order) => {
     return (
       s +
-      (order.payments || []).reduce((ps, p) => ps + safeNumber(p?.amount), 0)
+      (order.payments || []).reduce((ps, p) => ps + safeNumber(p?.received != null ? p.received : (p?.total != null ? p.total : 0)), 0)
     );
   }, 0);
   const rounding = amountCollected - amountDue;
-  const net = amountCollected - serviceCharges - taxCollected;
+  const net = amountCollected - taxCollected;
 
   const refunds = orders.reduce((s, order) => {
     if (order.status === 'Cancelled') {
@@ -111,43 +126,54 @@ function computeSummary(props) {
   const gross = amountCollected + refunds + discounts;
   const gSales = salePriceWithoutTax;
 
-  const tips = orders.reduce((s, o) => s + safeNumber(o.tip_amount), 0);
+  const tips = 0; // Not available in new model
 
   const discountsList = {};
   orders.forEach((order) => {
     if (order?.discount) {
-      const k = order.discount?.name || 'Discount';
+      const discountType = order.discount.type || {};
+      const k = discountType.name || 'Discount';
       if (!discountsList[k]) discountsList[k] = 0;
-      discountsList[k] += safeNumber(order.discount_amount);
+      if (order.discount.amount != null) {
+        discountsList[k] += safeNumber(order.discount.amount);
+      } else if (order.discount.rate != null) {
+        const itemsTotal = getFilteredItems(order).reduce((sum, item) => sum + itemLineTotal(item), 0);
+        if (discountType.rate_type === 'percent' || discountType.rate_type === 'Percent') {
+          discountsList[k] += itemsTotal * (safeNumber(order.discount.rate) / 100);
+        } else {
+          discountsList[k] += safeNumber(order.discount.rate);
+        }
+      }
     }
   });
 
   const taxesList = {};
   orders.forEach((order) => {
     if (order?.tax) {
-      const k = `${order.tax?.name || 'Tax'} ${order.tax?.rate ?? ''}`.trim();
+      const taxType = order.tax.type || {};
+      const taxName = taxType.name || 'Tax';
+      const taxRate = taxType.rate != null ? taxType.rate : (order.tax.rate != null ? order.tax.rate : '');
+      const k = `${taxName} ${taxRate}`.trim();
       if (!taxesList[k]) taxesList[k] = 0;
-      taxesList[k] += safeNumber(order.tax_amount);
+      if (order.tax.amount != null) {
+        taxesList[k] += safeNumber(order.tax.amount);
+      } else {
+        taxesList[k] += (order.items || []).reduce((sum, item) => sum + safeNumber(item?.taxes_total || 0), 0);
+      }
     }
   });
 
   const paymentTypes = {};
   orders.forEach((order) => {
     (order.payments || []).forEach((p) => {
-      const name = p.payment_type?.name || p.payment_type?.title || 'Unknown';
+      const paymentType = p.type || {};
+      const name = paymentType.name || 'Unknown';
       if (!paymentTypes[name]) paymentTypes[name] = 0;
-      paymentTypes[name] += safeNumber(p.payable ?? p.amount ?? 0);
+      paymentTypes[name] += safeNumber(p.received != null ? p.received : (p.total != null ? p.total : 0));
     });
   });
 
-  const extras = {};
-  orders.forEach((order) => {
-    (order.extras || []).forEach((e) => {
-      const n = e.name || 'Extra';
-      if (!extras[n]) extras[n] = 0;
-      extras[n] += safeNumber(e.value);
-    });
-  });
+  const extras = {}; // Not available in new model
 
   const voids = orders.reduce((s, order) => {
     return (
@@ -164,8 +190,10 @@ function computeSummary(props) {
   const categories = {};
   orders.forEach((order) => {
     getFilteredItems(order).forEach((item) => {
-      const c = item.category;
-      const cat = typeof c === 'string' ? c : (c?.name ?? item.item?.categories?.[0]?.name ?? '');
+      const product = item.product || {};
+      const cat = product.categories && product.categories.length > 0 
+        ? (product.categories[0].name || '') 
+        : '';
       if (!cat) return;
       if (!categories[cat]) categories[cat] = { quantity: 0, total: 0 };
       categories[cat].quantity += item.quantity ?? 1;
@@ -176,7 +204,9 @@ function computeSummary(props) {
   const dishes = {};
   orders.forEach((order) => {
     getFilteredItems(order).forEach((item) => {
-      const name = item.item?.name || item.dish?.name || '';
+      const product = item.product || {};
+      const variant = item.variant;
+      const name = variant && variant.name ? variant.name : (product.name || '');
       if (!name) return;
       if (!dishes[name]) dishes[name] = { quantity: 0, total: 0 };
       dishes[name].quantity += item.quantity ?? 1;
