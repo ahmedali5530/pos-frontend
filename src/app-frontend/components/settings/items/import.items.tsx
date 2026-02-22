@@ -1,39 +1,19 @@
-import React, { useState } from "react";
-import { faUpload } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Button } from "../../../../app-common/components/input/button";
-import { request } from "../../../../api/request/request";
-import { PRODUCT_UPLOAD } from "../../../../api/routing/routes/backend.app";
+import React, {useState} from "react";
+import {faUpload} from "@fortawesome/free-solid-svg-icons";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {Button} from "../../../../app-common/components/input/button";
 
 export const ImportItems = () => {
   const [loading, setLoading] = useState(false);
 
   const onChange = async (event: any) => {
-    setLoading(true);
-    const data = new FormData();
-    if (event.target.files.length > 0) {
-      data.append("file", event.target.files[0]);
-    } else {
-      //no file chosen
-      return false;
-    }
-
-    try {
-      await request(PRODUCT_UPLOAD, {
-        body: data,
-        method: "POST",
-      });
-    } catch (e) {
-      throw e;
-    } finally {
-      setLoading(false);
-    }
+    // TODO: add items upload feature
   };
   return (
     <>
       <Button variant="primary" type={"button"} disabled={loading}>
         <label htmlFor="file">
-          <FontAwesomeIcon icon={faUpload} className="mr-2" />{" "}
+          <FontAwesomeIcon icon={faUpload} className="mr-2"/>{" "}
           {loading ? "Uploading..." : "Upload Items"}
         </label>
         <input

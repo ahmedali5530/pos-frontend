@@ -1,4 +1,4 @@
-import {ITEM_FETCHES, Product} from "../../../../api/model/product";
+import {Product} from "../../../../api/model/product";
 import React, {useState} from "react";
 import {Button} from "../../../../app-common/components/input/button";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -9,17 +9,12 @@ import {withCurrency} from "../../../../lib/currency/currency";
 import {createColumnHelper} from "@tanstack/react-table";
 import {OrderItem} from "../../../../api/model/order.item";
 import {TableComponent} from "../../../../app-common/components/table/table";
-import {HydraCollection} from "../../../../api/model/hydra";
-import {PURCHASE_ITEM_LIST} from "../../../../api/routing/routes/backend.app";
 import {DateTime} from "luxon";
-import {DynamicValue} from "../../../../app-common/components/dynamic.value/dynamic.value";
 import {PurchaseItem} from "../../../../api/model/purchase.item";
 import useApi, {SettingsData} from "../../../../api/db/use.api";
 import {Tables} from "../../../../api/db/tables";
 import {useOrder} from "../../../../api/hooks/use.order";
-import {useDB} from "../../../../api/db/db";
 import {toRecordId} from "../../../../api/model/common";
-import {PURCHASE_FETCHES} from "../../../../api/model/purchase";
 
 interface Props {
   product: Product;

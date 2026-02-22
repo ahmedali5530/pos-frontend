@@ -1,6 +1,5 @@
 import {Controller, useForm} from "react-hook-form";
 import React, {useEffect, useState} from "react";
-import {PRODUCT_CREATE, PRODUCT_GET} from "../../../../../api/routing/routes/backend.app";
 import {HttpException, UnprocessableEntityException} from "../../../../../lib/http/exception/http.exception";
 import {ConstraintViolation} from "../../../../../lib/validator/validation.result";
 import {Input} from "../../../../../app-common/components/input/input";
@@ -69,7 +68,7 @@ export const CreateItem = ({
     resolver: yupResolver(ValidationSchema)
   });
 
-  const { register, handleSubmit, setError, formState: { errors }, reset, getValues, control, watch } = useFormHook;
+  const {register, handleSubmit, setError, formState: {errors}, reset, getValues, control, watch} = useFormHook;
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
   const db = useDB();
@@ -81,47 +80,47 @@ export const CreateItem = ({
   const createProduct = async (values: any) => {
     setCreating(true);
     try {
-      if( values.categories ) {
+      if (values.categories) {
         values.categories = values.categories.map((item: ReactSelectOptionProps) => new StringRecordId(item.value));
       }
-      if( values.suppliers ) {
+      if (values.suppliers) {
         values.suppliers = values.suppliers.map((item: ReactSelectOptionProps) => new StringRecordId(item.value));
       }
-      if( values.brands ) {
+      if (values.brands) {
         values.brands = values.brands.map((item: ReactSelectOptionProps) => new StringRecordId(item.value));
       }
-      if( values.stores ) {
+      if (values.stores) {
         values.stores = values.stores
           .filter((item: any) => item.quantity !== undefined)
           .map((item: any) => ({
-          id: item.id,
-          store: new StringRecordId(item.store),
-          location: item.location,
-          quantity: item.quantity,
-          re_order_level: item.re_order_level,
-          product: entity ? new StringRecordId(entity['id']) : null
-        }));
+            id: item.id,
+            store: new StringRecordId(item.store),
+            location: item.location,
+            quantity: item.quantity,
+            re_order_level: item.re_order_level,
+            product: entity ? new StringRecordId(entity['id']) : null
+          }));
       }
-      if( values.department ) {
+      if (values.department) {
         values.department = new StringRecordId(values.department.value);
       }
-      if( values.taxes ) {
+      if (values.taxes) {
         values.taxes = values.taxes.map((item: ReactSelectOptionProps) => new StringRecordId(item.value));
       } else {
         values.taxes = [];
       }
-      if( values.barcode ) {
+      if (values.barcode) {
         values.barcode = values.barcode.toString();
       }
-      if( values.terminals ) {
+      if (values.terminals) {
         values.terminals = values.terminals.map((item: ReactSelectOptionProps) => new StringRecordId(item.value))
       }
 
       const variantIds = [];
       const allVariantStoreIds = [];
 
-      if( values.variants ) {
-        for(let vIdx = 0; vIdx < values.variants.length; vIdx++) {
+      if (values.variants) {
+        for (let vIdx = 0; vIdx < values.variants.length; vIdx++) {
           const variant = values.variants[vIdx];
           const variantData = {
             attribute_value: variant.attribute_value,
@@ -155,18 +154,18 @@ export const CreateItem = ({
                 product: entity ? new StringRecordId(entity.id) : null
               };
 
-                let vsRecord;
-                if (storeVariant.id) {
-                  vsRecord = await db.merge(storeVariant.id, vsData);
-                } else {
-                  [vsRecord] = await db.insert(Tables.product_variant_store, vsData);
-                }
+              let vsRecord;
+              if (storeVariant.id) {
+                vsRecord = await db.merge(storeVariant.id, vsData);
+              } else {
+                [vsRecord] = await db.insert(Tables.product_variant_store, vsData);
+              }
               localVariantStoreIds.push(vsRecord.id);
               allVariantStoreIds.push(vsRecord.id);
             }
           }
 
-          await db.merge(vId, { stores: localVariantStoreIds });
+          await db.merge(vId, {stores: localVariantStoreIds});
         }
       }
 
@@ -212,22 +211,23 @@ export const CreateItem = ({
             store: s.store
           };
 
-            let psRecord;
-            if (s.id) {
-              psRecord = s;
-              await db.merge(s.id, psData);
-            } else {
-              [psRecord] = await db.insert(Tables.product_store, psData);
-            }
+          let psRecord;
+          if (s.id) {
+            psRecord = s;
+            await db.merge(s.id, psData);
+          } else {
+            [psRecord] = await db.insert(Tables.product_store, psData);
+          }
           productStoreIds.push(new StringRecordId(psRecord.id));
         }
       }
 
-      await db.merge(productId, { stores: productStoreIds });
+      await db.merge(productId, {stores: productStoreIds});
 
       // update terminals to include products
-      for(const t of productData.terminals){
-        const [terminal] = await db.query(`SELECT * FROM ${t}`);
+      for (const t of productData.terminals) {
+        const [terminal] = await db.query(`SELECT *
+                                           FROM ${t}`);
         await db.merge(t, {
           products: Array.from(new Set([...(terminal[0]?.products || []), productId])),
         });
@@ -236,10 +236,10 @@ export const CreateItem = ({
       // Link variants and variant stores to product if it was just created
       if (!entity?.id) {
         for (const vId of variantIds) {
-          await db.merge(vId, { product: productId });
+          await db.merge(vId, {product: productId});
         }
         for (const vsId of allVariantStoreIds) {
-          await db.merge(vsId, { product: productId });
+          await db.merge(vsId, {product: productId});
         }
       }
 
@@ -251,8 +251,8 @@ export const CreateItem = ({
 
       onModalClose();
 
-    } catch ( exception: any ) {
-      if( exception instanceof HttpException ) {
+    } catch (exception: any) {
+      if (exception instanceof HttpException) {
         notify({
           type: 'error',
           title: exception.code,
@@ -260,9 +260,9 @@ export const CreateItem = ({
         });
       }
 
-      if( exception instanceof UnprocessableEntityException ) {
+      if (exception instanceof UnprocessableEntityException) {
         const e = await exception.response.json();
-        if( e.violations ) {
+        if (e.violations) {
           e.violations.forEach((item: ConstraintViolation) => {
             setError(item.propertyPath, {
               message: item.message,
@@ -271,7 +271,7 @@ export const CreateItem = ({
           });
         }
 
-        if( e.errorMessage ) {
+        if (e.errorMessage) {
           notify({
             type: 'error',
             title: 'Validation Error',
@@ -339,7 +339,7 @@ export const CreateItem = ({
   const [terminalModal, setTerminalModal] = useState(false);
 
   useEffect(() => {
-    if(modal) {
+    if (modal) {
       loadDepartments();
       loadTaxes();
       loadTerminals();
@@ -350,7 +350,7 @@ export const CreateItem = ({
   }, [modal]);
 
   useEffect(() => {
-    if( entity ) {
+    if (entity) {
       const variantStores = entity.stores.map((s) => {
         return entity.variants.map((v) => {
           const vs = v.stores?.find(item => {
@@ -486,7 +486,8 @@ export const CreateItem = ({
                                 )
                               }
                             />
-                            <button className="btn btn-primary" type={"button"} onClick={() => setDepartmentModal(true)}>
+                            <button className="btn btn-primary" type={"button"}
+                                    onClick={() => setDepartmentModal(true)}>
                               <FontAwesomeIcon icon={faPlus}/>
                             </button>
                           </div>
@@ -757,7 +758,7 @@ export const CreateItem = ({
                   </div>
                 </TabContent>
                 <TabContent isActive={isTabActive("inventory")} holdState>
-                  <ItemInventory useForm={useFormHook} />
+                  <ItemInventory useForm={useFormHook}/>
                 </TabContent>
               </>
             )}

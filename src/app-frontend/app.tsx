@@ -6,7 +6,6 @@ import {Error404} from "../app-common/components/error/404";
 import {ForgotPassword} from "./containers/forgot/forgot";
 import {Pos} from "./containers/dashboard/pos";
 import {ResetPassword} from "./containers/forgot/reset";
-import {Dashboard} from "./containers/dashboard/dashboard";
 import {Settings} from "./containers/settings";
 import {useAtom} from "jotai";
 import {appState} from "../store/jotai";
@@ -38,7 +37,6 @@ export const AppComponent = () => {
 
         <Route path={POS} element={<RequireAuth><Pos/></RequireAuth>}/>
         <Route path={SETTINGS} element={<RequireAuth><Settings/></RequireAuth>}/>
-        <Route path={DASHBOARD} element={<RequireAuth><Dashboard/></RequireAuth>}/>
 
         {/*if nothing matches show 404*/}
         <Route path="*" element={<Error404/>}/>

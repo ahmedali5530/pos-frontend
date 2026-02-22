@@ -1,16 +1,13 @@
-import { Button } from "../../../app-common/components/input/button";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Tooltip } from "antd";
-import React, { useEffect, useState } from "react";
-import { Modal } from "../../../app-common/components/modal/modal";
+import {Button} from "../../../app-common/components/input/button";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {Tooltip} from "antd";
+import React, {useEffect, useState} from "react";
+import {Modal} from "../../../app-common/components/modal/modal";
 import {Order, ORDER_FETCHES} from "../../../api/model/order";
-import { Controller, useForm } from "react-hook-form";
-import { Input } from "../../../app-common/components/input/input";
-import { fetchJson } from "../../../api/request/request";
-import { ORDERS_LIST } from "../../../api/routing/routes/backend.app";
-import { QueryString } from "../../../lib/location/query.string";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { DateTime } from "luxon";
+import {Controller, useForm} from "react-hook-form";
+import {Input} from "../../../app-common/components/input/input";
+import {QueryString} from "../../../lib/location/query.string";
+import {IconProp} from "@fortawesome/fontawesome-svg-core";
 import {useDB} from "../../../api/db/db";
 import {Tables} from "../../../api/db/tables";
 
@@ -29,7 +26,7 @@ export const SaleFind = ({
   onSuccess, onError, variant, icon, title, displayLabel, active, onClick
 }: Props) => {
   const [modal, setModal] = useState(false);
-  const { control, handleSubmit, reset } = useForm();
+  const {control, handleSubmit, reset} = useForm();
   const [isLoading, setLoading] = useState(false);
   const db = useDB();
 
@@ -37,13 +34,15 @@ export const SaleFind = ({
     setLoading(true)
     try {
       const query = QueryString.stringify(values);
-      const [orders] = await db.query(`SELECT * FROM ${Tables.order} WHERE ${query} FETCH ${ORDER_FETCHES.join(', ')}`)
+      const [orders] = await db.query(`SELECT *
+                                       FROM ${Tables.order}
+                                       WHERE ${query} FETCH ${ORDER_FETCHES.join(', ')}`)
 
-      if( orders.length > 0 ) {
+      if (orders.length > 0) {
         onSuccess(orders[0]);
         setModal(false)
       }
-    } catch ( e ) {
+    } catch (e) {
       onError();
       throw e;
     } finally {
@@ -77,7 +76,7 @@ export const SaleFind = ({
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="input-group w-full">
             <Controller
-              render={({ field }) => (
+              render={({field}) => (
                 <Input
                   placeholder="Search by Order# or scan QR Code/Barcode"
                   value={field.value}

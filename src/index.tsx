@@ -1,6 +1,5 @@
 import React from "react";
 import {AppComponent as Frontend} from "./app-frontend/app";
-import {App as Admin} from "./app-admin/app";
 import "./css/index.scss";
 import {createRoot} from "react-dom/client";
 import {I18nextProvider} from "react-i18next";
@@ -21,11 +20,7 @@ root.render(
     <QueryClientProvider client={queryClient}>
       <DatabaseProvider>
         <I18nextProvider i18n={i18n}>
-          {import.meta.env.VITE_APP_TYPE === "frontend" ? (
-            <Frontend/>
-          ) : (
-            <Admin/>
-          )}
+          <Frontend/>
         </I18nextProvider>
       </DatabaseProvider>
     </QueryClientProvider>

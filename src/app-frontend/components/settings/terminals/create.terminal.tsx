@@ -4,10 +4,7 @@ import {Input} from "../../../../app-common/components/input/input";
 import {Controller, useForm} from "react-hook-form";
 import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
 import {Button} from "../../../../app-common/components/input/button";
-
-import {CATEGORY_LIST, PRODUCT_KEYWORDS} from "../../../../api/routing/routes/backend.app";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
-import {fetchJson} from "../../../../api/request/request";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
 import {Category} from "../../../../api/model/category";
@@ -18,16 +15,14 @@ import {yupResolver} from "@hookform/resolvers/yup";
 import {getErrorClass, getErrors, hasErrors} from "../../../../lib/error/error";
 import {Store} from "../../../../api/model/store";
 import {notify} from "../../../../app-common/components/confirm/notification";
-import {HydraCollection} from "../../../../api/model/hydra";
 import {Product} from "../../../../api/model/product";
 import useApi, {SettingsData} from "../../../../api/db/use.api";
 import {Tables} from "../../../../api/db/tables";
 import {useDB} from "../../../../api/db/db";
 import {StringRecordId} from "surrealdb";
 import {types} from "sass";
-import String = types.String;
 
-interface CreateTerminalProps{
+interface CreateTerminalProps {
   entity?: Terminal;
   operation?: string;
   addModal: boolean;
@@ -75,26 +70,28 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
   const createTerminal = async (values: any) => {
     setCreating(true);
     try {
-      if(values.store){
+      if (values.store) {
         values.store = new StringRecordId(values.store.value);
       }
 
       // build products list
       let products = [];
 
-      if(values.products){
+      if (values.products) {
         products = values.products.map((p: ReactSelectOptionProps) => p.value);
       }
 
-      if(values.excludeProducts){
+      if (values.excludeProducts) {
         products = products.filter(item => {
           return !values.excludeProducts.map(item => item.value).includes(item);
         })
       }
 
-      if(values.categories){
-        for(const c of values.categories){
-          const [categoryProducts] = await db.query(`SELECT <string>id as id FROM ${Tables.product} where categories ?= $category`, {
+      if (values.categories) {
+        for (const c of values.categories) {
+          const [categoryProducts] = await db.query(`SELECT <string>id as id
+                                                     FROM ${Tables.product}
+                                                     where categories ?= $category`, {
             category: c.value
           });
 
@@ -117,8 +114,8 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
       onModalClose();
 
     } catch (exception: any) {
-      if(exception instanceof HttpException){
-        if(exception.message){
+      if (exception instanceof HttpException) {
+        if (exception.message) {
           notify({
             title: 'Error',
             type: 'error',
@@ -136,7 +133,7 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
           });
         });
 
-        if(e.errorMessage){
+        if (e.errorMessage) {
           notify({
             title: 'Error',
             type: 'error',

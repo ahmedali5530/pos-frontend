@@ -1,9 +1,7 @@
 import React, {FC, useEffect, useState} from "react";
 import {Modal} from "../../../../app-common/components/modal/modal";
 import {Controller, useForm} from "react-hook-form";
-import {PAYMENT_TYPE_CREATE, PAYMENT_TYPE_GET} from "../../../../api/routing/routes/backend.app";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
-import {fetchJson} from "../../../../api/request/request";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
 import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";

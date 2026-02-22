@@ -5,10 +5,8 @@ import {DateTime} from "luxon";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPlus, faSearch} from "@fortawesome/free-solid-svg-icons";
 import {Modal} from "../../../app-common/components/modal/modal";
-import {fetchJson} from "../../../api/request/request";
 import {useForm} from "react-hook-form";
 import {Expense} from "../../../api/model/expense";
-import {EXPENSE_CREATE} from "../../../api/routing/routes/backend.app";
 import {ConstraintViolation, ValidationResult} from "../../../lib/validator/validation.result";
 import {Trans} from "react-i18next";
 import {HttpException, UnprocessableEntityException} from "../../../lib/http/exception/http.exception";
@@ -24,10 +22,10 @@ import {useAtom} from "jotai";
 import {appState} from "../../../store/jotai";
 import {useDB} from "../../../api/db/db";
 import {Tables} from "../../../api/db/tables";
-import {toRecordId, toSurrealDBDate} from "../../../api/model/common";
+import {toRecordId} from "../../../api/model/common";
 import {useQueryBuilder} from "../../../api/db/query-builder";
 
-interface ExpensesProps{
+interface ExpensesProps {
   onClose?: () => void;
 }
 
@@ -63,10 +61,10 @@ export const Expenses: FC<ExpensesProps> = (props) => {
     try {
       qb.setWheres([]);
 
-      if(values.startTime){
+      if (values.startTime) {
         qb.addWhere(`created_at >= d"${values.startTime}"`);
       }
-      if(values.endTime){
+      if (values.endTime) {
         qb.addWhere(`created_at <= d"${values.endTime}"`);
       }
 
@@ -96,7 +94,13 @@ export const Expenses: FC<ExpensesProps> = (props) => {
   }, [modal]);
 
 
-  const {register: createRegister, handleSubmit: createHandleSubmit, reset: createReset, formState: {errors: createErrors}, setError: createSetError} = useForm({
+  const {
+    register: createRegister,
+    handleSubmit: createHandleSubmit,
+    reset: createReset,
+    formState: {errors: createErrors},
+    setError: createSetError
+  } = useForm({
     resolver: yupResolver(ValidationSchema)
   });
 
@@ -155,12 +159,12 @@ export const Expenses: FC<ExpensesProps> = (props) => {
         setModal(true);
       }} title="Expenses" type="button" tabIndex={-1}>
         Expenses
-        <Shortcut shortcut="ctrl+e" handler={() => setModal(true)} />
+        <Shortcut shortcut="ctrl+e" handler={() => setModal(true)}/>
       </Button>
 
       <Modal open={modal} onClose={() => {
         setModal(false);
-        if(props.onClose){
+        if (props.onClose) {
           props.onClose();
         }
 
@@ -203,7 +207,7 @@ export const Expenses: FC<ExpensesProps> = (props) => {
                       disabled={creating}>
                 {creating ? 'Adding...' : (
                   <>
-                    <FontAwesomeIcon icon={faPlus} className="mr-2" /> Expense
+                    <FontAwesomeIcon icon={faPlus} className="mr-2"/> Expense
                   </>
                 )}
               </Button>
@@ -232,7 +236,7 @@ export const Expenses: FC<ExpensesProps> = (props) => {
               <Button variant="primary" className="w-full" type="submit"
                       disabled={isLoading}>{isLoading ? 'Loading...' : (
                 <>
-                  <FontAwesomeIcon icon={faSearch} className="mr-2" /> Search expenses
+                  <FontAwesomeIcon icon={faSearch} className="mr-2"/> Search expenses
                 </>
               )}</Button>
             </div>
@@ -246,15 +250,15 @@ export const Expenses: FC<ExpensesProps> = (props) => {
         )}
         {!isLoading && (
           <>
-          <div className="grid grid-cols-4 gap-4 mb-5">
-            <div className="border border-danger-500 p-5 font-bold text-danger-500 rounded">
-              Expenses
-              <span className="float-right">
-                {withCurrency(list.reduce((prev, item) => prev + item.amount , 0))}
+            <div className="grid grid-cols-4 gap-4 mb-5">
+              <div className="border border-danger-500 p-5 font-bold text-danger-500 rounded">
+                Expenses
+                <span className="float-right">
+                {withCurrency(list.reduce((prev, item) => prev + item.amount, 0))}
               </span>
+              </div>
+              <div></div>
             </div>
-            <div></div>
-          </div>
 
             <table className="table border border-collapse">
               <thead>
@@ -267,7 +271,8 @@ export const Expenses: FC<ExpensesProps> = (props) => {
               <tbody>
               {list.map((order, index) => (
                 <tr key={index} className="hover:bg-gray-100">
-                  <td title={order.created_at}>{DateTime.fromJSDate(order.created_at).toRelative({base: DateTime.now()})}</td>
+                  <td
+                    title={order.created_at}>{DateTime.fromJSDate(order.created_at).toRelative({base: DateTime.now()})}</td>
                   <td>{order.description}</td>
                   <td>{withCurrency(order.amount)}</td>
                 </tr>

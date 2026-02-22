@@ -1,14 +1,12 @@
 import React, {FC, useEffect, useState} from "react";
 import {Modal} from "../../../../app-common/components/modal/modal";
 import {useForm} from "react-hook-form";
-import {BRAND_CREATE, BRAND_EDIT, STORE_EDIT} from "../../../../api/routing/routes/backend.app";
 import {ReactSelectOptionProps} from "../../../../api/model/common";
-import {fetchJson} from "../../../../api/request/request";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
 import {Input} from "../../../../app-common/components/input/input";
 import {Trans} from "react-i18next";
-import { StoresInput } from "../../../../app-common/components/input/stores";
+import {StoresInput} from "../../../../app-common/components/input/stores";
 import {Button} from '../../../../app-common/components/input/button';
 import {Brand} from "../../../../api/model/brand";
 import * as yup from 'yup';
@@ -20,7 +18,7 @@ import {useDB} from "../../../../api/db/db";
 import {Tables} from "../../../../api/db/tables";
 import {StringRecordId} from "surrealdb";
 
-interface CreateBrandProps{
+interface CreateBrandProps {
   entity?: Brand;
   operation?: string;
   addModal: boolean;
@@ -63,7 +61,7 @@ export const CreateBrand: FC<CreateBrandProps> = ({
   const createBrand = async (values: any) => {
     setCreating(true);
     try {
-      if(values.stores){
+      if (values.stores) {
         values.stores = values.stores.map((item: ReactSelectOptionProps) => new StringRecordId(item.value));
       }
 
@@ -148,7 +146,7 @@ export const CreateBrand: FC<CreateBrandProps> = ({
               </div>
             )}
           </div>
-          <StoresInput control={control} errors={errors} />
+          <StoresInput control={control} errors={errors}/>
           <div>
             <Button variant="primary" type="submit" disabled={creating}>
               {creating ? 'Saving...' : (operation === 'create' ? 'Create new' : 'Update')}

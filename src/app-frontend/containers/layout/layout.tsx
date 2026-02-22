@@ -1,6 +1,4 @@
 import React, {FunctionComponent, PropsWithChildren} from 'react';
-import {useSelector} from "react-redux";
-import {isUserLoggedIn} from "../../../duck/auth/auth.selector";
 import {useAtom} from "jotai";
 import {appState} from "../../../store/jotai";
 

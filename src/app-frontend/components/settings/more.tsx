@@ -25,6 +25,7 @@ interface Props {
 export const More: FC<Props> = ({}) => {
 
   const [modal, setModal] = useState(false);
+
   const [, contextHolder] = AntMessage.useMessage();
 
 
@@ -106,37 +107,40 @@ export const More: FC<Props> = ({}) => {
         </Button>
       </Tooltip>
 
-      <Modal
-        open={modal}
-        onClose={() => {
-          setModal(false);
-        }}
-        title="Settings"
-        size="full"
-        transparentContainer={false}>
-        <TabControl
-          defaultTab="general"
-          position={isMobile ? "top" : "left"}
-          render={({isTabActive, setActiveTab}) => (
-            <>
-              <TabNav position={isMobile ? "top" : "left"}>
+      {modal && (
+        <Modal
+          open={modal}
+          onClose={() => {
+            setModal(false);
+          }}
+          title="Settings"
+          size="full"
+          transparentContainer={false}>
+          <TabControl
+            defaultTab="general"
+            position={isMobile ? "top" : "left"}
+            render={({isTabActive, setActiveTab}) => (
+              <>
+                <TabNav position={isMobile ? "top" : "left"}>
+                  {sidebarItems.map(item => (
+                    <Tab
+                      key={item.key}
+                      isActive={isTabActive(item.key)}
+                      onClick={() => setActiveTab(item.key)}>
+                      {item.title}
+                    </Tab>
+                  ))}
+                </TabNav>
                 {sidebarItems.map(item => (
-                  <Tab
-                    isActive={isTabActive(item.key)}
-                    onClick={() => setActiveTab(item.key)}>
-                    {item.title}
-                  </Tab>
+                  <TabContent key={item.key} isActive={isTabActive(item.key)}>
+                    {item.component}
+                  </TabContent>
                 ))}
-              </TabNav>
-              {sidebarItems.map(item => (
-                <TabContent isActive={isTabActive(item.key)}>
-                  {item.component}
-                </TabContent>
-              ))}
-            </>
-          )}
-        />
-      </Modal>
+              </>
+            )}
+          />
+        </Modal>
+      )}
     </>
   );
 };
