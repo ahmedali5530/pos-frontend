@@ -21,11 +21,11 @@ import {CartItemType} from "../cart/cart.container";
 import {appState as AppState, defaultData, defaultState, PosModes} from "../../../store/jotai";
 import {discountTotal, finalTotal, taxTotal} from "../../containers/dashboard/pos";
 import {OrderStatus} from "../../../api/model/order";
-import {StringRecordId} from "surrealdb";
 import {useDB} from "../../../api/db/db";
 import {Tables} from "../../../api/db/tables";
 import {useOrder} from "../../../api/hooks/use.order";
 import {toRecordId} from "../../../api/model/common";
+import {Order} from "../../../api/model/order";
 import {dispatchPrint} from "../../../lib/print/print.service";
 
 interface Props {
@@ -168,6 +168,8 @@ export const CloseSaleInline: FC<Props> = ({
       return;
     }
 
+    let order;
+
     try {
       setSaleClosing(true);
 
@@ -248,7 +250,6 @@ export const CloseSaleInline: FC<Props> = ({
 
       const order_id = await nextOrderId();
 
-
       if (paymentsAdded.length === 0) {
         paymentsAdded = [
           {
@@ -301,7 +302,7 @@ export const CloseSaleInline: FC<Props> = ({
         }
       }
 
-      let order;
+
       if (orderId) {
         await db.merge(toRecordId(orderId), {
           ...formValues
@@ -324,30 +325,6 @@ export const CloseSaleInline: FC<Props> = ({
 
       resetFields();
       setPayments([]);
-
-      if (order.status === OrderStatus.COMPLETED) {
-        onSale && onSale();
-
-        let printers = [];
-
-        const [settings] = await db.query(`SELECT * FROM ${Tables.setting} where terminal = $terminal and name = $name FETCH values.printers.printers`, {
-          name: 'final_printers',
-          terminal: toRecordId(terminal?.id)
-        });
-
-        if(settings.length > 0 && settings[0].values.printers.length > 0){
-          printers = settings[0].values.printers;
-        }
-
-        //print the order
-        await dispatchPrint(db, 'final', {
-          order: order
-        }, {
-          userId: user?.id,
-          printers: printers
-        })
-        // PrintOrder(order);
-      }
     } catch (e) {
       if (e instanceof UnprocessableEntityException) {
         const res: ValidationResult = await e.response.json();
@@ -375,6 +352,29 @@ export const CloseSaleInline: FC<Props> = ({
       throw e;
     } finally {
       setSaleClosing(false);
+    }
+
+    if ('id' in order && order.status === OrderStatus.COMPLETED) {
+      onSale && onSale();
+
+      let printers = [];
+
+      const [settings] = await db.query(`SELECT * FROM ${Tables.setting} where terminal = $terminal and name = $name FETCH values.printers.printers`, {
+        name: 'final_printers',
+        terminal: toRecordId(terminal?.id)
+      });
+
+      if(settings.length > 0 && settings[0].values.printers.length > 0){
+        printers = settings[0].values.printers;
+      }
+
+      //print the order
+      await dispatchPrint(db, 'final', {
+        order: order
+      }, {
+        userId: user?.id,
+        printers: printers
+      });
     }
   };
 

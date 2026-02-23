@@ -144,13 +144,13 @@ export const GeneralSetting = () => {
     });
 
     if(setting.length > 0){
-      await db.upsert(toRecordId(setting[0].id), data);
+      await db.merge(toRecordId(setting[0].id), data);
 
       notify({
         title: 'Printer settings updated'
       })
     }else{
-      await db.upsert(Tables.setting, data);
+      await db.insert(Tables.setting, data);
       notify({
         title: 'Printer settings added'
       })
@@ -444,12 +444,12 @@ export const GeneralSetting = () => {
             </div>
           ))}
 
-          {fields.length > 0 && (
+          <div className="mt-3">
             <button
               className="btn btn-primary"
               type="submit"
             >Save printers</button>
-          )}
+          </div>
         </form>
       </div>
     </div>
