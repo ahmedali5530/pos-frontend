@@ -27,6 +27,8 @@ A point of sale system built using React.js and SurrealDB.
 ## Other projects
 If you are interested in for restaurant based software, [Checkout my other](https://github.com/ahmedali5530/react-posr) software for demo.
 
+## deployment with docker is possible.
+
 ## Requirements
 - [Bun](https://bun.com/docs/installation)
 - [SurrealDB](https://surrealdb.com/docs/surrealdb/installation) 
