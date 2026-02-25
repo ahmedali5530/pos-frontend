@@ -40,7 +40,7 @@ export enum Tables {
   purchase_order = "purchase_order",
   purchase_order_item = "purchase_order_item",
   purchase_order_item_variant = "purchase_order_item_variant",
-  setting = "setting",
+  setting = "settings",
   store = "store",
   supplier = "supplier",
   supplier_payment = "supplier_payment",

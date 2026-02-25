@@ -4,6 +4,7 @@ import {RecordId, StringRecordId} from "surrealdb";
 import {Printer} from "../../api/model/printer";
 import {Tables} from "../../api/db/tables";
 import {notify} from "../../app-common/components/confirm/notification";
+import {toRecordId} from "../../api/model/common";
 
 export type PrintTemplateRenderer<Payload = any> = (payload: Payload) => React.ReactElement;
 
@@ -93,11 +94,11 @@ export async function getPrintersForType(db: PrintDB, template: string, userId?:
   if (!key) return [];
 
   let row: { values?: unknown[] } | undefined;
-  const uid = userId != null && userId !== '' ? new StringRecordId(toIdString(userId)) : null;
+  const uid = userId != null && userId !== '' ? toRecordId(userId) : null;
   if (uid) {
     const [userRes] = await db.query(
       `SELECT * FROM ${Tables.setting} WHERE name = $key LIMIT 1`,
-      { key, uid }
+      { key }
     );
     const userRows = Array.isArray(userRes) ? userRes : [];
     row = userRows[0] as { values?: unknown[] } | undefined;
@@ -142,7 +143,8 @@ export async function dispatchPrint<Payload = any>(
   template: string,
   payload: Payload,
   options?: {
-    title?: string; userId?: string | { id?: string; toString?: () => string } | null,
+    title?: string;
+    userId?: string | { id?: string; toString?: () => string } | null,
     printers?: {
       prints: number,
       printers: Printer[]
@@ -155,7 +157,7 @@ export async function dispatchPrint<Payload = any>(
   // eslint-disable-next-line prefer-const
   let [config] = await Promise.all([
     getPrintConfig(db, template),
-    // getPrintersForType(db, template, uid),
+    // getPrintersForType(db, template),
   ]);
 
   const printers = options?.printers;

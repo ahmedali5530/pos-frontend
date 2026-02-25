@@ -175,8 +175,7 @@ export const CloseSaleInline: FC<Props> = ({
 
       let customerFromDB = null;
       if (customer) {
-        [[customerFromDB]] = await db.query(`SELECT id
-                                             FROM ${toRecordId(customer.id)}`);
+        [[customerFromDB]] = await db.query(`SELECT * FROM ${toRecordId(customer.id)}`);
       }
 
       if (customerName) {
@@ -321,6 +320,13 @@ export const CloseSaleInline: FC<Props> = ({
         await db.merge(toRecordId(item), {
           order: toRecordId(order.id)
         });
+      }
+
+      // update customer account
+      if(customerFromDB){
+        await db.merge(toRecordId(customerFromDB.id), {
+          orders: [...customerFromDB.orders, toRecordId(order.id)]
+        })
       }
 
       resetFields();

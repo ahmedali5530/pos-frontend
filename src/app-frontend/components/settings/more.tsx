@@ -18,6 +18,7 @@ import {useMediaQuery} from "react-responsive";
 import {message as AntMessage, Tooltip} from "antd";
 import {GeneralSetting} from "./general/general";
 import {Printers} from "./printers";
+import {PrintSettings} from "./prints";
 
 interface Props {
 }
@@ -55,18 +56,6 @@ export const More: FC<Props> = ({}) => {
       title: 'Categories',
       component: <Categories/>
     }, {
-      key: 'payments',
-      title: 'Payments',
-      component: <PaymentTypes/>
-    }, {
-      key: 'discounts',
-      title: 'Discounts',
-      component: <DiscountTypes/>
-    }, {
-      key: 'taxes',
-      title: 'Taxes',
-      component: <TaxTypes/>
-    }, {
       key: 'departments',
       title: 'Departments',
       component: <Departments/>
@@ -81,6 +70,18 @@ export const More: FC<Props> = ({}) => {
     //   component: <DynamicBarcodes />
     // },
     {
+      key: 'payments',
+      title: 'Payment types',
+      component: <PaymentTypes/>
+    }, {
+      key: 'discounts',
+      title: 'Discount types',
+      component: <DiscountTypes/>
+    }, {
+      key: 'taxes',
+      title: 'Taxes',
+      component: <TaxTypes/>
+    }, {
       key: 'terminals',
       title: 'Terminals',
       component: <Terminals/>
@@ -88,6 +89,10 @@ export const More: FC<Props> = ({}) => {
       key: 'printers',
       title: 'Printers',
       component: <Printers/>
+    }, {
+      key: 'print_settings',
+      title: 'Print settings',
+      component: <PrintSettings/>
     }
   ];
 

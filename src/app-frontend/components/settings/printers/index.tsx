@@ -70,34 +70,11 @@ export const Printers = () => {
               tabIndex={-1}>
               <FontAwesomeIcon icon={faPencilAlt}/>
             </Button>
-            <span className="mx-2 text-gray-300">|</span>
-            <ConfirmAlert
-              onConfirm={() => {
-                deletePrinter(
-                  info.getValue().toString(),
-                  !info.row.original.is_active
-                );
-              }}
-              confirmText="Yes, please"
-              cancelText="No, wait"
-              title="Confirmation"
-              description={`Are you sure to ${info.row.original.is_active ? 'de-' : ''}activate this printer?`}
-            >
-              <Switch checked={info.row.original.is_active} readOnly/>
-            </ConfirmAlert>
           </>
         );
       },
     }),
   ];
-
-  async function deletePrinter(id: string, status: boolean) {
-    await db.merge(new StringRecordId(id), {
-      is_active: status
-    })
-
-    await useLoadHook.fetchData();
-  }
 
   return (
     <>

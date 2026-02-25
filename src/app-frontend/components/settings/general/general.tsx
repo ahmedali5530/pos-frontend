@@ -150,7 +150,7 @@ export const GeneralSetting = () => {
         title: 'Printer settings updated'
       })
     }else{
-      await db.insert(Tables.setting, data);
+      await db.create(Tables.setting, data);
       notify({
         title: 'Printer settings added'
       })

@@ -24,7 +24,7 @@ export const TaxTypes = () => {
 
   const useLoadHook = useApi<SettingsData<Tax>>(
     Tables.tax,
-    [`stores ?= ${store?.id}`], [], 0, 10, ['stores']
+    [], [], 0, 10, ['stores']
   );
   const {fetchData} = useLoadHook;
 

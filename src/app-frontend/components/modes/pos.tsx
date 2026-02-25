@@ -551,18 +551,15 @@ export const PosMode = () => {
     });
   };
 
-  // useEffect(() => {
-
-  // }, [modal, selected, selectedVariant, variants, items, added, quantity]);
-
-  // useEffect(() => {
   Mousetrap.bind("f3", function (e: any) {
     e.preventDefault();
+    e.stopPropagation();
     if (searchField.current !== null) {
       searchField.current.focus();
+
+      return false;
     }
   });
-  // }, [searchField.current]);
 
   useEffect(() => {
     if(!modal){

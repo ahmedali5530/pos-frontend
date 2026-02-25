@@ -25,7 +25,7 @@ export const PaymentTypes = () => {
 
   const useLoadHook = useApi<SettingsData<PaymentType>>(
     Tables.payment,
-    [`stores ?= ${store?.id}`],
+    [],
     [], 0, 10, ['stores']
   );
   const {fetchData} = useLoadHook;

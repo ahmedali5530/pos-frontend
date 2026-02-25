@@ -21,7 +21,7 @@ export const Shortcuts = () => {
 
   const shortcutsList = useMemo(() => {
     return [
-      {title: 'Open help', shortcut: ['?']},
+      {title: 'Open help', shortcut: ['f3']},
       {title: 'Focus search', shortcut: ['/']},
       {title: 'Open search', shortcut: ['ctrl', 'f']},
       {title: 'Move in cart controls', shortcut: [
