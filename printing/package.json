@@ -10,9 +10,10 @@
   "dependencies": {
     "cors": "^2.8.5",
     "escpos": "^3.0.0-alpha.6",
-    "escpos-usb": "^3.0.0-alpha.4",
-    "escpos-serialport": "^3.0.0-alpha.4",
     "escpos-network": "^3.0.0-alpha.5",
-    "express": "^4.21.0"
+    "escpos-serialport": "^3.0.0-alpha.4",
+    "escpos-usb": "^3.0.0-alpha.4",
+    "express": "^4.21.0",
+    "patch-package": "^8.0.1"
   }
 }
