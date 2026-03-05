@@ -9,4 +9,7 @@ export interface Printer{
   type: string
   priority?: number
   store: Store
+  vid?: string
+  pid?: string
+  path?: string
 }

@@ -1,6 +1,6 @@
 import React, {FC, useEffect, useState} from "react";
 import {Modal} from "../../../../app-common/components/modal/modal";
-import {Controller, useForm} from "react-hook-form";
+import {Controller, useForm, useWatch} from "react-hook-form";
 import {toRecordId} from "../../../../api/model/common";
 import {Input} from "../../../../app-common/components/input/input";
 import {Printer} from "../../../../api/model/printer";
@@ -24,8 +24,10 @@ interface PrinterProps {
 
 const ValidationSchema = yup.object({
   name: yup.string().min(1, "This is required"),
-  ip_address: yup.string().min(1, "This is required"),
-  port: yup.number().min(1, "This is required"),
+  ip_address: yup.string().optional(),
+  vid: yup.string().optional(),
+  pid: yup.string().optional(),
+  port: yup.number().optional(),
   prints: yup.number().min(1, "This is required"),
   priority: yup.number(),
   type: yup.object({
@@ -57,6 +59,8 @@ export const PrinterForm: FC<PrinterProps> = ({
         ip_address: entity.ip_address,
         port: entity.port,
         prints: entity.prints,
+        vid: entity.vid,
+        pid: entity.pid,
         type: entity.type ? {
           label: entity.type,
           value: entity.type
@@ -106,6 +110,11 @@ export const PrinterForm: FC<PrinterProps> = ({
     onClose && onClose();
   }
 
+  const type = useWatch({
+    name: 'type',
+    control: control
+  })
+
   return (
     <Modal
       open={modal}
@@ -135,25 +144,97 @@ export const PrinterForm: FC<PrinterProps> = ({
               control={control}
             />
           </div>
-          <div className="flex-1">
-            <Input className="w-full" label="Address" {...register('ip_address')} hasError={!!errors?.ip_address?.message}/>
-          </div>
-          <div className="flex-1">
-            <Controller
-              render={({field}) => (
-                <Input
-                  type="number"
-                  label="Port"
-                  hasError={!!errors?.port?.message}
-                  value={field.value}
-                  onChange={field.onChange}
-                  className="w-full"
+          {type?.value === 'Network' && (
+            <>
+              <div className="flex-1">
+                <Controller
+                  name="ip_address"
+                  control={control}
+                  render={({field}) => (
+                    <Input
+                      label="Path"
+                      value={transformValue.input(field.value)}
+                      onChange={field.onChange}
+                      error={errors?.ip_address?.message}
+                      className="w-full"
+                    />
+                  )}
                 />
-              )}
-              name="port"
-              control={control}
-            />
-          </div>
+              </div>
+              <div className="flex-1">
+                <Controller
+                  render={({ field }) => (
+                    <Input
+                      type="number"
+                      label="Port"
+                      error={errors?.port?.message}
+                      value={transformValue.input(field.value)}
+                      onChange={(e) => field.onChange(transformValue.output(e))}
+                      className="w-full"
+                    />
+                  )}
+                  name="port"
+                  control={control}
+                />
+              </div>
+            </>
+          )}
+
+          {type?.value === 'USB' && (
+            <>
+              <div className="flex-1">
+                <Controller
+                  name="vid"
+                  control={control}
+                  render={({field}) => (
+                    <Input
+                      label="VID"
+                      value={field.value}
+                      onChange={field.onChange}
+                      error={errors?.vid?.message}
+                      className="w-full"
+                    />
+                  )}
+                />
+
+              </div>
+              <div className="flex-1">
+                <Controller
+                  render={({ field }) => (
+                    <Input
+                      label="PID"
+                      error={errors?.pid?.message}
+                      value={field.value}
+                      onChange={field.onChange}
+                      className="w-full"
+                    />
+                  )}
+                  name="pid"
+                  control={control}
+                />
+              </div>
+            </>
+          )}
+
+          {(type?.value === 'Bluetooth' || type?.value === 'Serial') && (
+            <>
+              <div className="flex-1">
+                <Controller
+                  name="path"
+                  control={control}
+                  render={({field}) => (
+                    <Input
+                      label="Path"
+                      value={field.value}
+                      onChange={field.onChange}
+                      error={errors?.path?.message}
+                      className="w-full"
+                    />
+                  )}
+                />
+              </div>
+            </>
+          )}
           <div className="flex-1">
             <Controller
               render={({field}) => (

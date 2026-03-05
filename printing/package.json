@@ -5,15 +5,19 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "escpos": "^3.0.0-alpha.6",
-    "escpos-network": "^3.0.0-alpha.5",
-    "escpos-serialport": "^3.0.0-alpha.4",
     "escpos-usb": "^3.0.0-alpha.4",
+    "escpos-serialport": "^3.0.0-alpha.4",
+    "escpos-network": "^3.0.0-alpha.5",
     "express": "^4.21.0",
+    "canvas": "^2.11.2"
+  },
+  "devDependencies": {
     "patch-package": "^8.0.1"
   }
 }

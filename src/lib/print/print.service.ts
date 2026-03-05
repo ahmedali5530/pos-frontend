@@ -61,12 +61,15 @@ function logoToBase64(logo: unknown): string | undefined {
   return `data:image/png;base64,${btoa(b)}`;
 }
 
-function printerToDriverConfig(p: Printer): { type: string; ip?: string; port?: number } {
+function printerToDriverConfig(p: Printer): { type: string; ip?: string; port?: number; vid?: string; pid?: string; path?: string } {
   const type = String(p.type || 'network').toLowerCase();
   return {
     type,
     ip: p.ip_address,
     port: p.port,
+    vid: p.vid,
+    pid: p.pid,
+    path: p.path,
   };
 }
 
@@ -111,7 +114,7 @@ export async function getPrintersForType(db: PrintDB, template: string, userId?:
     const globalRows = Array.isArray(globalRes) ? globalRes : [];
     row = globalRows[0] as { values?: unknown[] } | undefined;
   }
-  const ids = Array.isArray(row?.values)
+  const ids = (row && Array.isArray(row.values))
     ? row.values.map((v) => v as any)
     : [];
   if (ids.length === 0) return [];
@@ -162,12 +165,18 @@ export async function dispatchPrint<Payload = any>(
 
   const printers = options?.printers;
 
-  const driverPrinters = printers?.map(p => ({
-    prints: p.prints,
-    printers: p.printers.map(printerToDriverConfig)
-  }));
+  const driverPrinters: any[] = [];
+  printers?.forEach((group) => {
+    const prints = group.prints || 1;
+    group.printers.forEach((p) => {
+      const config = printerToDriverConfig(p);
+      for (let i = 0; i < prints; i++) {
+        driverPrinters.push(config);
+      }
+    });
+  });
 
-  if (driverPrinters?.length === 0) {
+  if (driverPrinters.length === 0) {
     notify({
       type: "error",
       description: 'No printers configured for this print type',

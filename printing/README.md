@@ -24,12 +24,9 @@ Use this to check layout and content before printing.
 **Body:**
 ```json
 {
-  "data": {
-    "printType": "temp|refund|final|delivery|kitchen|summary",
-    "order": OrderModel
-  },
+  "printers": [ ... ],
+  "data": { "printType": "temp|summary|kitchen|delivery|final|refund|deletion|table", ... },
   "config": {
-    "currencySymbol": "$",
     "bottomMargin": "1",
     "companyName": "Your Co",
     "leftMargin": "1",
@@ -44,38 +41,11 @@ Use this to check layout and content before printing.
     "topMargin": "1",
     "vatName": "NTN",
     "vatNumber": "12356789"
-  },
-  "printers": [
-    {
-      "prints": "1",
-      "printers": [
-        PrinterModel
-      ]
-    }
-  ]
+  }
 }
 ```
 
-**Printers** structure (new format):
-```json
-[
-  {
-    "prints": "1",
-    "printers": [
-      {
-        "id": "printer:xxx",
-        "name": "Kitchen Printer",
-        "ip_address": "192.168.1.100",
-        "port": 9100,
-        "type": "network",
-        "prints": 1
-      }
-    ]
-  }
-]
-```
-
-**Legacy printers format** (still supported for backward compatibility):
+**Printers** (one or more):
 ```json
 [
   { "type": "usb" },
@@ -93,13 +63,11 @@ Use this to check layout and content before printing.
 - **Item columns:** `showItemName`, `showItemPrice`, `showItemQuantity`, `showItemTotal` — for summary / custom use
 - **VAT:** `showVatNumber`, `vatName`, `vatNumber`
 
-**temp** (Pre-Sale Bill, matches `presale.bill.tsx`): **CommonBillParts** only — Order ID, date, user; items `Name xQty` / `$lineTotal`; **Items (n)**, **Tax (name rate%)**, **Discount**, **Total**. No payments or Change.
+**temp** (Pre-Sale Bill, matches `presale.bill.tsx`): **CommonBillParts** only — Invoice#, date, table, user; items `Name xQty` / `$lineTotal`; **Items (n)**, **Tax (name rate%)**, **Discount**, **Service charges (X or X%)**, **extras**, **Tip** / **Tip %**; **Total**. No payments or Change.
 
-**final** (matches `final.bill.tsx` + `_common.bill.tsx`): CommonBillParts + **payments** (each `payment.type.name` / `received`) + **Change** (`sum(payments.received) - total`). `data.duplicate: true` → title "Duplicate Final Bill".
+**final** (matches `final.bill.tsx` + `_common.bill.tsx`): CommonBillParts + **payments** (each `payment_type.name` / amount) + **Change** (`sum(payments) - total`). `data.duplicate: true` → title "Duplicate Final Bill".
 
-**refund**: Refund receipt showing refunded items, tax, discount, and refund total. Requires `data.order` (refund order) and optionally `data.originalOrder`.
-
-**delivery**: CommonBillParts + address/phone/notes from customer + payments + Change.
+**delivery**: CommonBillParts + **Delivery Charges** (when `order.delivery.delivery_charges` or `order.delivery_charges`) + address/phone/notes + payments + Change.
 
 ## Drivers (escpos adapters)
 
@@ -112,20 +80,7 @@ Use this to check layout and content before printing.
 
 ## Print builders
 
-**temp, final, delivery, kitchen, refund** — expect `data: { printType, order }` where `order` is an `Order` from `src/api/model/order.ts`:
-- `id`, `order_id` (order number)
-- `created_at` (Date)
-- `items: OrderItem[]` (each with `product: Product`, `variant?: ProductVariant`, `quantity`, `price`, `is_deleted`, `is_returned`, `is_suspended`, `taxes_total`, `discount`)
-- `discount?: OrderDiscount` (with `type: Discount`, `amount` or `rate`)
-- `tax?: OrderTax` (with `type: Tax`, `amount` or calculated from items)
-- `payments: OrderPayment[]` (each with `type: PaymentType`, `received`, `total`, `due`)
-- `customer?: Customer` (with `name`, `phone`, `address`)
-- `user?: User` (with `display_name`)
-- `store: Store`, `terminal: Terminal`
-- `notes?: string`
-- `adjustment?: number`
-
-Items are mapped from `order.items` (Product/Variant name, quantity, price); deleted/returned/suspended items are omitted.
+**temp, final, delivery, kitchen** — expect `data: { printType, order }` where `order` is an `Order` from `src/api/model/order.ts` (invoice_number, split, created_at, table, items, tax_amount, discount_amount, service_charge_amount, tip_amount, payments, customer, delivery, order_type, tags, …). Items are mapped from `order.items` (Dish name, quantity, price, comments); deleted/refunded/suspended items are omitted.
 
 | printType | purpose |
 |-----------|---------|
@@ -133,8 +88,46 @@ Items are mapped from `order.items` (Product/Variant name, quantity, price); del
 | `final`   | Customer receipt from `order` |
 | `delivery`| Delivery slip from `order` (delivery/customer address, phone, items, totals) |
 | `kitchen` | Kitchen ticket from `order` (table, items with comments, time, priority) |
+| `table`   | Generic table-only print; pass prebuilt `rows` with escpos `tableCustom` cells |
 
 **summary** — same props as `Summary` (summary.tsx): `{ orders: { data: Order[] }, date: string }`. All totals (exclusive, gross, refunds, service charges, discounts, taxes, net, amount due, amount collected, extras, rounding, voids, tips, covers, categories, dishes, payment types, taxes list, discounts list, extras) are computed from `orders.data` in the print server to match the Summary logic.
+
+**table** — generic table-only builder for reusable structured slips:
+
+```json
+{
+  "data": {
+    "printType": "table",
+    "rows": [
+      [
+        { "text": "Item", "align": "LEFT", "width": 0.6, "style": "B" },
+        { "text": "Total", "align": "RIGHT", "width": 0.4, "style": "B" }
+      ],
+      [
+        { "text": "Burger x2", "align": "LEFT", "width": 0.6 },
+        { "text": "$20", "align": "RIGHT", "width": 0.4 }
+      ]
+    ],
+    "size": [1, 1],
+    "feed": 1,
+    "cut": true
+  }
+}
+```
+
+Shorthand for a single row is also supported:
+
+```json
+{
+  "data": {
+    "printType": "table",
+    "rows": [
+      { "text": "Name", "align": "LEFT", "width": 0.5, "style": "B" },
+      { "text": "Value", "align": "RIGHT", "width": 0.5, "style": "B" }
+    ]
+  }
+}
+```
 
 ## Bluetooth
 

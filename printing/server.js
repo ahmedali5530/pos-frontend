@@ -29,7 +29,7 @@ app.post('/print/preview', (req, res) => {
 
 app.get('/print/preview', (req, res) => {
   const tool = `<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="utf-8">
   <title>Print preview</title>
@@ -114,8 +114,9 @@ app.get('/health', (req, res) => {
   res.json({ ok: true, service: 'posr-print-server' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Print server listening on http://localhost:${PORT}`);
+const HOST = process.env.PRINT_HOST || '0.0.0.0';
+app.listen(PORT, HOST, () => {
+  console.log(`Print server listening on http://${HOST}:${PORT}`);
   console.log('POST /print with JSON: { printers: [...], data: { printType, ... } }');
   console.log('GET /print/preview - preview tool in browser');
   console.log('POST /print/preview - same body as /print, returns HTML receipt preview');

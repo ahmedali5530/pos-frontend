@@ -27,6 +27,7 @@ function renderBillToHtml(bill, config, opts) {
     thankYou,
     showPayments = false,
     showChange = false,
+    showDeliveryLine = false,
   } = opts || {};
 
   const row = (left, right) =>
@@ -34,13 +35,19 @@ function renderBillToHtml(bill, config, opts) {
 
   const parts = [];
 
-  // Logo
-  if (cfg.logo && String(cfg.logo).trim()) {
+  // Logo (only when showLogo is true)
+  if (cfg.showLogo && cfg.logo && String(cfg.logo).trim()) {
     const src = /^data:/.test(cfg.logo) ? cfg.logo : `data:image/png;base64,${cfg.logo}`;
     parts.push(`<div class="logo"><img src="${escapeHtml(src)}" alt="Logo" style="max-width:120px;max-height:60px;" /></div>`);
   }
   if (cfg.showCompanyName && cfg.companyName) {
     parts.push(`<div class="center">${escapeHtml(cfg.companyName)}</div>`);
+  }
+  if (cfg.showCompanyAddress && cfg.companyAddress) {
+    parts.push(`<div class="center">${escapeHtml(String(cfg.companyAddress).slice(0, 48))}</div>`);
+  }
+  if (cfg.showTopDescription && cfg.topDescription) {
+    parts.push(`<div class="center">${escapeHtml(String(cfg.topDescription).slice(0, 48))}</div>`);
   }
 
   // Header
@@ -68,6 +75,18 @@ function renderBillToHtml(bill, config, opts) {
   if (bill.discount && bill.discountAmount != null && Number(bill.discountAmount) !== 0) {
     parts.push(row('Discount', formatMoney(bill.discountAmount, sym)));
   }
+  if (bill.serviceChargeLabel && bill.serviceChargeAmount != null && Number(bill.serviceChargeAmount) !== 0) {
+    parts.push(row(bill.serviceChargeLabel, formatMoney(bill.serviceChargeAmount, sym)));
+  }
+  (bill.extras || []).forEach((e) => {
+    parts.push(row(e.name || 'Extra', formatMoney(e.value, sym)));
+  });
+  if (bill.tipAmount != null && Number(bill.tipAmount) !== 0) {
+    parts.push(row(bill.tipLabel || 'Tip', formatMoney(bill.tipAmount, sym)));
+  }
+  if (showDeliveryLine && bill.deliveryCharges != null && Number(bill.deliveryCharges) !== 0) {
+    parts.push(row('Delivery Charges', formatMoney(bill.deliveryCharges, sym)));
+  }
   parts.push('<hr/>');
 
   // Total
@@ -93,6 +112,9 @@ function renderBillToHtml(bill, config, opts) {
   }
   if (thankYou) {
     parts.push(`<div class="center thankyou">${escapeHtml(thankYou)}</div>`);
+  }
+  if (cfg.showBottomDescription && cfg.bottomDescription) {
+    parts.push(`<div class="center">${escapeHtml(String(cfg.bottomDescription).slice(0, 48))}</div>`);
   }
 
   return `<!DOCTYPE html>
@@ -137,8 +159,18 @@ function renderSummaryToHtml(data, config) {
   const sect = (t) => `<div class="sect">${escapeHtml(t)}</div>`;
 
   const parts = [];
+  if (cfg.showLogo && cfg.logo && String(cfg.logo).trim()) {
+    const src = /^data:/.test(cfg.logo) ? cfg.logo : `data:image/png;base64,${cfg.logo}`;
+    parts.push(`<div class="logo"><img src="${escapeHtml(src)}" alt="Logo" style="max-width:120px;max-height:60px;" /></div>`);
+  }
   if (cfg.showCompanyName && cfg.companyName) {
     parts.push(`<div class="center">${escapeHtml(cfg.companyName)}</div>`);
+  }
+  if (cfg.showCompanyAddress && cfg.companyAddress) {
+    parts.push(`<div class="center">${escapeHtml(String(cfg.companyAddress).slice(0, 48))}</div>`);
+  }
+  if (cfg.showTopDescription && cfg.topDescription) {
+    parts.push(`<div class="center">${escapeHtml(String(cfg.topDescription).slice(0, 48))}</div>`);
   }
   parts.push(`<div class="title">Summary of ${escapeHtml(s.date)}</div>`);
   parts.push('<hr/>');
@@ -148,16 +180,21 @@ function renderSummaryToHtml(data, config) {
   parts.push(row('Gross', formatMoney(s.gross, sym)));
   parts.push(sub('Amount collected + Refunds + Discounts'));
   parts.push(row('Refunds', formatMoney(s.refunds, sym)));
+  parts.push(row('Service charges', formatMoney(s.serviceCharges, sym)));
   parts.push(row('Discounts', formatMoney(s.discounts, sym)));
   parts.push(row('Taxes', formatMoney(s.taxes, sym)));
   parts.push(row('Net', formatMoney(s.net, sym)));
-  parts.push(sub('Amount collected - Taxes'));
+  parts.push(sub('Amount collected - Service charges - Taxes'));
   parts.push(row('Amount due', formatMoney(s.amountDue, sym)));
-  parts.push(sub('Items total + Taxes - Discounts'));
+  parts.push(sub('Items total + Taxes + Service + Extras - Discounts'));
   parts.push(row('Amount collected', formatMoney(s.amountCollected, sym)));
+  parts.push(row('Extras', formatMoney(s.totalExtras, sym)));
   parts.push(row('Rounding', formatMoney(s.rounding, sym)));
   parts.push(sub('Amount collected - Amount due'));
   parts.push(row('Voids', formatMoney(s.voids, sym)));
+  parts.push('<hr/>');
+  parts.push(sect('Tips'));
+  parts.push(row('Total Tips', formatMoney(s.tips, sym)));
   parts.push('<hr/>');
   parts.push(row('Covers', formatNum(s.covers)));
   parts.push(row('Average cover', formatMoney(s.averageCover, sym)));
@@ -192,6 +229,11 @@ function renderSummaryToHtml(data, config) {
   Object.keys(s.discountsList || {}).forEach((k) => {
     const a = s.discountsList[k];
     parts.push(row(k, formatMoney(a, sym) + '  ' + formatNum(pct(a, s.discounts)) + '%'));
+  });
+  parts.push('<hr/>');
+  parts.push(sect('Extras'));
+  Object.keys(s.extras || {}).forEach((k) => {
+    parts.push(row(k, formatMoney(s.extras[k], sym)));
   });
   if (cfg.showVatNumber && cfg.vatNumber) {
     parts.push('<hr/>');
@@ -282,12 +324,18 @@ function renderRefundToHtml(data, config) {
     `<div class="row"><span>${escapeHtml(left)}</span><span>${escapeHtml(right)}</span></div>`;
 
   const parts = [];
-  if (cfg.logo && String(cfg.logo).trim()) {
+  if (cfg.showLogo && cfg.logo && String(cfg.logo).trim()) {
     const src = /^data:/.test(cfg.logo) ? cfg.logo : `data:image/png;base64,${cfg.logo}`;
     parts.push(`<div class="logo"><img src="${escapeHtml(src)}" alt="Logo" style="max-width:120px;max-height:60px;" /></div>`);
   }
   if (cfg.showCompanyName && cfg.companyName) {
     parts.push(`<div class="center">${escapeHtml(cfg.companyName)}</div>`);
+  }
+  if (cfg.showCompanyAddress && cfg.companyAddress) {
+    parts.push(`<div class="center">${escapeHtml(String(cfg.companyAddress).slice(0, 48))}</div>`);
+  }
+  if (cfg.showTopDescription && cfg.topDescription) {
+    parts.push(`<div class="center">${escapeHtml(String(cfg.topDescription).slice(0, 48))}</div>`);
   }
   parts.push(`<div class="title">REFUND RECEIPT</div>`);
   parts.push(row(`Original Invoice# ${bill.originalOrderId || ''}`, ''));
@@ -306,6 +354,15 @@ function renderRefundToHtml(data, config) {
   }
   if (bill.discount && bill.discountAmount != null && Number(bill.discountAmount) !== 0) {
     parts.push(row('Discount', formatMoney(bill.discountAmount, sym)));
+  }
+  if (bill.serviceChargeLabel && bill.serviceChargeAmount != null && Number(bill.serviceChargeAmount) !== 0) {
+    parts.push(row(bill.serviceChargeLabel, formatMoney(bill.serviceChargeAmount, sym)));
+  }
+  (bill.extras || []).forEach((e) => {
+    parts.push(row(e.name || 'Extra', formatMoney(e.value, sym)));
+  });
+  if (bill.tipAmount != null && Number(bill.tipAmount) !== 0) {
+    parts.push(row(bill.tipLabel || 'Tip', formatMoney(bill.tipAmount, sym)));
   }
   parts.push('<hr/>');
   parts.push(`<div class="row bold"><span>Refund Total</span><span>${escapeHtml(formatMoney(bill.total, sym))}</span></div>`);
@@ -355,6 +412,7 @@ function renderPreview(printType, data, config) {
       notes: bill.note || undefined,
       showPayments: false,
       showChange: false,
+      showDeliveryLine: false,
     });
   }
 
@@ -367,6 +425,7 @@ function renderPreview(printType, data, config) {
       thankYou: bill.thankYou,
       showPayments: true,
       showChange: true,
+      showDeliveryLine: false,
     });
   }
 
@@ -381,6 +440,7 @@ function renderPreview(printType, data, config) {
       notes: bill.notes || undefined,
       showPayments: true,
       showChange: true,
+      showDeliveryLine: true,
     });
   }
 
