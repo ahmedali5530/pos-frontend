@@ -27,6 +27,7 @@ import {useOrder} from "../../../api/hooks/use.order";
 import {toRecordId} from "../../../api/model/common";
 import {Order} from "../../../api/model/order";
 import {dispatchPrint} from "../../../lib/print/print.service";
+import {nanoid} from "nanoid";
 
 interface Props {
   paymentTypesList: PaymentType[];
@@ -157,6 +158,78 @@ export const CloseSaleInline: FC<Props> = ({
   }
 
   const onSaleSubmit = async (values: any) => {
+    if(defaultMode === PosModes.quote){
+      if (requireCustomerBox && !customerName) {
+        notify({
+          type: "error",
+          description: 'Add customer name',
+        });
+
+        customerInput?.current?.focus();
+        return;
+      }
+
+      try {
+        setSaleClosing(true);
+
+        let printers = [];
+
+        const [settings] = await db.query(`SELECT * FROM ${Tables.setting} where terminal = $terminal and name = $name FETCH values.printers.printers`, {
+          name: 'final_printers',
+          terminal: toRecordId(terminal?.id)
+        });
+
+        if(settings.length > 0 && settings[0].values.printers.length > 0){
+          printers = settings[0].values.printers;
+        }
+
+        const quoteOrder = {
+          order_id: `Q-${nanoid(5)}`,
+          created_at: new Date(),
+          customer: customer ?? (customerName ? {name: customerName} : undefined),
+          user,
+          adjustment,
+          description: values.notes,
+          discount: discount ? {
+            amount: discountAmount,
+            rate: discount.rate,
+            type: discount
+          } : null,
+          tax: tax ? {
+            amount: taxTotal(added),
+            rate: tax.rate,
+            type: tax
+          } : null,
+          payments: [],
+          items: added.map((item) => ({
+            product: item.item,
+            price: Number(item.price),
+            quantity: Number(item.quantity),
+            discount: Number(item.discount || 0),
+            taxes: item.taxes,
+            variant: item.variant,
+            is_deleted: false,
+            is_returned: false
+          }))
+        };
+
+        await dispatchPrint(db, 'quotation', {
+          order: quoteOrder,
+          notes: values.notes
+        }, {
+          userId: user?.id,
+          printers: printers
+        });
+
+        onSale && onSale();
+        resetFields();
+        setPayments([]);
+      } finally {
+        setSaleClosing(false);
+      }
+      return;
+    }
+
     let paymentsAdded: AddedPayment[] = [...payments];
     if (requireCustomerBox && !customerName && defaultMode !== PosModes.payment) {
       notify({
@@ -231,7 +304,7 @@ export const CloseSaleInline: FC<Props> = ({
       let orderDiscount = null;
       if (discount) {
         [orderDiscount] = await db.insert(Tables.order_discount, {
-          amount: discountAmount,
+          amount: Number(discountAmount),
           rate: discount.rate,
           rate_type: discount.rate_type,
           type: toRecordId(discount.id)
@@ -241,7 +314,7 @@ export const CloseSaleInline: FC<Props> = ({
       let orderTax = null;
       if (tax) {
         [orderTax] = await db.insert(Tables.order_tax, {
-          amount: taxTotal(added),
+          amount: Number(taxTotal(added, tax)),
           rate: tax.rate,
           type: toRecordId(tax.id)
         });
@@ -829,29 +902,50 @@ export const CloseSaleInline: FC<Props> = ({
               />
             </div>
 
-            <div className="flex gap-3 flex-wrap">
-              <Button
-                className="btn-success w-full"
-                type="submit"
-                disabled={added.length === 0 || isSaleClosing || changeDue < 0}
-                size="lg"
-                tabIndex={0}>
-                {isSaleClosing ? "..." : "Done"}
-                <Shortcut shortcut="ctrl+s" handler={shortcutHandler}/>
-              </Button>
+            {(defaultMode === PosModes.payment || defaultMode === PosModes.pos || defaultMode === PosModes.order) && (
+              <div className="flex gap-3 flex-wrap">
+                <Button
+                  className="btn-success w-full"
+                  type="submit"
+                  disabled={added.length === 0 || isSaleClosing || changeDue < 0}
+                  size="lg"
+                  tabIndex={0}>
+                  {isSaleClosing ? "..." : "Done"}
+                  <Shortcut shortcut="ctrl+s" handler={shortcutHandler}/>
+                </Button>
 
-              <Button
-                type="submit"
-                disabled={added.length === 0 || isSaleClosing}
-                size="lg"
-                className="btn-warning flex-1"
-                onClick={() => setHold(true)}>
-                <FontAwesomeIcon icon={faPause} size="lg"/>
-              </Button>
-              <div className="flex-1">
-                <ClearSale/>
+                <Button
+                  type="submit"
+                  disabled={added.length === 0 || isSaleClosing}
+                  size="lg"
+                  className="btn-warning flex-1"
+                  onClick={() => setHold(true)}>
+                  <FontAwesomeIcon icon={faPause} size="lg"/>
+                </Button>
+                <div className="flex-1">
+                  <ClearSale/>
+                </div>
               </div>
-            </div>
+            )}
+
+            {(defaultMode === PosModes.quote) && (
+              <div className="flex gap-3 flex-wrap">
+                <Button
+                  className="btn-warning w-full"
+                  type="submit"
+                  disabled={added.length === 0 || isSaleClosing || changeDue < 0}
+                  size="lg"
+                  tabIndex={0}>
+                  {isSaleClosing ? "..." : "Print Quote"}
+                  <Shortcut shortcut="ctrl+s" handler={shortcutHandler}/>
+                </Button>
+
+                <div className="flex-1">
+                  <ClearSale/>
+                </div>
+              </div>
+            )}
+
           </div>
           <ScrollContainer
             horizontal={false}

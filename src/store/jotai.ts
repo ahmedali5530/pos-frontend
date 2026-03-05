@@ -16,6 +16,7 @@ export enum PosModes {
   pos = "pos",
   order = "order",
   payment = "payment",
+  quote = "quote",
 }
 
 export interface AppStateInterface {

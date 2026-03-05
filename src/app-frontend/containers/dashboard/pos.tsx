@@ -1,76 +1,76 @@
-import React, { useMemo } from "react";
-import { DateTime } from "luxon";
-import { Product } from "../../../api/model/product";
-import { CartItem } from "../../../api/model/cart.item";
-import { useAtom } from "jotai";
-import { defaultData, PosModes } from "../../../store/jotai";
-import { PosMode } from "../../components/modes/pos";
-import { PaymentMode } from "../../components/modes/payment";
-import { Discount, DiscountRate, DiscountScope } from "../../../api/model/discount";
-import { Tax } from "../../../api/model/tax";
+import React, {useMemo} from "react";
+import {DateTime} from "luxon";
+import {Product} from "../../../api/model/product";
+import {CartItem} from "../../../api/model/cart.item";
+import {useAtom} from "jotai";
+import {defaultData, PosModes} from "../../../store/jotai";
+import {PosMode} from "../../components/modes/pos";
+import {PaymentMode} from "../../components/modes/payment";
+import {Discount, DiscountRate, DiscountScope} from "../../../api/model/discount";
+import {Tax} from "../../../api/model/tax";
 import {formatNumber} from "../../../lib/currency/currency";
 
 export const getRealProductPrice = (item: Product) => {
   let price = 0;
 
-  if( !item ) return price;
+  if (!item) return price;
 
-  if( item.base_price ) {
+  if (item.base_price) {
     price = item.base_price;
   }
 
-  if( item.prices.length > 0 ) {
-    for ( let index in item.prices ) {
+  if (item.prices.length > 0) {
+    for (let index in item.prices) {
       const itemPrice = item.prices[index];
 
-      if( !itemPrice.base_price ) {
+      if (!itemPrice.base_price) {
         continue;
       }
 
       //based on date
-      if( itemPrice.date ) {
-        if( DateTime.fromISO(itemPrice.date).toFormat('d') === DateTime.now().toFormat('d') ) {
+      if (itemPrice.date) {
+        if (DateTime.fromISO(itemPrice.date).toFormat('d') === DateTime.now().toFormat('d')) {
           price = itemPrice.base_price;
           break;
         }
       }
 
       //based on time
-      if( itemPrice.time && itemPrice.time_to ) {
-        if( DateTime.fromISO(itemPrice.time).toFormat('HH:mm') >= DateTime.now().toFormat('HH:mm') &&
-          DateTime.fromISO(itemPrice.time_to).toFormat('HH:mm') <= DateTime.now().toFormat('HH:mm') ) {
+      if (itemPrice.time && itemPrice.time_to) {
+        if (DateTime.fromISO(itemPrice.time).toFormat('HH:mm') >= DateTime.now().toFormat('HH:mm') &&
+          DateTime.fromISO(itemPrice.time_to).toFormat('HH:mm') <= DateTime.now().toFormat('HH:mm')) {
           price = itemPrice.base_price;
           break;
         }
       }
 
       //based on day
-      if( itemPrice.day ) {
-        if( itemPrice.day === DateTime.now().toFormat('cccc') ) {
+      if (itemPrice.day) {
+        if (itemPrice.day === DateTime.now().toFormat('cccc')) {
           price = itemPrice.base_price;
           break;
         }
       }
 
       //based on week
-      if( itemPrice.week ) {
-        if( itemPrice.week === +DateTime.now().toFormat('W') ) {
+      if (itemPrice.week) {
+        if (itemPrice.week === +DateTime.now().toFormat('W')) {
           price = itemPrice.base_price;
           break;
         }
       }
 
       //based on month
-      if( itemPrice.month ) {
-        if( itemPrice.month === +DateTime.now().toFormat('L') ) {
+      if (itemPrice.month) {
+        if (itemPrice.month === +DateTime.now().toFormat('L')) {
           price = itemPrice.base_price;
           break;
         }
       }
 
       //based on quarter
-      if( itemPrice.quarter ) {
-        if( itemPrice.quarter === +DateTime.now().toFormat('q') ) {
+      if (itemPrice.quarter) {
+        if (itemPrice.quarter === +DateTime.now().toFormat('q')) {
           price = itemPrice.base_price;
           break;
         }
@@ -82,10 +82,10 @@ export const getRealProductPrice = (item: Product) => {
 };
 
 export const getExclusiveRowTotal = (item: CartItem) => {
-  const quantity = parseFloat(item.quantity as unknown as string);
+  const quantity = Number(item.quantity);
 
   let total = item.price * quantity;
-  if( item.discount ) {
+  if (item.discount) {
     total -= item.discount;
   }
 
@@ -96,12 +96,12 @@ export const getRowTotal = (item: CartItem) => {
   const quantity = item.quantity;
 
   let total = item.price * quantity;
-  if( item.discount ) {
+  if (item.discount) {
     total -= item.discount;
   }
 
   //add taxes
-  if( item.taxIncluded ) {
+  if (item.taxIncluded) {
     total += item.taxes.reduce((prev, tax) => prev + (tax.rate * (item.price * quantity) / 100), 0);
   }
 
@@ -117,16 +117,16 @@ export const exclusiveSubTotal = (added: CartItem[]) => {
 }
 
 export const taxTotal = (added: CartItem[], tax?: Tax) => {
-  if( !tax ) return 0;
+  if (!tax) return 0;
 
   return (Number(tax.rate) * exclusiveSubTotal(added)) / 100;
 }
 
-export const discountTotal = (added: CartItem[], tax?: Tax, discountAmount?: number, discountRateType?: string, discount?: Discount ) => {
-  if( discountAmount ) {
+export const discountTotal = (added: CartItem[], tax?: Tax, discountAmount?: number, discountRateType?: string, discount?: Discount) => {
+  if (discountAmount) {
     //calculate based on open discount
-    if( discountRateType ) {
-      if( discountRateType === "fixed" ) {
+    if (discountRateType) {
+      if (discountRateType === "fixed") {
         return discountAmount;
       } else {
         return ((subTotal(added) + taxTotal(added, tax)) * discountAmount) / 100;
@@ -135,17 +135,17 @@ export const discountTotal = (added: CartItem[], tax?: Tax, discountAmount?: num
     return discountAmount;
   }
 
-  if( !discount ) return 0;
+  if (!discount) return 0;
 
-  if( discount.rate_type === DiscountRate.RATE_FIXED && discount.rate ) {
+  if (discount.rate_type === DiscountRate.RATE_FIXED && discount.rate) {
     return discount.rate;
-  } else if(
+  } else if (
     discount.rate_type === DiscountRate.RATE_PERCENT &&
     discount.rate
   ) {
     return ((subTotal(added) + taxTotal(added, tax)) * Number(discount?.rate)) / 100;
   } else {
-    if( discount.scope === DiscountScope.SCOPE_EXACT && discount.rate ) {
+    if (discount.scope === DiscountScope.SCOPE_EXACT && discount.rate) {
       return discount.rate || 0;
     } else {
       //ask for discount
@@ -156,7 +156,7 @@ export const discountTotal = (added: CartItem[], tax?: Tax, discountAmount?: num
 
 export const couponTotal = () => 0;
 
-export const finalTotal = (added: CartItem[], tax?: Tax, discountAmount?: number, discountRateType?: string, discount?: Discount ) => {
+export const finalTotal = (added: CartItem[], tax?: Tax, discountAmount?: number, discountRateType?: string, discount?: Discount) => {
   return Number(formatNumber(subTotal(added) + taxTotal(added, tax) - discountTotal(added, tax, discountAmount, discountRateType, discount) - couponTotal()));
 }
 
@@ -165,15 +165,15 @@ export const scrollToBottom = (container: HTMLDivElement | null) => {
 }
 
 
-
 export const Pos = () => {
   const [defaultAppState, setDefaultAppState] = useAtom(defaultData);
 
-  const { defaultMode } = defaultAppState;
+  const {defaultMode} = defaultAppState;
 
   const modes: any = {
     [PosModes.pos]: <PosMode/>,
     [PosModes.order]: <PosMode/>,
+    [PosModes.quote]: <PosMode/>,
     [PosModes.payment]: <PaymentMode/>,
   };
 

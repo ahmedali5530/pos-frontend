@@ -70,17 +70,14 @@ function printBillLayout(printer, bill, config, opts) {
     // Aggregate tax line
     printLineLeftRight(printer, `Tax (${bill.taxLabel || 'Tax'})`, formatMoney(bill.tax, sym));
     // When detailed taxes are provided (taxes array on order), print each tax line under the total.
-    if (Array.isArray(bill.taxLines) && bill.taxLines.length > 0) {
-      bill.taxLines.forEach((t) => {
-        printLineLeftRight(printer, t.label || 'Tax', formatMoney(t.amount, sym));
-      });
-    }
+    // if (Array.isArray(bill.taxLines) && bill.taxLines.length > 0) {
+    //   bill.taxLines.forEach((t) => {
+    //     printLineLeftRight(printer, t.label || 'Tax', formatMoney(t.amount, sym));
+    //   });
+    // }
   }
   if (bill.discount && bill.discountAmount != null && Number(bill.discountAmount) !== 0) {
     printLineLeftRight(printer, 'Discount', formatMoney(bill.discountAmount, sym));
-  }
-  if (bill.serviceChargeLabel && bill.serviceChargeAmount != null && Number(bill.serviceChargeAmount) !== 0) {
-    printLineLeftRight(printer, bill.serviceChargeLabel, formatMoney(bill.serviceChargeAmount, sym));
   }
   (bill.extras || []).forEach((e) => {
     printLineLeftRight(printer, e.name || 'Extra', formatMoney(e.value, sym));
