@@ -362,7 +362,7 @@ export const PosMode = () => {
           latestIndex: index,
           added: prev.added.map(a => {
             if (toRecordId(a.item.id).toString() === toRecordId(item.id).toString()) {
-              return {...a, quantity: formatNumber(a.quantity + quantity)};
+              return {...a, quantity: formatNumber(Number(a.quantity) + Number(quantity))};
             } else {
               return a;
             }
@@ -429,7 +429,7 @@ export const PosMode = () => {
             if (toRecordId(i.item.id).toString() === toRecordId(item.id).toString() && toRecordId(variant.id).toString() === toRecordId(i.variant?.id)?.toString()) {
               return {
                 ...i,
-                quantity: formatNumber(i.quantity + quantity)
+                quantity: formatNumber(Number(i.quantity) + Number(quantity))
               }
             }
 
