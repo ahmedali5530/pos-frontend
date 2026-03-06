@@ -12,6 +12,7 @@ import {Tables} from "../../../../api/db/tables";
 import useApi, {SettingsData} from "../../../../api/db/use.api";
 import {useDB} from "../../../../api/db/db";
 import {StringRecordId} from "surrealdb";
+import {ProductStore} from "../../../../api/model/product.store";
 
 export const Brands = () => {
   const [operation, setOperation] = useState("create");
@@ -39,8 +40,7 @@ export const Brands = () => {
       cell: (info) =>
         info
           .getValue()
-          .map((item) => item.name)
-          .join(", "),
+          .map((item) => <span key={item.id} className="badge">{item.name}</span>),
     }),
     columnHelper.accessor("id", {
       id: "actions",

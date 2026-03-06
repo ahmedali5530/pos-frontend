@@ -16,6 +16,9 @@ import useApi, {SettingsData} from "../../../../api/db/use.api";
 import {Tables} from "../../../../api/db/tables";
 import {useDB} from "../../../../api/db/db";
 import {StringRecordId} from "surrealdb";
+import {Terminal} from "../../../../api/model/terminal";
+import {Store} from "../../../../api/model/store";
+import {ProductStore} from "../../../../api/model/product.store";
 
 export const Items = () => {
   const useLoadHook = useApi<SettingsData<Product>>(
@@ -50,8 +53,7 @@ export const Items = () => {
       cell: (info) =>
         info
           .getValue()
-          .map((item) => item.name)
-          .join(", "),
+          .map((item) => <span key={item.id} className="badge">{item.name}</span>)
     }),
     columnHelper.accessor("suppliers", {
       id: "suppliers.name",
@@ -59,8 +61,7 @@ export const Items = () => {
       cell: (info) =>
         info
           .getValue()
-          .map((item) => item.name)
-          .join(", "),
+          .map((item) => <span key={item.id} className="badge">{item.name}</span>)
     }),
     columnHelper.accessor("brands", {
       id: "brands.name",
@@ -68,8 +69,7 @@ export const Items = () => {
       cell: (info) =>
         info
           .getValue()
-          .map((item) => item.name)
-          .join(", "),
+          .map((item) => <span key={item.id} className="badge">{item.name}</span>)
     }),
     columnHelper.accessor("variants", {
       header: "Variants",
@@ -83,16 +83,14 @@ export const Items = () => {
       cell: (info) =>
         info
           .getValue()
-          .map((item) => `${item.name} ${item.rate}%`)
-          .join(", "),
+          .map((item) => <span key={item.id} className="badge">{item.name}</span>)
     }),
     columnHelper.accessor("stores", {
       header: "Stores",
       cell: (info) =>
         info
           .getValue()
-          .map((item) => item.store.name)
-          .join(", "),
+          .map((item: ProductStore) => <span key={item.id} className="badge">{item.store.name}</span>),
       enableColumnFilter: false,
       enableSorting: false,
     }),
@@ -101,8 +99,7 @@ export const Items = () => {
       cell: (info) =>
         info
           .getValue()
-          .map((item) => item.code)
-          .join(", "),
+          .map((item: Terminal) => <span key={item.id} className="badge">{item.code}</span>),
       enableColumnFilter: false,
       enableSorting: false,
     }),

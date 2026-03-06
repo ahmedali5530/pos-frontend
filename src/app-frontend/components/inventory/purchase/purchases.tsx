@@ -24,9 +24,7 @@ export const Purchases = () => {
   const [{store}] = useAtom(appState);
   const db = useDB();
 
-  const useLoadHook = useApi<SettingsData<Purchase>>(Tables.purchase, [`store = ${store?.id}`], [], 0, 10, [
-    PURCHASE_FETCHES
-  ]);
+  const useLoadHook = useApi<SettingsData<Purchase>>(Tables.purchase, [`store = ${store?.id}`], [], 0, 10, PURCHASE_FETCHES);
 
   const columnHelper = createColumnHelper<Purchase>();
   const purchaseHook = usePurchase();

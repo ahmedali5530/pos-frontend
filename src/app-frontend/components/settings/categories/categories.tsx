@@ -37,8 +37,7 @@ export const Categories = () => {
       cell: (info) =>
         info
           .getValue()
-          .map((item) => item.name)
-          .join(", "),
+          .map((item) => <span key={item.id} className="badge">{item.name}</span>),
       enableColumnFilter: false,
     }),
     columnHelper.accessor("id", {

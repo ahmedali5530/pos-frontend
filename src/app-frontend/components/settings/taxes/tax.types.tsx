@@ -44,8 +44,7 @@ export const TaxTypes = () => {
       cell: (info) =>
         info
           .getValue()
-          .map((item) => item.name)
-          .join(", "),
+          .map((item) => <span key={item.id} className="badge">{item.name}</span>),
     }),
     columnHelper.accessor("id", {
       header: "Actions",

@@ -177,6 +177,9 @@ export const GeneralSetting = () => {
           </tbody>
         </table>
         <div className="inline-flex flex-col gap-5 justify-start">
+          <div className="alert alert-info py-12 text-center text-lg">
+            Reload Cache is required after changing anything in settings.
+          </div>
           <div>
             <Button
               variant="warning"
@@ -423,6 +426,7 @@ export const GeneralSetting = () => {
                       value={field.value}
                       onChange={field.onChange}
                       placeholder="Prints"
+                      className="w-full"
                     />
                     )}
                   name={`printers.${index}.prints`}

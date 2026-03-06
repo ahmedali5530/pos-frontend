@@ -54,7 +54,7 @@ export const Terminals = () => {
       enableColumnFilter: false,
       cell: info => (
         <>
-          {info.getValue().slice(0, 7).map(p => p.name).join(', ')}{' '}
+          {info.getValue().slice(0, 7).map(p => <span key={p.id} className="badge">{p.name}</span>)}{' '}
           {info.getValue().slice(7).length > 0 && (
             <Button
               className="btn btn-secondary"

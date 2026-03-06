@@ -8,7 +8,8 @@ import {
 } from "react";
 import classNames from "classnames";
 import ScrollContainer from "react-indiana-drag-scroll";
-import { Button } from "../input/button";
+import {Button} from "../input/button";
+import {boolean, string} from "yup";
 
 export interface TabControlState {
   activeTab: string;
@@ -26,7 +27,7 @@ export interface UseTabControlProps {
 export const useTabControl = (
   props: UseTabControlProps
 ): [TabControlState, TabControlActions] => {
-  const { defaultTab } = props;
+  const {defaultTab} = props;
   const [activeTab, setActiveTab] = useState<string>(defaultTab);
 
   const isTabActive = useCallback(
@@ -34,10 +35,11 @@ export const useTabControl = (
     [activeTab]
   );
 
-  return [{ activeTab, isTabActive }, { setActiveTab }];
+  return [{activeTab, isTabActive}, {setActiveTab}];
 };
 
-export interface RenderProps extends TabControlState, TabControlActions {}
+export interface RenderProps extends TabControlState, TabControlActions {
+}
 
 export interface TabControlProps {
   defaultTab: string;
@@ -46,7 +48,7 @@ export interface TabControlProps {
 }
 
 export const TabControl: FunctionComponent<TabControlProps> = (props) => {
-  const [{ activeTab, isTabActive }, { setActiveTab }] = useTabControl(props);
+  const [{activeTab, isTabActive}, {setActiveTab}] = useTabControl(props);
   let classes = `tab-control flex gap-5 ${props?.position}`;
   if (props.position === "top") {
     classes = `tab-control flex gap-5 flex-col ${props?.position}`;
@@ -54,7 +56,7 @@ export const TabControl: FunctionComponent<TabControlProps> = (props) => {
 
   return (
     <div className={classes}>
-      {props.render({ activeTab, setActiveTab, isTabActive })}
+      {props.render({activeTab, setActiveTab, isTabActive})}
     </div>
   );
 };
@@ -62,6 +64,7 @@ export const TabControl: FunctionComponent<TabControlProps> = (props) => {
 interface TabNavProps extends PropsWithChildren {
   position?: "top" | "left" | "right";
 }
+
 export const TabNav = (props: TabNavProps) => {
   let classes =
     "flex flex-col w-[220px] flex-shrink-0 ml-[-20px] bg-primary-500 py-5 pl-3 min-h-[100ex]";
@@ -83,18 +86,20 @@ export const TabNav = (props: TabNavProps) => {
 interface TabProps
   extends PropsWithChildren,
     ButtonHTMLAttributes<HTMLButtonElement> {
-  isActive: boolean;
-  justified?: boolean
+  isActive: boolean,
+  justified?: boolean,
+  key?: string
 }
+
 export const Tab = (props: TabProps) => {
-  const { isActive, justified, ...rest } = props;
+  const {isActive, justified, ...rest} = props;
   return (
     <button
       {...rest}
       type="button"
       className={classNames(
         "p-3 px-5 flex-shrink-0 text-left rounded-full relative sidebar-btn",
-        isActive ? "text-primary-500 bg-white active shadow border-primary-500 border-2" : "text-white border-transparent border-2",
+        isActive ? "text-primary-500 bg-white active border-primary-500" : "text-white border-transparent border-2",
         justified ? 'flex flex-1 justify-center' : ''
       )}>
       <span></span>
@@ -104,9 +109,11 @@ export const Tab = (props: TabProps) => {
 };
 
 interface TabContentProps extends PropsWithChildren {
-  isActive: boolean;
-  holdState?: boolean;
+  isActive: boolean,
+  holdState?: boolean,
+  key?: string
 }
+
 export const TabContent = (props: TabContentProps) => {
   if (!props.isActive && !props.holdState) {
     return <></>;
