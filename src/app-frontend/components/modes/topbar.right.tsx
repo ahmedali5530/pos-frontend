@@ -42,12 +42,15 @@ export const TopbarRight = () => {
         size="sm"
         open={modal}
         onClose={() => setModal(false)}>
-        <div className="list-group">
-          {options.map((item) => (
-            <Button
+        <div className="list-group border-2 rounded-lg border-gray-500">
+          {options.map((item, index) => (
+            <button
               key={item.label}
-              variant={item.value === defaultMode ? "primary" : "secondary"}
-              className={classNames("w-full")}
+              className={classNames(
+                "w-full p-3", 'border-0', 'border-gray-500',
+                index === 0 ? '!border-b-0' : '!border-t-2',
+                item.value === defaultMode && 'bg-primary-100 text-primary-500'
+              )}
               onClick={() => {
                 setDefaultAppState((prev) => ({
                   ...prev,
@@ -62,12 +65,12 @@ export const TopbarRight = () => {
 
                 setModal(false);
               }}
-              size="lg">
+              >
               {item.value === defaultMode && (
                 <FontAwesomeIcon icon={faCheck} className="mr-3"/>
               )}
               {item.label}
-            </Button>
+            </button>
           ))}
         </div>
       </Modal>

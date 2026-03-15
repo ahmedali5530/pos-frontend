@@ -6,11 +6,6 @@ import {
   useState,
 } from "react";
 import classNames from "classnames";
-import { useSelector } from "react-redux";
-import {
-  displayShortcut,
-  getShortcut,
-} from "../../../duck/shortcuts/shortcut.selector";
 import Mousetrap from "mousetrap";
 import { defaultData } from "../../../store/jotai";
 import { useAtom } from "jotai";

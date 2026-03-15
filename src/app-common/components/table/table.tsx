@@ -161,9 +161,18 @@ export const TableComponent: FC<TableComponentProps> = ({
 
   const handleColumnFilter = (values: any) => {
     if( values.value && values.value.trim() !== '' ) {
-      handleFilterChange([
-        `string::lowercase($this[$column]) ~ $value`
-      ]);
+      if(typeof values.value === 'number') {
+        // strict matching for numbers
+        handleFilterChange([
+          `$this[$column] = $value`
+        ]);
+      }else{
+          handleFilterChange([
+            `string::lowercase($this[$column]) ~ $value`
+          ]);
+      }
+
+
       handleParameterChange({
         'column': values.column.value,
         'value': values.value

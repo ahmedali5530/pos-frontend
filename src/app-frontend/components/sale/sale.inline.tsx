@@ -157,6 +157,67 @@ export const CloseSaleInline: FC<Props> = ({
     return 0;
   }
 
+  const getProjectedCreditSale = (addedPayments: AddedPayment[]) => {
+    return addedPayments.reduce((total, current) => {
+      if (current?.type?.type === "credit") {
+        return total + Number(current.received || 0);
+      }
+
+      return total;
+    }, 0);
+  };
+
+  const getCustomerOutstanding = (customerData: any) => {
+    const creditSales = (customerData?.orders || []).reduce((saleTotal: number, order: any) => {
+      const orderCreditSale = (order?.payments || []).reduce((paymentTotal: number, payment: any) => {
+        if (payment?.type?.type === "credit") {
+          return paymentTotal + Number(payment.received || 0);
+        }
+        return paymentTotal;
+      }, 0);
+
+      return saleTotal + orderCreditSale;
+    }, 0);
+
+    const customerPayments = (customerData?.payments || []).reduce((paymentTotal: number, payment: any) => {
+      return paymentTotal + Number(payment?.amount || 0);
+    }, 0);
+
+    return creditSales - customerPayments + Number(customerData?.opening_balance ?? 0);
+  };
+
+  const ensureCustomerCreditLimit = async (customerData: any, projectedCreditSale: number) => {
+    if (!customerData?.id) {
+      return true;
+    }
+
+    const creditLimit = Number(customerData?.credit_limit);
+    if (!Number.isFinite(creditLimit) || creditLimit <= 0) {
+      return true;
+    }
+
+    const [rows] = await db.query(
+      `SELECT * FROM ONLY ${toRecordId(customerData.id)} FETCH payments, orders, orders.payments, orders.payments.type`
+    );
+    const customerWithHistory = rows;
+    if (!customerWithHistory) {
+      return true;
+    }
+
+    const outstanding = getCustomerOutstanding(customerWithHistory);
+    const projectedOutstanding = outstanding + Number(projectedCreditSale || 0);
+
+    if (projectedOutstanding > creditLimit) {
+      notify({
+        type: "error",
+        description: `Credit limit exceeded. Limit: ${withCurrency(creditLimit)}, projected outstanding: ${withCurrency(projectedOutstanding)}`
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const onSaleSubmit = async (values: any) => {
     if(defaultMode === PosModes.quote){
       if (requireCustomerBox && !customerName) {
@@ -257,6 +318,26 @@ export const CloseSaleInline: FC<Props> = ({
         });
       }
 
+      if (paymentsAdded.length === 0) {
+        paymentsAdded = [
+          {
+            received: values.received,
+            type: payment,
+            total: ft + adjustment,
+            due: changeDue,
+          },
+        ];
+      }
+
+      const orderWillBeCompleted = defaultMode !== PosModes.order && !hold;
+      if (orderWillBeCompleted) {
+        const projectedCreditSale = getProjectedCreditSale(paymentsAdded);
+        const creditAllowed = await ensureCustomerCreditLimit(customerFromDB, projectedCreditSale);
+        if (!creditAllowed) {
+          return;
+        }
+      }
+
       // add items
       const items = [];
       for (const add of added) {
@@ -321,17 +402,6 @@ export const CloseSaleInline: FC<Props> = ({
       }
 
       const order_id = await nextOrderId();
-
-      if (paymentsAdded.length === 0) {
-        paymentsAdded = [
-          {
-            received: values.received,
-            type: payment,
-            total: ft + adjustment,
-            due: changeDue,
-          },
-        ];
-      }
 
       const orderPayments = [];
       for (const op of paymentsAdded) {

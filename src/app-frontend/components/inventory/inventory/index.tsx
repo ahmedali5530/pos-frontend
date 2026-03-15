@@ -28,7 +28,9 @@ export const InventoryDetails = () => {
   const {data: stores} = useApi<SettingsData<Store>>(Tables.store, [], [], 0, undefined, [], {}, ['id', 'name']);
 
   const useLoadHook = useApi<SettingsData<ProductStore>>(Tables.product_store, [], [], 0, 10, [
-    'product', 'store'
+    'store', 'variants.store', 'variants.variant', 'product', 'variants.product'
+  ], {}, ['id', 'product.name', 'product.purchase_unit', 'quantity', 'store.name',
+    '(SELECT product.name, product.purchase_unit, quantity, store.name, variant.attribute_value FROM product_variant_store WHERE product = $parent.product AND store = $parent.store) AS variants'
   ]);
 
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -50,7 +52,7 @@ export const InventoryDetails = () => {
     }
   }, [filteredProducts, store]);
 
-  const columnHelper = createColumnHelper<ProductStore>();
+  const columnHelper = createColumnHelper();
   const columns: any = [
     columnHelper.accessor('store.name', {
       header: 'Store',
@@ -62,12 +64,36 @@ export const InventoryDetails = () => {
       enableSorting: false,
       enableColumnFilter: false,
     }),
+    columnHelper.accessor('product.purchase_unit', {
+      header: 'Purchase unit',
+      enableSorting: false,
+      enableColumnFilter: false,
+    }),
     columnHelper.accessor('quantity', {
       header: 'Quantity',
       enableSorting: false,
       enableColumnFilter: false,
-      cell: info => formatNumber(info.getValue()) + " " + info.row.original.product.purchase_unit
+      cell: info => formatNumber(info.getValue())
     }),
+    columnHelper.accessor('id', {
+      header: 'Variants',
+      enableSorting: false,
+      enableColumnFilter: false,
+      cell: info => {
+        return (
+          <table className="table table-borderless table-hover bg-white table-fixed w-[300px]">
+            <tbody>
+            {info.row.original.variants.map(item => (
+              <tr>
+                <td>{item.variant.attribute_value}</td>
+                <td>{item.quantity}</td>
+              </tr>
+            ))}
+            </tbody>
+          </table>
+        )
+      }
+    })
   ];
 
   return (

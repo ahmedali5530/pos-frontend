@@ -173,7 +173,7 @@ export const SaleHistory: FC<Props> = ({}) => {
       cell: (info) =>
         withCurrency(
           info.getValue().reduce((prev, item) => {
-            return (item.product?.cost || 0) * item.quantity + prev;
+            return (item?.product?.cost || 0) * item?.quantity + prev;
           }, 0)
         ),
       enableSorting: false,
@@ -553,7 +553,7 @@ export const SaleHistory: FC<Props> = ({}) => {
         return (
           prev +
           order.items.reduce((p, item) => {
-            if (item.product.cost) {
+            if (item?.product?.cost) {
               return p + item.product.cost;
             }
 

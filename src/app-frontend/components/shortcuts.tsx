@@ -21,8 +21,8 @@ export const Shortcuts = () => {
 
   const shortcutsList = useMemo(() => {
     return [
-      {title: 'Open help', shortcut: ['f3']},
-      {title: 'Focus search', shortcut: ['/']},
+      {title: 'Open help', shortcut: ['?']},
+      {title: 'Focus search', shortcut: ['f']},
       {title: 'Open search', shortcut: ['ctrl', 'f']},
       {title: 'Move in cart controls', shortcut: [
           'ctrl', '+',
@@ -39,6 +39,7 @@ export const Shortcuts = () => {
       {title: 'Open taxes', shortcut: ['ctrl', 'shift', 'q']},
       {title: 'Open discount', shortcut: ['ctrl', 'shift', 'd']},
       {title: 'Open customers', shortcut: ['ctrl', 'shift', 'c']},
+      {title: 'Focus customer input', shortcut: ["alt", "shift", "c"]},
     ].filter(item => item.title.indexOf(q) !== -1);
   }, [q]);
 

@@ -87,7 +87,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
           {order.items.map((item, index) => (
             <tr key={index} className="hover:bg-gray-100">
               <td>
-                {item.product.name}
+                {item?.product?.name}
                 {item.variant && (
                   <>
                     <br/>

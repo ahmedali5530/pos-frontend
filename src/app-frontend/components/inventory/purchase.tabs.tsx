@@ -11,6 +11,7 @@ import { Suppliers } from "./supplier/suppliers";
 import { PurchaseOrders } from "./purchase-orders/purchase.orders";
 import { Purchases } from "./purchase/purchases";
 import {InventoryDetails} from "./inventory";
+import {Wastes} from "./waste/wastes";
 
 interface Props extends PropsWithChildren {}
 
@@ -54,6 +55,11 @@ export const PurchaseTabs: FC<Props> = ({ children }) => {
                   Purchases
                 </Tab>
                 <Tab
+                  isActive={isTabActive("waste")}
+                  onClick={() => setActiveTab("waste")}>
+                  Waste
+                </Tab>
+                <Tab
                   isActive={isTabActive("purchase_orders")}
                   onClick={() => setActiveTab("purchase_orders")}>
                   Purchase Orders
@@ -69,6 +75,9 @@ export const PurchaseTabs: FC<Props> = ({ children }) => {
               </TabContent>
               <TabContent isActive={isTabActive("purchases")}>
                 <Purchases />
+              </TabContent>
+              <TabContent isActive={isTabActive("waste")}>
+                <Wastes />
               </TabContent>
               <TabContent isActive={isTabActive("purchase_orders")}>
                 <PurchaseOrders />

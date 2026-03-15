@@ -624,6 +624,17 @@ export const PosMode = () => {
   const customerInputRef = useRef<HTMLInputElement | null>(null);
   const [searchModal, setSearchModal] = useState(false);
 
+  Mousetrap.bind(["alt", "shift", "c"], function (e: any) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log(customerInputRef.current);
+    if (customerInputRef.current !== null) {
+      customerInputRef.current.focus();
+
+      return false;
+    }
+  });
+
 
   return (
     <>

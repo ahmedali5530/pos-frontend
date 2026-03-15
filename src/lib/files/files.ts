@@ -28,16 +28,13 @@ export const toArrayBuffer = (value: ArrayBuffer | string): ArrayBuffer => {
   if (value instanceof ArrayBuffer) {
     return value;
   }
-  if (typeof value === 'string') {
-    // Assume it's base64 encoded
-    const binaryString = atob(value);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes.buffer;
+   // Assume it's base64 encoded
+  const binaryString = atob(value);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
   }
-  throw new Error('Invalid value type for ArrayBuffer conversion');
+  return bytes.buffer;
 };
 
 /**

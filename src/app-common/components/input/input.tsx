@@ -21,6 +21,13 @@ export const Input = forwardRef((props: InputProps, ref: Ref<any>) => {
   }, [selectable]);
 
   const id = useMemo(() => providedId ?? nanoid(), [providedId]);
+  const numberInputValueProps: Record<string, any> = {};
+
+  if (props.value !== undefined) {
+    numberInputValueProps.value = props.value;
+  } else if (props.defaultValue !== undefined) {
+    numberInputValueProps.defaultValue = props.defaultValue;
+  }
 
   if (props.type === 'number') {
     return (
@@ -28,8 +35,7 @@ export const Input = forwardRef((props: InputProps, ref: Ref<any>) => {
         {label && <label htmlFor={id}>{label}</label>}
         <NumericFormat
           name={props.name}
-          value={props.value as any}
-          defaultValue={props.defaultValue as any}
+          {...numberInputValueProps}
           onChange={props.onChange}
           autoComplete="off"
           className={
