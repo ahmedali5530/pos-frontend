@@ -177,10 +177,11 @@ export async function dispatchPrint<Payload = any>(
   });
 
   if (driverPrinters.length === 0) {
-    notify({
-      type: "error",
-      description: 'No printers configured for this print type',
-    });
+    console.error('No printers configured for this print type: ' + template);
+    // notify({
+    //   type: "error",
+    //   description: 'No printers configured for this print type',
+    // });
     return;
   }
 
