@@ -9,12 +9,11 @@ import {Tables} from "../../../api/db/tables";
 interface StoresInputProps {
   control: UseFormReturn['control'];
   errors: UseFormReturn['formState']['errors'];
-  valueAsNumber?: boolean;
   name?: string;
 }
 
 export const StoresInput: FC<StoresInputProps> = ({
-  control, errors, valueAsNumber, name
+  control, errors, name
 }) => {
   const [stores, setStores] = useState<Store[]>([]);
   const db = useDB();
@@ -45,7 +44,7 @@ export const StoresInput: FC<StoresInputProps> = ({
             options={stores.map(item => {
               return {
                 label: item.name,
-                value: item.id
+                value: item.id.toString()
               }
             })}
             isMulti

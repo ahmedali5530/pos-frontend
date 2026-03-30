@@ -44,6 +44,6 @@ export interface SearchableProduct {
 }
 
 export const ITEM_FETCHES = [
-  'department', 'categories', 'suppliers', 'brands', 'variants', 'taxes', 'terminals',
+  'department', 'categories', 'suppliers', 'brands', 'variants', 'taxes', 'terminals', 'terminals.store',
   'stores', 'stores.store', 'variants.stores', 'variants.stores.store'
 ];

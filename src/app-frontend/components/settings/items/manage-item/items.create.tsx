@@ -9,7 +9,7 @@ import {Button} from "../../../../../app-common/components/input/button";
 import {Category} from "../../../../../api/model/category";
 import {Product} from "../../../../../api/model/product";
 import {ReactSelect} from "../../../../../app-common/components/input/custom.react.select";
-import {ReactSelectOptionProps} from "../../../../../api/model/common";
+import {ReactSelectOptionProps, toRecordId} from "../../../../../api/model/common";
 import {Supplier} from "../../../../../api/model/supplier";
 import {Brand} from "../../../../../api/model/brand";
 import {withCurrency} from "../../../../../lib/currency/currency";
@@ -80,40 +80,40 @@ export const CreateItem = ({
   const createProduct = async (values: any) => {
     setCreating(true);
     try {
-      if (values.categories) {
-        values.categories = values.categories.map((item: ReactSelectOptionProps) => new StringRecordId(item.value));
+      if (values?.categories) {
+        values.categories = values.categories.map((item: ReactSelectOptionProps) => toRecordId(item.value));
       }
-      if (values.suppliers) {
-        values.suppliers = values.suppliers.map((item: ReactSelectOptionProps) => new StringRecordId(item.value));
+      if (values?.suppliers) {
+        values.suppliers = values.suppliers.map((item: ReactSelectOptionProps) => toRecordId(item.value));
       }
-      if (values.brands) {
-        values.brands = values.brands.map((item: ReactSelectOptionProps) => new StringRecordId(item.value));
+      if (values?.brands) {
+        values.brands = values.brands.map((item: ReactSelectOptionProps) => toRecordId(item.value));
       }
-      if (values.stores) {
+      if (values?.stores) {
         values.stores = values.stores
           .filter((item: any) => item.quantity !== undefined)
           .map((item: any) => ({
             id: item.id,
-            store: new StringRecordId(item.store),
+            store: toRecordId(item.store),
             location: item.location,
             quantity: item.quantity,
             re_order_level: item.re_order_level,
-            product: entity ? new StringRecordId(entity['id']) : null
+            product: entity ? toRecordId(entity['id']) : null
           }));
       }
-      if (values.department) {
-        values.department = new StringRecordId(values.department.value);
+      if (values?.department) {
+        values.department = toRecordId(values.department.value);
       }
-      if (values.taxes) {
-        values.taxes = values.taxes.map((item: ReactSelectOptionProps) => new StringRecordId(item.value));
+      if (values?.taxes) {
+        values.taxes = values.taxes.map((item: ReactSelectOptionProps) => toRecordId(item.value));
       } else {
         values.taxes = [];
       }
       if (values.barcode) {
         values.barcode = values.barcode.toString();
       }
-      if (values.terminals) {
-        values.terminals = values.terminals.map((item: ReactSelectOptionProps) => new StringRecordId(item.value))
+      if (values?.terminals) {
+        values.terminals = values.terminals.map((item: ReactSelectOptionProps) => toRecordId(item.value))
       }
 
       const variantIds = [];
@@ -127,12 +127,12 @@ export const CreateItem = ({
             barcode: variant.barcode,
             price: Number(variant.price),
             cost: Number(variant.cost),
-            product: entity ? new StringRecordId(entity.id) : null
+            product: entity ? toRecordId(entity.id) : null
           };
 
           let variantRecord;
           if (variant.id) {
-            variantRecord = await db.merge(new StringRecordId(variant.id), variantData);
+            variantRecord = await db.merge(toRecordId(variant.id), variantData);
           } else {
             [variantRecord] = await db.insert(Tables.product_variant, variantData);
           }
@@ -149,9 +149,9 @@ export const CreateItem = ({
                 quantity: Number(storeVariant.quantity),
                 re_order_level: Number(storeVariant.re_order_level),
                 location: storeVariant.location,
-                store: new StringRecordId(storeVariant.store),
+                store: toRecordId(storeVariant.store),
                 variant: vId,
-                product: entity ? new StringRecordId(entity.id) : null
+                product: entity ? toRecordId(entity.id) : null
               };
 
               let vsRecord;
@@ -201,7 +201,7 @@ export const CreateItem = ({
       let productId = productRecord.id;
 
       const productStoreIds = [];
-      if (values.stores) {
+      if (values?.stores) {
         for (const s of values.stores) {
           const psData = {
             location: s.location,
@@ -218,18 +218,18 @@ export const CreateItem = ({
           } else {
             [psRecord] = await db.insert(Tables.product_store, psData);
           }
-          productStoreIds.push(new StringRecordId(psRecord.id));
+          productStoreIds.push(toRecordId(psRecord.id));
         }
       }
 
-      await db.merge(productId, {stores: productStoreIds});
+      await db.merge(toRecordId(productId), {stores: productStoreIds});
 
       // update terminals to include products
-      for (const t of productData.terminals) {
+      for (const t of productData?.terminals) {
         const [terminal] = await db.query(`SELECT *
-                                           FROM ${t}`);
+                                           FROM ONLY ${t}`);
         await db.merge(t, {
-          products: Array.from(new Set([...(terminal[0]?.products || []), productId])),
+          products: Array.from(new Set([...(terminal?.products || []), productId])),
         });
       }
 
@@ -327,7 +327,7 @@ export const CreateItem = ({
     data: terminals,
     fetchData: loadTerminals,
     isLoading: loadingTerminals
-  } = useApi<SettingsData<Terminal>>(Tables.terminal, ['is_active = true'], [], 0, 999999, [], {
+  } = useApi<SettingsData<Terminal>>(Tables.terminal, ['is_active = true'], [], 0, 999999, ['store'], {
     enabled: false
   });
 
@@ -408,7 +408,7 @@ export const CreateItem = ({
           value: item.id.toString()
         })),
         terminals: entity.terminals.map(item => ({
-          label: item.code,
+          label: `${item?.store?.name} - ${item.code}`,
           value: item.id.toString()
         })),
         variant_stores: variantStores
@@ -616,7 +616,7 @@ export const CreateItem = ({
                           <div className="input-group">
                             <ReactSelect
                               options={terminals?.data?.map(item => ({
-                                label: item.code,
+                                label: `${item?.store?.name} - ${item.code}`,
                                 value: item['id']
                               }))}
                               onChange={props.field.onChange}
