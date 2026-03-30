@@ -205,7 +205,7 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
                 <ReactSelect
                   onChange={props.field.onChange}
                   value={props.field.value}
-                  options={stores?.['hydra:member']?.map(item => {
+                  options={stores?.data?.map(item => {
                     return {
                       label: item.name,
                       value: item.id
