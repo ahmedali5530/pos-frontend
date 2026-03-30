@@ -1,12 +1,8 @@
 import React, {useState} from "react";
 import Layout from "../layout/layout";
-import {Controller, useForm} from "react-hook-form";
-import Cookies from "js-cookie";
-import {useTranslation} from "react-i18next";
-import {HttpException, UnauthorizedException,} from "../../../lib/http/exception/http.exception";
+import {useForm} from "react-hook-form";
 import {useNavigate} from "react-router";
-import {FORGOT_PASSWORD, POS} from "../../routes/frontend.routes";
-import {Link} from "react-router-dom";
+import {POS} from "../../routes/frontend.routes";
 import {Modal} from "../../../app-common/components/modal/modal";
 import {Store} from "../../../api/model/store";
 import {Button} from "../../../app-common/components/input/button";
@@ -57,13 +53,14 @@ const Login = () => {
             and crypto::bcrypt::compare(password, $password) = true
             and is_active = true
               fetch stores
-              , stores.store, stores.terminals
+              , stores.store
+              , stores.terminals
       `, {
         username: values.username,
         password: values.password
       });
 
-      if(record.length > 0){
+      if (record.length > 0) {
         const userAccount = record[0];
         setApp(prev => ({
           ...prev,
@@ -86,12 +83,12 @@ const Login = () => {
 
             return;
           }
-        } else if(userAccount?.stores?.length > 1) {
+        } else if (userAccount?.stores?.length > 1) {
           setModal(true);
         }
       }
     } catch (err: any) {
-        setErrorMessage(err.toString());
+      setErrorMessage(err.toString());
     } finally {
       setLoading(false);
     }
@@ -196,7 +193,7 @@ const Login = () => {
             <>
               <h4 className="text-xl text-center my-3">Choose a Terminal</h4>
               <div className="flex justify-center items-center gap-5 flex-wrap">
-                {store.terminals.map((terminal, index) => (
+                {store?.terminals?.map((terminal, index) => (
                   <Button
                     variant="primary"
                     key={index}

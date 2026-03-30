@@ -4,7 +4,7 @@ import {Input} from "../../../../app-common/components/input/input";
 import {Controller, useForm} from "react-hook-form";
 import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
 import {Button} from "../../../../app-common/components/input/button";
-import {ReactSelectOptionProps} from "../../../../api/model/common";
+import {ReactSelectOptionProps, toRecordId} from "../../../../api/model/common";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
 import {User} from "../../../../api/model/user";
@@ -57,16 +57,14 @@ export const CreateUser: FC<CreateUserProps> = ({
     if (entity) {
       reset({
         ...entity,
-        roles: entity.roles.map(item => {
-          return {
-            label: item,
-            value: item
-          }
-        }),
+        roles: entity.roles ? {
+          label: entity.roles,
+          value: entity.roles
+        } : null,
         stores: entity.stores.map(item => {
           return {
             label: item.name,
-            value: item.id
+            value: item.id.toString()
           }
         }),
         password: undefined
@@ -78,25 +76,28 @@ export const CreateUser: FC<CreateUserProps> = ({
     setCreating(true);
     try {
       if (values.roles) {
-        values.roles = values.roles.map((item: ReactSelectOptionProps) => item.value);
+        values.roles = values.roles.value;
       }
-      if (values.stores) {
-        values.stores = values.stores.map((item: ReactSelectOptionProps) => new StringRecordId(item.value));
+      if (values?.stores) {
+        values.stores = values.stores.map((item: ReactSelectOptionProps) => toRecordId(item.value));
       }
 
+      let id = null;
       if (entity?.id) {
-        if (values.password) {
-          values.password = `crypto::bcrypt::generate(${values.password})`;
-        }
+        id = entity?.id;
 
-        await db.merge(new StringRecordId(entity.id), {
+        await db.merge(toRecordId(entity.id), {
           ...values,
         });
       } else {
-        await db.insert(Tables.user_account, {
+        let [id] = await db.insert(Tables.user_account, {
           ...values,
-          password: `crypto::bcrypt::generate(${values.password})`
+          password: ''
         });
+      }
+
+      if (values.password && values.password.length > 0) {
+        await db.query(`UPDATE ${id} merge {password: crypto::bcrypt::generate('${values.password}')}`);
       }
 
       onModalClose();
@@ -202,7 +203,6 @@ export const CreateUser: FC<CreateUserProps> = ({
                     label: 'ROLE_ADMIN',
                     value: 'ROLE_ADMIN'
                   }]}
-                  isMulti
                   className={getErrorClass(errors.roles)}
                 />
               )}
@@ -211,7 +211,7 @@ export const CreateUser: FC<CreateUserProps> = ({
             {getErrors(errors.roles)}
           </div>
 
-          <StoresInput control={control} errors={errors} valueAsNumber={true}/>
+          <StoresInput control={control} errors={errors}/>
 
           <div>
             <Button variant="primary" type="submit" disabled={creating}>

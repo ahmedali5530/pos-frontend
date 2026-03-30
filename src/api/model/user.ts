@@ -6,7 +6,7 @@ export interface User  {
   display_name: string;
   id: string;
   email: string;
-  roles: string[];
+  roles?: string;
   stores: Store[];
   is_active: boolean
 }
