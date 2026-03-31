@@ -10,6 +10,8 @@ import {QueryString} from "../../../lib/location/query.string";
 import {IconProp} from "@fortawesome/fontawesome-svg-core";
 import {useDB} from "../../../api/db/db";
 import {Tables} from "../../../api/db/tables";
+import {useAtom} from "jotai";
+import {defaultState} from "../../../store/jotai";
 
 interface Props {
   onSuccess: (order: Order) => void,
@@ -25,18 +27,21 @@ interface Props {
 export const SaleFind = ({
   onSuccess, onError, variant, icon, title, displayLabel, active, onClick
 }: Props) => {
+
   const [modal, setModal] = useState(false);
   const {control, handleSubmit, reset} = useForm();
   const [isLoading, setLoading] = useState(false);
   const db = useDB();
+  const [{refundingFrom}, ] = useAtom(defaultState);
 
   const onSubmit = async (values: any) => {
     setLoading(true)
     try {
-      const query = QueryString.stringify(values);
       const [orders] = await db.query(`SELECT *
                                        FROM ${Tables.order}
-                                       WHERE ${query} FETCH ${ORDER_FETCHES.join(', ')}`)
+                                       WHERE order_id = $orderId LIMIT 1 FETCH ${ORDER_FETCHES.join(', ')}`, {
+        orderId: Number(values.order_id)
+      })
 
       if (orders.length > 0) {
         onSuccess(orders[0]);
@@ -68,6 +73,7 @@ export const SaleFind = ({
           }}
           size="lg"
           active={active}
+          disabled={!!refundingFrom}
         ><FontAwesomeIcon icon={icon} className={displayLabel ? 'mr-2' : ''}/>{displayLabel && title}</Button>
       </Tooltip>
       <Modal open={modal} title={title} onClose={() => {

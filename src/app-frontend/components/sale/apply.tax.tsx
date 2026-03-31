@@ -7,6 +7,7 @@ import { Shortcut } from "../../../app-common/components/input/shortcut";
 import { CartItem } from "../../../api/model/cart.item";
 import { useAtom } from "jotai";
 import { defaultState } from "../../../store/jotai";
+import {toRecordId} from "../../../api/model/common";
 
 interface TaxProps extends PropsWithChildren {}
 
@@ -14,19 +15,9 @@ export const ApplyTax: FC<TaxProps> = ({ children }) => {
   const [appState, setAppState] = useAtom(defaultState);
   const { tax, added } = appState;
   const [modal, setModal] = useState(false);
-  const [taxList, setTaxList] = useState<Tax[]>([]);
 
-  const [state, action] = useLoadData();
+  const [state, ] = useLoadData();
 
-  const loadTaxList = async () => {
-    if (state.taxList.list) {
-      setTaxList(state.taxList.list);
-    }
-  };
-
-  useEffect(() => {
-    loadTaxList();
-  }, [state.taxList]);
 
   return (
     <>
@@ -52,7 +43,7 @@ export const ApplyTax: FC<TaxProps> = ({ children }) => {
           onClick={() => {
             setAppState((prev) => ({
               ...prev,
-              data: undefined,
+              tax: undefined,
             }));
             setModal(false);
           }}
@@ -61,7 +52,7 @@ export const ApplyTax: FC<TaxProps> = ({ children }) => {
           Clear Tax
         </Button>
 
-        {taxList.map((taxItem, index) => (
+        {state.taxList.list.map((taxItem, index) => (
           <Button
             variant="primary"
             key={index}
@@ -70,11 +61,13 @@ export const ApplyTax: FC<TaxProps> = ({ children }) => {
                 ...prev,
                 tax: taxItem,
               }));
+
               setModal(false);
             }}
             className="mr-3 mb-3"
-            active={taxItem.id === tax?.id}
-            size="lg">
+            active={toRecordId(taxItem.id).toString() === toRecordId(tax?.id)?.toString()}
+            size="lg"
+          >
             {taxItem.name} {taxItem.rate}%
           </Button>
         ))}

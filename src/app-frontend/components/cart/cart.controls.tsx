@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import _ from "lodash";
 import { scrollToBottom } from "../../containers/dashboard/pos";
 import { Modal } from "../../../app-common/components/modal/modal";
@@ -10,6 +10,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useAtom } from "jotai";
 import { defaultState } from "../../../store/jotai";
+import {Order} from "../../../api/model/order";
+import {useDB} from "../../../api/db/db";
+import {toRecordId} from "../../../api/model/common";
 
 interface CartControlsProps {
   containerRef: HTMLDivElement | null;
@@ -17,7 +20,8 @@ interface CartControlsProps {
 
 export const CartControls = ({ containerRef }: CartControlsProps) => {
   const [appState, setAppState] = useAtom(defaultState);
-  const { added } = appState;
+  const { added, refundingFrom } = appState;
+  const db = useDB();
 
   const checkedCartItems = useMemo(() => {
     return added.filter((item) => item.checked);
@@ -173,6 +177,19 @@ export const CartControls = ({ containerRef }: CartControlsProps) => {
     }));
   };
 
+  const [refundOrder, setRefundOrder] = useState<Order>();
+  useEffect(() => {
+    if(!!refundingFrom) {
+      (async () => {
+        const [o] = await db.query(`SELECT order_id
+                                    from only ${toRecordId(refundingFrom)}`);
+        setRefundOrder(o);
+      })();
+    }else{
+      setRefundOrder(undefined);
+    }
+  }, [refundingFrom]);
+
   return (
     <>
       <div className="flex justify-between items-center bg-white p-3">
@@ -190,6 +207,9 @@ export const CartControls = ({ containerRef }: CartControlsProps) => {
               </div>
             </>
           )}*/}
+          {refundOrder && (
+            <>Refunding from order# {refundOrder.order_id}</>
+          )}
         </div>
         <div className="flex gap-3 justify-end">
           <button

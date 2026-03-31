@@ -52,7 +52,7 @@ export const CreateTax: FC<CreateTaxProps> = ({
         stores: entity.stores.map(item => {
           return {
             label: item.name,
-            value: item['id']
+            value: item['id'].toString()
           }
         })
       });

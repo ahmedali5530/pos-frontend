@@ -49,7 +49,7 @@ export const CreateDepartment: FC<CreateDepartmentProps> = ({
       reset({
         ...entity,
         store: {
-          value: entity?.store?.['id'],
+          value: entity?.store?.['id'].toString(),
           label: entity?.store?.name
         }
       });

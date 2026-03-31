@@ -41,7 +41,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
   const [isLoading, setLoading] = useState(false);
   const [itemInfo, setItemInfo] = useState<ItemInfo>();
   const [appState, setAppState] = useAtom(defaultState);
-  const {cartItemType, cartItem} = appState;
+  const {cartItemType, cartItem, refundingFrom} = appState;
   const taxTotal = useMemo(() => {
     return item.taxes.reduce(
       (prev, tax) => prev + (tax.rate * item.price) / 100,

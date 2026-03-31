@@ -16,6 +16,10 @@ export interface LabelValue {
 }
 
 export const toRecordId = (id: any) => {
+  if(typeof id === 'undefined'){
+    return id;
+  }
+
   if(typeof id === 'string'){
     return new StringRecordId(id);
   }

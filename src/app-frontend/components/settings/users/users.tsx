@@ -37,7 +37,7 @@ export const Users = () => {
     }),
     columnHelper.accessor('roles', {
       header: ('Roles'),
-      cell: info => info.getValue()?.join(', '),
+      cell: info => info.getValue(),
       enableColumnFilter: false,
     }),
     columnHelper.accessor('stores', {

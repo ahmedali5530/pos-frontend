@@ -72,7 +72,8 @@ export const PosMode = () => {
     q,
     added,
     rate,
-    customerName
+    customerName,
+    refundingFrom
   } = appState;
 
   useEffect(() => {
@@ -667,7 +668,8 @@ export const PosMode = () => {
                     type="button"
                     active={mode === SearchModes.sale}
                     size="lg"
-                    onClick={() => setMode(SearchModes.sale)}>
+                    onClick={() => setMode(SearchModes.sale)}
+                  >
                     <FontAwesomeIcon icon={faBarcode}/>
                   </Button>
                 </Tooltip>
@@ -677,9 +679,18 @@ export const PosMode = () => {
                     iconButton
                     type="button"
                     size="lg"
-                    onClick={() => setSearchModal(true)}>
+                    onClick={() => setSearchModal(true)}
+                    disabled={!!refundingFrom}
+                  >
                     <FontAwesomeIcon icon={faMagnifyingGlass}/>
-                    <Shortcut shortcut="ctrl+f" handler={() => setSearchModal(true)} invisible={true}/>
+                    {refundingFrom === undefined && (
+                      <Shortcut
+                        shortcut="ctrl+f"
+                        handler={() => setSearchModal(true)}
+                        invisible={true}
+                      />
+                    )}
+
                   </Button>
                 </Tooltip>
               </div>
@@ -730,6 +741,7 @@ export const PosMode = () => {
                         className="search-field mousetrap lg w-72"
                         value={field.value}
                         onChange={field.onChange}
+                        disabled={!!refundingFrom}
                       />
                     )}
                     name="q"
@@ -746,6 +758,7 @@ export const PosMode = () => {
                         className="w-28 mousetrap lg"
                         value={field.value}
                         onChange={field.onChange}
+                        disabled={!!refundingFrom}
                       />
                     )}
                     name="quantity"

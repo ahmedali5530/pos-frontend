@@ -475,7 +475,7 @@ export const CreateItem = ({
                               options={departments?.data?.map(item => {
                                 return {
                                   label: item.name,
-                                  value: item['id']
+                                  value: item['id'].toString()
                                 }
                               })}
                               isLoading={loadingDepartments}
@@ -585,7 +585,7 @@ export const CreateItem = ({
                             <ReactSelect
                               options={taxes?.data?.map(item => ({
                                 label: `${item.name} ${item.rate}%`,
-                                value: item['id']
+                                value: item['id'].toString()
                               }))}
                               onChange={props.field.onChange}
                               value={props.field.value}
@@ -617,7 +617,7 @@ export const CreateItem = ({
                             <ReactSelect
                               options={terminals?.data?.map(item => ({
                                 label: `${item?.store?.name} - ${item.code}`,
-                                value: item['id']
+                                value: item['id'].toString()
                               }))}
                               onChange={props.field.onChange}
                               value={props.field.value}
@@ -649,7 +649,7 @@ export const CreateItem = ({
                             <ReactSelect
                               options={categories?.data?.map(item => ({
                                 label: item.name,
-                                value: item['id']
+                                value: item['id'].toString()
                               }))}
                               onChange={props.field.onChange}
                               value={props.field.value}
@@ -681,7 +681,7 @@ export const CreateItem = ({
                             <ReactSelect
                               options={suppliers?.data?.map(item => ({
                                 label: item.name,
-                                value: item['id']
+                                value: item['id'].toString()
                               }))}
                               onChange={props.field.onChange}
                               value={props.field.value}
@@ -713,7 +713,7 @@ export const CreateItem = ({
                             <ReactSelect
                               options={brands?.data?.map(item => ({
                                 label: item.name,
-                                value: item['id']
+                                value: item['id'].toString()
                               }))}
                               onChange={props.field.onChange}
                               value={props.field.value}

@@ -59,7 +59,7 @@ export const CreatePaymentType: FC<CreatePaymentTypeProps> = ({
         stores: entity.stores.map(item => {
           return {
             label: item.name,
-            value: item['id']
+            value: item['id'].toString()
           }
         })
       });

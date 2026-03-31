@@ -67,7 +67,7 @@ export const PrinterForm: FC<PrinterProps> = ({
         } : null,
         store: entity.store ? {
           label: entity.store.name,
-          value: entity.store.id
+          value: entity.store.id.toString()
         } : null
       });
     }

@@ -69,7 +69,7 @@ export const CreateDiscount: FC<CreateDiscountProps> = ({
         },
         stores: entity.stores.map(item => ({
           label: item.name,
-          value: item['id']
+          value: item['id'].toString()
         }))
       });
     }
