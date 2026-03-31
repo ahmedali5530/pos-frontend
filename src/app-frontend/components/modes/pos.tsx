@@ -82,6 +82,7 @@ export const PosMode = () => {
   }, [state.list, state.paymentTypesList]);
 
   const searchField = useRef<HTMLInputElement | null>(null);
+  const quantityField = useRef<HTMLInputElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const [modal, setModal] = useState(false);
@@ -552,16 +553,6 @@ export const PosMode = () => {
     });
   };
 
-  Mousetrap.bind("f3", function (e: any) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (searchField.current !== null) {
-      searchField.current.focus();
-
-      return false;
-    }
-  });
-
   useEffect(() => {
     if(!modal){
       setVariants([]);
@@ -625,18 +616,6 @@ export const PosMode = () => {
   const customerInputRef = useRef<HTMLInputElement | null>(null);
   const [searchModal, setSearchModal] = useState(false);
 
-  Mousetrap.bind(["alt", "shift", "c"], function (e: any) {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log(customerInputRef.current);
-    if (customerInputRef.current !== null) {
-      customerInputRef.current.focus();
-
-      return false;
-    }
-  });
-
-
   return (
     <>
       <TrapFocus inputRef={searchField.current}>
@@ -683,14 +662,12 @@ export const PosMode = () => {
                     disabled={!!refundingFrom}
                   >
                     <FontAwesomeIcon icon={faMagnifyingGlass}/>
-                    {refundingFrom === undefined && (
-                      <Shortcut
-                        shortcut="ctrl+f"
-                        handler={() => setSearchModal(true)}
-                        invisible={true}
-                      />
-                    )}
-
+                    <Shortcut
+                      shortcut="ctrl+f"
+                      handler={() => setSearchModal(true)}
+                      invisible={true}
+                      disabled={!!refundingFrom}
+                    />
                   </Button>
                 </Tooltip>
               </div>
@@ -750,9 +727,23 @@ export const PosMode = () => {
                     defaultValue={""}
                   />
 
+                  <Shortcut
+                    shortcut="f2"
+                    handler={() => {
+                      if (searchField.current !== null) {
+                        searchField.current.select();
+
+                        return false;
+                      }
+                    }}
+                    invisible={true}
+                    disabled={!!refundingFrom}
+                  />
+
                   <Controller
                     render={({field}) => (
                       <Input
+                        ref={quantityField}
                         type="number"
                         placeholder="Quantity"
                         className="w-28 mousetrap lg"
@@ -766,10 +757,23 @@ export const PosMode = () => {
                     defaultValue={1}
                     rules={{required: true}}
                   />
+                  <Shortcut
+                    shortcut="f4"
+                    handler={() => {
+                      if (quantityField.current !== null) {
+                        quantityField.current.focus();
+
+                        return false;
+                      }
+                    }}
+                    invisible={true}
+                    disabled={!!refundingFrom}
+                  />
                 </div>
                 <button type="submit" className="hidden">submit</button>
               </form>
               {customerBox && (
+                <>
                 <Input
                   placeholder="Enter customer name"
                   className="lg mousetrap"
@@ -782,6 +786,19 @@ export const PosMode = () => {
                   value={customerName}
                   ref={customerInputRef}
                 />
+                  <Shortcut
+                    shortcut="f7"
+                    handler={() => {
+                      if (customerInputRef.current !== null) {
+                        customerInputRef.current.focus();
+
+                        return false;
+                      }
+                    }}
+                    invisible={true}
+                    disabled={!!refundingFrom}
+                  />
+                </>
               )}
 
             </div>

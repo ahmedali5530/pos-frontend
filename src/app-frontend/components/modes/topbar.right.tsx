@@ -21,8 +21,8 @@ export const TopbarRight = () => {
   const options = [
     { label: "Pos", value: PosModes.pos },
     { label: "Order only", value: PosModes.order },
-    { label: "Quotation mode", value: PosModes.quote },
     { label: "Payment only", value: PosModes.payment },
+    { label: "Quotation mode", value: PosModes.quote },
   ];
 
   return (

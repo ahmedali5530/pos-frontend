@@ -16,11 +16,11 @@ interface Props
   shortcut: string;
   handler: (e: Event) => void;
   invisible?: boolean;
+  disabled?: boolean
 }
 
-export const Shortcut: FC<Props> = ({ children, ...rest }) => {
-  const [defaultState] = useAtom(defaultData);
-  const { displayShortcuts, enableShortcuts: state } = defaultState;
+export const Shortcut: FC<Props> = ({ children, disabled, ...rest }) => {
+  const [{ displayShortcuts, enableShortcuts }] = useAtom(defaultData);
 
   const [visible, setVisible] = useState<boolean | undefined>(rest.invisible);
 
@@ -30,29 +30,33 @@ export const Shortcut: FC<Props> = ({ children, ...rest }) => {
 
   useEffect(() => {
     const handler = function (e: any) {
-      const inputNodes = ["INPUT", "TEXTAREA"];
+      // const inputNodes = ["INPUT", "TEXTAREA"];
 
       // only run shortcuts when there is no modal active
       if (!document.body.classList.contains("ReactModal__Body--open")) {
-        e.preventDefault();
         e.stopPropagation();
+        e.preventDefault();
 
         rest.handler(e);
+
+        return;
       }
 
       return false;
     };
 
-    if (state) {
+    if (enableShortcuts) {
       Mousetrap.bind(rest.shortcut, handler);
-    } else {
-      Mousetrap.unbind(rest.shortcut, handler);
     }
 
-    return () => Mousetrap.unbind(rest.shortcut, handler);
-  }, [state, rest]);
+    if(disabled || enableShortcuts === false){
+      Mousetrap.reset(rest.shortcut, handler);
+    }
 
-  if (!state) {
+    return () => Mousetrap.reset(rest.shortcut, handler);
+  }, [enableShortcuts, rest, disabled]);
+
+  if (!enableShortcuts) {
     return <></>;
   }
 

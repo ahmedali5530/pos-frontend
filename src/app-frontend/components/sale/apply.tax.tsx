@@ -13,7 +13,7 @@ interface TaxProps extends PropsWithChildren {}
 
 export const ApplyTax: FC<TaxProps> = ({ children }) => {
   const [appState, setAppState] = useAtom(defaultState);
-  const { tax, added } = appState;
+  const { tax, added, refundingFrom } = appState;
   const [modal, setModal] = useState(false);
 
   const [state, ] = useLoadData();
@@ -27,9 +27,12 @@ export const ApplyTax: FC<TaxProps> = ({ children }) => {
           setModal(true);
         }}
         type="button"
-        disabled={added.length === 0}>
+        disabled={added.length === 0 || !!refundingFrom}
+      >
         {children || "Taxes"}
-        <Shortcut shortcut="ctrl+shift+q" handler={() => setModal(true)} />
+        <Shortcut
+          disabled={added.length === 0 || !!refundingFrom}
+          shortcut="ctrl+shift+q" handler={() => setModal(true)} />
       </button>
       <Modal
         open={modal}

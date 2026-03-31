@@ -22,10 +22,12 @@ export const Shortcuts = () => {
   const shortcutsList = useMemo(() => {
     return [
       {title: 'Open help', shortcut: ['?']},
-      {title: 'Focus search', shortcut: ['f']},
-      {title: 'Open search', shortcut: ['ctrl', 'f']},
+      {title: 'Focus search', shortcut: ['f2']},
+      {title: 'Focus quantity', shortcut: ['f4']},
+      {title: 'Focus customer input', shortcut: ['f7']},
+      {title: 'Open search items box', shortcut: ['ctrl', 'f']},
       {title: 'Move in cart controls', shortcut: [
-          'ctrl', '+',
+          'ctrl',
           <FontAwesomeIcon icon={faArrowUp} />, <FontAwesomeIcon icon={faArrowDown} />, <FontAwesomeIcon icon={faArrowLeft} />
           , <FontAwesomeIcon icon={faArrowRight} />
         ]
@@ -33,14 +35,13 @@ export const Shortcuts = () => {
       {title: 'Focus payment', shortcut: ['ctrl', 'enter']},
       {title: 'Add payment (while in payment field)', shortcut: ['ctrl', 'enter']},
       {title: 'Settle order', shortcut: ['ctrl', 's']},
-      {title: 'Clear/Cancel order', shortcut: ['ctrl', 'x']},
-      {title: 'Open expenses', shortcut: ['ctrl', 'e']},
-      {title: 'Open history', shortcut: ['ctrl', 'h']},
+      {title: 'Clear/Cancel/reset order states', shortcut: ['ctrl', 'x']},
+      {title: 'Open expenses', shortcut: ['ctrl', 'shift', 'e']},
+      {title: 'Open history', shortcut: ['ctrl', 'shift', 'h']},
       {title: 'Open taxes', shortcut: ['ctrl', 'shift', 'q']},
       {title: 'Open discount', shortcut: ['ctrl', 'shift', 'd']},
       {title: 'Open customers', shortcut: ['ctrl', 'shift', 'c']},
-      {title: 'Focus customer input', shortcut: ["alt", "shift", "c"]},
-    ].filter(item => item.title.indexOf(q) !== -1);
+    ].filter(item => item.title.toLowerCase().indexOf(q.toLowerCase()) !== -1);
   }, [q]);
 
   return (

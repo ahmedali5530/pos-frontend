@@ -44,8 +44,7 @@ const ValidationSchema = yup.object({
 export const Customers: FC<Props> = ({children, className}) => {
   const db = useDB();
   const customerHook = useCustomer();
-  const [appState, setAppState] = useAtom(defaultState);
-  const {customer} = appState;
+  const [{customer, refundingFrom}, setAppState] = useAtom(defaultState);
   const setCustomer = (customer?: Customer) => {
     setAppState((prev) => ({
       ...prev,
@@ -263,15 +262,16 @@ export const Customers: FC<Props> = ({children, className}) => {
           setModal(true);
         }}
         title="Customers"
-        tabIndex={-1}>
+        tabIndex={-1}
+        disabled={!!refundingFrom}
+      >
         {children || (
           <>
             <FontAwesomeIcon icon={faUsers} className="mr-2"/> Customers
           </>
         )}
-        <Shortcut shortcut="ctrl+shift+c" handler={() => setModal(true)}/>
+        <Shortcut disabled={!!refundingFrom} shortcut="ctrl+shift+c" handler={() => setModal(true)}/>
       </button>
-
 
       <Modal
         shouldCloseOnEsc={true}
