@@ -31,7 +31,8 @@ interface ExpensesProps {
 
 const ValidationSchema = yup.object({
   description: yup.string().required(ValidationMessage.Required),
-  amount: yup.string().required(ValidationMessage.Required)
+  amount: yup.string().required(ValidationMessage.Required),
+  created_at: yup.date().required(ValidationMessage.Required)
 });
 
 export const Expenses: FC<ExpensesProps> = (props) => {
@@ -68,10 +69,11 @@ export const Expenses: FC<ExpensesProps> = (props) => {
         qb.addWhere(`created_at <= d"${values.endTime}"`);
       }
 
-      qb.addWhere('store = $store');
-      qb.addParameter('store', toRecordId(store?.id));
+      qb.addWhere('store = $store', 'and', {
+        store: toRecordId(store?.id)
+      });
 
-      const [data] = await db.query(qb.queryString);
+      const [data] = await db.query(qb.queryString, qb.parameters);
 
       setList(data);
     } catch (e) {
@@ -91,7 +93,7 @@ export const Expenses: FC<ExpensesProps> = (props) => {
       createReset();
     }
     reset();
-  }, [modal]);
+  }, [modal, store?.id]);
 
 
   const {
@@ -111,7 +113,6 @@ export const Expenses: FC<ExpensesProps> = (props) => {
       await db.insert(Tables.expense, {
         ...values,
         amount: Number(values.amount),
-        created_at: DateTime.now().toJSDate(),
         store: toRecordId(store?.id),
         user: toRecordId(user?.id)
       });
@@ -172,7 +173,7 @@ export const Expenses: FC<ExpensesProps> = (props) => {
         <form onSubmit={createHandleSubmit(createExpense)}>
           <h3 className="text-lg">Add new expenses</h3>
           <div className="grid grid-cols-7 gap-4 mb-5">
-            <div className="col-span-3">
+            <div className="col-span-2">
               <Input {...createRegister('description')}
                      type="text"
                      placeholder="Description"
@@ -187,7 +188,7 @@ export const Expenses: FC<ExpensesProps> = (props) => {
                 </div>
               )}
             </div>
-            <div className="col-span-3">
+            <div className="col-span-2">
               <Input {...createRegister('amount')}
                      type="number"
                      placeholder="Expense Amount"
@@ -201,6 +202,13 @@ export const Expenses: FC<ExpensesProps> = (props) => {
                   </Trans>
                 </div>
               )}
+            </div>
+            <div className="col-span-2">
+              <Input {...register('created_at')}
+                     type="datetime-local"
+                     placeholder="Start time"
+                     className="w-full"
+              />
             </div>
             <div>
               <Button variant="primary" className="w-full" type="submit"

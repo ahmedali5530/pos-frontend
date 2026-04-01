@@ -46,12 +46,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
   const [closing, setClosing] = useState<Closing>();
   const checkDayOpening = async () => {
     try {
-      const [result] = await db.query(`SELECT *
-                                       FROM ${Tables.closing}
-                                       where store = $store
-                                         and terminal = $terminal fetch store
-                                           , terminal
-                                           , opened_by`, {
+      const [result] = await db.query(`SELECT * FROM closing WHERE store = $store AND terminal = $terminal and closed_at = none order by created_at desc LIMIT 1 FETCH store, terminal, opened_by`, {
         store: toRecordId(store?.id),
         terminal: toRecordId(terminal?.id)
       });
@@ -68,7 +63,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
           created_at: DateTime.now().toJSDate()
         });
 
-        await fetchClosing(cl.id);
+        await fetchClosing(toRecordId(cl.id));
       }
 
     } catch (e) {
@@ -76,13 +71,31 @@ export const SaleClosing: FC<TaxProps> = (props) => {
     }
   };
 
+  const loadPreviousClosing = async () => {
+    try {
+      const [result] = await db.query(`SELECT * FROM closing WHERE store = $store AND terminal = $terminal and closed_at != none order by created_at desc LIMIT 1`, {
+        store: toRecordId(store?.id),
+        terminal: toRecordId(terminal?.id)
+      });
+
+      if (result.length === 1) {
+        setValue('opening_balance', Number(result[0].closing_balance));
+      }else{
+        setValue('opening_balance', 0);
+      }
+
+    } catch (e) {
+      throw e;
+    }
+  }
+
   const [title, setTitle] = useState('');
   const [hideCloseButton, setHideCloseButton] = useState(false);
 
   useEffect(() => {
     if (closing) {
       reset({
-        opening_balance: closing.opening_balance,
+        // opening_balance: closing.opening_balance,
         cash_added: closing.cash_added || 0,
         cash_withdrawn: closing.cash_withdrawn || 0,
         id: closing.id.toString()
@@ -94,14 +107,14 @@ export const SaleClosing: FC<TaxProps> = (props) => {
         setTitle('Start day');
       }
 
-      if (closing.opening_balance && DateTime.now().diff(DateTime.fromJSDate(closing.created_at), 'hours').hours > 24) {
+      if (closing.opening_balance && DateTime.now().diff(DateTime.fromJSDate(closing?.created_at), 'hours').hours > 24) {
         setModal(true);
         setHideCloseButton(true);
         setTitle('Close previous day first');
       }
 
       loadExpenses({
-        dateTimeFrom: closing.date_from
+        dateTimeFrom: closing?.date_from
       });
 
       handleFilterChange!([
@@ -112,7 +125,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
       handleParameterChange({
         dateTimeFrom: closing?.date_from,
         store: store?.id
-      })
+      });
     }
   }, [closing]);
 
@@ -122,12 +135,15 @@ export const SaleClosing: FC<TaxProps> = (props) => {
 
   useEffect(() => {
     if (modal) {
-      fetchOrders();
-      checkDayOpening();
+      (async () => {
+        await fetchOrders();
+        await checkDayOpening();
+        await loadPreviousClosing();
+      })();
     }
   }, [modal]);
 
-  const {reset, register, handleSubmit, control, watch, getValues} = useForm();
+  const {reset, register, handleSubmit, control, watch, getValues, setValue} = useForm();
   const [saving, setSaving] = useState(false);
   const [expenses, setExpenses] = useState(0);
 
@@ -182,7 +198,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
 
       await db.merge(toRecordId(closing?.id), vals);
 
-      await fetchClosing(vals.id);
+      await fetchClosing(toRecordId(closing?.id));
 
       setHideCloseButton(false);
       setModal(false);
@@ -201,9 +217,9 @@ export const SaleClosing: FC<TaxProps> = (props) => {
 
   const fetchClosing = async (id: string) => {
     const [newClosing] = await db.query(`SELECT *
-                                         FROM ${id} fetch store, terminal, opened_by`);
+                                         FROM ONLY ${id} fetch store, terminal, opened_by`);
 
-    setClosing(newClosing[0]);
+    setClosing(newClosing);
   }
 
   const loadExpenses = async (values?: any) => {
@@ -264,14 +280,14 @@ export const SaleClosing: FC<TaxProps> = (props) => {
             </tr>
             <tr>
               <th className="text-right">Day started at</th>
-              <td>{closing?.created_at && DateTime.fromISO(closing?.created_at || '').toFormat(import.meta.env.VITE_DATE_TIME_FORMAT as string)}</td>
+              <td>{closing?.created_at && DateTime.fromJSDate(closing?.created_at || '').toFormat(import.meta.env.VITE_DATE_TIME_FORMAT as string)}</td>
             </tr>
             <tr>
-              <th className="text-right">Previous closing</th>
-              <td>{withCurrency(0)}</td>
-            </tr>
-            <tr>
-              <th className="text-right">Opening balance</th>
+              <th className="text-right">
+                Opening balance
+                <br/>
+                <span className="text-sm font-normal text-gray-500">Balance from previous closing</span>
+              </th>
               <td>
                 <Controller
                   render={(props) => (
@@ -281,6 +297,7 @@ export const SaleClosing: FC<TaxProps> = (props) => {
                       defaultValue={props.field.value}
                       value={props.field.value}
                       onChange={props.field.onChange}
+                      disabled
                     />
                   )}
                   name="opening_balance"

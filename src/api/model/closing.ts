@@ -5,9 +5,9 @@ import {HydraId, HydraType} from "./hydra";
 
 export interface Closing {
   id: string;
-  date_from?: string;
-  date_to?: string;
-  closed_at?: string;
+  date_from?: Date;
+  date_to?: Date;
+  closed_at?: Date;
   closed_by?: User;
   opening_balance?: number;
   closing_balance?: number;
@@ -17,6 +17,6 @@ export interface Closing {
   data?: any;
   store: Store;
   denominations?: any;
-  created_at: string;
+  created_at: Date;
   terminal: Terminal;
 }
