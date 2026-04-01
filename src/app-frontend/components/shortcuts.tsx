@@ -32,6 +32,7 @@ export const Shortcuts = () => {
           , <FontAwesomeIcon icon={faArrowRight} />
         ]
       },
+      {title: 'Copy last added item', shortcut: ['ctrl', 'shift', <FontAwesomeIcon icon={faArrowDown} />]},
       {title: 'Focus payment', shortcut: ['ctrl', 'enter']},
       {title: 'Add payment (while in payment field)', shortcut: ['ctrl', 'enter']},
       {title: 'Settle order', shortcut: ['ctrl', 's']},
