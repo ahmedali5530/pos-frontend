@@ -14,7 +14,7 @@ import {Controller, useFieldArray, useForm} from "react-hook-form";
 import {Printer} from "../../../../api/model/printer";
 import {Input} from "../../../../app-common/components/input/input";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faRefresh, faRemove} from "@fortawesome/free-solid-svg-icons";
+import {faPlus, faRefresh, faRemove} from "@fortawesome/free-solid-svg-icons";
 import {toRecordId} from "../../../../api/model/common";
 import {yupResolver} from "@hookform/resolvers/yup";
 import * as yup from 'yup';
@@ -391,8 +391,8 @@ export const GeneralSetting = () => {
           <div className="p-5 border-b border-primary-300 bg-primary-100 text-primary-900 rounded-t-xl">Set printers for this terminal</div>
           <div className="p-5">
             <form onSubmit={handleSubmit(savePrinters)}>
-              <button
-                className="btn btn-secondary"
+              <Button
+                className="btn btn-secondary gap-2"
                 type="button"
                 onClick={() => {
                   append({
@@ -400,8 +400,9 @@ export const GeneralSetting = () => {
                     prints: 1
                   })
                 }}
-              >Add printer
-              </button>
+              >
+                <FontAwesomeIcon icon={faPlus} /> Add printer
+              </Button>
 
               {fields.length > 0 && (
                 <div className="grid grid-cols-3 gap-5 my-3">
