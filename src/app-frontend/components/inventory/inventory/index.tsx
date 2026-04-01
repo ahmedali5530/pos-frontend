@@ -5,19 +5,12 @@ import {ReactSelect} from "../../../../app-common/components/input/custom.react.
 import {Product} from "../../../../api/model/product";
 import {Store} from "../../../../api/model/store";
 import React, {useEffect, useState} from "react";
-import {Button} from "../../../../app-common/components/input/button";
 import {useAtom} from "jotai";
 import {appState} from "../../../../store/jotai";
-import {Purchase, PURCHASE_FETCHES} from "../../../../api/model/purchase";
 import {ProductStore} from "../../../../api/model/product.store";
 import {TableComponent} from "../../../../app-common/components/table/table";
 import {createColumnHelper} from "@tanstack/react-table";
-import {ViewPurchase} from "../purchase/view.purchase";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faEye, faPencilAlt, faTrash} from "@fortawesome/free-solid-svg-icons";
-import {formatNumber, withCurrency} from "../../../../lib/currency/currency";
-import {DateTime} from "luxon";
-import {ConfirmAlert} from "../../../../app-common/components/confirm/confirm.alert";
+import {formatNumber} from "../../../../lib/currency/currency";
 import {toRecordId} from "../../../../api/model/common";
 
 export const InventoryDetails = () => {
@@ -28,8 +21,8 @@ export const InventoryDetails = () => {
   const {data: stores} = useApi<SettingsData<Store>>(Tables.store, [], [], 0, undefined, [], {}, ['id', 'name']);
 
   const useLoadHook = useApi<SettingsData<ProductStore>>(Tables.product_store, [], [], 0, 10, [
-    'store', 'variants.store', 'variants.variant', 'product', 'variants.product'
-  ], {}, ['id', 'product.name', 'product.purchase_unit', 'quantity', 'store.name',
+    'store', 'variants.store', 'variants.variant', 'product', 'variants.product', 'product.categories'
+  ], {}, ['id', 'product.name', 'product.categories', 'product.purchase_unit', 'quantity', 'store.name',
     '(SELECT product.name, product.purchase_unit, quantity, store.name, variant.attribute_value FROM product_variant_store WHERE product = $parent.product AND store = $parent.store) AS variants'
   ]);
 
@@ -39,13 +32,13 @@ export const InventoryDetails = () => {
   useEffect(() => {
     useLoadHook.resetFilters();
 
-    if(store){
+    if (store) {
       useLoadHook.addFilter(
         `store.id = ${toRecordId(store?.value)}`
       )
     }
 
-    if(filteredProducts.length > 0){
+    if (filteredProducts.length > 0) {
       useLoadHook.addFilter(
         `product.id IN [${filteredProducts.map(item => toRecordId(item.value)).join(',')}]`
       )
@@ -64,16 +57,17 @@ export const InventoryDetails = () => {
       enableSorting: false,
       enableColumnFilter: false,
     }),
-    columnHelper.accessor('product.purchase_unit', {
-      header: 'Purchase unit',
+    columnHelper.accessor('product.categories', {
+      header: 'Categories',
       enableSorting: false,
       enableColumnFilter: false,
+      cell: info => info.getValue()?.map(item => item.name)?.join(', ')
     }),
     columnHelper.accessor('quantity', {
-      header: 'Quantity',
+      header: 'Current Quantity',
       enableSorting: false,
       enableColumnFilter: false,
-      cell: info => formatNumber(info.getValue())
+      cell: info => `${formatNumber(info.getValue())} ${info.row.original.product.purchase_unit}`
     }),
     columnHelper.accessor('id', {
       header: 'Variants',
@@ -86,7 +80,7 @@ export const InventoryDetails = () => {
             {info.row.original.variants.map(item => (
               <tr>
                 <td>{item.variant.attribute_value}</td>
-                <td>{item.quantity}</td>
+                <td>{item.quantity} {info.row.original.product.purchase_unit}</td>
               </tr>
             ))}
             </tbody>
