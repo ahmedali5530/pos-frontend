@@ -7,6 +7,7 @@ import {
 } from "react";
 import classNames from "classnames";
 import Mousetrap from "mousetrap";
+import "mousetrap/plugins/global-bind/mousetrap-global-bind";
 import { defaultData } from "../../../store/jotai";
 import { useAtom } from "jotai";
 
@@ -46,14 +47,14 @@ export const Shortcut: FC<Props> = ({ children, disabled, ...rest }) => {
     };
 
     if (enableShortcuts) {
-      Mousetrap.bind(rest.shortcut, handler);
+      (Mousetrap as any).bindGlobal(rest.shortcut, handler);
     }
 
     if(disabled || enableShortcuts === false){
-      Mousetrap.reset(rest.shortcut, handler);
+      (Mousetrap as any).unbind(rest.shortcut, handler);
     }
 
-    return () => Mousetrap.reset(rest.shortcut, handler);
+    return () => (Mousetrap as any).unbind(rest.shortcut, handler);
   }, [enableShortcuts, rest, disabled]);
 
   if (!enableShortcuts) {

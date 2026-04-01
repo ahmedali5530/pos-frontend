@@ -73,6 +73,7 @@ export const defaultState = atomWithStorage<DefaultStateInterface>(
     quantity: 1,
     rate: 0,
     adjustment: 0,
+    cartItem: -1,
     cartItemType: "quantity",
     tax: undefined,
   }

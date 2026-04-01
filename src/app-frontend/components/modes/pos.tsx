@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useRef, useState,} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState,} from "react";
 import {HomeProps, initialData, useLoadData,} from "../../../api/hooks/use.load.data";
 import {appState as AppState, defaultData, defaultState} from "../../../store/jotai";
 import {
@@ -17,7 +17,7 @@ import {Controller, useForm} from "react-hook-form";
 import {CartItem} from "../../../api/model/cart.item";
 import {notify} from "../../../app-common/components/confirm/notification";
 import {getRealProductPrice, scrollToBottom,} from "../../containers/dashboard/pos";
-import {CartContainer} from "../cart/cart.container";
+import {CartContainer, CartItemType} from "../cart/cart.container";
 import {CartControls} from "../cart/cart.controls";
 import {SaleFind} from "../sale/sale.find";
 import {CloseSaleInline} from "../sale/sale.inline";
@@ -31,6 +31,7 @@ import {Brand} from "../../../api/model/brand";
 import {Category} from "../../../api/model/category";
 import {Department} from "../../../api/model/department";
 import Mousetrap from "mousetrap";
+import "mousetrap/plugins/global-bind/mousetrap-global-bind";
 import {Order} from "../../../api/model/order";
 import {Tooltip} from "antd";
 import {Button} from "../../../app-common/components/input/button";
@@ -73,7 +74,8 @@ export const PosMode = () => {
     added,
     rate,
     customerName,
-    refundingFrom
+    refundingFrom,
+    cartItemType, cartItem
   } = appState;
 
   useEffect(() => {
@@ -612,6 +614,129 @@ export const PosMode = () => {
       customer: order?.customer,
     }));
   };
+
+  const copyLastItem = useCallback(() => {
+    setAppState((prev) => {
+      const lastItem = prev.added[prev.added.length - 1];
+      if (lastItem) {
+        return {
+          ...prev,
+          added: [...prev.added, { ...lastItem }],
+          cartItem: prev.added.length,
+        };
+      }
+
+      return prev;
+    });
+  }, [setAppState]);
+
+  const updateCartItemType = useCallback(
+    (direction: "left" | "right") => {
+      if (cartItemType === CartItemType.quantity) {
+        if (direction === "right") {
+          setAppState((prev) => ({
+            ...prev,
+            cartItemType: CartItemType.discount,
+          }));
+        } else {
+          setAppState((prev) => ({
+            ...prev,
+            cartItemType: CartItemType.discount,
+          }));
+        }
+      }
+      if (cartItemType === CartItemType.discount) {
+        if (direction === "right") {
+          setAppState((prev) => ({
+            ...prev,
+            cartItemType: CartItemType.quantity,
+          }));
+        } else {
+          setAppState((prev) => ({
+            ...prev,
+            cartItemType: CartItemType.quantity,
+          }));
+        }
+      }
+    },
+    [cartItemType]
+  );
+
+  const updateCartItem = useCallback(
+    (direction: "up" | "down") => {
+      console.log(direction)
+      const addedItems = added.length;
+      let newCartItem = cartItem;
+      if (!newCartItem) {
+        newCartItem = 0;
+      }
+
+      if (direction === "up") {
+        if (cartItem !== 0) {
+          setAppState((prev) => ({
+            ...prev,
+            cartItem: Number(newCartItem) - 1,
+          }));
+        } else if (cartItem === 0) {
+          setAppState((prev) => ({
+            ...prev,
+            cartItem: addedItems - 1,
+          }));
+        }
+      }
+      if (direction === "down") {
+        if (newCartItem + 1 < addedItems) {
+          setAppState((prev) => ({
+            ...prev,
+            cartItem: Number(newCartItem) + 1,
+          }));
+        } else if (newCartItem + 1 >= addedItems) {
+          setAppState((prev) => ({
+            ...prev,
+            cartItem: 0,
+          }));
+        }
+      }
+    },
+    [cartItem, added]
+  );
+
+  useEffect(() => {
+    (Mousetrap as any).bindGlobal(
+      ["ctrl+up", "ctrl+down", "ctrl+left", "ctrl+right", "del", "ctrl+shift+down"],
+      function (e: KeyboardEvent) {
+        if (document.body.classList.contains("ReactModal__Body--open")) return;
+
+        e.preventDefault();
+
+        if (e.key === "Delete") {
+          setAppState((prev) => ({
+            ...prev,
+            added: prev.added.filter((_, index) => index !== prev.cartItem),
+          }));
+        }
+
+        //update quantity of last added item
+        if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+          updateCartItemType(e.key === "ArrowLeft" ? "left" : "right");
+        }
+
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+          if (e.ctrlKey && !e.shiftKey) {
+            updateCartItem(e.key === "ArrowDown" ? "down" : "up");
+          }
+        }
+
+        if (e.key === "ArrowDown" && e.ctrlKey && e.shiftKey) {
+          copyLastItem();
+        }
+      }
+    );
+
+    return () => {
+      (Mousetrap as any).unbind(["ctrl+up", "ctrl+down", "ctrl+left", "ctrl+right", "del", "ctrl+shift+down"]);
+    };
+  }, [updateCartItem, updateCartItemType, copyLastItem]);
 
   const customerInputRef = useRef<HTMLInputElement | null>(null);
   const [searchModal, setSearchModal] = useState(false);

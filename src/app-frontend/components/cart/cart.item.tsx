@@ -21,6 +21,7 @@ interface CartItemProps {
   deleteItem: (index: number) => void;
   item: CartItemModel;
   index: number;
+  key?: string|number;
   onCheck: (state: boolean, index: number) => void;
 }
 
