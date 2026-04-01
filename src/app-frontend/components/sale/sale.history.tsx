@@ -292,7 +292,7 @@ export const SaleHistory: FC<Props> = ({}) => {
     }),
   ];
 
-  const qb = useQueryBuilder(Tables.expense, '*', [], undefined, undefined, ['created_at DESC']);
+  const qb = useQueryBuilder(Tables.expense, '*', [`created_at >= d"${startTime}" and created_at <= d"${endTime}"`], undefined, undefined, ['created_at DESC']);
 
   const loadExpenses = async (values?: any) => {
     try {
@@ -308,7 +308,7 @@ export const SaleHistory: FC<Props> = ({}) => {
       qb.addWhere('store = $store');
       qb.addParameter('store', toRecordId(store?.id));
 
-      const [data] = await db.query(qb.queryString);
+      const [data] = await db.query(qb.queryString, qb.parameters);
 
       setExpenses(data);
     } catch (e) {
@@ -426,10 +426,6 @@ export const SaleHistory: FC<Props> = ({}) => {
     if (!window.confirm("Refund order?")) return false;
     setRefunding(true);
     try {
-      await db.merge(order.id, {
-        status: OrderStatus.RETURNED
-      });
-
       const items: CartItem[] = [];
       order.items.forEach((item) => {
         items.push({
@@ -554,7 +550,7 @@ export const SaleHistory: FC<Props> = ({}) => {
           prev +
           order.items.reduce((p, item) => {
             if (item?.product?.cost) {
-              return p + item.product.cost;
+              return p + (item.product.cost * item.quantity);
             }
 
             return p;

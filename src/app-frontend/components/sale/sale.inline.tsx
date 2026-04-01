@@ -91,7 +91,6 @@ export const CloseSaleInline: FC<Props> = ({
       added: [],
       customer: undefined,
       adjustment: 0,
-      refundingFrom: undefined,
       customerName: '',
       cartItem: undefined,
       cartItemType: CartItemType.quantity,
@@ -102,6 +101,8 @@ export const CloseSaleInline: FC<Props> = ({
       latestQuantity: undefined,
       latestRate: undefined,
       latestVariant: undefined,
+
+      refundingFrom: undefined,
     }));
 
     if (typeof setSaleModal === 'function') {
@@ -218,76 +219,80 @@ export const CloseSaleInline: FC<Props> = ({
     return true;
   };
 
+  const printQuotation = async (values: any) => {
+    if (requireCustomerBox && !customerName) {
+      notify({
+        type: "error",
+        description: 'Add customer name',
+      });
+
+      customerInput?.current?.focus();
+      return;
+    }
+
+    try {
+      setSaleClosing(true);
+
+      let printers = [];
+
+      const [settings] = await db.query(`SELECT * FROM ${Tables.setting} where terminal = $terminal and name = $name FETCH values.printers.printers`, {
+        name: 'final_printers',
+        terminal: toRecordId(terminal?.id)
+      });
+
+      if(settings.length > 0 && settings[0].values.printers.length > 0){
+        printers = settings[0].values.printers;
+      }
+
+      const quoteOrder = {
+        order_id: `Q-${nanoid(5)}`,
+        created_at: new Date(),
+        customer: customer ?? (customerName ? {name: customerName} : undefined),
+        user,
+        adjustment,
+        description: values.notes,
+        discount: discount ? {
+          amount: discountAmount,
+          rate: discount.rate,
+          type: discount
+        } : null,
+        tax: tax ? {
+          amount: taxTotal(added),
+          rate: tax.rate,
+          type: tax
+        } : null,
+        payments: [],
+        items: added.map((item) => ({
+          product: item.item,
+          price: Number(item.price),
+          quantity: Number(item.quantity),
+          discount: Number(item.discount || 0),
+          taxes: item.taxes,
+          variant: item.variant,
+          is_deleted: false,
+          is_returned: false
+        }))
+      };
+
+      await dispatchPrint(db, 'quotation', {
+        order: quoteOrder,
+        notes: values.notes
+      }, {
+        userId: user?.id,
+        printers: printers
+      });
+
+      onSale && onSale();
+      resetFields();
+      setPayments([]);
+    } finally {
+      setSaleClosing(false);
+    }
+  }
+
   const onSaleSubmit = async (values: any) => {
     if(defaultMode === PosModes.quote){
-      if (requireCustomerBox && !customerName) {
-        notify({
-          type: "error",
-          description: 'Add customer name',
-        });
-
-        customerInput?.current?.focus();
-        return;
-      }
-
-      try {
-        setSaleClosing(true);
-
-        let printers = [];
-
-        const [settings] = await db.query(`SELECT * FROM ${Tables.setting} where terminal = $terminal and name = $name FETCH values.printers.printers`, {
-          name: 'final_printers',
-          terminal: toRecordId(terminal?.id)
-        });
-
-        if(settings.length > 0 && settings[0].values.printers.length > 0){
-          printers = settings[0].values.printers;
-        }
-
-        const quoteOrder = {
-          order_id: `Q-${nanoid(5)}`,
-          created_at: new Date(),
-          customer: customer ?? (customerName ? {name: customerName} : undefined),
-          user,
-          adjustment,
-          description: values.notes,
-          discount: discount ? {
-            amount: discountAmount,
-            rate: discount.rate,
-            type: discount
-          } : null,
-          tax: tax ? {
-            amount: taxTotal(added),
-            rate: tax.rate,
-            type: tax
-          } : null,
-          payments: [],
-          items: added.map((item) => ({
-            product: item.item,
-            price: Number(item.price),
-            quantity: Number(item.quantity),
-            discount: Number(item.discount || 0),
-            taxes: item.taxes,
-            variant: item.variant,
-            is_deleted: false,
-            is_returned: false
-          }))
-        };
-
-        await dispatchPrint(db, 'quotation', {
-          order: quoteOrder,
-          notes: values.notes
-        }, {
-          userId: user?.id,
-          printers: printers
-        });
-
-        onSale && onSale();
-        resetFields();
-        setPayments([]);
-      } finally {
-        setSaleClosing(false);
-      }
+      await printQuotation(values);
       return;
     }
 
@@ -444,7 +449,6 @@ export const CloseSaleInline: FC<Props> = ({
         }
       }
 
-
       if (orderId) {
         await db.merge(toRecordId(orderId), {
           ...formValues
@@ -470,6 +474,12 @@ export const CloseSaleInline: FC<Props> = ({
         await db.merge(toRecordId(customerFromDB.id), {
           orders: [...customerFromDB.orders, toRecordId(order.id)]
         })
+      }
+
+      if(refundingFrom){
+        await db.merge(toRecordId(refundingFrom), {
+          status: OrderStatus.RETURNED
+        });
       }
 
       resetFields();
