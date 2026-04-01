@@ -29,7 +29,7 @@ export const ItemComponent = ({
 
   return (
     <>
-      <Button variant="primary" onClick={() => setModal(true)}>
+      <Button variant="secondary" onClick={() => setModal(true)}>
         <FontAwesomeIcon icon={faEye}/>
       </Button>
 

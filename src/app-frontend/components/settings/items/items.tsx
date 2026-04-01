@@ -1,6 +1,6 @@
 import {Button} from "../../../../app-common/components/input/button";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faEllipsis, faPencil, faPlus} from "@fortawesome/free-solid-svg-icons";
+import {faPencil, faPlus} from "@fortawesome/free-solid-svg-icons";
 import React, {useState} from "react";
 import {ITEM_FETCHES, Product} from "../../../../api/model/product";
 import {TableComponent} from "../../../../app-common/components/table/table";
@@ -129,20 +129,17 @@ export const Items = () => {
               }}></Switch>
             </ConfirmAlert>
             <ItemComponent product={info.row.original}/>
-            <DropdownMenu label={
-              <FontAwesomeIcon icon={faEllipsis}/>
-            } onAction={key => {
-              if (key === 'edit') {
+            <Button
+              variant="primary"
+              onClick={() => {
                 setEntity(info.row.original);
                 setOperation("update");
                 setModal(true);
-              }
-              if (key === 'view') {
-                // <ItemComponent product={info.row.original}/>
-              }
-            }}>
-              <DropdownMenuItem id="edit" icon={faPencil}>Edit</DropdownMenuItem>
-            </DropdownMenu>
+              }}
+              iconButton
+            >
+              <FontAwesomeIcon icon={faPencil}/>
+            </Button>
           </div>
         );
       },
