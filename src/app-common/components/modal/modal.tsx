@@ -23,7 +23,11 @@ interface ModalProps extends PropsWithChildren {
   backdrop?: boolean;
 }
 
-export const Modal: FunctionComponent<ModalProps> = (props) => {
+export const Modal: FunctionComponent<ModalProps> = ({
+  shouldCloseOnOverlayClick = true,
+  shouldCloseOnEsc = true,
+  ...props
+}) => {
   const [open, setOpen] = useState(false);
   const [closeClass, setCloseClass] = useState("");
 
@@ -48,7 +52,7 @@ export const Modal: FunctionComponent<ModalProps> = (props) => {
         isOpen={open}
         onRequestClose={close}
         ariaHideApp={false}
-        shouldCloseOnEsc={props.shouldCloseOnEsc || false}
+        shouldCloseOnEsc={shouldCloseOnEsc || false}
         className={classNames(
           "justify-center",
           closeClass,
@@ -57,7 +61,7 @@ export const Modal: FunctionComponent<ModalProps> = (props) => {
           props.size === "sm" && "modal-sm",
           !props.backdrop && 'no-backdrop'
         )}
-        shouldCloseOnOverlayClick={props.shouldCloseOnOverlayClick}
+        shouldCloseOnOverlayClick={shouldCloseOnOverlayClick}
         style={{
           overlay: {
             backgroundColor: "rgba(0, 70, 254, 0.01)",

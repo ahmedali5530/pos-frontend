@@ -32,20 +32,24 @@ export const SaleFind = ({
   const {control, handleSubmit, reset} = useForm();
   const [isLoading, setLoading] = useState(false);
   const db = useDB();
-  const [{refundingFrom}, ] = useAtom(defaultState);
+  const [{disableEdit}, ] = useAtom(defaultState);
 
   const onSubmit = async (values: any) => {
     setLoading(true)
     try {
       const [orders] = await db.query(`SELECT *
                                        FROM ${Tables.order}
-                                       WHERE order_id = $orderId LIMIT 1 FETCH ${ORDER_FETCHES.join(', ')}`, {
+                                       WHERE order_id = $orderId and is_returned != true and is_deleted != true and status != "Returned" LIMIT 1 FETCH ${ORDER_FETCHES.join(', ')}`, {
         orderId: Number(values.order_id)
       })
 
       if (orders.length > 0) {
         onSuccess(orders[0]);
         setModal(false)
+      }
+
+      if(orders.length === 0){
+        onError();
       }
     } catch (e) {
       onError();
@@ -73,7 +77,7 @@ export const SaleFind = ({
           }}
           size="lg"
           active={active}
-          disabled={!!refundingFrom}
+          disabled={disableEdit}
         ><FontAwesomeIcon icon={icon} className={displayLabel ? 'mr-2' : ''}/>{displayLabel && title}</Button>
       </Tooltip>
       <Modal open={modal} title={title} onClose={() => {

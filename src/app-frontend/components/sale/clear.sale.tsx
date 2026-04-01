@@ -34,7 +34,10 @@ export const ClearSale: FC<Props> = ({}) => {
       latestRate: undefined,
       latestVariant: undefined,
       customerName: undefined,
-      refundingFrom: undefined
+      refundingFrom: undefined,
+      refundingSourceItems: undefined,
+      refundPaymentType: undefined,
+      disableEdit: undefined
     }));
 
     if (defaultPaymentType) {

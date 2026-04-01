@@ -142,6 +142,8 @@ export const CreateSupplier: FC<CreateSupplierProps> = ({
       onClose={onModalClose}
       title="Create Supplier"
       size="sm"
+      shouldCloseOnOverlayClick={false}
+      shouldCloseOnEsc={false}
     >
       <form onSubmit={handleSubmit(createSupplier)} className="mb-5">
         <div className="grid lg:grid-cols-1 gap-4 mb-3 md:grid-cols-3 sm:grid-cols-1">

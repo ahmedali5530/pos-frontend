@@ -15,4 +15,6 @@ export interface CartItem {
   taxIncluded?: boolean;
   discountIncluded?: boolean;
   stock?: number;
+  sourceOrderItemId?: string;
+  refundMaxQuantity?: number;
 }

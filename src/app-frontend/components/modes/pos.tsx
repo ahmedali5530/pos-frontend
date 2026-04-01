@@ -21,6 +21,7 @@ import {CartContainer, CartItemType} from "../cart/cart.container";
 import {CartControls} from "../cart/cart.controls";
 import {SaleFind} from "../sale/sale.find";
 import {CloseSaleInline} from "../sale/sale.inline";
+import {RefundOrder} from "../sale/refund.order";
 import {SaleBrands} from "../search/sale.brands";
 import {SaleCategories} from "../search/sale.categories";
 import {SaleDepartments} from "../search/sale.departments";
@@ -74,7 +75,7 @@ export const PosMode = () => {
     added,
     rate,
     customerName,
-    refundingFrom,
+    disableEdit,
     cartItemType, cartItem
   } = appState;
 
@@ -566,31 +567,6 @@ export const PosMode = () => {
     }
   }, [modal]);
 
-  const refundOrder = async (order: Order) => {
-    const items: CartItem[] = [];
-    order.items.forEach((item) => {
-      items.push({
-        quantity: -1 * item.quantity,
-        price: item.price,
-        discount: 0,
-        variant: item.variant,
-        item: item.product,
-        taxes: item.taxes,
-        taxIncluded: true,
-      });
-    });
-
-    setAppState((prev) => ({
-      ...prev,
-      added: items,
-      discount: order?.discount?.type,
-      tax: order?.tax?.type,
-      discountAmount: order?.discount?.amount,
-      customer: order?.customer,
-      refundingFrom: order.id,
-    }));
-  };
-
   const reOrder = async (order: Order) => {
     const items: CartItem[] = [];
     order.items.forEach((item) => {
@@ -784,33 +760,25 @@ export const PosMode = () => {
                     type="button"
                     size="lg"
                     onClick={() => setSearchModal(true)}
-                    disabled={!!refundingFrom}
+                    disabled={disableEdit}
                   >
                     <FontAwesomeIcon icon={faMagnifyingGlass}/>
                     <Shortcut
                       shortcut="ctrl+f"
                       handler={() => setSearchModal(true)}
                       invisible={true}
-                      disabled={!!refundingFrom}
+                      disabled={disableEdit}
                     />
                   </Button>
                 </Tooltip>
               </div>
               <div className="input-group">
                 {/*TODO: add voice search here*/}
-                <SaleFind
+                <RefundOrder
                   icon={faReply}
                   title="Refund"
                   variant="danger"
-                  onSuccess={refundOrder}
-                  onError={() => {
-                    notify({
-                      title: "Not found",
-                      description: "Order not found",
-                      type: "error",
-                      placement: "top",
-                    });
-                  }}
+                  paymentTypesList={paymentTypesList.list}
                   displayLabel
                 />
                 <SaleFind
@@ -843,7 +811,7 @@ export const PosMode = () => {
                         className="search-field mousetrap lg w-72"
                         value={field.value}
                         onChange={field.onChange}
-                        disabled={!!refundingFrom}
+                        disabled={disableEdit}
                       />
                     )}
                     name="q"
@@ -862,7 +830,7 @@ export const PosMode = () => {
                       }
                     }}
                     invisible={true}
-                    disabled={!!refundingFrom}
+                    disabled={disableEdit}
                   />
 
                   <Controller
@@ -874,7 +842,7 @@ export const PosMode = () => {
                         className="w-28 mousetrap lg"
                         value={field.value}
                         onChange={field.onChange}
-                        disabled={!!refundingFrom}
+                        disabled={disableEdit}
                       />
                     )}
                     name="quantity"
@@ -892,7 +860,7 @@ export const PosMode = () => {
                       }
                     }}
                     invisible={true}
-                    disabled={!!refundingFrom}
+                    disabled={disableEdit}
                   />
                 </div>
                 <button type="submit" className="hidden">submit</button>
@@ -910,6 +878,7 @@ export const PosMode = () => {
                   }}
                   value={customerName}
                   ref={customerInputRef}
+                  disabled={disableEdit}
                 />
                   <Shortcut
                     shortcut="f7"
@@ -921,7 +890,7 @@ export const PosMode = () => {
                       }
                     }}
                     invisible={true}
-                    disabled={!!refundingFrom}
+                    disabled={disableEdit}
                   />
                 </>
               )}

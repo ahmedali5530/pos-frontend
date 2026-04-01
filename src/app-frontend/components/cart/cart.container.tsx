@@ -20,10 +20,8 @@ export enum CartItemType {
 }
 
 export const CartContainer: FunctionComponent<CartContainerProps> = ({}) => {
+  const [{added}, setAppState] = useAtom(defaultState);
 
-
-  const [appState, setAppState] = useAtom(defaultState);
-  const {added, cartItemType, cartItem} = appState;
   const onCheckAll = (e: any) => {
     setAppState((prev) => ({
       ...prev,

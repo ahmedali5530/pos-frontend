@@ -227,14 +227,14 @@ export const SaleHistory: FC<Props> = ({}) => {
             <>
               {!info.row.original.returnedFrom && (
                 <>
-                  <Button
+                  {/*<Button
                     variant="danger"
                     className="w-[40px]"
                     onClick={() => refundOrder(info.row.original)}
                     disabled={refunding}
                     title="Refund">
                     <FontAwesomeIcon icon={faBackward}/>
-                  </Button>
+                  </Button>*/}
                   {/*<Button variant="success" className="ml-3 w-[40px]" onClick={() => dispatchOrder(info.row.original)}
                           disabled={dispatching} title="Dispatch">
                     <FontAwesomeIcon icon={faTruck}/>
@@ -432,17 +432,19 @@ export const SaleHistory: FC<Props> = ({}) => {
           variant: item.variant,
           item: item.product,
           taxes: item.taxes,
+          taxIncluded: true
         });
       });
 
       setAppState((prev) => ({
         ...prev,
         added: items,
-        discount: order.discount?.type,
-        tax: order.tax?.type,
-        discountAmount: order.discount?.amount,
+        discount: order?.discount?.type,
+        tax: order?.tax?.type,
+        discountAmount: order?.discount?.amount,
         customer: order?.customer,
-        refundingFrom: order.id
+        refundingFrom: order.id,
+        disableEdit: true
       }));
 
       fetchOrders();

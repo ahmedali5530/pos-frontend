@@ -54,13 +54,21 @@ export interface DefaultStateInterface {
   tax?: Tax;
   coupon?: Coupon;
   customer?: Customer;
-  refundingFrom?: string;
   adjustment: number;
   cartItem?: number;
   cartItemType: string;
   orderId?: string;
   customerName?: string;
   paymentType?: PaymentType;
+  disableEdit?: boolean
+
+  refundingFrom?: string;
+  refundingSourceItems?: {
+    orderItemId: string;
+    quantity: number;
+    originalQuantity: number;
+  }[];
+  refundPaymentType?: PaymentType;
 }
 
 export const defaultState = atomWithStorage<DefaultStateInterface>(

@@ -16,7 +16,7 @@ import { faCheck } from "@fortawesome/free-solid-svg-icons";
 interface Props extends PropsWithChildren {}
 
 export const ApplyDiscount: FC<Props> = ({ children }) => {
-  const [{ added, discount, discountAmount, refundingFrom }, setAppState] = useAtom(defaultState);
+  const [{ added, discount, discountAmount, disableEdit }, setAppState] = useAtom(defaultState);
 
   const [modal, setModal] = useState(false);
   const [askDiscount, setAskDiscount] = useState(false);
@@ -68,14 +68,14 @@ export const ApplyDiscount: FC<Props> = ({ children }) => {
     <>
       <button
         className="block w-full text-left"
-        disabled={added.length === 0 || !!refundingFrom}
+        disabled={added.length === 0 || disableEdit}
         onClick={() => {
           setModal(true);
         }}
         type="button">
         {children || "Discounts"}
         <Shortcut
-          disabled={added.length === 0 || !!refundingFrom}
+          disabled={added.length === 0 || disableEdit}
           shortcut="ctrl+shift+d" handler={() => setModal(true)} />
       </button>
 

@@ -53,6 +53,8 @@ export const CloseSaleInline: FC<Props> = ({
     tax,
     customer,
     refundingFrom,
+    refundingSourceItems,
+    refundPaymentType,
     discountRateType,
     adjustment,
     orderId,
@@ -84,6 +86,14 @@ export const CloseSaleInline: FC<Props> = ({
     5000, 1000, 500, 100, 50, 20, 10, 5, 2, 1,
   ]);
 
+  const availablePaymentTypes = useMemo(() => {
+    if (!refundingFrom) {
+      return paymentTypesList;
+    }
+
+    return paymentTypesList.filter((pt) => pt.type !== "card" && pt.type !== "credit");
+  }, [paymentTypesList, refundingFrom]);
+
 
   const resetFields = () => {
     setAppState((prev) => ({
@@ -103,6 +113,9 @@ export const CloseSaleInline: FC<Props> = ({
       latestVariant: undefined,
 
       refundingFrom: undefined,
+      refundingSourceItems: undefined,
+      refundPaymentType: undefined,
+      disableEdit: false
     }));
 
     if (typeof setSaleModal === 'function') {
@@ -324,6 +337,14 @@ export const CloseSaleInline: FC<Props> = ({
       }
 
       if (paymentsAdded.length === 0) {
+        if (!payment) {
+          notify({
+            type: "error",
+            description: "Select a payment type",
+          });
+          return;
+        }
+
         paymentsAdded = [
           {
             received: values.received,
@@ -477,9 +498,26 @@ export const CloseSaleInline: FC<Props> = ({
       }
 
       if(refundingFrom){
-        await db.merge(toRecordId(refundingFrom), {
-          status: OrderStatus.RETURNED
-        });
+        if (Array.isArray(refundingSourceItems) && refundingSourceItems.length > 0) {
+          for (const source of refundingSourceItems) {
+            if (Number(source.quantity) >= Number(source.originalQuantity)) {
+              await db.merge(toRecordId(source.orderItemId), {
+                is_returned: true
+              });
+            }
+          }
+        }
+
+        const [refundingOrderRows] = await db.query(
+          `SELECT * FROM ONLY ${toRecordId(refundingFrom)} FETCH items`
+        );
+        const refundingOrder = refundingOrderRows;
+        if (refundingOrder?.items?.length > 0) {
+          const hasUnreturnedItems = refundingOrder.items.some((item: any) => !item.is_deleted && !item.is_returned);
+          await db.merge(toRecordId(refundingFrom), {
+            status: hasUnreturnedItems ? OrderStatus.COMPLETED : OrderStatus.RETURNED
+          });
+        }
       }
 
       resetFields();
@@ -555,24 +593,38 @@ export const CloseSaleInline: FC<Props> = ({
 
   useEffect(() => {
     if (payment === undefined) {
-      //check for default payment
-      if (defaultPaymentType) {
-        setPayment(defaultPaymentType);
+      if (refundingFrom) {
+        if (refundPaymentType && availablePaymentTypes.some((item) => item.id === refundPaymentType.id)) {
+          setPayment(refundPaymentType);
+        } else if (availablePaymentTypes.length > 0) {
+          setPayment(availablePaymentTypes[0]);
+        }
       } else {
-        if (paymentTypesList.length > 0) {
-          setPayment(paymentTypesList[0]);
+        //check for default payment
+        if (defaultPaymentType && availablePaymentTypes.some((item) => item.id === defaultPaymentType.id)) {
+          setPayment(defaultPaymentType);
+        } else if (availablePaymentTypes.length > 0) {
+          setPayment(availablePaymentTypes[0]);
         }
       }
+    } else if (!availablePaymentTypes.some((item) => item.id === payment.id)) {
+      setPayment(availablePaymentTypes[0]);
     }
-  }, [paymentTypesList, payment, saleModal]);
+  }, [availablePaymentTypes, defaultPaymentType, payment, refundPaymentType, refundingFrom, saleModal]);
 
   useEffect(() => {
     if (payments.length === 0 && saleModal) {
-      if (defaultPaymentType) {
+      if (refundingFrom) {
+        if (refundPaymentType && availablePaymentTypes.some((item) => item.id === refundPaymentType.id)) {
+          addSplitPayment(ft, refundPaymentType);
+        } else if (availablePaymentTypes.length > 0) {
+          addSplitPayment(ft, availablePaymentTypes[0]);
+        }
+      } else if (defaultPaymentType) {
         addSplitPayment(ft, defaultPaymentType);
       }
     }
-  }, [saleModal]);
+  }, [saleModal, payments.length, ft, refundingFrom, refundPaymentType, availablePaymentTypes, defaultPaymentType]);
 
   const received = useMemo(() => {
     return Number(
@@ -648,6 +700,14 @@ export const CloseSaleInline: FC<Props> = ({
   );
 
   const addSplitPayment = (amount: number, payment?: PaymentType) => {
+    if (!payment) {
+      notify({
+        type: "error",
+        description: "Select a payment type",
+      });
+      return false;
+    }
+
     if (amount === 0) {
       notify({
         type: "error",
@@ -843,7 +903,7 @@ export const CloseSaleInline: FC<Props> = ({
             horizontal
             className="scroll-container flex gap-3 mb-3 py-3"
             vertical={false}>
-            {paymentTypesList.map((pt, index) => {
+            {availablePaymentTypes.map((pt, index) => {
               return (
                 <Button
                   key={index}

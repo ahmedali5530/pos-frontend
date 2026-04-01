@@ -20,7 +20,7 @@ interface CartControlsProps {
 
 export const CartControls = ({ containerRef }: CartControlsProps) => {
   const [appState, setAppState] = useAtom(defaultState);
-  const { added, refundingFrom } = appState;
+  const { added, disableEdit, refundingFrom } = appState;
   const db = useDB();
 
   const checkedCartItems = useMemo(() => {

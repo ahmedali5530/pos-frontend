@@ -42,7 +42,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
   const [isLoading, setLoading] = useState(false);
   const [itemInfo, setItemInfo] = useState<ItemInfo>();
   const [appState, setAppState] = useAtom(defaultState);
-  const {cartItemType, cartItem, refundingFrom} = appState;
+  const {cartItemType, cartItem, disableEdit, refundingFrom} = appState;
   const taxTotal = useMemo(() => {
     return item.taxes.reduce(
       (prev, tax) => prev + (tax.rate * item.price) / 100,
@@ -187,6 +187,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
                 }));
               }}
               ref={qtyRef}
+              disabled={disableEdit}
             />
             {/*<Button
               tabIndex={-1}
@@ -215,6 +216,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
               cartItemType: CartItemType.discount
             }))
           }}
+          disabled={disableEdit}
         />
       </div>
       <div className="table-cell p-2 text-center">
