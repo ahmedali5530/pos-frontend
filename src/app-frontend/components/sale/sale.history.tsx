@@ -44,7 +44,6 @@ import useApi from "../../../api/db/use.api";
 import {useDB} from "../../../api/db/db";
 import {toRecordId} from "../../../api/model/common";
 import {useQueryBuilder} from "../../../api/db/query-builder";
-import {useCustomer} from "../../../api/hooks/use.customer";
 
 interface Props {
 }
@@ -58,7 +57,6 @@ export const SaleHistory: FC<Props> = ({}) => {
   const {store} = appSt;
 
   const [modal, setModal] = useState(false);
-  // const [list, setList] = useState<Order[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const startTime = DateTime.now()
     .minus({day: 1})
@@ -101,7 +99,6 @@ export const SaleHistory: FC<Props> = ({}) => {
   }, [data]);
 
   const columnHelper = createColumnHelper<Order>();
-  const customerHook = useCustomer();
 
   const columns = [
     columnHelper.accessor("order_id", {
@@ -686,6 +683,7 @@ export const SaleHistory: FC<Props> = ({}) => {
   const {handleSubmit, reset, control} = useForm();
 
   const [areChartsOpen, setChartsOpen] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
 
   const searchSale = async (values: any) => {
     resetFilters();
@@ -731,7 +729,7 @@ export const SaleHistory: FC<Props> = ({}) => {
 
   return (
     <>
-      <Tooltip title="Sale lookup">
+      <Tooltip title="Sale history">
         <Button
           variant="primary"
           size="lg"
@@ -976,6 +974,72 @@ export const SaleHistory: FC<Props> = ({}) => {
                         }}
                       />
                     </div>
+                  </div>
+                </div>
+              )}
+
+              <h3
+                className="mb-3 text-lg cursor-pointer"
+                onClick={() => setSummaryOpen(!summaryOpen)}>
+                Summary{" "}
+                {summaryOpen ? (
+                  <FontAwesomeIcon icon={faChevronDown}/>
+                ) : (
+                  <FontAwesomeIcon icon={faChevronRight}/>
+                )}
+              </h3>
+              {summaryOpen && (
+                <div className="mb-5 grid md:grid-cols-4 gap-4">
+                  <div className="bg-neutral-50 p-3">
+                    <h4>Payment types</h4>
+
+                    <table className="table table-sm table-hover">
+                      {Object.keys(payments).map((item) => (
+                        <tr>
+                          <th>{item}</th>
+                          <td>{withCurrency(payments[item])}</td>
+                        </tr>
+                      ))}
+                    </table>
+                  </div>
+
+                  <div className="bg-neutral-50 p-3">
+                    <h4>Stores</h4>
+
+                    <table className="table table-sm table-hover">
+                      {Object.values(storesChartData).map((item) => (
+                        <tr>
+                          <th>{item.id}</th>
+                          <td>{withCurrency(item.value)}</td>
+                        </tr>
+                      ))}
+                    </table>
+                  </div>
+
+                  <div className="bg-neutral-50 p-3">
+                    <h4>Terminals</h4>
+
+                    <table className="table table-sm table-hover">
+                      {Object.values(terminalsChartData).map((item) => (
+                        <tr>
+                          <th>{item.id}</th>
+                          <td>{withCurrency(item.value)}</td>
+                        </tr>
+                      ))}
+                    </table>
+                  </div>
+
+                  <div className="bg-neutral-50 p-3">
+                    <h4>Customers</h4>
+
+                    <table className="table table-sm table-hover">
+                      {Object.values(customerChartData).map((item) => (
+                        <tr>
+                          <th>{item.id}</th>
+                          <td>{withCurrency(item.value)}</td>
+                        </tr>
+                      ))}
+                    </table>
                   </div>
                 </div>
               )}

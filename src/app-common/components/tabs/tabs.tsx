@@ -1,15 +1,6 @@
-import {
-  ButtonHTMLAttributes,
-  FunctionComponent,
-  PropsWithChildren,
-  ReactElement,
-  useCallback,
-  useState,
-} from "react";
+import {ButtonHTMLAttributes, FunctionComponent, PropsWithChildren, ReactElement, useCallback, useState,} from "react";
 import classNames from "classnames";
 import ScrollContainer from "react-indiana-drag-scroll";
-import {Button} from "../input/button";
-import {boolean, string} from "yup";
 
 export interface TabControlState {
   activeTab: string;
@@ -116,7 +107,7 @@ interface TabContentProps extends PropsWithChildren {
 
 export const TabContent = (props: TabContentProps) => {
   if (!props.isActive && !props.holdState) {
-    return <></>;
+    return null;
   }
 
   return (

@@ -8,6 +8,7 @@ import { Shortcuts } from "../shortcuts";
 import {Customers} from "../customers/customers";
 import {useAtom} from "jotai";
 import {appState} from "../../../store/jotai";
+import {Settings} from "../settings/settings";
 
 export const Footer = () => {
   const [{user}] = useAtom(appState);
@@ -24,6 +25,7 @@ export const Footer = () => {
         </>
       )}
 
+      <Settings />
       <SaleHistory />
       <SaleClosing />
       <span className="w-[2px] bg-gray-500 h-full"></span>

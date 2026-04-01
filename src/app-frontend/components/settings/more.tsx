@@ -1,6 +1,4 @@
 import React, {FC, useState} from "react";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCog} from "@fortawesome/free-solid-svg-icons";
 import {Button} from "../../../app-common/components/input/button";
 import {Modal} from "../../../app-common/components/modal/modal";
 import {Tab, TabContent, TabControl, TabNav,} from "../../../app-common/components/tabs/tabs";
@@ -16,7 +14,6 @@ import {Categories} from "./categories/categories";
 import {Brands} from "./brands/brands";
 import {useMediaQuery} from "react-responsive";
 import {message as AntMessage, Tooltip} from "antd";
-import {GeneralSetting} from "./general/general";
 import {Printers} from "./printers";
 import {PrintSettings} from "./prints";
 
@@ -24,11 +21,8 @@ interface Props {
 }
 
 export const More: FC<Props> = ({}) => {
-
   const [modal, setModal] = useState(false);
-
   const [, contextHolder] = AntMessage.useMessage();
-
 
   const isMobile = useMediaQuery({
     query: "(max-width: 1224px)",
@@ -36,10 +30,6 @@ export const More: FC<Props> = ({}) => {
 
   const sidebarItems = [
     {
-      key: 'general',
-      title: 'General',
-      component: <GeneralSetting/>
-    }, {
       key: 'stores',
       title: 'Stores',
       component: <Stores/>
@@ -64,11 +54,6 @@ export const More: FC<Props> = ({}) => {
       title: 'Items list',
       component: <Items/>
     },
-    // {
-    //   key: 'barcodes',
-    //   title: 'Barcodes',
-    //   component: <DynamicBarcodes />
-    // },
     {
       key: 'payments',
       title: 'Payment types',
@@ -99,16 +84,16 @@ export const More: FC<Props> = ({}) => {
   return (
     <>
       {contextHolder}
-      <Tooltip title="Settings">
+      <Tooltip title="Control panel">
         <Button
-          variant="secondary"
-          iconButton
+          variant="primary"
           size="lg"
           onClick={() => {
             setModal(true);
           }}
-          tabIndex={-1}>
-          <FontAwesomeIcon icon={faCog}/>
+          tabIndex={-1}
+        >
+          Control panel
         </Button>
       </Tooltip>
 
@@ -118,11 +103,11 @@ export const More: FC<Props> = ({}) => {
           onClose={() => {
             setModal(false);
           }}
-          title="Settings"
+          title="Control panel"
           size="full"
           transparentContainer={false}>
           <TabControl
-            defaultTab="general"
+            defaultTab="stores"
             position={isMobile ? "top" : "left"}
             render={({isTabActive, setActiveTab}) => (
               <>
@@ -137,7 +122,11 @@ export const More: FC<Props> = ({}) => {
                   ))}
                 </TabNav>
                 {sidebarItems.map(item => (
-                  <TabContent key={item.key} isActive={isTabActive(item.key)}>
+                  <TabContent
+                    holdState={false}
+                    key={item.key}
+                    isActive={isTabActive(item.key)}
+                  >
                     {item.component}
                   </TabContent>
                 ))}
