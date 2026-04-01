@@ -30,7 +30,8 @@ interface CreatePaymentTypeProps {
 const ValidationSchema = yup.object({
   name: yup.string().required(ValidationMessage.Required),
   type: yup.object().required(ValidationMessage.Required),
-  stores: yup.array().required(ValidationMessage.Required)
+  stores: yup.array().required(ValidationMessage.Required),
+  priority: yup.string().nullable().optional()
 });
 
 export const CreatePaymentType: FC<CreatePaymentTypeProps> = ({
@@ -61,7 +62,8 @@ export const CreatePaymentType: FC<CreatePaymentTypeProps> = ({
             label: item.name,
             value: item['id'].toString()
           }
-        })
+        }),
+        priority: entity.priority
       });
     }
   }, [entity]);
@@ -76,6 +78,10 @@ export const CreatePaymentType: FC<CreatePaymentTypeProps> = ({
 
       if (values.stores) {
         values.stores = values.stores.map((item: ReactSelectOptionProps) => new StringRecordId(item.value));
+      }
+
+      if(values.priority){
+        values.priority = Number(values.priority);
       }
 
       if (entity?.id) {
@@ -193,6 +199,13 @@ export const CreatePaymentType: FC<CreatePaymentTypeProps> = ({
             />
             {getErrors(errors.can_have_change_due)}
           </div>
+
+          <div>
+            <label htmlFor="priority">Priority</label>
+            <Input {...register('priority')} id="priority" className="w-full" hasError={hasErrors(errors.priority)}/>
+            {getErrors(errors.priority)}
+          </div>
+
           <StoresInput control={control} errors={errors}/>
 
           <div>

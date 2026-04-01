@@ -19,7 +19,6 @@ export const PaymentTypes = () => {
   const [operation, setOperation] = useState("create");
 
   const [appSt] = useAtom(appState);
-  const {user, store} = appSt;
 
   const db = useDB();
 
@@ -41,7 +40,10 @@ export const PaymentTypes = () => {
     columnHelper.accessor("type", {
       header: "Type",
     }),
-    columnHelper.accessor("canHaveChangeDue", {
+    columnHelper.accessor("priority", {
+      header: "Priority",
+    }),
+    columnHelper.accessor("can_have_change_due", {
       header: "Can accept amount greater then total?",
       cell: (info) => (info.getValue() ? "Yes" : "No"),
       enableColumnFilter: false,

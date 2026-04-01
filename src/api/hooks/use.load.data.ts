@@ -141,7 +141,7 @@ export const useLoadData = (): [ReturnState, ReturnAction] => {
       }));
 
       try {
-        const [paymentTypes] = await db.query<PaymentType[]>(`SELECT * FROM ${Tables.payment}`);
+        const [paymentTypes] = await db.query<PaymentType[]>(`SELECT * FROM ${Tables.payment} order by priority`);
 
         setPaymentTypesList({list: paymentTypes});
         await localforage.setItem('paymentTypesList', {list: paymentTypes});
