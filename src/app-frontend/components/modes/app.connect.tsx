@@ -57,8 +57,17 @@ export const AppConnect = () => {
       }
     };
 
-    // Set up live query
-    runLiveQuery();
+    if(appConnected) {
+      // Set up live query
+      runLiveQuery();
+    }
+
+    if(!appConnected){
+      isMounted = false;
+      if (queryId) {
+        db.db.kill(queryId).catch(console.error);
+      }
+    }
 
     return () => {
       isMounted = false;
@@ -66,7 +75,7 @@ export const AppConnect = () => {
         db.db.kill(queryId).catch(console.error);
       }
     };
-  }, []);
+  }, [appConnected]);
 
   const removeApp = async () => {
     await db.query(`DELETE ${Tables.app_connection} where user = $user and store = $store and terminal = $terminal`, {
