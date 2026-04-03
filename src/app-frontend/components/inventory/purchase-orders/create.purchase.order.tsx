@@ -88,15 +88,29 @@ export const CreatePurchaseOrder: FunctionComponent<CreatePurchaseOrderProps> = 
   const [modal, setModal] = useState(false);
   const [supplierModal, setSupplierModal] = useState(false);
 
+  const fetchNextInvoiceNumber = async () => {
+    const [rows] = await db.query(`SELECT math::max(<int>po_number) as max_value FROM ${Tables.purchase_order} GROUP ALL`);
+    return Number(rows?.[0]?.max_value || 0) + 1;
+  };
+
   useEffect(() => {
     setModal(showModal);
     if (showModal) {
-      setTimeout(() => {
-        loadSuppliers();
-        loadProducts();
-      }, 300);
+      (async () => {
+        await loadSuppliers();
+        await loadProducts();
+
+        if(operation === 'create'){
+          const newId = await fetchNextInvoiceNumber();
+
+          reset({
+            po_number: newId,
+            created_at: DateTime.now().toFormat("yyyy-MM-dd'T'HH:mm")
+          });
+        }
+      })();
     }
-  }, [showModal]);
+  }, [showModal, operation]);
 
   useEffect(() => {
     if (purchaseOrder) {

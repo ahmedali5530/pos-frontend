@@ -1,7 +1,7 @@
 import React, {FC, useCallback, useEffect, useMemo, useState} from 'react';
 import {Input} from "../../../../app-common/components/input/input";
 import {Trans} from "react-i18next";
-import {Controller, useFieldArray, useForm, UseFormRegister} from "react-hook-form";
+import {Controller, useFieldArray, useForm, UseFormRegister, useWatch} from "react-hook-form";
 import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
 import {ITEM_FETCHES, Product} from "../../../../api/model/product";
 import {PurchaseOrder} from "../../../../api/model/purchase.order";
@@ -32,6 +32,7 @@ import useApi, {SettingsData} from "../../../../api/db/use.api";
 import {Tables} from "../../../../api/db/tables";
 import {useDB} from "../../../../api/db/db";
 import {toRecordId} from "../../../../api/model/common";
+import {Category} from "../../../../api/model/category";
 
 export interface SelectedItem {
   item: Product;
@@ -114,22 +115,79 @@ export const CreatePurchase: FC<PurchaseProps> = ({
     isFetching: loadingPaymentTypes
   } = useApi<SettingsData<PaymentType>>(Tables.payment, [`stores ?= ${store?.id}`]);
 
+  const {
+    data: categories,
+    isFetching: loadingCategories
+  } = useApi<SettingsData<Category>>(Tables.category, [`stores ?= ${store?.id}`]);
+
   const [modal, setModal] = useState(false);
+  const supplier = useWatch({
+    name: 'supplier',
+    control: control
+  });
+
+  const category = useWatch({
+    name: 'category',
+    control: control
+  });
 
   const itemsList = useMemo(() => {
-    return items?.data || [];
-  }, [items, watch('supplier')]);
+    let list = items?.data || [];
+    if(supplier){
+      list = list.filter((item) => {
+        if (!item?.suppliers?.length) {
+          return false;
+        }
+
+        return item.suppliers.some((productSupplier) => {
+          return productSupplier?.id?.toString() === supplier?.value?.toString();
+        });
+      });
+    }
+
+    if(category){
+      list = list.filter((item) => {
+        if (!item?.categories?.length) {
+          return false;
+        }
+
+        return item.categories.some((productCategory) => {
+          return productCategory?.id?.toString() === category?.value?.toString();
+        });
+      });
+    }
+
+    return list;
+  }, [items, supplier, category]);
 
   useEffect(() => {
     setModal(addModal);
     // load on modal open
     if (addModal) {
-      loadPurchaseOrders();
-      loadSuppliers();
-      loadProducts();
-      loadPaymentTypes();
+      (async () => {
+        await loadPurchaseOrders();
+        await loadSuppliers();
+        await loadProducts();
+        await loadPaymentTypes();
+
+        if(operation === 'create'){
+          const newId = await fetchNextInvoiceNumber();
+
+          reset({
+            purchase_number: newId,
+            created_at: DateTime.now().toFormat("yyyy-MM-dd'T'HH:mm")
+          });
+        }
+      })();
+
+
     }
-  }, [addModal]);
+  }, [addModal, operation]);
+
+  const fetchNextInvoiceNumber = async () => {
+    const [rows] = await db.query(`SELECT math::max(<int>purchase_number) as max_value FROM ${Tables.purchase} GROUP ALL`);
+    return Number(rows?.[0]?.max_value || 0) + 1;
+  };
 
   useEffect(() => {
     if (purchase) {
@@ -448,7 +506,6 @@ export const CreatePurchase: FC<PurchaseProps> = ({
       onModalClose();
 
     } catch (exception) {
-      console.error(exception)
       if (exception instanceof HttpException) {
         if (exception.message) {
           notify({
@@ -482,22 +539,6 @@ export const CreatePurchase: FC<PurchaseProps> = ({
       setCreating(false);
     }
   }
-
-  const resetForm = () => {
-    // reset({
-    //   store: null,
-    //   items: [],
-    //   created_at: null,
-    //   supplier: null,
-    //   purchase_order: null,
-    //   purchase_number: null,
-    //   payment_type: null,
-    //   purchase_mode: {
-    //     label: 'Items list',
-    //     value: 'Items list'
-    //   },
-    // });
-  };
 
   const purchase_mode = watch('purchase_mode');
 
@@ -607,7 +648,6 @@ export const CreatePurchase: FC<PurchaseProps> = ({
   const onModalClose = () => {
     setModal(false);
     onClose && onClose();
-    resetForm();
   }
 
   return (
@@ -657,110 +697,144 @@ export const CreatePurchase: FC<PurchaseProps> = ({
 
               {getErrors(errors.purchase_mode)}
             </div>
-            {poMode ? (
-              <div>
-                <label htmlFor="purchase_order">Select a Purchase Order</label>
-                <Controller
-                  render={(props) => (
-                    <div className="input-group">
-                      <ReactSelect
-                        onChange={(value) => {
-                          props.field.onChange(value);
-                          onPurchaseOrderChange(value);
-                        }}
-                        value={props.field.value}
-                        options={purchase_orders?.data?.filter(item => !item.isUsed).map((item) => {
-                          return {
-                            label: `${item.po_number} - ${item?.supplier?.name}`,
-                            value: item['id'],
-                            items: item.items
-                          }
-                        })}
-                        id="purchase_order"
-                        className={
-                          classNames(
-                            "rs-__container flex-grow",
-                            getErrorClass(errors.purchase_order)
-                          )
-                        }
-                        isClearable={true}
-                        isLoading={loadingPurchaseOrder}
-                      />
-                      <button className="btn btn-primary" type="button" onClick={() => setPurchaseOrderModal(true)}>
-                        <FontAwesomeIcon icon={faPlus}/>
-                      </button>
-                    </div>
-                  )}
-                  name="purchase_order"
-                  control={control}
-                />
-
-                {getErrors(errors.purchase_order)}
-              </div>
-            ) : (
-              <>
+            <div className="col-span-full grid grid-cols-4 gap-4">
+              {poMode ? (
                 <div>
-                  <label htmlFor="supplier">Select a supplier</label>
+                  <label htmlFor="purchase_order">Select a Purchase Order</label>
                   <Controller
                     render={(props) => (
                       <div className="input-group">
                         <ReactSelect
-                          onChange={props.field.onChange}
+                          onChange={(value) => {
+                            props.field.onChange(value);
+                            onPurchaseOrderChange(value);
+                          }}
                           value={props.field.value}
-                          options={suppliers?.data?.map(item => {
+                          options={purchase_orders?.data?.filter(item => !item.isUsed).map((item) => {
                             return {
-                              label: item.name,
-                              value: item["id"]
+                              label: `${item.po_number} - ${item?.supplier?.name}`,
+                              value: item['id'],
+                              items: item.items
                             }
                           })}
-                          id="supplier"
-                          isClearable={true}
+                          id="purchase_order"
                           className={
                             classNames(
-                              "flex-grow rs-__container",
-                              getErrorClass(errors.supplier)
+                              "rs-__container flex-grow",
+                              getErrorClass(errors.purchase_order)
                             )
                           }
-                          isLoading={loadingSuppliers}
+                          isClearable={true}
+                          isLoading={loadingPurchaseOrder}
                         />
-                        <button className="btn btn-primary" type="button" onClick={() => setSupplierModal(true)}>
+                        <button className="btn btn-primary" type="button" onClick={() => setPurchaseOrderModal(true)}>
                           <FontAwesomeIcon icon={faPlus}/>
                         </button>
                       </div>
                     )}
-                    name="supplier"
+                    name="purchase_order"
                     control={control}
                   />
 
-                  {getErrors(errors.supplier)}
+                  {getErrors(errors.purchase_order)}
                 </div>
-                <div>
-                  <label htmlFor="items">Select items</label>
-                  <div className="input-group">
-                    <ReactSelect
-                      onChange={(value) => {
-                        if (value) {
-                          addSelectedItem(value.value);
-                        }
-                      }}
-                      options={itemsList.map(item => {
-                        return {
-                          label: item.name,
-                          value: item.id.toString()
-                        }
-                      })}
-                      id="items"
-                      closeMenuOnSelect={false}
-                      className="rs-__container flex-grow"
-                      isLoading={loadingProducts}
+              ) : (
+                <>
+                  <div>
+                    <label htmlFor="supplier">Select a supplier</label>
+                    <Controller
+                      render={(props) => (
+                        <div className="input-group">
+                          <ReactSelect
+                            onChange={props.field.onChange}
+                            value={props.field.value}
+                            options={suppliers?.data?.map(item => {
+                              return {
+                                label: item.name,
+                                value: item["id"]
+                              }
+                            })}
+                            id="supplier"
+                            isClearable={true}
+                            className={
+                              classNames(
+                                "flex-grow rs-__container",
+                                getErrorClass(errors.supplier)
+                              )
+                            }
+                            isLoading={loadingSuppliers}
+                          />
+                          <button className="btn btn-primary" type="button" onClick={() => setSupplierModal(true)}>
+                            <FontAwesomeIcon icon={faPlus}/>
+                          </button>
+                        </div>
+                      )}
+                      name="supplier"
+                      control={control}
                     />
-                    <button className="btn btn-primary" type="button" onClick={() => setItemsModal(true)}>
-                      <FontAwesomeIcon icon={faPlus}/>
-                    </button>
+
+                    {getErrors(errors.supplier)}
                   </div>
-                </div>
-              </>
-            )}
+                  <div>
+                    <label htmlFor="category">Select a category</label>
+                    <Controller
+                      render={(props) => (
+                        <div className="input-group">
+                          <ReactSelect
+                            onChange={props.field.onChange}
+                            value={props.field.value}
+                            options={categories?.data?.map(item => {
+                              return {
+                                label: item.name,
+                                value: item["id"]
+                              }
+                            })}
+                            id="category"
+                            isClearable={true}
+                            className={
+                              classNames(
+                                "flex-grow rs-__container",
+                                getErrorClass(errors.category)
+                              )
+                            }
+                            isLoading={loadingCategories}
+                          />
+                        </div>
+                      )}
+                      name="category"
+                      control={control}
+                    />
+
+                    {getErrors(errors.category)}
+                  </div>
+                  <div>
+                    <label htmlFor="items">Select items</label>
+                    <div className="input-group">
+                      <ReactSelect
+                        onChange={(value) => {
+                          if (value) {
+                            addSelectedItem(value.value);
+                          }
+                        }}
+                        options={itemsList.map(item => {
+                          return {
+                            label: item.name,
+                            value: item.id.toString()
+                          }
+                        })}
+                        id="items"
+                        closeMenuOnSelect={false}
+                        className="rs-__container flex-grow"
+                        isLoading={loadingProducts}
+                      />
+                      <button className="btn btn-primary" type="button" onClick={() => setItemsModal(true)}>
+                        <FontAwesomeIcon icon={faPlus}/>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
             <div className="col-span-full"></div>
             <div>
               <Controller
@@ -809,10 +883,11 @@ export const CreatePurchase: FC<PurchaseProps> = ({
             <div className={
               classNames(
                 "grid gap-3 mb-3",
-                po ? 'grid-cols-7' : 'grid-cols-6'
+                po ? 'grid-cols-7' : 'grid-cols-7'
               )
             }>
               <div className="font-bold">Item</div>
+              <div className="font-bold">Category</div>
               {po && <div className="font-bold">Quantity requested</div>}
               <div className="font-bold">Quantity</div>
               <div className="font-bold">Unit Cost</div>
@@ -836,10 +911,11 @@ export const CreatePurchase: FC<PurchaseProps> = ({
             <div className={
               classNames(
                 "grid gap-3",
-                po ? 'grid-cols-7' : 'grid-cols-6'
+                po ? 'grid-cols-7' : 'grid-cols-7'
               )
             }>
               <div className="p-3 bg-gray-200 font-bold">{fields.length}</div>
+              <div></div>
               {po && <div className="p-3 bg-gray-200 font-bold">{totalQuantityRequested}</div>}
               <div className="p-3 bg-gray-200 font-bold">{totalQuantity}</div>
               <div></div>
@@ -879,32 +955,40 @@ export const CreatePurchase: FC<PurchaseProps> = ({
         </form>
       </Modal>
 
-      <CreateSupplier
-        operation={'create'}
-        showModal={supplierModal}
-        onClose={() => {
-          loadSuppliers();
-          setSupplierModal(false);
-        }}
-      />
+      {supplierModal && (
+        <CreateSupplier
+          operation={'create'}
+          showModal={true}
+          onClose={() => {
+            loadSuppliers();
+            setSupplierModal(false);
+          }}
+        />
+      )}
 
-      <CreateItem
-        addModal={itemsModal}
-        operation="create"
-        onClose={() => {
-          loadProducts();
-          setItemsModal(false);
-        }}
-      />
 
-      <CreatePurchaseOrder
-        operation={'create'}
-        onClose={() => {
-          loadPurchaseOrders();
-          setPurchaseOrderModal(false);
-        }}
-        showModal={purchaseOrderModal}
-      />
+      {itemsModal && (
+        <CreateItem
+          addModal={true}
+          operation="create"
+          onClose={() => {
+            loadProducts();
+            setItemsModal(false);
+          }}
+        />
+      )}
+
+      {purchaseOrderModal && (
+        <CreatePurchaseOrder
+          operation={'create'}
+          onClose={() => {
+            loadPurchaseOrders();
+            setPurchaseOrderModal(false);
+          }}
+          showModal={true}
+        />
+      )}
+
     </>
   );
 }
@@ -932,7 +1016,7 @@ const ItemRow: FC<ItemRowProps> = ({
       <div className={
         classNames(
           "grid hover:bg-gray-100 gap-3 mb-3",
-          po ? 'grid-cols-7' : 'grid-cols-6'
+          po ? 'grid-cols-7' : 'grid-cols-7'
         )
       }>
         <div className="inline-flex items-center">
@@ -946,6 +1030,9 @@ const ItemRow: FC<ItemRowProps> = ({
             </button>
           )}
           {item.item.name}
+        </div>
+        <div>
+          {item.item.categories?.map(a => a.name).join(', ')}
         </div>
         {po && (
           <Input
@@ -1053,7 +1140,6 @@ const ItemRow: FC<ItemRowProps> = ({
                     </button>
                   </ConfirmAlert>
                 )}
-
               </div>
             </div>
           ))}
