@@ -62,7 +62,7 @@ export const SaleCategories: FC<SaleCategoriesProps> = ({
         >
           {children || 'Categories'}
           {Object.values(categories).length > 0 && (
-            <span className="shrink-0 ml-1 bg-primary-500 text-white h-5 w-5 rounded-full text-sm font-bold">{Object.values(categories).length}</span>
+            <span className="inline-block shrink-0 ml-1 bg-primary-500 text-white h-5 w-5 rounded-full text-sm font-bold">{Object.values(categories).length}</span>
           )}
         </Button>
       </Tooltip>

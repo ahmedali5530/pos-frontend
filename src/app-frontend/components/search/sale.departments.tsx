@@ -34,7 +34,9 @@ export const SaleDepartments: FC<SaleDepartmentsProps> = ({
   };
 
   useEffect(() => {
-    loadDepartmentsList();
+    if(modal) {
+      loadDepartmentsList();
+    }
   }, [modal]);
 
   const addRemoveDepartment = (department: Department) => {
@@ -62,7 +64,7 @@ export const SaleDepartments: FC<SaleDepartmentsProps> = ({
         >
           {children || 'Departments'}
           {Object.values(departments).length > 0 && (
-            <span className="shrink-0 ml-1 bg-primary-500 text-white h-5 w-5 rounded-full text-sm font-bold">{Object.values(departments).length}</span>
+            <span className="inline-block shrink-0 ml-1 bg-primary-500 text-white h-5 w-5 rounded-full text-sm font-bold">{Object.values(departments).length}</span>
           )}
         </Button>
       </Tooltip>
