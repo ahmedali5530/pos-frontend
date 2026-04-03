@@ -27,9 +27,10 @@ interface SearchTableProps {
 
 export const SearchTable = (props: SearchTableProps) => {
   const {items: allItems, addItem} = props;
+
   const [searchParams, setSearchParams] = useState({
-    ignoreLocation: true,
-    threshold: 0.2,
+    ignoreLocation: false,
+    threshold: 0.5,
     caseSensitive: false,
   });
 
@@ -48,34 +49,24 @@ export const SearchTable = (props: SearchTableProps) => {
   const [appSettings, setAppSettings] = useAtom(defaultData);
   const {searchBox} = appSettings;
 
-
-  const items = useMemo(() => {
+  const filteredItems = useMemo(() => {
     if (q.trim().length === 0) {
       return allItems;
     }
 
     const fuseOptions = {
+      includeMatches: true,
       isCaseSensitive: searchParams.caseSensitive,
-      // includeScore: false,
-      shouldSort: true,
-      // includeMatches: false,
-      findAllMatches: true,
-      // minMatchCharLength: 1,
-      // location: 0,
+      includeScore: true,
       threshold: searchParams.threshold,
-      // distance: 100,
-      useExtendedSearch: true,
       ignoreLocation: searchParams.ignoreLocation,
-      // ignoreFieldNorm: false,
-      // fieldNormWeight: 1,
       keys: ["name", "barcode", "base_price"],
     };
 
     const fuse = new Fuse(allItems, fuseOptions);
 
-    return fuse.search(q).map((item) => item.item);
+    return fuse.search(q.trim()).map((item) => item.item);
   }, [allItems, q, searchParams]);
-
 
   const defaultColumn = React.useMemo(
     () => ({
@@ -109,7 +100,7 @@ export const SearchTable = (props: SearchTableProps) => {
     useTable(
       {
         columns,
-        data: items,
+        data: filteredItems,
         defaultColumn,
       },
       useBlockLayout
@@ -169,12 +160,7 @@ export const SearchTable = (props: SearchTableProps) => {
                 props.onClose();
               }
             }}>
-            <Highlighter
-              highlightClassName="YourHighlightClass"
-              searchWords={[q]}
-              autoEscape={true}
-              textToHighlight={getRealProductPrice(item).toString()}
-            />
+            {getRealProductPrice(item).toString()}
             {item.base_price !== getRealProductPrice(item) && (
               <div className="text-danger-500 font-normal text-sm">
                 <s>{item.base_price}</s>
@@ -184,7 +170,7 @@ export const SearchTable = (props: SearchTableProps) => {
         </div>
       );
     },
-    [prepareRow, rows, quantity, q, selected, items, searchBox]
+    [prepareRow, rows, quantity, q, selected, filteredItems, searchBox]
   );
 
   const [windowHeight, setWindowHeight] = useState(0);
@@ -202,11 +188,10 @@ export const SearchTable = (props: SearchTableProps) => {
 
       moveCursor(event);
     };
-  }, [selected, items, quantity]);
+  }, [selected, filteredItems, quantity]);
 
   const moveCursor = (event: any) => {
-    console.log('listeners in product modeal')
-    const itemsLength = items.length;
+    const itemsLength = filteredItems.length;
     if (event.key === "ArrowDown") {
       setAppState(prev => {
         let newSelected = prev.selected + 1;
@@ -237,7 +222,7 @@ export const SearchTable = (props: SearchTableProps) => {
 
       })
     } else if (event.key === "Enter") {
-      addItem(items[appState.selected], appState.quantity);
+      addItem(filteredItems[appState.selected], appState.quantity);
       if (searchBox) {
         props.onClose();
       }
@@ -245,7 +230,7 @@ export const SearchTable = (props: SearchTableProps) => {
   };
 
   const submitForm = async (values: any) => {
-    const item = items[selected];
+    const item = filteredItems[selected];
 
     addItem(item, Number(values.quantity));
 
@@ -312,14 +297,13 @@ export const SearchTable = (props: SearchTableProps) => {
         <form onSubmit={handleSubmit(submitForm)}>
           <div className="flex gap-3">
             <div className="input-group flex-1">
-              <Input
-                className="search-field w-full mousetrap lg"
+              <input
+                className="input search-field w-full mousetrap lg"
                 onChange={(event) => {
                   setQ(event.currentTarget.value);
                   setAppState(prev => ({
                     ...prev,
                     selected: 0,
-                    q: event.currentTarget.value
                   }));
                 }}
                 autoFocus
@@ -399,7 +383,6 @@ export const SearchTable = (props: SearchTableProps) => {
           </div>
         </div>
       </Modal>
-
 
       {searchBoxModal && (
         <Modal

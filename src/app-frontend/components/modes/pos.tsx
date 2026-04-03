@@ -63,7 +63,7 @@ export const PosMode = () => {
   const [state] = useLoadData();
   const [appState, setAppState] = useAtom(defaultState);
 
-  const [{user, store, terminal}] = useAtom(AppState);
+  const [{user, store, terminal, appConnected}] = useAtom(AppState);
 
   const [appSettings] = useAtom(defaultData);
   const {
@@ -76,7 +76,8 @@ export const PosMode = () => {
     rate,
     customerName,
     disableEdit,
-    cartItemType, cartItem
+    cartItemType, cartItem,
+
   } = appState;
 
   useEffect(() => {
@@ -389,15 +390,7 @@ export const PosMode = () => {
         }],
         latestIndex: prev.added.length - 1,
       };
-    })
-
-    // setAppState((prev) => ({
-    //   ...prev,
-    //   added: oldItems,
-    //   q: "",
-    //   quantity: 1,
-    //   // selected: items.findIndex((i) => i.id === item.id),
-    // }));
+    });
 
     scrollToBottom(containerRef.current);
   };
@@ -516,8 +509,17 @@ export const PosMode = () => {
       }
     };
 
-    // Set up live query
-    runLiveQuery();
+    if(appConnected) {
+      // Set up live query
+      runLiveQuery();
+    }
+
+    if(!appConnected){
+      isMounted = false;
+      if (queryId) {
+        db.db.kill(queryId).catch(console.error);
+      }
+    }
 
     return () => {
       isMounted = false;
@@ -525,7 +527,7 @@ export const PosMode = () => {
         db.db.kill(queryId).catch(console.error);
       }
     };
-  }, []);
+  }, [appConnected]);
 
   useEffect(() => {
     if (added.length === 0) {
