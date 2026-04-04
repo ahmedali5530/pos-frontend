@@ -20,6 +20,10 @@ export const useDB = () => {
       // Perform a custom advanced query
       const result: ActionResult<Record<string, T>>[] = await client.query(sql, parameters);
 
+      if(sql.startsWith('SELECT * FROM order')) {
+        console.trace()
+      }
+
       if (import.meta.env.DEV) {
         console.group('DB Query Debug')
         console.info(sql.trim());

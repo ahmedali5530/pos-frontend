@@ -109,6 +109,7 @@ const PurchaseTable = ({
         <thead>
         <tr>
           <th className="text-left">Item</th>
+          <th className="text-left">Supplier</th>
           {purchase.purchase_order && (
             <th className="text-right">Quantity Requested</th>
           )}
@@ -123,6 +124,7 @@ const PurchaseTable = ({
           <React.Fragment key={index}>
             <tr className="hover:bg-gray-100">
               <td>{item.item.name}</td>
+              <td>{item.supplier?.name || '-'}</td>
               {purchase.purchase_order && (
                 <td className="text-right">{item.quantity_requested} {item.purchase_unit}</td>
               )}
@@ -133,7 +135,7 @@ const PurchaseTable = ({
             </tr>
             {item.variants.length > 0 && (
               <tr>
-                <td colSpan={purchase.purchase_order ? 6 : 5} className="p-5 bg-gray-100">
+                <td colSpan={purchase.purchase_order ? 7 : 6} className="p-5 bg-gray-100">
                   <table className="table table-fixed bg-white">
                     <thead>
                     <tr>
@@ -177,6 +179,7 @@ const PurchaseTable = ({
         <tfoot>
         <tr>
           <th className="text-left">Total</th>
+          <th></th>
           {purchase.purchase_order && (
             <th className="text-right">{totalRequested}</th>
           )}

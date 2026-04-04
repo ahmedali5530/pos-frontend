@@ -175,7 +175,8 @@ export const CreatePurchase: FC<PurchaseProps> = ({
 
           reset({
             purchase_number: newId,
-            created_at: DateTime.now().toFormat("yyyy-MM-dd'T'HH:mm")
+            created_at: DateTime.now().toFormat("yyyy-MM-dd'T'HH:mm"),
+            purchase_mode: {label: 'Items list', value: 'Items list'}
           });
         }
       })();
@@ -219,6 +220,10 @@ export const CreatePurchase: FC<PurchaseProps> = ({
           quantity: purchaseItem.quantity,
           comments: purchaseItem.comments,
           purchase_price: purchaseItem.purchase_price,
+          supplier: purchaseItem.supplier ? {
+            label: purchaseItem.supplier.name,
+            value: purchaseItem.supplier.id
+          } : null,
           variants: purchaseItem.variants.map(variant => ({
             id: variant['id'],
             attribute_value: variant.variant.attribute_value,
@@ -419,7 +424,8 @@ export const CreatePurchase: FC<PurchaseProps> = ({
             purchase_unit: item.purchase_unit,
             quantity: Number(item.quantity),
             quantity_requested: Number(item.quantity_requested),
-            variants: variants
+            variants: variants,
+            supplier: item.supplier ? toRecordId(item.supplier.value) : null
           };
 
           if (item?.id) {
@@ -883,17 +889,20 @@ export const CreatePurchase: FC<PurchaseProps> = ({
             <div className={
               classNames(
                 "grid gap-3 mb-3",
-                po ? 'grid-cols-7' : 'grid-cols-7'
+                po ? 'grid-cols-8' : 'grid-cols-8'
               )
             }>
               <div className="font-bold">Item</div>
               <div className="font-bold">Category</div>
+              <div className="font-bold">Supplier</div>
               {po && <div className="font-bold">Quantity requested</div>}
               <div className="font-bold">Quantity</div>
               <div className="font-bold">Unit Cost</div>
               <div className="font-bold">Total Cost</div>
               <div className="font-bold">Comments</div>
-              <div className="font-bold">Remove?</div>
+              {!po &&
+                <div className="font-bold">Remove?</div>
+              }
             </div>
             {fields.map((item: any, index) => (
               <ItemRow
@@ -906,15 +915,21 @@ export const CreatePurchase: FC<PurchaseProps> = ({
                 lineTotal={lineTotal}
                 variantTotal={variantTotal}
                 removeVariant={removeVariant}
+                globalSupplier={supplier}
+                suppliers={suppliers?.data || []}
+                loadingSuppliers={loadingSuppliers}
+                control={control}
+                setValue={setValue}
               />
             ))}
             <div className={
               classNames(
                 "grid gap-3",
-                po ? 'grid-cols-7' : 'grid-cols-7'
+                po ? 'grid-cols-8' : 'grid-cols-8'
               )
             }>
               <div className="p-3 bg-gray-200 font-bold">{fields.length}</div>
+              <div></div>
               <div></div>
               {po && <div className="p-3 bg-gray-200 font-bold">{totalQuantityRequested}</div>}
               <div className="p-3 bg-gray-200 font-bold">{totalQuantity}</div>
@@ -1004,19 +1019,38 @@ interface ItemRowProps {
   lineTotal: (index: number) => number;
   variantTotal: (index: number, variantIndex: number) => number;
   removeVariant: (index: number, variantIndex: number) => void;
+  globalSupplier: any;
+  suppliers: Supplier[];
+  loadingSuppliers: boolean;
+  control: any;
+  setValue: any;
 }
 
 const ItemRow: FC<ItemRowProps> = ({
-  item, po, register, index, remove, lineTotal, variantTotal, removeVariant
+  item, po, register, index, remove, lineTotal, variantTotal, removeVariant,
+  globalSupplier, suppliers, loadingSuppliers, control, setValue
 }) => {
   const [open, setOpen] = useState(false);
+
+  // Sync global supplier to item-level supplier
+  useEffect(() => {
+    if (globalSupplier) {
+      setValue(`items.${index}.supplier`, {
+        label: globalSupplier.label,
+        value: globalSupplier.value
+      });
+    } else {
+      // Clear item supplier when global supplier is removed
+      setValue(`items.${index}.supplier`, null);
+    }
+  }, [globalSupplier, index, setValue]);
 
   return (
     <React.Fragment key={item.id}>
       <div className={
         classNames(
           "grid hover:bg-gray-100 gap-3 mb-3",
-          po ? 'grid-cols-7' : 'grid-cols-7'
+          po ? 'grid-cols-8' : 'grid-cols-8'
         )
       }>
         <div className="inline-flex items-center">
@@ -1033,6 +1067,27 @@ const ItemRow: FC<ItemRowProps> = ({
         </div>
         <div>
           {item.item.categories?.map(a => a.name).join(', ')}
+        </div>
+        <div>
+          <Controller
+            name={`items.${index}.supplier`}
+            control={control}
+            render={({ field }) => (
+              <ReactSelect
+                onChange={field.onChange}
+                value={field.value}
+                options={suppliers?.map(item => ({
+                  label: item.name,
+                  value: item.id
+                }))}
+                isDisabled={!!globalSupplier}
+                isClearable={!globalSupplier}
+                isLoading={loadingSuppliers}
+                className="w-full"
+                placeholder="Select supplier"
+              />
+            )}
+          />
         </div>
         {po && (
           <Input

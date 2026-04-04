@@ -89,8 +89,8 @@ export const Tab = (props: TabProps) => {
       {...rest}
       type="button"
       className={classNames(
-        "p-3 px-5 flex-shrink-0 text-left rounded-full relative sidebar-btn",
-        isActive ? "text-primary-500 bg-white active border-primary-500" : "text-white border-transparent border-2",
+        "p-3 px-5 flex-shrink-0 text-left rounded-full relative sidebar-btn ",
+        isActive ? "text-primary-500 bg-white active" : "text-white",
         justified ? 'flex flex-1 justify-center' : ''
       )}>
       <span></span>

@@ -22,5 +22,5 @@ export interface Purchase  {
 }
 
 export const PURCHASE_FETCHES = [
-  'purchase_order', 'store', 'supplier', 'payment_type', 'items', 'items.item', 'items.item.variants', 'items.variants', 'items.variants.variant'
+  'purchase_order', 'store', 'supplier', 'payment_type', 'items', 'items.item', 'items.item.variants', 'items.variants', 'items.variants.variant', 'items.supplier'
 ];

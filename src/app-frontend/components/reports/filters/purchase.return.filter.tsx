@@ -1,0 +1,114 @@
+import useApi, {SettingsData} from "../../../../api/db/use.api";
+import {Supplier} from "../../../../api/model/supplier";
+import {Tables} from "../../../../api/db/tables";
+import {User} from "../../../../api/model/user";
+import {Product} from "../../../../api/model/product";
+import {Store} from "../../../../api/model/store";
+import {REPORTS_PURCHASE_RETURN} from "../../../routes/frontend.routes";
+import {DateRange} from "./date.range";
+import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
+import {Button} from "../../../../app-common/components/input/button";
+
+
+const toOption = <T extends { id?: any }>(
+  item: T | undefined,
+  label: string
+) => {
+  if (!item?.id) {
+    return null;
+  }
+
+  const value =
+    typeof item.id === "string" ? item.id : item.id.toString?.() ?? String(item.id);
+
+  return {
+    label,
+    value,
+  };
+};
+
+const notNull = <T,>(value: T | null | undefined): value is T =>
+  value !== null && value !== undefined;
+
+export const PurchaseReturnFilter = () => {
+  const {data: suppliersData, isLoading: loadingSuppliers} = useApi<SettingsData<Supplier>>(Tables.supplier, [], ['name asc'], 0, 9999);
+  const {data: storesData, isLoading: loadingStores} = useApi<SettingsData<Store>>(Tables.store, [], ['name asc'], 0, 9999);
+  const {data: itemsData, isLoading: loadingItems} = useApi<SettingsData<Product>>(Tables.product, [], ['name asc'], 0, 9999);
+  const {data: usersData, isLoading: loadingUsers} = useApi<SettingsData<User>>(Tables.user_account, [], ['display_name asc'], 0, 9999);
+
+  return (
+    <form
+      action={REPORTS_PURCHASE_RETURN}
+      className="flex flex-col gap-4 items-start w-full"
+      target="_blank"
+    >
+      <DateRange isRequired label="Select a range" />
+
+      <div className="w-full flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="purchase-return-suppliers">Suppliers</label>
+          <ReactSelect
+            id="purchase-return-suppliers"
+            name="suppliers[]"
+            isMulti
+            isLoading={loadingSuppliers}
+            className="w-full"
+            options={(suppliersData?.data || [])
+              .map(supplier => toOption(supplier, supplier.name))
+              .filter(notNull)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label htmlFor="purchase-return-stores">Stores</label>
+          <ReactSelect
+            id="purchase-return-stores"
+            name="stores[]"
+            isMulti
+            isLoading={loadingStores}
+            className="w-full"
+            options={(storesData?.data || [])
+              .map(store => toOption(store, store.name))
+              .filter(notNull)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label htmlFor="purchase-return-items">Items</label>
+          <ReactSelect
+            id="purchase-return-items"
+            name="items[]"
+            isMulti
+            isLoading={loadingItems}
+            className="w-full"
+            options={(itemsData?.data || [])
+              .map(item => toOption(item, item.name))
+              .filter(notNull)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label htmlFor="purchase-return-users">Created By</label>
+          <ReactSelect
+            id="purchase-return-users"
+            name="users[]"
+            isMulti
+            isLoading={loadingUsers}
+            className="w-full"
+            options={(usersData?.data || [])
+              .map(user =>
+                toOption(user, user.display_name || 'Unnamed user')
+              )
+              .filter(notNull)}
+          />
+        </div>
+      </div>
+
+      <Button
+        variant="primary"
+        type="submit"
+      >Generate</Button>
+    </form>
+  );
+};
+

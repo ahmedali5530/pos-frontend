@@ -6,8 +6,7 @@ interface Props extends PropsWithChildren {
 
 export const TrapFocus = (props: Props) => {
   const trap = (event: any) => {
-    console.log(props.inputRef?.closest('.modal-container'), props.inputRef)
-    if (document.body.classList.contains("ReactModal__Body--open") && props.inputRef?.closest('.ReactModalPortal')?.length > 0) {
+    if (document.body.classList.contains("ReactModal__Body--open")) {
       return;
     }
 

@@ -38,6 +38,11 @@ export enum Tables {
   purchase = "purchase",
   purchase_item = "purchase_item",
   purchase_item_variant = "purchase_item_variant",
+
+  purchase_return = 'purchase_return',
+  purchase_return_item = 'purchase_return_item',
+  purchase_return_item_variant = 'purchase_return_item_variant',
+
   waste = "waste",
   waste_item = "waste_item",
   waste_item_variant = "waste_item_variant",
