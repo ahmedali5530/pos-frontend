@@ -32,7 +32,10 @@ export const CreateUser: FC<CreateUserProps> = ({
     display_name: yup.string().required(ValidationMessage.Required),
     username: yup.string().required(ValidationMessage.Required),
     email: yup.string().required(ValidationMessage.Required).email(ValidationMessage.Email),
-    roles: yup.array().required(ValidationMessage.Required),
+    roles: yup.object({
+      label: yup.string(),
+      value: yup.string(),
+    }).required(ValidationMessage.Required),
     stores: yup.array().min(1, 'Please add some stores').required(ValidationMessage.Required)
   }
 

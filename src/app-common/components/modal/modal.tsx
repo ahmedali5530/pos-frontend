@@ -85,8 +85,9 @@ export const Modal: FunctionComponent<ModalProps> = ({
           </div>
           <div
             className={classNames(
-              "pb-5 overflow-y-auto modal-container px-5 py-3",
-              "bg-white"
+              "pb-5 modal-container px-5 py-3",
+              "bg-white",
+              props.size === 'full' || props.size === 'bottom-sheet' ? 'overflow-y-auto' : '' // TODO: fix the overflow thing later
             )}>
             {props.children}
           </div>

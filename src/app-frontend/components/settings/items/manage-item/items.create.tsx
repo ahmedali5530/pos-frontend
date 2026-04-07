@@ -46,18 +46,18 @@ interface ItemsCreateProps {
 }
 
 const ValidationSchema = yup.object({
-  department: yup.object().required(ValidationMessage.Required),
-  name: yup.string().required(ValidationMessage.Required),
-  barcode: yup.string().required(ValidationMessage.Required),
-  sale_unit: yup.string().required(ValidationMessage.Required),
-  base_price: yup.string().required(ValidationMessage.Required),
-  purchase_unit: yup.string().required(ValidationMessage.Required),
-  cost: yup.string().required(ValidationMessage.Required),
+  department: yup.object().required('Department is required'),
+  name: yup.string().required('Name is required'),
+  barcode: yup.string().required('Barcode is required'),
+  sale_unit: yup.string().required('Sale unit is required'),
+  base_price: yup.string().required('Sale price is required'),
+  purchase_unit: yup.string().required('Purchase unit is required'),
+  cost: yup.string().required('Cost is required'),
   taxes: yup.array(),
-  stores: yup.array().required(ValidationMessage.Required),
-  categories: yup.array().required(ValidationMessage.Required),
-  suppliers: yup.array().required(ValidationMessage.Required),
-  brands: yup.array().required(ValidationMessage.Required),
+  stores: yup.array().required('Add at-least one store'),
+  categories: yup.array().required('Add at-least one category'),
+  suppliers: yup.array().required('Add at-least one supplier'),
+  brands: yup.array().required('Add at-least one brand'),
   variants: yup.array(yup.object({})).typeError('Please add valid variants'),
 });
 
@@ -429,7 +429,16 @@ export const CreateItem = ({
         title={operation === 'create' ? 'Create item' : 'Update item'}
       >
         {Object.keys(errors).length > 0 && (
-          <div className="alert alert-danger">There are some errors in the form</div>
+          <div className="alert alert-danger">
+            There are some errors in the form
+            <div>
+              <ul className="list-disc ml-5">
+                {Object.values(errors).map(item => (
+                  <li>{item?.message}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
         )}
         <form onSubmit={handleSubmit(createProduct)} className="mb-5">
           <TabControl
@@ -630,7 +639,7 @@ export const CreateItem = ({
                               }
                               isLoading={loadingTerminals}
                             />
-                            <button className="btn btn-primary" type={"button"} onClick={() => setTaxModal(true)}>
+                            <button className="btn btn-primary" type={"button"} onClick={() => setTerminalModal(true)}>
                               <FontAwesomeIcon icon={faPlus}/>
                             </button>
                           </div>
