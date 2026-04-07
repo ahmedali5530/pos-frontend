@@ -53,7 +53,7 @@ export const Items = () => {
       cell: (info) =>
         info
           .getValue()
-          .map((item) => <span key={item.id} className="badge">{item.name}</span>)
+          ?.map((item) => <span key={item.id} className="badge">{item.name}</span>)
     }),
     columnHelper.accessor("suppliers", {
       id: "suppliers.name",
@@ -61,7 +61,7 @@ export const Items = () => {
       cell: (info) =>
         info
           .getValue()
-          .map((item) => <span key={item.id} className="badge">{item.name}</span>)
+          ?.map((item) => <span key={item.id} className="badge">{item.name}</span>)
     }),
     columnHelper.accessor("brands", {
       id: "brands.name",
@@ -69,7 +69,7 @@ export const Items = () => {
       cell: (info) =>
         info
           .getValue()
-          .map((item) => <span key={item.id} className="badge">{item.name}</span>)
+          ?.map((item) => <span key={item.id} className="badge">{item.name}</span>)
     }),
     columnHelper.accessor("variants", {
       header: "Variants",
@@ -83,14 +83,14 @@ export const Items = () => {
       cell: (info) =>
         info
           .getValue()
-          .map((item) => <span key={item.id} className="badge">{item.name}</span>)
+          ?.map((item) => <span key={item.id} className="badge">{item.name}</span>)
     }),
     columnHelper.accessor("stores", {
       header: "Stores",
       cell: (info) =>
         info
           .getValue()
-          .map((item: ProductStore) => <span key={item.id} className="badge">{item.store.name}</span>),
+          ?.map((item: ProductStore) => <span key={item.id} className="badge">{item.store.name}</span>),
       enableColumnFilter: false,
       enableSorting: false,
     }),
@@ -99,7 +99,7 @@ export const Items = () => {
       cell: (info) =>
         info
           .getValue()
-          .map((item: Terminal) => <span key={item.id} className="badge">{item.code}</span>),
+          ?.map((item: Terminal) => <span key={item.id} className="badge">{item.code}</span>),
       enableColumnFilter: false,
       enableSorting: false,
     }),
