@@ -24,7 +24,7 @@ interface ModalProps extends PropsWithChildren {
 }
 
 export const Modal: FunctionComponent<ModalProps> = ({
-  shouldCloseOnOverlayClick = true,
+  shouldCloseOnOverlayClick = false,
   shouldCloseOnEsc = true,
   ...props
 }) => {
