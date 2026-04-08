@@ -177,7 +177,7 @@ export const CreateItem = ({
         cost: Number(values.cost),
         sale_unit: values.sale_unit,
         purchase_unit: values.purchase_unit,
-        quantity: Number(values.quantity),
+        quantity: Number(0),
         base_quantity: 1,
         brands: values.brands,
         categories: values.categories,
