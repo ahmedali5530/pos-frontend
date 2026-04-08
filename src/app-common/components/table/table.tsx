@@ -199,7 +199,7 @@ export const TableComponent: FC<TableComponentProps> = ({
 
   return (
     <>
-      <div className="my-5 flex justify-between gap-3">
+      <div className="my-5 flex justify-between gap-3 overflow-x-auto">
         <div className="inline-flex justify-start">
           {enableSearch !== false && (
             <form

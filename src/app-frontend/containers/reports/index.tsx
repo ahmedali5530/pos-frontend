@@ -1,6 +1,6 @@
 import {ReactNode, useMemo, useState} from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCheckCircle, faChevronRight} from "@fortawesome/free-solid-svg-icons";
+import {faArrowLeft, faCheckCircle, faChevronRight} from "@fortawesome/free-solid-svg-icons";
 import {SalesAdvancedFilter} from "../../components/reports/filters/sales.advanced.filter";
 import {CashClosingFilter} from "../../components/reports/filters/cash.closing.filter";
 import {CurrentInventoryFilter} from "../../components/reports/filters/current.inventory.filter";
@@ -8,6 +8,9 @@ import {DetailedInventoryFilter} from "../../components/reports/filters/detailed
 import {PurchaseFilter} from "../../components/reports/filters/purchase.filter";
 import {PurchaseReturnFilter} from "../../components/reports/filters/purchase.return.filter";
 import {WasteFilter} from "../../components/reports/filters/waste.filter";
+import {Button} from "../../../app-common/components/input/button";
+import {Link} from "react-router-dom";
+import {POS} from "../../routes/frontend.routes";
 
 export const Reports = () => {
 
@@ -21,7 +24,7 @@ export const Reports = () => {
       //   "Inventory": ""
       // },
       "Sales": {
-        "Advanced Sales report": <SalesAdvancedFilter/>,
+        "Sales report": <SalesAdvancedFilter/>,
 
       },
       // "Products": {},
@@ -41,6 +44,14 @@ export const Reports = () => {
 
   return (
     <div className="p-5">
+      <Link to={POS} className="mb-5">
+        <Button
+          icon={faArrowLeft}
+          className="btn btn-secondary"
+        >
+          Back
+        </Button>
+      </Link>
       <div className="grid grid-cols-9 gap-5">
         <div className="col-span-2">
           <div className="bg-white shadow py-5 rounded-lg">
