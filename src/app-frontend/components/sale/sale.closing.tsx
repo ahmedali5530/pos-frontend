@@ -282,8 +282,6 @@ export const SaleClosing: FC<TaxProps> = (props) => {
               <th className="text-right">Day started at</th>
               <td>
                 {closing?.created_at && DateTime.fromJSDate(closing?.created_at || '').toFormat(import.meta.env.VITE_DATE_TIME_FORMAT as string)}
-
-                {import.meta.env.VITE_DATE_TIME_FORMAT as string}
               </td>
             </tr>
             <tr>
