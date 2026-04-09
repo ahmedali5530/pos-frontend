@@ -85,9 +85,12 @@ export const CreateUser: FC<CreateUserProps> = ({
         values.stores = values.stores.map((item: ReactSelectOptionProps) => toRecordId(item.value));
       }
 
+      const password = values?.password;
+
       let id = null;
       if (entity?.id) {
         id = entity?.id;
+        delete values.password;
 
         await db.merge(toRecordId(entity.id), {
           ...values,
@@ -99,8 +102,8 @@ export const CreateUser: FC<CreateUserProps> = ({
         });
       }
 
-      if (values.password && values.password.length > 0) {
-        await db.query(`UPDATE ${id} merge {password: crypto::bcrypt::generate('${values.password}')}`);
+      if (password && password.length > 0) {
+        await db.query(`UPDATE ${id} merge {password: crypto::bcrypt::generate('${password}')}`);
       }
 
       onModalClose();
