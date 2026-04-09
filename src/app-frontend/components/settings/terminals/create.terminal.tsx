@@ -4,7 +4,7 @@ import {Input} from "../../../../app-common/components/input/input";
 import {Controller, useForm} from "react-hook-form";
 import {ReactSelect} from "../../../../app-common/components/input/custom.react.select";
 import {Button} from "../../../../app-common/components/input/button";
-import {ReactSelectOptionProps} from "../../../../api/model/common";
+import {ReactSelectOptionProps, toRecordId} from "../../../../api/model/common";
 import {HttpException, UnprocessableEntityException} from "../../../../lib/http/exception/http.exception";
 import {ConstraintViolation, ValidationResult} from "../../../../lib/validator/validation.result";
 import {Category} from "../../../../api/model/category";
@@ -20,7 +20,6 @@ import useApi, {SettingsData} from "../../../../api/db/use.api";
 import {Tables} from "../../../../api/db/tables";
 import {useDB} from "../../../../api/db/db";
 import {StringRecordId} from "surrealdb";
-import {types} from "sass";
 
 interface CreateTerminalProps {
   entity?: Terminal;
@@ -99,17 +98,28 @@ export const CreateTerminal: FC<CreateTerminalProps> = ({
         }
       }
 
+      let terminalId;
+
       if (entity?.id) {
+        terminalId = entity.id;
+
         await db.merge(new StringRecordId(entity.id), {
           ...values,
           products: products.map(item => new StringRecordId(item))
         });
       } else {
-        await db.insert(Tables.terminal, {
+        const [t] = await db.insert(Tables.terminal, {
           ...values,
           products: products.map(item => new StringRecordId(item))
         });
+
+        terminalId = t.id;
       }
+
+      const [store] = await db.query(`SELECT * FROM ONLY ${toRecordId(values.store)} FETCH terminals`);
+      await db.merge(toRecordId(values.store), {
+        terminals: Array.from(new Set([...(store?.terminals || []), terminalId])),
+      });
 
       onModalClose();
 

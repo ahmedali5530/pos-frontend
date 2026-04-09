@@ -6,6 +6,6 @@ export interface Store {
   id: RecordId;
   name: string;
   location?: string;
-  terminals: Terminal[];
+  terminals?: Terminal[];
   is_active: boolean
 }

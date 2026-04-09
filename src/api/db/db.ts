@@ -20,10 +20,6 @@ export const useDB = () => {
       // Perform a custom advanced query
       const result: ActionResult<Record<string, T>>[] = await client.query(sql, parameters);
 
-      if(sql.startsWith('SELECT * FROM order')) {
-        console.trace()
-      }
-
       if (import.meta.env.DEV) {
         console.group('DB Query Debug')
         console.info(sql.trim());
@@ -40,7 +36,7 @@ export const useDB = () => {
     }
   }
 
-  const select = async <T>(thing: Tables): Promise<T[]> => {
+  const select = async <T>(thing: Tables | string): Promise<T[]> => {
     try {
       if (import.meta.env.DEV) {
         console.group('DB Select Debug')
