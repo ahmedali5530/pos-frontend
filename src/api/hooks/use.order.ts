@@ -28,12 +28,16 @@ export const useOrder = () => {
     return (Number(item.quantity) * Number(item.price)) + itemTaxes(item) - Number(item.discount)
   }
 
+  const calculateOrderItemCost = (item: OrderItem) => {
+    return (Number(item.quantity) * Number(item.cost ?? 0))
+  }
+
   const itemTaxes = (item: OrderItem) => {
     return item.taxes.reduce((p, t) => p + t.rate * item.price / 100, 0)
   }
 
   return {
-    fetchOrder, fetchOrders, itemTaxes, calculateOrderItemPrice
+    fetchOrder, fetchOrders, itemTaxes, calculateOrderItemPrice, calculateOrderItemCost
   }
 }
 

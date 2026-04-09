@@ -6,6 +6,7 @@ import {formatNumber, withCurrency} from "../../../../lib/currency/currency";
 import {ReportsLayout} from "../../../containers/layout/reports.layout";
 import {useOrder} from "../../../../api/hooks/use.order";
 import {toRecordId} from "../../../../api/model/common";
+import {DateTime} from "luxon";
 
 const safeNumber = (value: unknown) => {
   const parsed = Number(value);
@@ -236,6 +237,11 @@ export const SalesAdvancedReport = () => {
         return sum + orderHook.calculateOrderItemPrice(item) - orderHook.itemTaxes(item);
       }, 0) ?? 0
     );
+    const cost = safeNumber(
+      order.items?.reduce((sum, item) => {
+        return sum + orderHook.calculateOrderItemCost(item)
+      }, 0) ?? 0
+    )
     const lineDiscounts = safeNumber(
       order.items?.reduce((sum, item) => sum + safeNumber(item?.discount), 0) ?? 0
     );
@@ -261,6 +267,7 @@ export const SalesAdvancedReport = () => {
 
     return {
       salePriceWithoutTax,
+      cost,
       taxes,
       amountDue,
       serviceCharges,
@@ -394,6 +401,7 @@ export const SalesAdvancedReport = () => {
                 <th className="py-3 px-3 text-left text-xs font-semibold text-neutral-700">Terminal</th>
                 <th className="py-3 px-3 text-left text-xs font-semibold text-neutral-700">Store</th>
                 <th className="py-3 px-3 text-left text-xs font-semibold text-neutral-700">Status</th>
+                <th className="py-3 px-3 text-left text-xs font-semibold text-neutral-700">Cost</th>
                 <th className="py-3 px-3 text-right text-xs font-semibold text-neutral-700">Sale w/o Tax</th>
                 <th className="py-3 px-3 text-right text-xs font-semibold text-neutral-700">Taxes</th>
                 <th className="py-3 px-3 text-right text-xs font-semibold text-neutral-700">Discounts</th>
@@ -406,12 +414,11 @@ export const SalesAdvancedReport = () => {
               <tbody className="divide-y divide-neutral-100 bg-white">
               {filteredOrders.map(order => {
                 const orderTotals = calculateOrderTotals(order);
-                const orderDate = new Date(order.created_at);
-                const dateStr = orderDate.toLocaleDateString();
+                const orderDate = DateTime.fromJSDate(order.created_at);
+                const dateStr = orderDate.toFormat(import.meta.env.VITE_DATE_TIME_FORMAT);
                 const cashierName = order.user ? `${order.user.display_name}` || 'Unknown' : 'Unknown';
                 const terminalName = order.terminal?.code ? order.terminal.code : `-`;
                 const storeName = order.store?.name || 'Unknown';
-                const discountName = order.discount?.type?.name || (orderTotals.discounts > 0 ? 'Custom' : 'None');
                 const hasItems = filters.showMenuItems && order.items && order.items.length > 0;
 
                 return (
@@ -434,6 +441,7 @@ export const SalesAdvancedReport = () => {
                             {order.status}
                           </span>
                       </td>
+                      <td className="py-3 px-3 text-right text-sm text-neutral-700">{withCurrency(orderTotals.cost)}</td>
                       <td className="py-3 px-3 text-right text-sm text-neutral-700">{withCurrency(orderTotals.salePriceWithoutTax)}</td>
                       <td className="py-3 px-3 text-right text-sm text-neutral-700">{withCurrency(orderTotals.taxes)}</td>
                       <td className="py-3 px-3 text-right text-sm text-danger-600">{withCurrency(-orderTotals.discounts)}</td>

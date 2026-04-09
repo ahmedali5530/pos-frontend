@@ -373,6 +373,7 @@ export const CloseSaleInline: FC<Props> = ({
           is_returned: false,
           is_suspended: false,
           price: Number(add.price),
+          cost: Number(add.variant ? add.variant.cost : add.item.cost),
           product: toRecordId(add.item.id),
           quantity: Number(add.quantity),
           taxes: add.taxes.map(item => toRecordId(item.id)),

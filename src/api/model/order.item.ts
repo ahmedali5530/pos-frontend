@@ -10,6 +10,7 @@ export interface OrderItem  {
   variant?: ProductVariant;
   quantity: number;
   price: number;
+  cost?: number;
   is_suspended?: boolean;
   is_deleted?: boolean;
   is_returned?: boolean;

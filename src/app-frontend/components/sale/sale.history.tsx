@@ -44,6 +44,7 @@ import useApi from "../../../api/db/use.api";
 import {useDB} from "../../../api/db/db";
 import {toRecordId} from "../../../api/model/common";
 import {useQueryBuilder} from "../../../api/db/query-builder";
+import {useOrder} from "../../../api/hooks/use.order";
 
 interface Props {
 }
@@ -542,20 +543,19 @@ export const SaleHistory: FC<Props> = ({}) => {
     }, 0);
   }, [data]);
 
+  const orderHook = useOrder();
+
   const totalCost = useMemo(() => {
     return data?.data?.reduce((prev, order) => {
       if (order.status !== "Deleted") {
         return (
           prev +
           order.items.reduce((p, item) => {
-            if (item?.product?.cost) {
-              return p + (item.product.cost * item.quantity);
-            }
-
-            return p;
+            return p + orderHook.calculateOrderItemCost(item)
           }, 0)
         );
       }
+
       return prev;
     }, 0);
   }, [data]);

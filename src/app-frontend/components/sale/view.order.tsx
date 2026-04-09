@@ -18,7 +18,13 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
 
   const itemsTotal = useMemo(() => {
     return order.items.reduce((prev, item) => (
-      (prev + (Number(item.quantity) * Number(item.price))) + orderHook.itemTaxes(item) - Number(item.discount)
+      prev + orderHook.calculateOrderItemPrice(item)
+    ), 0);
+  }, [order]);
+
+  const itemsCost = useMemo(() => {
+    return order.items.reduce((prev, item) => (
+      prev + orderHook.calculateOrderItemCost(item)
     ), 0);
   }, [order]);
 
@@ -62,6 +68,15 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
                 <li key={item["id"]} className="font-bold">{item.type?.name}: <span className="float-right">{withCurrency(item.received)}</span></li>
               ))}
             </ul>
+          </div>
+          <div className="border border-danger-500 p-5 bg-danger-100 text-danger-900 rounded font-bold">
+            <div className="text-2xl">={withCurrency(itemsCost)}</div>
+            Cost
+          </div>
+
+          <div className="border border-success-500 p-5 bg-success-100 text-success-900 rounded font-bold">
+            <div className="text-2xl">={withCurrency(orderTotal - itemsCost)}</div>
+            Profit
           </div>
         </div>
 
