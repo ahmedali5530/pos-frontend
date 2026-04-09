@@ -5,6 +5,7 @@ import {ReportsLayout} from "../../../containers/layout/reports.layout";
 import {formatNumber, withCurrency} from "../../../../lib/currency/currency";
 import {toRecordId} from "../../../../api/model/common";
 import {Purchase} from "../../../../api/model/purchase";
+import {DateTime} from "luxon";
 
 const safeNumber = (value: unknown) => {
   const parsed = Number(value);
@@ -81,12 +82,12 @@ export const PurchaseReport = () => {
         const params: Record<string, any> = {};
 
         if (filters.startDate) {
-          conditions.push(`time::format(created_at, "%Y-%m-%d") >= $startDate`);
+          conditions.push(`time::format(created_at, "${import.meta.env.VITE_REPORTS_DATE_PARSE}") >= $startDate`);
           params.startDate = filters.startDate;
         }
 
         if (filters.endDate) {
-          conditions.push(`time::format(created_at, "%Y-%m-%d") <= $endDate`);
+          conditions.push(`time::format(created_at, "${import.meta.env.VITE_REPORTS_DATE_PARSE}") <= $endDate`);
           params.endDate = filters.endDate;
         }
 
@@ -275,7 +276,7 @@ export const PurchaseReport = () => {
                   purchaseItems.map((item, index) => (
                     <tr key={`${item.date}-${item.item}-${index}`}>
                       <td className="py-3 pl-6 pr-3 text-sm text-neutral-700">
-                        {item.date ? new Date(item.date).toLocaleDateString() : ""}
+                        {item.date ? DateTime.fromJSDate(item.date as Date).toFormat(import.meta.env.VITE_DATE_FORMAT) : ""}
                       </td>
                       <td className="py-3 px-3 text-sm text-neutral-700">{item.purchaseNumber}</td>
                       <td className="py-3 px-3 text-sm text-neutral-700">{item.supplier}</td>

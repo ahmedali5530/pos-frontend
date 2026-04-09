@@ -106,12 +106,12 @@ export const SalesAdvancedReport = () => {
         const params: Record<string, string | string[]> = {};
 
         if (filters.startDate) {
-          orderConditions.push(`time::format(created_at, "%Y-%m-%d") >= $startDate`);
+          orderConditions.push(`time::format(created_at, "${import.meta.env.VITE_REPORTS_DATE_PARSE}") >= $startDate`);
           params.startDate = filters.startDate;
         }
 
         if (filters.endDate) {
-          orderConditions.push(`time::format(created_at, "%Y-%m-%d") <= $endDate`);
+          orderConditions.push(`time::format(created_at, "${import.meta.env.VITE_REPORTS_DATE_PARSE}") <= $endDate`);
           params.endDate = filters.endDate;
         }
 

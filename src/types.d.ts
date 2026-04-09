@@ -15,6 +15,7 @@ interface ImportMetaEnv {
   readonly VITE_TIME_FORMAT: string
   readonly VITE_DATE_TIME_FORMAT: string
   readonly VITE_DATE_TIME_HUMAN_FORMAT: string
+  readonly VITE_REPORTS_DATE_PARSE: string
   readonly VITE_GOOGLE_ANALYTICS: string
 
   readonly VITE_SURREAL_DB_DATE_TIME_FORMAT: string

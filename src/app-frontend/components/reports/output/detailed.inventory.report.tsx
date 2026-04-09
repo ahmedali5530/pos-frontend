@@ -4,6 +4,7 @@ import {Tables} from "../../../../api/db/tables";
 import {ReportsLayout} from "../../../containers/layout/reports.layout";
 import {formatNumber} from "../../../../lib/currency/currency";
 import {toRecordId} from "../../../../api/model/common";
+import {DateTime} from "luxon";
 
 const safeNumber = (value: unknown) => {
   const parsed = Number(value);
@@ -91,12 +92,12 @@ export const DetailedInventoryReport = () => {
           const params: Record<string, any> = {};
 
           if (filters.startDate) {
-            conditions.push(`time::format(${prefix}created_at, "%Y-%m-%d") >= $startDate`);
+            conditions.push(`time::format(${prefix}created_at, "${import.meta.env.VITE_REPORTS_DATE_PARSE}") >= $startDate`);
             params.startDate = filters.startDate;
           }
 
           if (filters.endDate) {
-            conditions.push(`time::format(${prefix}created_at, "%Y-%m-%d") <= $endDate`);
+            conditions.push(`time::format(${prefix}created_at, "${import.meta.env.VITE_REPORTS_DATE_PARSE}") <= $endDate`);
             params.endDate = filters.endDate;
           }
 
@@ -552,7 +553,7 @@ export const DetailedInventoryReport = () => {
                   transactions.map((transaction, index) => (
                     <tr key={`${transaction.date}-${transaction.itemId}-${transaction.type}-${index}`}>
                       <td className="py-3 pl-6 pr-3 text-sm text-neutral-700">
-                        {transaction.date ? new Date(transaction.date).toLocaleDateString() : ""}
+                        {transaction.date ? DateTime.fromJSDate(transaction.date as Date).toFormat(import.meta.env.VITE_DATE_FORMAT) : ""}
                       </td>
                       <td className="py-3 px-3 text-sm font-medium text-neutral-800">
                         {transaction.item}{transaction.itemCode ? ` (${transaction.itemCode})` : ""}

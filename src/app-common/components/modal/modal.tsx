@@ -87,7 +87,7 @@ export const Modal: FunctionComponent<ModalProps> = ({
             className={classNames(
               "pb-5 modal-container px-5 py-3",
               "bg-white",
-              props.size === 'full' || props.size === 'bottom-sheet' ? 'overflow-y-auto' : '' // TODO: fix the overflow thing later
+              props.size === 'full' || props.size === 'bottom-sheet' ? 'overflow-y-auto' : '' // TODO: fix the overflow thing later, dropdowns were contained within modals
             )}>
             {props.children}
           </div>

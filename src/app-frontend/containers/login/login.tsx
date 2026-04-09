@@ -104,6 +104,7 @@ const Login = () => {
       terminal: terminal,
       store: store
     }));
+
     navigate(POS);
   };
 
