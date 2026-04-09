@@ -7,6 +7,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCheckCircle} from "@fortawesome/free-solid-svg-icons";
 import {Department} from "../../../api/model/department";
 import { Tooltip } from "antd";
+import {toRecordId} from "../../../api/model/common";
 
 interface SaleDepartmentsProps extends PropsWithChildren{
   departments:  {[key: string]: Department} ;
@@ -20,12 +21,12 @@ export const SaleDepartments: FC<SaleDepartmentsProps> = ({
   const [list, setList] = useState<Department[]>([]);
 
   const loadDepartmentsList = async () => {
-    const list: HomeProps['list']|null = await localforage.getItem('list');
+    const l: HomeProps['list']|null = await localforage.getItem('list');
     let departments: {[key: string]: Department} = {};
-    if(list !== null) {
-      list.list.forEach(item => {
+    if(l !== null) {
+      l.list.forEach(item => {
         if(item.department) {
-          departments[item.department.id] = item.department;
+          departments[toRecordId(item.department.id).toString()] = item.department;
         }
       });
     }
@@ -42,10 +43,10 @@ export const SaleDepartments: FC<SaleDepartmentsProps> = ({
   const addRemoveDepartment = (department: Department) => {
     const newDepartment = {...departments};
 
-    if(newDepartment[department.id] !== undefined){
-      delete newDepartment[department.id];
+    if(newDepartment[toRecordId(department.id).toString()] !== undefined){
+      delete newDepartment[toRecordId(department.id).toString()];
     }else {
-      newDepartment[department.id] = department;
+      newDepartment[toRecordId(department.id).toString()] = department;
     }
 
     setDepartments(newDepartment);
@@ -68,7 +69,7 @@ export const SaleDepartments: FC<SaleDepartmentsProps> = ({
           )}
         </Button>
       </Tooltip>
-      <Modal open={modal} onClose={() => {
+      <Modal shouldCloseOnOverlayClick open={modal} onClose={() => {
         setModal(false);
       }} title="Filter by departments">
         <div className="flex justify-center items-center gap-5">
@@ -79,7 +80,7 @@ export const SaleDepartments: FC<SaleDepartmentsProps> = ({
                     className="mr-3 mb-3 h-[100px_!important] min-w-[150px] relative"
             >
               {department.name}
-              {!!departments[department.id] && (
+              {!!departments[toRecordId(department.id).toString()] && (
                 <span className="absolute top-1 right-1">
                   <FontAwesomeIcon icon={faCheckCircle} className="text-primary-500" size="lg" />
                 </span>

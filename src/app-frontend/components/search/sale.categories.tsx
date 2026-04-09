@@ -7,6 +7,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCheckCircle} from "@fortawesome/free-solid-svg-icons";
 import {Category} from "../../../api/model/category";
 import { Tooltip } from "antd";
+import {toRecordId} from "../../../api/model/common";
 
 interface SaleCategoriesProps extends PropsWithChildren{
   categories:  {[key: string]: Category} ;
@@ -20,12 +21,12 @@ export const SaleCategories: FC<SaleCategoriesProps> = ({
   const [list, setList] = useState<Category[]>([]);
 
   const loadCategoriesList = async () => {
-    const list: HomeProps['list']|null = await localforage.getItem('list');
+    const l: HomeProps['list']|null = await localforage.getItem('list');
     let categories: {[key: string]: Category} = {};
-    if(list !== null) {
-      list.list.forEach(item => {
+    if(l !== null) {
+      l.list.forEach(item => {
         item.categories.forEach(category => {
-          categories[category.id] = category;
+          categories[toRecordId(category.id).toString()] = category;
         });
       });
     }
@@ -34,16 +35,18 @@ export const SaleCategories: FC<SaleCategoriesProps> = ({
   };
 
   useEffect(() => {
-    loadCategoriesList();
+    if(modal) {
+      loadCategoriesList();
+    }
   }, [modal]);
 
-  const addRemoveCategory = (category: Category) => {
+  const toggleCategory = (category: Category) => {
     const newCategory = {...categories};
 
-    if(newCategory[category.id] !== undefined){
-      delete newCategory[category.id];
+    if(newCategory[toRecordId(category.id).toString()] !== undefined){
+      delete newCategory[toRecordId(category.id).toString()];
     }else {
-      newCategory[category.id] = category;
+      newCategory[toRecordId(category.id).toString()] = category;
     }
 
     setCategories(newCategory);
@@ -66,18 +69,18 @@ export const SaleCategories: FC<SaleCategoriesProps> = ({
           )}
         </Button>
       </Tooltip>
-      <Modal open={modal} onClose={() => {
+      <Modal shouldCloseOnOverlayClick open={modal} onClose={() => {
         setModal(false);
       }} title="Filter by categories">
         <div className="flex justify-center items-center gap-5">
           {list.map((category, index) => (
             <Button variant="primary"
                     key={index}
-                    onClick={() => addRemoveCategory(category)}
+                    onClick={() => toggleCategory(category)}
                     className="mr-3 mb-3 h-[100px_!important] min-w-[150px] relative"
             >
               {category.name}
-              {!!categories[category.id] && (
+              {!!categories[toRecordId(category.id).toString()] && (
                 <span className="absolute top-1 right-1">
                   <FontAwesomeIcon icon={faCheckCircle} className="text-primary-500" size="lg" />
                 </span>

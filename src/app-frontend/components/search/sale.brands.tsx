@@ -7,6 +7,7 @@ import {Brand} from "../../../api/model/brand";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCheckCircle} from "@fortawesome/free-solid-svg-icons";
 import { Tooltip } from "antd";
+import {toRecordId} from "../../../api/model/common";
 
 interface SaleBrandsProps extends PropsWithChildren{
   brands:  {[key: string]: Brand} ;
@@ -20,12 +21,13 @@ export const SaleBrands: FC<SaleBrandsProps> = ({
   const [list, setList] = useState<Brand[]>([]);
 
   const loadBrandsList = async () => {
-    const list: HomeProps['list']|null = await localforage.getItem('list');
+    const l: HomeProps['list']|null = await localforage.getItem('list');
     let brands: {[key: string]: Brand} = {};
-    if(list !== null) {
-      list.list.forEach(item => {
+
+    if(l !== null) {
+      l?.list.forEach(item => {
         item.brands.forEach(brand => {
-          brands[brand.id] = brand;
+          brands[toRecordId(brand.id).toString()] = brand;
         });
       });
     }
@@ -34,16 +36,18 @@ export const SaleBrands: FC<SaleBrandsProps> = ({
   };
 
   useEffect(() => {
-    loadBrandsList();
+    if(modal) {
+      loadBrandsList();
+    }
   }, [modal]);
 
-  const addRemoveBrand = (brand: Brand) => {
+  const toggleBrand = (brand: Brand) => {
     const newBrand = {...brands};
 
-    if(newBrand[brand.id] !== undefined){
-      delete newBrand[brand.id];
+    if(newBrand[toRecordId(brand.id).toString()] !== undefined){
+      delete newBrand[toRecordId(brand.id).toString()];
     }else {
-      newBrand[brand.id] = brand;
+      newBrand[toRecordId(brand.id).toString()] = brand;
     }
 
     setBrands(newBrand);
@@ -66,18 +70,23 @@ export const SaleBrands: FC<SaleBrandsProps> = ({
           )}
         </Button>
       </Tooltip>
-      <Modal open={modal} onClose={() => {
-        setModal(false);
-      }} title="Filter by brands">
+      <Modal
+        open={modal}
+        onClose={() => {
+          setModal(false);
+        }}
+        title="Filter by brands"
+        shouldCloseOnOverlayClick={true}
+      >
         <div className="flex justify-center items-center gap-5">
           {list.map((brand, index) => (
             <Button variant="primary"
                     key={index}
-                    onClick={() => addRemoveBrand(brand)}
+                    onClick={() => toggleBrand(brand)}
                     className="mr-3 mb-3 h-[100px_!important] min-w-[150px] relative"
             >
               {brand.name}
-              {!!brands[brand.id] && (
+              {!!brands[toRecordId(brand.id).toString()] && (
                 <span className="absolute top-1 right-1">
                   <FontAwesomeIcon icon={faCheckCircle} className="text-primary-500" size="lg" />
                 </span>

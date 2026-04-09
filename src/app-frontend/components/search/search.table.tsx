@@ -293,7 +293,9 @@ export const SearchTable = (props: SearchTableProps) => {
         open={true}
         onClose={onClose}
         title={`Search items ${rows.length}`}
-        shouldCloseOnEsc={true}>
+        shouldCloseOnEsc
+        shouldCloseOnOverlayClick
+      >
         <form onSubmit={handleSubmit(submitForm)}>
           <div className="flex gap-3">
             <div className="input-group flex-1">
