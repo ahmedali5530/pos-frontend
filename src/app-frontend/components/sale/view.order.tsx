@@ -37,7 +37,7 @@ export const ViewOrder: FunctionComponent<ViewOrderProps> = ({
       <Button type="button" variant="primary" onClick={() => setModal(true)}>
         {children}
       </Button>
-      <Modal open={modal} onClose={() => {
+      <Modal shouldCloseOnOverlayClick open={modal} onClose={() => {
         setModal(false);
       }} title={`Order# ${order.order_id}`}>
         <div className="grid grid-cols-6 md:grid-cols-4 gap-3 mb-5">

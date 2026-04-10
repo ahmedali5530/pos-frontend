@@ -56,16 +56,19 @@ export const Reports = () => {
       <div className="">
         <div className="grid grid-cols-9 gap-5">
           <div className="col-span-2">
-            <div className="bg-white shadow py-5 rounded-lg">
+            <div className="bg-white shadow pt-5 rounded-lg border">
               <h1 className="text-xl text-gray-600 px-5">Reports</h1>
-              <div className="py-5">
+              <div className="mt-5">
                 <ul>
                   {Object.keys(reportCategories).map((key) => (
                     <li
-                      className="border-b py-2 px-5 flex justify-between cursor-pointer hover:bg-gray-100 items-center"
+                      className="border-b py-3 px-5 flex justify-between cursor-pointer hover:bg-gray-100 items-center"
                       onClick={() => {
                         setSelectedCategory(key);
                         setSubCategory(reportCategories[key]);
+
+                        setSelectedSubCategory('');
+                        setFilter(undefined);
                       }}
                       key={key}
                     >
@@ -80,13 +83,13 @@ export const Reports = () => {
             </div>
           </div>
           <div className="col-span-2">
-            <div className="bg-white shadow py-5 rounded-lg">
+            <div className="bg-white shadow pt-5 rounded-lg border">
               <h1 className="text-xl text-gray-600 px-5">Sub reports</h1>
-              <div className="py-5">
+              <div className="mt-5">
                 <ul>
                   {Object.keys(subCategory).map((key) => (
                     <li
-                      className="border-b py-2 px-5 flex justify-between cursor-pointer hover:bg-gray-100 items-center"
+                      className="border-b py-3 px-5 flex justify-between cursor-pointer hover:bg-gray-100 items-center"
                       onClick={() => {
                         setSelectedSubCategory(key);
                         setFilter(subCategory[key]);
@@ -104,7 +107,7 @@ export const Reports = () => {
             </div>
           </div>
           <div className="col-span-5">
-            <div className="bg-white shadow p-5 rounded-lg">
+            <div className="bg-white shadow p-5 rounded-lg border">
               <h1 className="text-xl">
                 {selectedCategory && selectedSubCategory ? (
                   <span className="text-gray-600">{selectedCategory} <FontAwesomeIcon icon={faChevronRight}

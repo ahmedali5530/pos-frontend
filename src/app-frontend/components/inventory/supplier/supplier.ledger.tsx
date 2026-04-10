@@ -164,6 +164,7 @@ export const SupplierLedger: FC<SupplierLedgerProps> = ({
         onClose={() => {
           setModal(false);
         }}
+        shouldCloseOnOverlayClick
       >
         <form onSubmit={handleSubmit(createPayment)} className="mb-5">
           <div className="grid grid-cols-5 gap-4 mb-3">

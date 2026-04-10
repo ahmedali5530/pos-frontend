@@ -20,7 +20,7 @@ export const ViewPurchaseReturn: FC<ViewPurchaseReturnProps> = ({
         {children}
       </Button>
 
-      <Modal open={modal} onClose={() => {
+      <Modal shouldCloseOnOverlayClick open={modal} onClose={() => {
         setModal(false);
       }} title={`Purchase Return No. ${purchaseReturn.invoice_number}`}>
         <div className="float-right">

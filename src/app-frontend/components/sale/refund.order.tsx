@@ -233,7 +233,6 @@ export const RefundOrder: FC<Props> = ({
     setAppState((prev) => ({
       ...prev,
       added: refundCartItems,
-      refundingItems: refundCartItems,
       refundingSourceItems: selectedItems.map((item) => ({
         orderItemId: item.orderItemId,
         quantity: Number(item.quantity),
@@ -245,7 +244,7 @@ export const RefundOrder: FC<Props> = ({
       customer: order.customer,
       refundingFrom: order.id,
       refundPaymentType: selectedPayment,
-      disableEdit: true
+      disableEdit: true,
     }));
 
     setRefundModal(false);
@@ -279,6 +278,7 @@ export const RefundOrder: FC<Props> = ({
           reset({order_id: ""});
         }}
         shouldCloseOnEsc
+        shouldCloseOnOverlayClick
         size="sm">
         <form onSubmit={handleSubmit(onFindOrder)}>
           <div className="input-group w-full">

@@ -23,7 +23,7 @@ export const ViewPurchase: FC<ViewPurchaseProps> = ({
         {children}
       </Button>
 
-      <Modal open={modal} onClose={() => {
+      <Modal shouldCloseOnOverlayClick open={modal} onClose={() => {
         setModal(false);
       }} title={`Purchase no. ${purchase.purchase_number}`}>
         <div className="float-right">

@@ -494,7 +494,7 @@ export const CloseSaleInline: FC<Props> = ({
       // update customer account
       if(customerFromDB){
         await db.merge(toRecordId(customerFromDB.id), {
-          orders: [...customerFromDB.orders, toRecordId(order.id)]
+          orders: [...customerFromDB?.orders || [], toRecordId(order.id)]
         })
       }
 

@@ -170,8 +170,8 @@ export const SaleHistory: FC<Props> = ({}) => {
       header: "Cost",
       cell: (info) =>
         withCurrency(
-          info.getValue().reduce((prev, item) => {
-            return (item?.product?.cost || 0) * item?.quantity + prev;
+          info.getValue()?.reduce((prev, item) => {
+            return (item?.cost || 0) * item?.quantity + prev;
           }, 0)
         ),
       enableSorting: false,
@@ -182,11 +182,36 @@ export const SaleHistory: FC<Props> = ({}) => {
       cell: (info) => withCurrency(info.getValue()),
     }),
     columnHelper.accessor("payments", {
-      header: "Total",
+      header: "Amount Due",
       cell: (info) =>
         "=" +
         withCurrency(
-          info.getValue().reduce((prev, payment) => {
+          info.getValue()?.reduce((prev, payment) => {
+            return payment.total + prev;
+          }, 0)
+        ),
+      enableSorting: false,
+    }),
+    columnHelper.accessor("payments", {
+      header: "Received",
+      id: 'received',
+      cell: (info) =>
+        "=" +
+        withCurrency(
+          info.getValue()?.reduce((prev, payment) => {
+            return payment.received + prev;
+          }, 0)
+        ),
+      enableSorting: false,
+    }),
+    columnHelper.accessor("payments", {
+      id: 'change',
+      header: "Change",
+      cell: (info) =>
+        withCurrency(
+          info.getValue()?.reduce((prev, payment) => {
+            return payment.received + prev;
+          }, 0) - info.getValue()?.reduce((prev, payment) => {
             return payment.total + prev;
           }, 0)
         ),
@@ -535,7 +560,7 @@ export const SaleHistory: FC<Props> = ({}) => {
     return data?.data?.reduce((prev, order) => {
       if (order.status !== OrderStatus.DELETED && order.status !== OrderStatus.PENDING) {
         return (
-          prev + order.payments.reduce((p, payment) => p + payment.received, 0)
+          prev + order.payments.reduce((p, payment) => p + payment.total, 0)
         );
       }
 
@@ -833,8 +858,8 @@ export const SaleHistory: FC<Props> = ({}) => {
               </h3>
               {areChartsOpen && (
                 <div className="mb-5 grid grid-cols-3 gap-4">
-                  <div>
-                    <h4 className="text-lg">Payment types</h4>
+                  <div className="shadow border rounded-xl">
+                    <h4 className="text-lg p-3">Payment types</h4>
                     <div className="h-[300px]">
                       {payments && (
                         <Pie
@@ -857,8 +882,8 @@ export const SaleHistory: FC<Props> = ({}) => {
                     </div>
                   </div>
 
-                  <div>
-                    <h4 className="text-lg">Sales</h4>
+                  <div className="shadow border rounded-xl">
+                    <h4 className="text-lg p-3">Sales</h4>
                     <div className="h-[300px]">
                       <Bar
                         data={[
@@ -886,8 +911,8 @@ export const SaleHistory: FC<Props> = ({}) => {
                     </div>
                   </div>
 
-                  <div>
-                    <h4 className="text-lg">Customers</h4>
+                  <div className="shadow border rounded-xl">
+                    <h4 className="text-lg p-3">Customers</h4>
                     <div className="h-[300px]">
                       <Bar
                         data={customerChartData}
@@ -909,8 +934,8 @@ export const SaleHistory: FC<Props> = ({}) => {
                     </div>
                   </div>
 
-                  <div>
-                    <h4 className="text-lg">Statuses</h4>
+                  <div className="shadow border rounded-xl">
+                    <h4 className="text-lg p-3">Statuses</h4>
                     <div className="h-[300px]">
                       <Bar
                         data={statusChartData}
@@ -932,8 +957,8 @@ export const SaleHistory: FC<Props> = ({}) => {
                     </div>
                   </div>
 
-                  <div>
-                    <h4 className="text-lg">Stores</h4>
+                  <div className="shadow border rounded-xl">
+                    <h4 className="text-lg p-3">Stores</h4>
                     <div className="h-[300px]">
                       <Bar
                         data={storesChartData}
@@ -955,8 +980,8 @@ export const SaleHistory: FC<Props> = ({}) => {
                     </div>
                   </div>
 
-                  <div>
-                    <h4 className="text-lg">Terminals</h4>
+                  <div className="shadow border rounded-xl">
+                    <h4 className="text-lg p-3">Terminals</h4>
                     <div className="h-[300px]">
                       <Bar
                         data={terminalsChartData}
@@ -992,55 +1017,73 @@ export const SaleHistory: FC<Props> = ({}) => {
               </h3>
               {summaryOpen && (
                 <div className="mb-5 grid md:grid-cols-4 gap-4">
-                  <div className="bg-neutral-50 p-3">
+                  <div className="bg-neutral-50 p-3 shadow border rounded-xl">
                     <h4>Payment types</h4>
-
                     <table className="table table-sm table-hover">
+                      <tbody>
                       {Object.keys(payments).map((item) => (
-                        <tr>
-                          <th>{item}</th>
+                        <tr key={item}>
+                          <th className="text-left">{item}</th>
                           <td>{withCurrency(payments[item])}</td>
                         </tr>
                       ))}
+                      </tbody>
                     </table>
                   </div>
 
-                  <div className="bg-neutral-50 p-3">
+                  <div className="bg-neutral-50 p-3 shadow border rounded-xl">
                     <h4>Stores</h4>
-
                     <table className="table table-sm table-hover">
+                      <tbody>
                       {Object.values(storesChartData).map((item) => (
-                        <tr>
-                          <th>{item.id}</th>
+                        <tr key={item.id}>
+                          <th className="text-left">{item.id}</th>
                           <td>{withCurrency(item.value)}</td>
                         </tr>
                       ))}
+                      </tbody>
                     </table>
                   </div>
 
-                  <div className="bg-neutral-50 p-3">
+                  <div className="bg-neutral-50 p-3 shadow border rounded-xl">
                     <h4>Terminals</h4>
-
                     <table className="table table-sm table-hover">
+                      <tbody>
                       {Object.values(terminalsChartData).map((item) => (
-                        <tr>
-                          <th>{item.id}</th>
+                        <tr key={item.id}>
+                          <th className="text-left">{item.id}</th>
                           <td>{withCurrency(item.value)}</td>
                         </tr>
                       ))}
+                      </tbody>
                     </table>
                   </div>
 
-                  <div className="bg-neutral-50 p-3">
+                  <div className="bg-neutral-50 p-3 shadow border rounded-xl">
                     <h4>Customers</h4>
-
                     <table className="table table-sm table-hover">
+                      <tbody>
                       {Object.values(customerChartData).map((item) => (
-                        <tr>
-                          <th>{item.id}</th>
+                        <tr key={item.id}>
+                          <th className="text-left">{item.id}</th>
                           <td>{withCurrency(item.value)}</td>
                         </tr>
                       ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="bg-neutral-50 p-3 shadow border rounded-xl">
+                    <h4>Totals by Status</h4>
+                    <table className="table table-sm table-hover">
+                      <tbody>
+                        {Object.values(statusChartData).map((item) => (
+                          <tr key={item.id}>
+                            <th className={classNames("text-left", getOrderStatusClasses(item.id))}>{item.id}</th>
+                            <td className={getOrderStatusClasses(item.id)}>{withCurrency(item.value)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
                     </table>
                   </div>
                 </div>

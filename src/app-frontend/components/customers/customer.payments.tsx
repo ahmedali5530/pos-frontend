@@ -164,6 +164,7 @@ export const CustomerPayments: FC<Props> = ({
           onClose={() => {
             setModal(false);
           }}
+          shouldCloseOnOverlayClick
           title={`Payment history of ${customer?.name}`}
         >
           <form onSubmit={handleSubmit(createPayment)} className="mb-5">

@@ -46,9 +46,34 @@ interface ReportFilters {
   pending?: boolean;
   showMenuItems?: boolean;
   showDetails?: boolean;
+  sort?: string
 }
 
-const parseFilters = (): ReportFilters => {
+const parseFilters = (): {
+  startDate: string | null;
+  endDate: string | null;
+  cashierIds: string[];
+  terminalIds: string[];
+  storeIds: string[];
+  withTax: boolean;
+  withoutTax: boolean;
+  withDiscount: boolean;
+  withoutDiscount: boolean;
+  discountIds: string[];
+  taxIds: string[];
+  paymentTypeIds: string[];
+  completed: boolean;
+  refund: boolean;
+  cancelled: boolean;
+  onHold: boolean;
+  pending: boolean;
+  showMenuItems: boolean;
+  showDetails: boolean;
+  sort: string | null
+  sortBy: string | null
+  orders: string | null
+  items: string[]
+} => {
   const params = new URLSearchParams(window.location.search);
   const parseMulti = (name: string) => {
     const list = [
@@ -78,6 +103,10 @@ const parseFilters = (): ReportFilters => {
     pending: params.has('pending'),
     showMenuItems: params.has('show_order_items'),
     showDetails: params.has('show_details'),
+    sort: params.get('sort'),
+    sortBy: params.get('sortBy'),
+    items: parseMulti('items'),
+    orders: params.get('orders')
   };
 };
 
@@ -104,7 +133,7 @@ export const SalesAdvancedReport = () => {
         setError(null);
 
         const orderConditions: string[] = [];
-        const params: Record<string, string | string[]> = {};
+        const params: Record<string, string | number | string[] | number[]> = {};
 
         if (filters.startDate) {
           orderConditions.push(`time::format(created_at, "${import.meta.env.VITE_REPORTS_DATE_PARSE}") >= $startDate`);
@@ -173,10 +202,62 @@ export const SalesAdvancedReport = () => {
           orderConditions.push(`(${paymentFilter.join(' or ')})`);
         }
 
+        if(filters.items.length > 0){
+          const itemsFilters = [];
+          filters.items.forEach((i, index) => {
+            itemsFilters.push(`array::any(items.product.id, $item${index})`);
+            params[`item${index}`] = toRecordId(i);
+          })
+
+          orderConditions.push(`(${itemsFilters.join(' or ')})`);
+        }
+
+        if(filters.orders){
+          orderConditions.push(`order_id INSIDE $orders`);
+          params.orders = filters.orders.split(',').map(item => Number(item.trim()));
+        }
+
+        let orderBy = 'created_at';
+        if(filters.sort){
+          switch(filters.sort){
+            case "Invoice":
+              orderBy = 'order_id';
+              break;
+
+            case "Terminal":
+              orderBy = 'terminal.code';
+              break;
+
+            case "Store":
+              orderBy = 'store.name';
+              break;
+
+            case "Status":
+              orderBy = 'status';
+              break;
+
+            case "Cashier":
+              orderBy = 'user.display_name';
+              break;
+
+            case "Total":
+              orderBy = 'ttl';
+              break;
+
+            case "Date":
+            default:
+              orderBy = 'created_at';
+              break;
+          }
+        }
+
+        const orderByDir = filters.sortBy === 'Descending' ? 'desc' : 'asc';
+
+        const totalQuery = `math::sum(items.map(|$v| if $v.quantity != none and $v.price != none {$v.quantity * $v.price} else {0})) as ttl`;
         const ordersQuery = `
-            SELECT *
+            SELECT *, ${totalQuery}
             FROM ${Tables.order} ${orderConditions.length ? `WHERE ${orderConditions.join(" AND ")}` : ""}
-            order by created_at asc
+            order by ${orderBy} ${orderByDir}
                 FETCH ${ORDER_FETCHES.join(', ')}
         `;
 
@@ -204,7 +285,11 @@ export const SalesAdvancedReport = () => {
     filters.storeIds,
     filters.discountIds,
     filters.taxIds,
-    filters.paymentTypeIds
+    filters.paymentTypeIds,
+    filters.sort,
+    filters.sortBy,
+    filters.items,
+    filters.orders
   ]);
 
   const filteredOrders = useMemo(() => {
@@ -256,6 +341,11 @@ export const SalesAdvancedReport = () => {
       order.payments?.reduce((sum, payment) => sum + safeNumber(payment?.total), 0) ?? 0
     );
     const net = safeNumber(amountCollected - serviceCharges - taxes);
+    const amountReceived = safeNumber(
+      order.payments?.reduce((sum, payment) => sum + safeNumber(payment?.received), 0) ?? 0
+    )
+
+    const change = amountReceived - amountDue;
 
     // Calculate payment types wise total
     const payments: Record<string, number> = {};
@@ -275,7 +365,9 @@ export const SalesAdvancedReport = () => {
       coupons: couponDiscount,
       net,
       amountCollected,
-      payments
+      payments,
+      amountReceived,
+      change
     };
   };
 
@@ -292,6 +384,8 @@ export const SalesAdvancedReport = () => {
         acc.net += orderTotals.net;
         acc.amountCollected += orderTotals.amountCollected;
         acc.ordersCount += 1;
+
+        acc.cost += orderTotals.cost;
 
         // Aggregate payment type totals
         Object.entries(orderTotals.payments).forEach(([type, amount]) => {
@@ -311,6 +405,7 @@ export const SalesAdvancedReport = () => {
         amountCollected: 0,
         ordersCount: 0,
         payments: {} as Record<string, number>,
+        cost: 0
       }
     );
   }, [filteredOrders]);
@@ -338,7 +433,7 @@ export const SalesAdvancedReport = () => {
         <div className="overflow-hidden rounded-lg border border-neutral-200">
           <h3 className="bg-neutral-100 px-6 py-3 text-sm font-semibold text-neutral-700">Summary</h3>
           <div className="p-4">
-            <table className="min-w-full text-sm">
+            <table className="min-w-full text-sm table-hover">
               <tbody className="divide-y divide-neutral-100">
               <tr>
                 <td className="py-2 text-neutral-700">Total Orders</td>
@@ -348,6 +443,11 @@ export const SalesAdvancedReport = () => {
                 <td className="py-2 text-neutral-700">Sale Price w/o Tax</td>
                 <td
                   className="py-2 text-right font-semibold text-neutral-900">{withCurrency(totals.salePriceWithoutTax)}</td>
+              </tr>
+              <tr>
+                <td className="py-2 text-danger-700">Cost</td>
+                <td
+                  className="py-2 text-right font-semibold text-danger-900">{withCurrency(totals.salePriceWithoutTax)}</td>
               </tr>
               <tr>
                 <td className="py-2 text-neutral-700">Taxes</td>
@@ -392,7 +492,7 @@ export const SalesAdvancedReport = () => {
         <div className="overflow-hidden rounded-lg border border-neutral-200">
           <h3 className="bg-neutral-100 px-6 py-3 text-sm font-semibold text-neutral-700">Orders</h3>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-neutral-200">
+            <table className="min-w-full divide-y divide-neutral-200 table-hover">
               <thead className="bg-neutral-50">
               <tr>
                 <th className="py-3 pl-6 pr-3 text-left text-xs font-semibold text-neutral-700">Date</th>
@@ -407,6 +507,7 @@ export const SalesAdvancedReport = () => {
                 <th className="py-3 px-3 text-right text-xs font-semibold text-neutral-700">Discounts</th>
                 <th className="py-3 px-3 text-right text-xs font-semibold text-neutral-700">Amount Due</th>
                 <th className="py-3 px-3 text-right text-xs font-semibold text-neutral-700">Amount Collected</th>
+                <th className="py-3 px-3 text-right text-xs font-semibold text-neutral-700">Change</th>
                 <th className="py-3 px-3 text-right text-xs font-semibold text-neutral-700">Net</th>
                 <th className="py-3 px-3 text-right text-xs font-semibold text-neutral-700">Payments</th>
               </tr>
@@ -447,6 +548,7 @@ export const SalesAdvancedReport = () => {
                       <td className="py-3 px-3 text-right text-sm text-danger-600">{withCurrency(-orderTotals.discounts)}</td>
                       <td className="py-3 px-3 text-right text-sm text-neutral-700">{withCurrency(orderTotals.amountDue)}</td>
                       <td className="py-3 px-3 text-right text-sm text-neutral-700">{withCurrency(orderTotals.amountCollected)}</td>
+                      <td className="py-3 px-3 text-right text-sm text-neutral-700">{withCurrency(orderTotals.change)}</td>
                       <td className="py-3 px-3 text-right text-sm font-semibold text-neutral-900">{withCurrency(orderTotals.net)}</td>
                       <td className="py-2 pl-2 text-right font-semibold text-neutral-900 text-sm">
                         {Object.keys(orderTotals.payments).length > 0 && (

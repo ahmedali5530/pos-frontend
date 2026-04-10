@@ -137,6 +137,8 @@ export const TableComponent: FC<TableComponentProps> = ({
     25: 25,
     50: 50,
     100: 100,
+    500: 500,
+    1000: 1000
   };
 
   const {

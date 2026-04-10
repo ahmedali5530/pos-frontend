@@ -80,7 +80,7 @@ export const SaleFind = ({
           disabled={disableEdit}
         ><FontAwesomeIcon icon={icon} className={displayLabel ? 'mr-2' : ''}/>{displayLabel && title}</Button>
       </Tooltip>
-      <Modal open={modal} title={title} onClose={() => {
+      <Modal shouldCloseOnOverlayClick open={modal} title={title} onClose={() => {
         setModal(false)
       }} shouldCloseOnEsc={true} size="sm">
         <form onSubmit={handleSubmit(onSubmit)}>

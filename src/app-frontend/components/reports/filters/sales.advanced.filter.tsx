@@ -11,6 +11,8 @@ import {ReactSelect} from "../../../../app-common/components/input/custom.react.
 import {DateRange} from "./date.range";
 import {Checkbox} from "../../../../app-common/components/input/checkbox";
 import {Button} from "../../../../app-common/components/input/button";
+import {Product} from "../../../../api/model/product";
+import {Input} from "../../../../app-common/components/input/input";
 
 
 const toOption = <T extends { id?: any }>(
@@ -34,12 +36,13 @@ const notNull = <T,>(value: T | null | undefined): value is T =>
   value !== null && value !== undefined;
 
 export const SalesAdvancedFilter = () => {
-  const {data: usersData, isLoading: loadingUsers} = useApi<SettingsData<User>>(Tables.user_account, [], ['first_name asc'], 0, 9999);
-  const {data: terminalsData, isLoading: loadingTerminals} = useApi<SettingsData<Terminal>>(Tables.terminal, [], ['code asc'], 0, 9999);
-  const {data: storesData, isLoading: loadingStores} = useApi<SettingsData<Store>>(Tables.store, [], ['name asc'], 0, 9999, ['floor']);
-  const {data: discountsData, isLoading: loadingDiscounts} = useApi<SettingsData<Discount>>(Tables.discount, [], ['name asc'], 0, 9999);
-  const {data: taxesData, isLoading: loadingTaxes} = useApi<SettingsData<Tax>>(Tables.tax, [], ['name asc'], 0, 9999);
-  const {data: paymentTypesData, isLoading: loadingPaymentTypes} = useApi<SettingsData<PaymentType>>(Tables.payment, [], ['priority asc'], 0, 9999);
+  const {data: usersData, isLoading: loadingUsers} = useApi<SettingsData<User>>(Tables.user_account, [], ['first_name asc']);
+  const {data: terminalsData, isLoading: loadingTerminals} = useApi<SettingsData<Terminal>>(Tables.terminal, [], ['code asc']);
+  const {data: storesData, isLoading: loadingStores} = useApi<SettingsData<Store>>(Tables.store, [], ['name asc'], undefined, undefined, ['floor']);
+  const {data: discountsData, isLoading: loadingDiscounts} = useApi<SettingsData<Discount>>(Tables.discount, [], ['name asc']);
+  const {data: taxesData, isLoading: loadingTaxes} = useApi<SettingsData<Tax>>(Tables.tax, [], ['name asc']);
+  const {data: paymentTypesData, isLoading: loadingPaymentTypes} = useApi<SettingsData<PaymentType>>(Tables.payment, [], ['priority asc']);
+  const {data: itemsData, isLoading: loadingItems} = useApi<SettingsData<Product>>(Tables.product, [], ['name asc']);
 
   return (
     <form
@@ -167,6 +170,56 @@ export const SalesAdvancedFilter = () => {
           <div className="flex flex-col gap-2">
             <Checkbox name="show_details" value="1" label="Show Details" />
             <Checkbox name="show_order_items" value="1" label="Show Order Items" />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label htmlFor="sales-advanced-items">Filter by items</label>
+          <ReactSelect
+            id="sales-advanced-items"
+            name="items[]"
+            isMulti
+            isLoading={loadingItems}
+            className="w-full"
+            options={(itemsData?.data || [])
+              .map(item => toOption(item, item.name))
+              .filter(notNull)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label htmlFor="sales-advanced-items">Filter by orders</label>
+          <Input
+            id="sales-advanced-orders"
+            name="orders"
+            className="w-full"
+          />
+          <span className="text-xs text-neutral-400">Enter order id with comma separated</span>
+        </div>
+
+        <div className="flex flex-row gap-2">
+          <div className="flex flex-col flex-1">
+            <label htmlFor="sales-advanced-sort">Sort result by</label>
+            <ReactSelect
+              id="sales-advanced-sort"
+              name="sort"
+              className="w-full"
+              options={['Invoice', 'Date', 'Terminal', 'Store', 'Status', 'Cashier', 'Total']
+                .map(item => ({label: item, value: item}))
+                .filter(notNull)}
+            />
+          </div>
+
+          <div className="flex flex-col flex-1">
+            <label htmlFor="sales-advanced-sort">Sort direction</label>
+            <ReactSelect
+              id="sales-advanced-sort"
+              name="sortBy"
+              className="w-full"
+              options={['Ascending', 'Descending']
+                .map(item => ({label: item, value: item}))
+                .filter(notNull)}
+            />
           </div>
         </div>
       </div>
