@@ -1,52 +1,178 @@
-# Getting Started with Point of sale system
+# 🧾 POS Frontend System
+### ⚡ Fast • Simple • Scalable Retail POS + Inventory Management
 
-### Demo
-[https://pos.ahmedali5530.xyz](https://pos.ahmedali5530.xyz)
+A modern **Point of Sale (POS) + Inventory system** built for real-world retail operations.
 
-Username: admin
+Designed for **speed at checkout**, **accurate stock tracking**, and **multi-store scalability**.
 
-Password: admin
+---
 
-A point of sale system built using React.js and SurrealDB.
-### Features
+## 🚀 Live Demo
 
-- Order management
-- Detailed Multi Store Inventory for items and variants
-- Expenses
-- Multiple stores with multiple terminals
-- Can support variants. i.e. sizes, colors, anything etc...
-- Supports shortcuts for faster operations
-- Day closing
-- Supports multiple taxes
-- Supports multiple discounts
-- Customers management
-- Suppliers management
-- Supports Refunds
-- Print server for faster and headless printing
+👉 Try it here: **[Demo](https://ahmedali5530.xyz/pos.html)**  
+🔑 Login: `admin / admin` and `user / user`
 
-## Other projects
-If you are interested in for restaurant based software, [Checkout my other](https://github.com/ahmedali5530/react-posr) software for demo.
+---
 
-## deployment with docker is possible.
+## 💥 Why This Project?
 
-## Requirements
-- [Bun](https://bun.com/docs/installation)
-- [SurrealDB](https://surrealdb.com/docs/surrealdb/installation) 
-- Any text editor for updating configuration files
-## Installation
-- Download or clone this project
-- run `bun install` to install all third party libraries
-- open another terminal and run `surreal start -u root -p root surrealkv://database --bind 0.0.0.0:8001`.
-- For database import run this `surreal import --conn http://localhost:8001 --user root --pass root --ns pos --db pos database/latest.surql`
-- create a new file `.env.local` add `VITE_DB_WEBDOCKET=ws://localhost:8001`
-- Then run following Available scripts to run application.
-- Use `VITE_CURRENCY` and `VITE_LOCALE` variable to setup your currency settings.
-- Use `VITE_DATE_FORMAT` and `VITE_TIME_FORMAT` for time formats, I am using [luxon](https://moment.github.io/luxon/#/formatting) for date and time formatting.
-- Finally run `bun run dev` to start the application
-- For print server go to printing directory and install dependencies using `bun install`, then `bun run server.js` to start it.  It will start on port 3132 on localhost.
+Most POS systems are either:
+- ❌ Too complex for small businesses
+- ❌ Too slow for real checkout environments
+- ❌ Hard to scale across multiple stores
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+This system is built to be:
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- ⚡ Lightning fast at checkout
+- 📦 Easy inventory control
+- 🏪 Multi-store ready
+- 📱 Mobile scanner friendly
+- 🧠 Simple enough for daily retail use
+- 𝄃𝄂𝄂𝄀𝄁 EAN 13 support
+- ✨ Handles variants and their inventory
+
+---
+
+## ✨ Core Features
+
+### 🛒 Point of Sale (POS)
+- Barcode-based product search
+- Instant cart updates
+- Discounts & tax handling
+- Order creation & checkout flow
+- Receipt-ready structure
+
+---
+
+### 📦 Inventory System
+- Product CRUD (create / update / delete)
+- Real-time stock tracking
+- Stock adjustments (in/out)
+- Category-based organization
+
+---
+
+### 🏪 Multi-Store Support
+- Multiple store locations
+- Separate inventory per store
+- Centralized control dashboard
+
+---
+
+### ⚡ Speed-Focused UI
+- Optimized React interface
+- Keyboard-friendly workflow
+- Minimal clicks checkout flow
+
+### ⚙️ Modes
+
+| Mode              | Description                           |
+|-------------------|---------------------------------------|
+| 🛒 POS Mode       | Full checkout experience              |
+| 🔄 Order Mode     | Just order punching without payment   |
+| 🔄 Payment Mode   | Only allows payment of orders         |
+| 📷 Quotation Mode | Give quotation without creating order |
+
+---
+
+## 📱 Mobile Scanner App (Standalone Mode)
+
+Turn any phone into a **POS terminal or inventory scanner**
+
+### 🔹 What it does
+- Scan barcodes instantly including EAN 13
+- Lookup product details in real time
+- Update stock (add/remove)
+- Operate without full dashboard
+- Works as lightweight POS terminal
+
+---
+
+### 🔥 Use Cases
+- Retail counter checkout via phone
+- Warehouse inventory audits
+- Pop-up stores / temporary counters
+- Multi-terminal retail setups
+
+---
+
+### ⚙️ Modes
+
+| Mode | Description |
+|------|------------|
+| 📷 Scanner Mode | Inventory lookup + stock updates |
+| 🛒 POS Mode | Full checkout experience |
+| 🔄 Hybrid Mode | Sync with main system dashboard |
+
+---
+
+### 🔗 How it works
+
+Barcode Scan
+↓
+Product Lookup (API)
+↓
+Stock Update / Cart Add
+↓
+Sync with POS Dashboard
+
+
+---
+
+## 🏗️ Tech Stack
+
+- ⚛️ React.js (Frontend)
+- 🌐 Websocket Realtime Communication
+- 🗄️ SurrealDB (Backend managed)
+
+---
+
+## 📈 Key Highlights
+
+- Built for **real retail workflows**
+- Designed for **speed + simplicity**
+- Supports **multi-device usage**
+- Works for **small shops → scalable systems**
+
+---
+
+## ⚡ Quick Start with Bun and Docker
+
+```bash
+git clone https://github.com/ahmedali5530/pos-frontend
+cd pos-frontend
+bun install
+docker compose up -d
+```
+
+## 🧭 Roadmap
+- More features in mobile app
+- Offline mode support
+- Advanced analytics dashboard
+- Role-based access control
+- Multi-currency support
+
+
+## 🤝 Contribute
+
+Want to improve it?
+
+Fork it 🍴
+Create a branch 🌿
+Submit PR 🚀
+⭐ Support
+
+If you like this project, consider giving it a ⭐ on GitHub
+It really helps visibility and growth.
+
+---
+
+## 📷 Screenshots
+![Opera Snapshot_2026-04-11_221822_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_221822_pos.ahmedali5530.xyz.png)
+![Opera Snapshot_2026-04-11_221908_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_221908_pos.ahmedali5530.xyz.png)
+![Opera Snapshot_2026-04-11_221908_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_221908_pos.ahmedali5530.xyz.png)
+![Opera Snapshot_2026-04-11_222027_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_222027_pos.ahmedali5530.xyz.png)
+![Opera Snapshot_2026-04-11_222150_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_222150_pos.ahmedali5530.xyz.png)
+![Opera Snapshot_2026-04-11_222233_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_222233_pos.ahmedali5530.xyz.png)
+![Opera Snapshot_2026-04-11_222302_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_222302_pos.ahmedali5530.xyz.png)
+![Opera Snapshot_2026-04-11_222133_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_222133_pos.ahmedali5530.xyz.png)
