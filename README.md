@@ -14,6 +14,18 @@ Designed for **speed at checkout**, **accurate stock tracking**, and **multi-sto
 
 ---
 
+## 📷 Screenshots
+![Opera Snapshot_2026-04-11_221822_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_221822_pos.ahmedali5530.xyz.png)
+![Opera Snapshot_2026-04-11_221908_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_221908_pos.ahmedali5530.xyz.png)
+![Opera Snapshot_2026-04-11_221908_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_221908_pos.ahmedali5530.xyz.png)
+![Opera Snapshot_2026-04-11_222027_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_222027_pos.ahmedali5530.xyz.png)
+![Opera Snapshot_2026-04-11_222150_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_222150_pos.ahmedali5530.xyz.png)
+![Opera Snapshot_2026-04-11_222233_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_222233_pos.ahmedali5530.xyz.png)
+![Opera Snapshot_2026-04-11_222302_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_222302_pos.ahmedali5530.xyz.png)
+![Opera Snapshot_2026-04-11_222133_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_222133_pos.ahmedali5530.xyz.png)
+
+---
+
 ## 💥 Why This Project?
 
 Most POS systems are either:
@@ -164,15 +176,3 @@ Submit PR 🚀
 
 If you like this project, consider giving it a ⭐ on GitHub
 It really helps visibility and growth.
-
----
-
-## 📷 Screenshots
-![Opera Snapshot_2026-04-11_221822_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_221822_pos.ahmedali5530.xyz.png)
-![Opera Snapshot_2026-04-11_221908_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_221908_pos.ahmedali5530.xyz.png)
-![Opera Snapshot_2026-04-11_221908_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_221908_pos.ahmedali5530.xyz.png)
-![Opera Snapshot_2026-04-11_222027_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_222027_pos.ahmedali5530.xyz.png)
-![Opera Snapshot_2026-04-11_222150_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_222150_pos.ahmedali5530.xyz.png)
-![Opera Snapshot_2026-04-11_222233_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_222233_pos.ahmedali5530.xyz.png)
-![Opera Snapshot_2026-04-11_222302_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_222302_pos.ahmedali5530.xyz.png)
-![Opera Snapshot_2026-04-11_222133_pos.ahmedali5530.xyz.png](docs/Opera%20Snapshot_2026-04-11_222133_pos.ahmedali5530.xyz.png)
