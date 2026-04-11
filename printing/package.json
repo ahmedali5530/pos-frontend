@@ -9,13 +9,14 @@
     "postinstall": "patch-package"
   },
   "dependencies": {
+    "canvas": "^2.11.2",
     "cors": "^2.8.5",
     "escpos": "^3.0.0-alpha.6",
-    "escpos-usb": "^3.0.0-alpha.4",
-    "escpos-serialport": "^3.0.0-alpha.4",
     "escpos-network": "^3.0.0-alpha.5",
+    "escpos-serialport": "^3.0.0-alpha.4",
+    "escpos-usb": "^3.0.0-alpha.4",
     "express": "^4.21.0",
-    "canvas": "^2.11.2"
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "patch-package": "^8.0.1"

@@ -2,6 +2,7 @@ import {DateRangePickerProps as BaseDateRangePickerProps, DateValue, ValidationR
 import {useState} from "react";
 import {DateTime} from "luxon";
 import {DateRangePicker} from "../../../../app-common/components/react-aria/date.range.picker";
+import {parseDate} from '@internationalized/date';
 
 interface DateRangePickerProps<T extends DateValue> extends BaseDateRangePickerProps<T> {
   label?: string;
@@ -12,17 +13,18 @@ interface DateRangePickerProps<T extends DateValue> extends BaseDateRangePickerP
 export function DateRange<T extends DateValue>({
   startName = 'start', endName = 'end', ...props
 }: DateRangePickerProps<T>) {
-  const today = DateTime.now().toFormat(import.meta.env.VITE_DATE_FORMAT);
+  const dateFormat = import.meta.env.VITE_DATE_FORMAT;
+  const currentDay = DateTime.now().toFormat(dateFormat);
   const dates = {
     "All time": "to",
-    "Today": `${today}to${today}`,
-    "Yesterday": `${DateTime.now().minus({'day': 1}).toFormat(import.meta.env.VITE_DATE_FORMAT)}to${DateTime.now().minus({'day': 1}).toFormat(import.meta.env.VITE_DATE_FORMAT)}`,
-    "This week": `${DateTime.now().startOf('week').toFormat(import.meta.env.VITE_DATE_FORMAT)}to${DateTime.now().endOf('week').toFormat(import.meta.env.VITE_DATE_FORMAT)}`,
-    "Last week": `${DateTime.now().minus({week: 1}).startOf('week').toFormat(import.meta.env.VITE_DATE_FORMAT)}to${DateTime.now().minus({week: 1}).endOf('week').toFormat(import.meta.env.VITE_DATE_FORMAT)}`,
-    "This month": `${DateTime.now().startOf('month').toFormat(import.meta.env.VITE_DATE_FORMAT)}to${DateTime.now().endOf('month').toFormat(import.meta.env.VITE_DATE_FORMAT)}`,
-    "Last month": `${DateTime.now().minus({month: 1}).startOf('month').toFormat(import.meta.env.VITE_DATE_FORMAT)}to${DateTime.now().minus({month: 1}).endOf('month').toFormat(import.meta.env.VITE_DATE_FORMAT)}`,
-    "This year": `${DateTime.now().startOf('year').toFormat(import.meta.env.VITE_DATE_FORMAT)}to${DateTime.now().endOf('year').toFormat(import.meta.env.VITE_DATE_FORMAT)}`,
-    "Last year": `${DateTime.now().minus({year: 1}).startOf('year').toFormat(import.meta.env.VITE_DATE_FORMAT)}to${DateTime.now().minus({year: 1}).endOf('week').toFormat(import.meta.env.VITE_DATE_FORMAT)}`,
+    "Today": `${currentDay}to${currentDay}`,
+    "Yesterday": `${DateTime.now().minus({'day': 1}).toFormat(dateFormat)}to${DateTime.now().minus({'day': 1}).toFormat(dateFormat)}`,
+    "This week": `${DateTime.now().startOf('week').toFormat(dateFormat)}to${DateTime.now().endOf('week').toFormat(dateFormat)}`,
+    "Last week": `${DateTime.now().minus({week: 1}).startOf('week').toFormat(dateFormat)}to${DateTime.now().minus({week: 1}).endOf('week').toFormat(dateFormat)}`,
+    "This month": `${DateTime.now().startOf('month').toFormat(dateFormat)}to${DateTime.now().endOf('month').toFormat(dateFormat)}`,
+    "Last month": `${DateTime.now().minus({month: 1}).startOf('month').toFormat(dateFormat)}to${DateTime.now().minus({month: 1}).endOf('month').toFormat(dateFormat)}`,
+    "This year": `${DateTime.now().startOf('year').toFormat(dateFormat)}to${DateTime.now().endOf('year').toFormat(dateFormat)}`,
+    "Last year": `${DateTime.now().minus({year: 1}).startOf('year').toFormat(dateFormat)}to${DateTime.now().minus({year: 1}).endOf('week').toFormat(dateFormat)}`,
     "Custom": "CUS"
   }
 
@@ -49,16 +51,29 @@ export function DateRange<T extends DateValue>({
           <option key={item} value={dates[item]}>{item}</option>
         ))}
       </select>
-      {!isCustom && (
+      {/*{!isCustom && (*/}
         <>
           <input type="hidden" name="start" value={preset[0]}/>
           <input type="hidden" name="end" value={preset[1]}/>
         </>
-      )}
+      {/*)}*/}
+
       {isCustom && (
         <DateRangePicker
-          startName={startName}
-          endName={endName}
+          onChange={(value) => {
+            setPreset([
+              DateTime.fromJSDate(value?.start?.toDate()).toFormat(dateFormat),
+              DateTime.fromJSDate(value?.end?.toDate()).toFormat(dateFormat),
+            ])
+          }}
+          startName={'start-date'}
+          endName={'end-date'}
+          hideTimeZone
+          shouldForceLeadingZeros
+          defaultValue={{
+            start: parseDate(DateTime.now().toISODate()),
+            end: parseDate(DateTime.now().toISODate()),
+          }}
           {...props}
         />
       )}

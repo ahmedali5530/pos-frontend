@@ -25,7 +25,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          apollo: ['@apollo/client'],
           lodash: ['lodash'],
           antd: ['antd'],
           nivo: ['@nivo/bar', '@nivo/core', '@nivo/pie'],

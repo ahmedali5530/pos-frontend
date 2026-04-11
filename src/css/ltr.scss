@@ -935,3 +935,8 @@ table th {
     margin-left: 2px;
   }
 }
+.react-aria-CalendarCell {
+  &[data-disabled="true"] {
+    @apply text-neutral-500;
+  }
+}
