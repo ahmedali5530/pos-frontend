@@ -412,9 +412,9 @@ export const CloseSaleInline: FC<Props> = ({
       let orderDiscount = null;
       if (discount) {
         [orderDiscount] = await db.insert(Tables.order_discount, {
-          amount: Number(discountAmount),
-          rate: discount.rate,
-          rate_type: discount.rate_type,
+          amount: discountTotal(added, tax, discountAmount, discountRateType, discount),
+          rate: discountAmount != null ? discountAmount : discount.rate,
+          rate_type: discountAmount != null ? (discountRateType || discount.rate_type) : discount.rate_type,
           type: toRecordId(discount.id)
         });
       }
@@ -568,7 +568,9 @@ export const CloseSaleInline: FC<Props> = ({
 
       //print the order
       await dispatchPrint(db, 'final', {
-        order: order
+        order: order,
+        customerName: customer ? customer.name : null,
+        address: customer ? customer.address : null,
       }, {
         userId: user?.id,
         printers: printers
@@ -590,7 +592,7 @@ export const CloseSaleInline: FC<Props> = ({
       ft +
       adjustment
     ));
-  }, [payments, watch("received"), adjustment]);
+  }, [payments, watch("received"), adjustment, ft]);
 
   useEffect(() => {
     if (payment === undefined) {
@@ -657,48 +659,16 @@ export const CloseSaleInline: FC<Props> = ({
     [quickCashOperation, reset, finalTotal, payments, payment]
   );
 
-  const shortcutHandler = useCallback(
-    async (e: Event) => {
-      //open sale modal
-      // if (added.length > 0) {
-      //   if (setSaleModal) {
-      //     setSaleModal!(true);
-      //   }
-      // }
+  const shortcutHandler = async (e: Event) => {
+    const hasError = changeDue < 0 || isSaleClosing || added.length === 0;
 
-      // if (saleModal) {
-      //   //close sale
-      //   onSaleSubmit(getValues());
-      // }
+    if (isInline && !hasError) {
+      await onSaleSubmit(getValues());
 
-      const hasError = changeDue < 0 || isSaleClosing || added.length === 0;
-
-      if (isInline && !hasError) {
-        await onSaleSubmit(getValues());
-
-        resetFields();
-        setPayments([]);
-      }
-    },
-    [
-      added,
-      saleModal,
-      payments,
-      hold,
-      tax,
-      customer,
-      discount,
-      finalTotal,
-      discountTotal,
-      discountRateType,
-      refundingFrom,
-      getValues,
-      isInline,
-      payment,
-      changeDue,
-      customerName
-    ]
-  );
+      resetFields();
+      setPayments([]);
+    }
+  };
 
   const addSplitPayment = (amount: number, payment?: PaymentType) => {
     if (!payment) {

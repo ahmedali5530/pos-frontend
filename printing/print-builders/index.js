@@ -2,7 +2,6 @@
 
 const tempPrint = require('./temp-print');
 const summaryPrint = require('./summary-print');
-const kitchenPrint = require('./kitchen-print');
 const deliveryPrint = require('./delivery-print');
 const finalPrint = require('./final-print');
 const refundPrint = require('./refund-print');
@@ -13,7 +12,6 @@ const quotationPrint = require('./quotation-print');
 const BUILDERS = {
   temp: tempPrint,
   summary: summaryPrint,
-  kitchen: kitchenPrint,
   delivery: deliveryPrint,
   final: finalPrint,
   quotation: quotationPrint,
@@ -39,7 +37,6 @@ module.exports = {
   getBuilder,
   temp: tempPrint,
   summary: summaryPrint,
-  kitchen: kitchenPrint,
   delivery: deliveryPrint,
   final: finalPrint,
   quotation: quotationPrint,

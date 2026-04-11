@@ -16,7 +16,7 @@ import { faCheck } from "@fortawesome/free-solid-svg-icons";
 interface Props extends PropsWithChildren {}
 
 export const ApplyDiscount: FC<Props> = ({ children }) => {
-  const [{ added, discount, discountAmount, disableEdit }, setAppState] = useAtom(defaultState);
+  const [{ added, discount, discountAmount, disableEdit, discountRateType }, setAppState] = useAtom(defaultState);
 
   const [modal, setModal] = useState(false);
   const [askDiscount, setAskDiscount] = useState(false);
@@ -55,14 +55,14 @@ export const ApplyDiscount: FC<Props> = ({ children }) => {
     if (modal) {
       reset({
         discountAmount,
-        rateType: discount?.rate_type,
+        rateType: discountRateType,
       });
 
       if (discount?.scope === DiscountScope.SCOPE_OPEN) {
         setAskDiscount(true);
       }
     }
-  }, [modal, discountAmount, reset, discount]);
+  }, [modal, discountAmount, reset, discount, discountRateType]);
 
   return (
     <>
