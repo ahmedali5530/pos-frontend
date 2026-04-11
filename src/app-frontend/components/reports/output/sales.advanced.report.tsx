@@ -445,9 +445,9 @@ export const SalesAdvancedReport = () => {
                   className="py-2 text-right font-semibold text-neutral-900">{withCurrency(totals.salePriceWithoutTax)}</td>
               </tr>
               <tr>
-                <td className="py-2 text-danger-700">Cost</td>
+                <td className="py-2 text-neutral-700">Cost</td>
                 <td
-                  className="py-2 text-right font-semibold text-danger-900">{withCurrency(totals.salePriceWithoutTax)}</td>
+                  className="py-2 text-right font-semibold text-danger-600">{withCurrency(totals.salePriceWithoutTax)}</td>
               </tr>
               <tr>
                 <td className="py-2 text-neutral-700">Taxes</td>
