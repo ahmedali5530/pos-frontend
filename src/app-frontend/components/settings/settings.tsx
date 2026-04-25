@@ -20,8 +20,9 @@ export const Settings = () => {
           }}
           tabIndex={-1}
           className="gap-3"
+          iconButton
         >
-          <FontAwesomeIcon icon={faCog}/> Settings
+          <FontAwesomeIcon icon={faCog}/>
         </Button>
       </Tooltip>
 

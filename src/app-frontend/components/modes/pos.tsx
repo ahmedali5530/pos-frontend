@@ -1,14 +1,14 @@
 import {useCallback, useEffect, useMemo, useRef, useState,} from "react";
 import {HomeProps, initialData, useLoadData,} from "../../../api/hooks/use.load.data";
-import {appState as AppState, defaultData, defaultState} from "../../../store/jotai";
+import {appState as AppState, defaultData, defaultState as defaultAppState} from "../../../store/jotai";
 import {
-  faBarcode,
   faCubesStacked,
   faFlag,
   faIcons,
   faMagnifyingGlass,
   faReply,
   faRotateRight,
+  faTableCells
 } from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {useAtom} from "jotai";
@@ -47,6 +47,8 @@ import {Tables} from "../../../api/db/tables";
 import {useDB} from "../../../api/db/db";
 import {Shortcut} from "../../../app-common/components/input/shortcut";
 import {formatNumber} from "../../../lib/currency/currency";
+import classNames from "classnames";
+import {SearchInline} from "../search/search.inline";
 
 enum SearchModes {
   sale = "sale",
@@ -61,13 +63,13 @@ export const PosMode = () => {
   const [paymentTypesList, setPaymentTypesList] = useState<HomeProps["paymentTypesList"]>(initialData);
 
   const [state] = useLoadData();
-  const [appState, setAppState] = useAtom(defaultState);
+  const [defaultState, setDefaultState] = useAtom(defaultAppState);
 
-  const [{user, store, terminal, appConnected}] = useAtom(AppState);
+  const [{user, store, terminal, appConnected, inlineSearch}, setAppState] = useAtom(AppState);
 
   const [appSettings] = useAtom(defaultData);
   const {
-    customerBox
+    customerBox,
   } = appSettings;
 
   const {
@@ -77,8 +79,7 @@ export const PosMode = () => {
     customerName,
     disableEdit,
     cartItemType, cartItem,
-
-  } = appState;
+  } = defaultState;
 
   useEffect(() => {
     setList(state.list);
@@ -257,10 +258,10 @@ export const PosMode = () => {
               );
             }
           }
-        }else{
+        } else {
           const [items] = await db.query(`SELECT *
-                                        FROM ${Tables.barcode}
-                                        where barcode = $barcode FETCH item, variant`, {
+                                          FROM ${Tables.barcode}
+                                          where barcode = $barcode FETCH item, variant`, {
             barcode: values.q
           });
 
@@ -331,7 +332,7 @@ export const PosMode = () => {
       newPrice = rate;
     }
 
-    setAppState((prev) => ({
+    setDefaultState((prev) => ({
       ...prev,
       latest: item,
       quantity: quantity,
@@ -344,7 +345,7 @@ export const PosMode = () => {
       setModalTitle(`Choose a variant for ${item.name}`);
       setVariants(item.variants);
 
-      setAppState((prev) => ({
+      setDefaultState((prev) => ({
         ...prev,
         selectedVariant: 0,
         quantity: quantity,
@@ -353,7 +354,7 @@ export const PosMode = () => {
       return;
     }
 
-    setAppState(prev => {
+    setDefaultState(prev => {
       const otherState = {
         q: "",
         quantity: 1,
@@ -407,7 +408,7 @@ export const PosMode = () => {
         : getRealProductPrice(item)
     );
 
-    setAppState(prev => {
+    setDefaultState(prev => {
       const otherState = {
         selected: items.findIndex((i) => i.id.toString() === item.id.toString()),
         quantity: 1,
@@ -509,17 +510,7 @@ export const PosMode = () => {
       }
     };
 
-    if(appConnected) {
-      // Set up live query
-      runLiveQuery();
-    }
-
-    if(!appConnected){
-      isMounted = false;
-      if (queryId) {
-        db.db.kill(queryId).catch(console.error);
-      }
-    }
+    runLiveQuery();
 
     return () => {
       isMounted = false;
@@ -531,7 +522,7 @@ export const PosMode = () => {
 
   useEffect(() => {
     if (added.length === 0) {
-      setAppState((prev) => ({
+      setDefaultState((prev) => ({
         ...prev,
         adjustment: 0,
       }));
@@ -545,13 +536,13 @@ export const PosMode = () => {
 
   const setDefaultOptions = () => {
     localforage.getItem("defaultDiscount").then((data: any) => {
-      setAppState((prev) => ({
+      setDefaultState((prev) => ({
         ...prev,
         discount: data,
       }));
     });
     localforage.getItem("defaultTax").then((data: any) => {
-      setAppState((prev) => ({
+      setDefaultState((prev) => ({
         ...prev,
         tax: data,
       }));
@@ -559,9 +550,9 @@ export const PosMode = () => {
   };
 
   useEffect(() => {
-    if(!modal){
+    if (!modal) {
       setVariants([]);
-      setAppState(prev => ({
+      setDefaultState(prev => ({
         ...prev,
         selectedVariant: 0,
         latestVariant: undefined
@@ -583,7 +574,7 @@ export const PosMode = () => {
       });
     });
 
-    setAppState((prev) => ({
+    setDefaultState((prev) => ({
       ...prev,
       added: items,
       discount: order.discount?.type,
@@ -594,30 +585,30 @@ export const PosMode = () => {
   };
 
   const copyLastItem = useCallback(() => {
-    setAppState((prev) => {
+    setDefaultState((prev) => {
       const lastItem = prev.added[prev.added.length - 1];
       if (lastItem) {
         return {
           ...prev,
-          added: [...prev.added, { ...lastItem }],
+          added: [...prev.added, {...lastItem}],
           cartItem: prev.added.length,
         };
       }
 
       return prev;
     });
-  }, [setAppState]);
+  }, [setDefaultState]);
 
   const updateCartItemType = useCallback(
     (direction: "left" | "right") => {
       if (cartItemType === CartItemType.quantity) {
         if (direction === "right") {
-          setAppState((prev) => ({
+          setDefaultState((prev) => ({
             ...prev,
             cartItemType: CartItemType.discount,
           }));
         } else {
-          setAppState((prev) => ({
+          setDefaultState((prev) => ({
             ...prev,
             cartItemType: CartItemType.discount,
           }));
@@ -625,12 +616,12 @@ export const PosMode = () => {
       }
       if (cartItemType === CartItemType.discount) {
         if (direction === "right") {
-          setAppState((prev) => ({
+          setDefaultState((prev) => ({
             ...prev,
             cartItemType: CartItemType.quantity,
           }));
         } else {
-          setAppState((prev) => ({
+          setDefaultState((prev) => ({
             ...prev,
             cartItemType: CartItemType.quantity,
           }));
@@ -651,12 +642,12 @@ export const PosMode = () => {
 
       if (direction === "up") {
         if (cartItem !== 0) {
-          setAppState((prev) => ({
+          setDefaultState((prev) => ({
             ...prev,
             cartItem: Number(newCartItem) - 1,
           }));
         } else if (cartItem === 0) {
-          setAppState((prev) => ({
+          setDefaultState((prev) => ({
             ...prev,
             cartItem: addedItems - 1,
           }));
@@ -664,12 +655,12 @@ export const PosMode = () => {
       }
       if (direction === "down") {
         if (newCartItem + 1 < addedItems) {
-          setAppState((prev) => ({
+          setDefaultState((prev) => ({
             ...prev,
             cartItem: Number(newCartItem) + 1,
           }));
         } else if (newCartItem + 1 >= addedItems) {
-          setAppState((prev) => ({
+          setDefaultState((prev) => ({
             ...prev,
             cartItem: 0,
           }));
@@ -688,7 +679,7 @@ export const PosMode = () => {
         e.preventDefault();
 
         if (e.key === "Delete") {
-          setAppState((prev) => ({
+          setDefaultState((prev) => ({
             ...prev,
             added: prev.added.filter((_, index) => index !== prev.cartItem),
           }));
@@ -743,18 +734,18 @@ export const PosMode = () => {
             </div>
             <div className="flex flex-1 gap-3">
               <div className="input-group">
-                <Tooltip title="Barcode search">
-                  <Button
-                    variant="primary"
-                    className="btn-square"
-                    type="button"
-                    active={mode === SearchModes.sale}
-                    size="lg"
-                    onClick={() => setMode(SearchModes.sale)}
-                  >
-                    <FontAwesomeIcon icon={faBarcode}/>
-                  </Button>
-                </Tooltip>
+                {/*<Tooltip title="Barcode search">*/}
+                {/*  <Button*/}
+                {/*    variant="primary"*/}
+                {/*    className="btn-square"*/}
+                {/*    type="button"*/}
+                {/*    active={mode === SearchModes.sale}*/}
+                {/*    size="lg"*/}
+                {/*    onClick={() => setMode(SearchModes.sale)}*/}
+                {/*  >*/}
+                {/*    <FontAwesomeIcon icon={faBarcode}/>*/}
+                {/*  </Button>*/}
+                {/*</Tooltip>*/}
                 <Tooltip title="Search by name">
                   <Button
                     variant="primary"
@@ -771,6 +762,22 @@ export const PosMode = () => {
                       invisible={true}
                       disabled={disableEdit}
                     />
+                  </Button>
+                </Tooltip>
+                <Tooltip title="Display grid">
+                  <Button
+                    variant="primary"
+                    iconButton
+                    type="button"
+                    size="lg"
+                    onClick={() => setAppState(prev => ({
+                      ...prev,
+                      inlineSearch: !prev.inlineSearch
+                    }))}
+                    disabled={disableEdit}
+                    active={inlineSearch}
+                  >
+                    <FontAwesomeIcon icon={faTableCells}/>
                   </Button>
                 </Tooltip>
               </div>
@@ -869,19 +876,19 @@ export const PosMode = () => {
               </form>
               {customerBox && (
                 <>
-                <Input
-                  placeholder="Enter customer name"
-                  className="lg mousetrap"
-                  onChange={(event) => {
-                    setAppState(prev => ({
-                      ...prev,
-                      customerName: event.target.value
-                    }))
-                  }}
-                  value={customerName}
-                  ref={customerInputRef}
-                  disabled={disableEdit}
-                />
+                  <Input
+                    placeholder="Enter customer name"
+                    className="lg mousetrap"
+                    onChange={(event) => {
+                      setDefaultState(prev => ({
+                        ...prev,
+                        customerName: event.target.value
+                      }))
+                    }}
+                    value={customerName}
+                    ref={customerInputRef}
+                    disabled={disableEdit}
+                  />
                   <Shortcut
                     shortcut="f7"
                     handler={() => {
@@ -902,8 +909,22 @@ export const PosMode = () => {
               <TopbarRight/>
             </div>
           </div>
-          <div className="grid grid-cols-4 gap-3 p-3">
-            <div className="col-span-3">
+          <div className={
+            classNames(
+              "grid gap-3 p-3",
+              inlineSearch ? 'grid-cols-[350px_minmax(0,1fr)_440px]' : 'grid-cols-[minmax(0,1fr)_440px]'
+            )
+          }>
+            {inlineSearch && (
+              <div className="bg-white p-3">
+                <SearchInline
+                  items={items}
+                  addItem={addItem}
+                  onClick={() => setMode(SearchModes.sale)}
+                />
+              </div>
+            )}
+            <div className="min-w-0">
               <CartControls containerRef={containerRef.current}/>
               <div
                 className="block overflow-auto h-[calc(100vh_-_230px)] bg-white"
@@ -914,7 +935,7 @@ export const PosMode = () => {
                 <Footer/>
               </div>
             </div>
-            <div className="col-span-1 bg-white p-3">
+            <div className="bg-white p-3">
               <CloseSaleInline
                 paymentTypesList={paymentTypesList.list}
                 isInline={true}

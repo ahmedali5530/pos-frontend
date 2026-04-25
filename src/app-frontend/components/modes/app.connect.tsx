@@ -1,6 +1,6 @@
 import {Button} from "../../../app-common/components/input/button";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faBarcode, faCheck, faCheckCircle, faCircle} from "@fortawesome/free-solid-svg-icons";
+import {faBarcode, faCheckCircle, faCircle} from "@fortawesome/free-solid-svg-icons";
 import {Tooltip} from "antd";
 import {Modal} from "../../../app-common/components/modal/modal";
 import {useEffect, useState} from "react";
@@ -25,7 +25,7 @@ export const AppConnect = () => {
         const result = await db.live(Tables.app_connection, (action: string, result) => {
           if (!isMounted) return;
 
-          if(
+          if (
             result.store.toString() === store?.id.toString() &&
             result.terminal.toString() === terminal?.id?.toString() &&
             result.user.toString() === user?.id?.toString()
@@ -57,17 +57,7 @@ export const AppConnect = () => {
       }
     };
 
-    if(appConnected) {
-      // Set up live query
-      runLiveQuery();
-    }
-
-    if(!appConnected){
-      isMounted = false;
-      if (queryId) {
-        db.db.kill(queryId).catch(console.error);
-      }
-    }
+    runLiveQuery();
 
     return () => {
       isMounted = false;

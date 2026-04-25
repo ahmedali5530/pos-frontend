@@ -19,8 +19,8 @@ export const ProductVariants: FC<ProductVariantsProps> = ({
     <>
       <Button variant="primary" onClick={() => append({
         attributeName: '',
-        barcode: Math.floor(Math.random() * 10000000000) + 1,
-        price: null
+        barcode: (useForm.getValues('barcode') + (fields.length + 1).toString()).toString(),
+        price: 0
       })} type="button">
         Add Variant
       </Button>

@@ -3,6 +3,10 @@ import { Controller, useFieldArray, UseFormReturn, useWatch } from "react-hook-f
 import { Button } from "../../../../../app-common/components/input/button";
 import { Input } from "../../../../../app-common/components/input/input";
 import { VariantGroup } from "./variant.group";
+import {ReactSelect} from "../../../../../app-common/components/input/custom.react.select";
+import useApi, {SettingsData} from "../../../../../api/db/use.api";
+import {Tables} from "../../../../../api/db/tables";
+import {Product} from "../../../../../api/model/product";
 
 
 interface CreateVariantsProps {
@@ -12,10 +16,15 @@ interface CreateVariantsProps {
 export const CreateVariants = ({
   useForm
 }: CreateVariantsProps) => {
+  const {
+    data: items
+  } = useApi<SettingsData<Product>>(Tables.product, ['variant_groups != none']);
+
+
   const [filter, setFilter] = useState('');
 
   const { control, watch, getValues } = useForm;
-  const { fields, append, remove, } = useFieldArray({
+  const { fields, append, remove, replace: replaceGroups } = useFieldArray({
     control: useForm.control,
     name: 'groups'
   });
@@ -65,16 +74,70 @@ export const CreateVariants = ({
 
   const groups = useWatch({
     name: 'groups',
-    defaultValue: [],
+    // defaultValue: [],
     control: useForm.control
   });
+
+  console.log(groups)
 
   useEffect(() => {
     buildVariants();
   }, [groups]);
 
+
+
+  const setGroupsFromItem = (selectedItem: any) => {
+    const variantGroups = Array.isArray(selectedItem?.variant_groups)
+      ? selectedItem.variant_groups.map((group: any) => ({
+        groupName: group?.groupName ?? '',
+        variants: Array.isArray(group?.variants)
+          ? group.variants.map((variant: any) => {
+            if (typeof variant === 'string') {
+              return {
+                label: variant,
+                value: variant
+              };
+            }
+
+            return {
+              label: variant?.label ?? variant?.value ?? '',
+              value: variant?.value ?? variant?.label ?? ''
+            };
+          })
+          : []
+      }))
+      : [];
+    replaceGroups(variantGroups);
+  }
+
   return (
     <div>
+      <div className="mb-5">
+        <h4 className="text-xl">Copy variants from another item</h4>
+        <ReactSelect
+          options={items?.data?.map(item => ({
+            label: `${item.name} - ${item.barcode}`,
+            value: item.id.toString(),
+            variant_groups: item?.variant_groups
+          }))}
+          onChange={(value) => {
+            if(value === null){
+              useForm.setValue('groups', [])
+              useForm.setValue('variants', []);
+            }
+
+            if(value) {
+              if (value.variant_groups) {
+                setGroupsFromItem(value);
+              } else {
+                useForm.setValue('groups', []);
+                useForm.setValue('variants', []);
+              }
+            }
+          }}
+          isClearable
+        />
+      </div>
       <div className="input-group w-auto">
         <Input onChange={event => setGroupName(event.target.value)} value={groupName}/>
         <Button type="button" variant="primary" onClick={addGroup}>Add variant group</Button>
@@ -92,7 +155,7 @@ export const CreateVariants = ({
               />
             )}
             name={`groups.${index}.variants`}
-            key={index}
+            key={field.id}
           />
         ))}
       </div>

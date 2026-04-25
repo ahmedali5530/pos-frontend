@@ -256,7 +256,7 @@ export const CsvUploadModal: React.FC<CsvUploadModalProps> = ({
             </div>
           )}
         </div>
-        <div className="text-primary-500">You pipe operator "|" for multiple values. For example "store 1|store 2" etc...</div>
+        <div className="text-primary-500">Use pipe operator "|" for multiple values. For example "store 1|store 2" etc...</div>
 
         {/* Mapping */}
         {hasFile && (

@@ -1,0 +1,1 @@
+DEFINE FIELD OVERWRITE variant_groups ON TABLE product TYPE any FLEXIBLE PERMISSIONS FOR create FULL FOR select FULL FOR update FULL;

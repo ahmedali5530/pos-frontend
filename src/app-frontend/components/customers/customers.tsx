@@ -27,6 +27,7 @@ import {useDB} from "../../../api/db/db";
 import {toRecordId} from "../../../api/model/common";
 import {Customer, CUSTOMER_FETCHES} from "../../../api/model/customer";
 import {useCustomer} from "../../../api/hooks/use.customer";
+import {Tooltip} from "antd";
 
 interface Props extends PropsWithChildren {
   className?: string;
@@ -255,23 +256,26 @@ export const Customers: FC<Props> = ({children, className}) => {
 
   return (
     <>
-      <button
-        className={className ? className : "btn btn-primary lg"}
-        type="button"
-        onClick={() => {
-          setModal(true);
-        }}
-        title="Customers"
-        tabIndex={-1}
-        disabled={disableEdit}
-      >
-        {children || (
-          <>
-            <FontAwesomeIcon icon={faUsers} className="mr-2"/> Customers
-          </>
-        )}
-        <Shortcut disabled={disableEdit} shortcut="ctrl+shift+c" handler={() => setModal(true)}/>
-      </button>
+      <Tooltip title="Customers">
+        <button
+          className={className ? className : "btn btn-primary lg"}
+          type="button"
+          onClick={() => {
+            setModal(true);
+          }}
+          title="Customers"
+          tabIndex={-1}
+          disabled={disableEdit}
+
+        >
+          {children || (
+            <>
+              <FontAwesomeIcon icon={faUsers}/>
+            </>
+          )}
+          <Shortcut disabled={disableEdit} shortcut="ctrl+shift+c" handler={() => setModal(true)}/>
+        </button>
+      </Tooltip>
 
       <Modal
         shouldCloseOnEsc={true}

@@ -93,7 +93,7 @@ export const More: FC<Props> = ({}) => {
           }}
           tabIndex={-1}
         >
-          Control panel
+          Admin
         </Button>
       </Tooltip>
 

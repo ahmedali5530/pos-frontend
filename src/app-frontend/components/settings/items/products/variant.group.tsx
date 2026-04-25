@@ -50,7 +50,7 @@ export const VariantGroup = ({
       case 'Tab':
         setInputValue('');
         setValue((prev) => {
-          if(!prev.find(item => item === createOption(inputValue))) {
+          if(!prev.find(item => item.value === inputValue)) {
             return [...prev, createOption(inputValue)]
           }
 
@@ -59,6 +59,26 @@ export const VariantGroup = ({
         event.preventDefault();
     }
   };
+
+  useEffect(() => {
+    const initialValue = Array.isArray(field?.variants)
+      ? field.variants.map((item: any) => {
+        if (typeof item === "string") {
+          return createOption(item);
+        }
+
+        if (item?.value) {
+          return {
+            label: item.label ?? item.value,
+            value: item.value
+          };
+        }
+
+        return createOption(String(item ?? ""));
+      })
+      : [];
+    setValue(initialValue);
+  }, [field?.variants]);
 
   useEffect(() => {
     onChange(value);

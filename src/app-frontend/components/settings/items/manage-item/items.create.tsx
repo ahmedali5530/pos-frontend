@@ -22,7 +22,6 @@ import {Tax} from "../../../../../api/model/tax";
 import {Modal} from "../../../../../app-common/components/modal/modal";
 import {notify} from "../../../../../app-common/components/confirm/notification";
 import * as yup from 'yup';
-import {ValidationMessage} from "../../../../../api/model/validation";
 import {yupResolver} from "@hookform/resolvers/yup";
 import {CreateDepartment} from "../../departments/create.department";
 import {CreateTax} from "../../taxes/create.tax";
@@ -36,7 +35,6 @@ import useApi, {SettingsData} from "../../../../../api/db/use.api";
 import {Tables} from "../../../../../api/db/tables";
 import {Tab, TabContent, TabControl, TabNav} from "../../../../../app-common/components/tabs/tabs";
 import {ItemInventory} from "./item.inventory";
-import {StringRecordId} from "surrealdb";
 
 interface ItemsCreateProps {
   entity?: Product;
@@ -188,7 +186,8 @@ export const CreateItem = ({
         suppliers: values.suppliers,
         taxes: values.taxes,
         terminals: values.terminals,
-        variants: variantIds
+        variants: variantIds,
+        variant_groups: values.groups
       };
 
       let productRecord;

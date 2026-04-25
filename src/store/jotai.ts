@@ -27,12 +27,14 @@ export interface AppStateInterface {
   progress?: string
   appConnected?: boolean
   connectedDevice?: string
+  inlineSearch?: boolean
 }
 
 export const appState = atomWithStorage<AppStateInterface>(
   "pos-app-state",
   {
     loggedIn: false,
+    inlineSearch: false
   }
 );
 

@@ -35,6 +35,10 @@ export interface Product {
   terminals: Terminal[];
   taxes: Tax[];
   manage_inventory?: boolean
+  variant_groups?: {
+    groupName: string,
+    variants: {label: string, value: string}[]
+  }[]
 }
 
 export interface SearchableProduct {
