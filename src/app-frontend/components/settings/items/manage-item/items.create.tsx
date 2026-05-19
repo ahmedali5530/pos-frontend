@@ -431,23 +431,23 @@ export const CreateItem = ({
 
       reset({
         ...entity,
-        suppliers: entity.suppliers.map(item => ({
+        suppliers: entity?.suppliers?.map(item => ({
           label: item.name,
           value: item.id.toString()
         })),
-        brands: entity.brands.map(item => ({
+        brands: entity?.brands?.map(item => ({
           label: item.name,
           value: item.id.toString()
         })),
-        categories: entity.categories.map(item => ({
+        categories: entity?.categories?.map(item => ({
           label: item.name,
           value: item.id.toString()
         })),
-        storesDropdown: entity.stores.map(item => ({
+        storesDropdown: entity?.stores?.map(item => ({
           label: item.store.name,
           value: item.store.id.toString(),
         })),
-        stores: entity.stores.map(item => ({
+        stores: entity?.stores?.map(item => ({
           store: item.store.id.toString(),
           label: item.store.name,
           quantity: item.quantity,
@@ -459,11 +459,11 @@ export const CreateItem = ({
           label: entity?.department?.name,
           value: entity?.department?.id?.toString()
         },
-        taxes: entity.taxes.map(item => ({
+        taxes: entity?.taxes?.map(item => ({
           label: `${item.name} ${item.rate}%`,
           value: item.id.toString()
         })),
-        terminals: entity.terminals.map(item => ({
+        terminals: entity?.terminals?.map(item => ({
           label: `${item?.store?.name} - ${item.code}`,
           value: item.id.toString()
         })),
