@@ -17,23 +17,32 @@ export default defineConfig({
   plugins: [
     react(),
     svgr(),
-    envCompatible
+    envCompatible()
   ],
   build: {
     sourcemap: false,
     cssCodeSplit: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          lodash: ['lodash'],
-          antd: ['antd'],
-          nivo: ['@nivo/bar', '@nivo/core', '@nivo/pie'],
-          tanstack: ['@tanstack/react-query', '@tanstack/react-query-devtools', '@tanstack/react-table'],
-          keyboard: ['react-simple-keyboard'],
-          fontawesome: [
-            '@fortawesome/fontawesome-svg-core', '@fortawesome/free-regular-svg-icons',
-            '@fortawesome/free-solid-svg-icons', '@fortawesome/react-fontawesome'
-          ]
+        manualChunks(id) {
+          if (id.includes('lodash')) {
+            return 'lodash';
+          }
+          if (id.includes('antd')) {
+            return 'antd';
+          }
+          if (id.includes('@nivo')) {
+            return 'nivo';
+          }
+          if (id.includes('@tanstack')) {
+            return 'tanstack';
+          }
+          if (id.includes('react-simple-keyboard')) {
+            return 'keyboard';
+          }
+          if (id.includes('@fortawesome')) {
+            return 'fontawesome';
+          }
         }
       }
     }
