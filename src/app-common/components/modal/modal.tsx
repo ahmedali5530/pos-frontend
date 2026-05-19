@@ -65,7 +65,7 @@ export const Modal: FunctionComponent<ModalProps> = ({
         style={{
           overlay: {
             backgroundColor: "rgba(0, 70, 254, 0.01)",
-            backdropFilter: "blur(10px)",
+            backdropFilter: "blur(1px)",
           },
         }}
       >
@@ -79,7 +79,7 @@ export const Modal: FunctionComponent<ModalProps> = ({
             </button>
           )}
 
-          <div className="p-5 border-b-2 border-gray-200 bg-white/40">
+          <div className="p-5 border-b-2 border-gray-200 bg-gray-200">
             <h3 className="text-2xl">{props?.title}</h3>
             {props.header && props.header}
           </div>

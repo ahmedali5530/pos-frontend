@@ -2,12 +2,10 @@ import {Input} from "../../../app-common/components/input/input";
 import {TopbarRight} from "./topbar.right";
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {Order, ORDER_FETCHES, OrderStatus} from "../../../api/model/order";
-import {QueryString} from "../../../lib/location/query.string";
 import {DateTime} from "luxon";
 import {withCurrency} from "../../../lib/currency/currency";
 import {useAtom} from "jotai";
 import {appState as AppState, defaultState} from "../../../store/jotai";
-import {CartItem} from "../../../api/model/cart.item";
 import {CartContainer} from "../cart/cart.container";
 import {CloseSaleInline} from "../sale/sale.inline";
 import {HomeProps, initialData, useLoadData,} from "../../../api/hooks/use.load.data";
@@ -17,9 +15,7 @@ import {TrapFocus} from "../../../app-common/components/container/trap.focus";
 import {KeyboardTable} from "../../../app-common/components/table/keyboard.table";
 import classNames from "classnames";
 import {Row} from "react-table";
-import {ReactSelect} from "../../../app-common/components/input/custom.react.select";
 import {Terminal} from "../../../api/model/terminal";
-import useApi, {SettingsData} from "../../../api/db/use.api";
 import {Tables} from "../../../api/db/tables";
 import {useDB} from "../../../api/db/db";
 import {useQueryBuilder} from "../../../api/db/query-builder";
@@ -264,6 +260,7 @@ export const PaymentMode = () => {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               ref={searchField}
+              enableKeyboard
             />
           </div>
           {/*<div>

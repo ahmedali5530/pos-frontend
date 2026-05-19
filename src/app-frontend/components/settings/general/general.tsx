@@ -28,7 +28,7 @@ export const GeneralSetting = () => {
     defaultDiscount,
     defaultPaymentType,
     defaultTax,
-    // enableTouch,
+    enableTouch,
     customerBox, requireCustomerBox
   } = defaultOptions;
   const [state] = useLoadData();
@@ -68,6 +68,7 @@ export const GeneralSetting = () => {
     await localforage.removeItem("discountList");
     await localforage.removeItem("taxList");
     await localforage.removeItem("paymentTypesList");
+    await localforage.removeItem('settingList')
     // await action.load();
 
     setLoading(false);
@@ -217,18 +218,18 @@ export const GeneralSetting = () => {
           <div className="p-5 border-b border-primary-300 bg-primary-100 text-primary-900 rounded-t-xl">
             Default options (<span className="text-sm text-primary-700">Saved in this device.</span>)
           </div>
-          <div className="p-5">
-            {/*<Switch*/}
-            {/*  checked={enableTouch}*/}
-            {/*  onChange={(value) => {*/}
-            {/*    setDefaultOptions((prev) => ({*/}
-            {/*      ...prev,*/}
-            {/*      enableTouch: value.target.checked,*/}
-            {/*    }));*/}
-            {/*  }}>*/}
-            {/*  Enable Touch support? <span*/}
-            {/*  className="badge rounded-full bg-primary-500 text-primary-100 p-1 px-2 uppercase text-xs">Experimental</span>*/}
-            {/*</Switch>*/}
+          <div className="p-5 flex gap-5 flex-col">
+            <Switch
+              checked={enableTouch}
+              onChange={(value) => {
+                setDefaultOptions((prev) => ({
+                  ...prev,
+                  enableTouch: value.target.checked,
+                }));
+              }}>
+              Enable Touch support? <span
+              className="badge rounded-full bg-primary-500 text-primary-100 p-1 px-2 uppercase text-xs">Experimental</span>
+            </Switch>
 
             <div className="flex gap-3">
               <Switch

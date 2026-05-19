@@ -35,6 +35,8 @@ import useApi, {SettingsData} from "../../../../../api/db/use.api";
 import {Tables} from "../../../../../api/db/tables";
 import {Tab, TabContent, TabControl, TabNav} from "../../../../../app-common/components/tabs/tabs";
 import {ItemInventory} from "./item.inventory";
+import {Switch} from "../../../../../app-common/components/input/switch";
+import {CART_INPUT_MODES} from "../../../../../lib/product/product.pricing";
 
 interface ItemsCreateProps {
   entity?: Product;
@@ -57,16 +59,61 @@ const ValidationSchema = yup.object({
   suppliers: yup.array().required('Add at-least one supplier'),
   brands: yup.array().required('Add at-least one brand'),
   variants: yup.array(yup.object({})).typeError('Please add valid variants'),
+  allow_price_change: yup.boolean(),
+  allow_discount: yup.boolean(),
+  variable_price: yup.boolean(),
+  price_min: yup.string().when('variable_price', {
+    is: true,
+    then: (schema) => schema.required('Min price is required'),
+  }),
+  price_max: yup.string().when('variable_price', {
+    is: true,
+    then: (schema) => schema
+      .required('Max price is required')
+      .test('max-gte-min', 'Max price must be greater than or equal to min price', function (value) {
+        const min = Number(this.parent.price_min);
+        const max = Number(value);
+        if (Number.isNaN(min) || Number.isNaN(max)) {
+          return true;
+        }
+        return max >= min;
+      }),
+  }),
+  cart_input_mode: yup.object().nullable(),
+}).test('base-price-in-range', 'Sale price must be within min and max', function (values) {
+  if (!values?.variable_price || !values?.base_price) {
+    return true;
+  }
+  const base = Number(values.base_price);
+  const min = Number(values.price_min);
+  const max = Number(values.price_max);
+  if (Number.isNaN(base)) {
+    return true;
+  }
+  if (!Number.isNaN(min) && base < min) {
+    return this.createError({path: 'base_price', message: 'Sale price must be at least the min price'});
+  }
+  if (!Number.isNaN(max) && base > max) {
+    return this.createError({path: 'base_price', message: 'Sale price must be at most the max price'});
+  }
+  return true;
 });
 
 export const CreateItem = ({
   entity, onClose, operation, addModal
 }: ItemsCreateProps) => {
   const useFormHook = useForm({
-    resolver: yupResolver(ValidationSchema)
+    resolver: yupResolver(ValidationSchema),
+    defaultValues: {
+      allow_price_change: false,
+      allow_discount: true,
+      variable_price: false,
+      cart_input_mode: CART_INPUT_MODES[0],
+    },
   });
 
   const {register, handleSubmit, setError, formState: {errors}, reset, getValues, control, watch} = useFormHook;
+  const variablePrice = watch('variable_price');
   const [creating, setCreating] = useState(false);
   const [modal, setModal] = useState(false);
   const db = useDB();
@@ -181,6 +228,16 @@ export const CreateItem = ({
         categories: values.categories,
         department: values.department,
         manage_inventory: values.manage_inventory,
+        allow_price_change: !!values.allow_price_change,
+        allow_discount: values.allow_discount !== false,
+        variable_price: !!values.variable_price,
+        price_min: values.variable_price && values.price_min != null && values.price_min !== ''
+          ? Number(values.price_min)
+          : null,
+        price_max: values.variable_price && values.price_max != null && values.price_max !== ''
+          ? Number(values.price_max)
+          : null,
+        cart_input_mode: values.cart_input_mode?.value ?? 'none',
         is_available: true,
         is_expire: false,
         suppliers: values.suppliers,
@@ -410,6 +467,14 @@ export const CreateItem = ({
           label: `${item?.store?.name} - ${item.code}`,
           value: item.id.toString()
         })),
+        allow_price_change: entity.allow_price_change ?? false,
+        allow_discount: entity.allow_discount !== false,
+        variable_price: entity.variable_price ?? false,
+        price_min: entity.price_min != null ? String(entity.price_min) : '',
+        price_max: entity.price_max != null ? String(entity.price_max) : '',
+        cart_input_mode: CART_INPUT_MODES.find(
+          (m) => m.value === (entity.cart_input_mode ?? 'none')
+        ) ?? CART_INPUT_MODES[0],
         variant_stores: variantStores
       });
     }
@@ -561,6 +626,107 @@ export const CreateItem = ({
                         "w-full"
                       )} hasError={hasErrors(errors.sale_unit)}/>
                       {getErrors(errors.sale_unit)}
+                    </div>
+                    <div className="col-span-4">
+                      <h4 className="border-b-2 border-primary-500 inline-block mb-2">Pricing behavior</h4>
+                    </div>
+                    <div>
+                      <label className="w-full block">&nbsp;</label>
+                      <Controller
+                        control={control}
+                        name="allow_price_change"
+                        render={(props) => (
+                          <Switch
+                            checked={!!props.field.value}
+                            onChange={props.field.onChange}
+                          >
+                            Allow price change at POS
+                          </Switch>
+                        )}
+                      />
+                    </div>
+                    <div>
+                      <label className="w-full block">&nbsp;</label>
+                      <Controller
+                        control={control}
+                        name="allow_discount"
+                        render={(props) => (
+                          <Switch
+                            checked={props.field.value !== false}
+                            onChange={props.field.onChange}
+                          >
+                            Allow discount at POS
+                          </Switch>
+                        )}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="cart_input_mode">When adding to cart</label>
+                      <Controller
+                        name="cart_input_mode"
+                        control={control}
+                        render={(props) => (
+                          <ReactSelect
+                            options={CART_INPUT_MODES}
+                            onChange={props.field.onChange}
+                            value={props.field.value}
+                            className={classNames(
+                              getErrorClass(errors.cart_input_mode),
+                              'rs-__container w-full'
+                            )}
+                          />
+                        )}
+                      />
+                      {getErrors(errors.cart_input_mode)}
+                    </div>
+                    <div className="col-span-4 grid grid-cols-4 gap-3">
+                      <div>
+                        <label className="w-full block">&nbsp;</label>
+                        <Controller
+                          control={control}
+                          name="variable_price"
+                          render={(props) => (
+                            <Switch
+                              checked={!!props.field.value}
+                              onChange={props.field.onChange}
+                            >
+                              Variable price (min / max)
+                            </Switch>
+                          )}
+                        />
+                      </div>
+                      {variablePrice && (
+                        <>
+                          <div>
+                            <label htmlFor="price_min">Min price</label>
+                            <div className="input-group">
+                              <span className="input-addon">{withCurrency(undefined)}</span>
+                              <Input
+                                {...register('price_min')}
+                                id="price_min"
+                                type="number"
+                                className="w-full"
+                                hasError={hasErrors(errors.price_min)}
+                              />
+                            </div>
+                            {getErrors(errors.price_min)}
+                          </div>
+                          <div>
+                            <label htmlFor="price_max">Max price</label>
+                            <div className="input-group">
+                              <span className="input-addon">{withCurrency(undefined)}</span>
+                              <Input
+                                {...register('price_max')}
+                                id="price_max"
+                                type="number"
+                                className="w-full"
+                                hasError={hasErrors(errors.price_max)}
+                              />
+                            </div>
+                            {getErrors(errors.price_max)}
+                          </div>
+                        </>
+                      )}
                     </div>
                     <div className="col-span-4"></div>
                     <div>
@@ -754,7 +920,7 @@ export const CreateItem = ({
                 </TabContent>
                 <TabContent isActive={isTabActive("variants")} holdState>
                   <div className="col-span-4">
-                    <h4 className="text-lg">Variants</h4>
+                    <h4 className="text-xl mb-5">Variants</h4>
                   </div>
                   {getErrors(errors.variants)}
                   <div className="col-span-4">

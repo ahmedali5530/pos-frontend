@@ -187,6 +187,8 @@ export const ApplyDiscount: FC<Props> = ({ children }) => {
                             inputSize="lg"
                             selectable
                             className="input w-full"
+                            type="number"
+                            enableKeyboard
                           />
                           {errors.discountAmount && (
                             <span className="text-danger-500 text-sm">

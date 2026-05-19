@@ -16,6 +16,7 @@ import {useMediaQuery} from "react-responsive";
 import {message as AntMessage, Tooltip} from "antd";
 import {Printers} from "./printers";
 import {PrintSettings} from "./prints";
+import {BarcodeConfiguration} from "./barcode-config";
 
 interface Props {
 }
@@ -78,6 +79,10 @@ export const More: FC<Props> = ({}) => {
       key: 'print_settings',
       title: 'Print settings',
       component: <PrintSettings/>
+    }, {
+      key: 'barcode_config',
+      title: 'Barcode configuration',
+      component: <BarcodeConfiguration/>
     }
   ];
 

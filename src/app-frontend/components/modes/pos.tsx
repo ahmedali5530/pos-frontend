@@ -49,6 +49,22 @@ import {Shortcut} from "../../../app-common/components/input/shortcut";
 import {formatNumber} from "../../../lib/currency/currency";
 import classNames from "classnames";
 import {SearchInline} from "../search/search.inline";
+import {
+  getBarcodeConfigFromSettings,
+  isDynamicEan13Scan,
+  parseDynamicEan13,
+} from "../../../lib/barcode/barcode.config";
+import {CartAddPromptModal, CartAddPromptState} from "../cart/cart.add.prompt";
+import {
+  clampProductPrice,
+  getCartInputMode,
+  getDefaultUnitPrice,
+  shouldSkipCartPrompt,
+} from "../../../lib/product/product.pricing";
+
+type AddItemOptions = {
+  fromBarcode?: boolean;
+};
 
 enum SearchModes {
   sale = "sale",
@@ -63,6 +79,11 @@ export const PosMode = () => {
   const [paymentTypesList, setPaymentTypesList] = useState<HomeProps["paymentTypesList"]>(initialData);
 
   const [state] = useLoadData();
+
+  const barcodeConfig = useMemo(
+    () => getBarcodeConfigFromSettings(state.settingList?.list ?? []),
+    [state.settingList]
+  );
   const [defaultState, setDefaultState] = useAtom(defaultAppState);
 
   const [{user, store, terminal, appConnected, inlineSearch}, setAppState] = useAtom(AppState);
@@ -93,6 +114,9 @@ export const PosMode = () => {
   const [modal, setModal] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [cartPrompt, setCartPrompt] = useState<CartAddPromptState | null>(null);
+  const cartPromptResolverRef = useRef<((value: { quantity: number; price: number } | null) => void) | null>(null);
+  const pendingAddOptionsRef = useRef<AddItemOptions>({});
   const [brands, setBrands] = useState<{ [key: string]: Brand }>({});
   const [categories, setCategories] = useState<{ [key: string]: Category }>({});
   const [departments, setDepartment] = useState<{ [key: string]: Department }>(
@@ -225,6 +249,59 @@ export const PosMode = () => {
 
   const {handleSubmit, control, reset} = useForm();
 
+  const openCartPrompt = (
+    state: CartAddPromptState
+  ): Promise<{ quantity: number; price: number } | null> => {
+    return new Promise((resolve) => {
+      cartPromptResolverRef.current = resolve;
+      setCartPrompt(state);
+    });
+  };
+
+  const handleCartPromptConfirm = (quantity: number, price: number) => {
+    cartPromptResolverRef.current?.({quantity, price});
+    cartPromptResolverRef.current = null;
+    setCartPrompt(null);
+  };
+
+  const handleCartPromptCancel = () => {
+    cartPromptResolverRef.current?.(null);
+    cartPromptResolverRef.current = null;
+    setCartPrompt(null);
+  };
+
+  const resolveCartAddInputs = async (
+    item: Product,
+    defaults: { quantity: number; price: number; variant?: ProductVariant },
+    options?: AddItemOptions
+  ): Promise<{ quantity: number; price: number } | null> => {
+    if (shouldSkipCartPrompt(item, {
+      fromBarcode: options?.fromBarcode,
+      price: options?.fromBarcode ? defaults.price : undefined,
+    })) {
+      return {
+        quantity: defaults.quantity,
+        price: clampProductPrice(item, defaults.price),
+      };
+    }
+
+    const mode = getCartInputMode(item);
+    if (mode === 'none') {
+      return {
+        quantity: defaults.quantity,
+        price: clampProductPrice(item, defaults.price),
+      };
+    }
+
+    return openCartPrompt({
+      item,
+      variant: defaults.variant,
+      mode,
+      defaultQuantity: defaults.quantity,
+      defaultPrice: defaults.price,
+    });
+  };
+
   const searchAction = async (values: any) => {
     const item = itemsMap.get(values.q);
 
@@ -233,12 +310,9 @@ export const PosMode = () => {
       // direct product not found, try with dynamic barcode
       // parse barcode for dynamic item
       try {
-        const prefix = Number(values.q.substring(0, 2));
-        if (prefix >= 20 && prefix <= 29) {
-          // dynamic barcode
-          const itemId = values.q.substring(2, 7);
+        if (isDynamicEan13Scan(values.q, barcodeConfig)) {
+          const {itemId, qty} = parseDynamicEan13(values.q);
           const item = itemsMap.get(itemId || '');
-          const qty = Number(values.q.substring(7, 12).padStart(5, '0')) / 1000;
 
           if (item) {
             if (item.isVariant) {
@@ -246,7 +320,8 @@ export const PosMode = () => {
                 item.item,
                 item.variant,
                 Number(qty),
-                Number(item.price)
+                Number(item.price),
+                {fromBarcode: true}
               );
             }
 
@@ -254,7 +329,8 @@ export const PosMode = () => {
               await addItem(
                 item.item,
                 Number(qty),
-                Number(item.price)
+                Number(item.price),
+                {fromBarcode: true}
               );
             }
           }
@@ -273,7 +349,8 @@ export const PosMode = () => {
                 item.item,
                 item.variant,
                 Number(item.measurement),
-                Number(item.price)
+                Number(item.price),
+                {fromBarcode: true}
               );
             }
 
@@ -281,7 +358,8 @@ export const PosMode = () => {
               await addItem(
                 item.item,
                 Number(item.measurement),
-                Number(item.price)
+                Number(item.price),
+                {fromBarcode: true}
               );
             }
 
@@ -318,29 +396,122 @@ export const PosMode = () => {
     });
   };
 
-  const addItem = async (item: Product, quantity: number, price?: number) => {
-    let newPrice = 0;
-    if (item.base_price) {
-      newPrice = item.base_price;
+  const finalizeAddToCart = async (
+    item: Product,
+    variant: ProductVariant | undefined,
+    quantity: number,
+    price?: number,
+    options?: AddItemOptions
+  ) => {
+    let defaultPrice = price != null
+      ? Number(price)
+      : getDefaultUnitPrice(item, variant);
+
+    if (rate) {
+      defaultPrice = rate;
     }
 
-    if (price) {
-      newPrice = price;
+    const exists = added.find((line) => {
+      const sameItem = toRecordId(line.item.id).toString() === toRecordId(item.id).toString();
+      if (!sameItem) {
+        return false;
+      }
+      if (variant) {
+        return toRecordId(variant.id).toString() === toRecordId(line.variant?.id)?.toString();
+      }
+      return !line.variant;
+    });
+
+    if (exists) {
+      setDefaultState((prev) => {
+        const otherState = {
+          q: "",
+          quantity: 1,
+          selected: items.findIndex((i) => i.id.toString() === item.id.toString()),
+          latestQuantity: quantity,
+          latestRate: defaultPrice,
+          latestVariant: variant,
+        };
+
+        return {
+          ...prev,
+          ...otherState,
+          added: prev.added.map((line) => {
+            const sameItem = toRecordId(line.item.id).toString() === toRecordId(item.id).toString();
+            const sameVariant = variant
+              ? toRecordId(variant.id).toString() === toRecordId(line.variant?.id)?.toString()
+              : !line.variant;
+            if (sameItem && sameVariant) {
+              return {
+                ...line,
+                quantity: Number(formatNumber(Number(line.quantity) + Number(quantity))),
+              };
+            }
+            return line;
+          }),
+        };
+      });
+      scrollToBottom(containerRef.current);
+      return;
     }
 
+    const resolved = await resolveCartAddInputs(
+      item,
+      {quantity, price: defaultPrice, variant},
+      options
+    );
+    if (!resolved) {
+      return;
+    }
+
+    let newPrice = resolved.price;
     if (rate) {
       newPrice = rate;
     }
 
     setDefaultState((prev) => ({
       ...prev,
+      q: "",
+      quantity: 1,
+      selected: items.findIndex((i) => i.id.toString() === item.id.toString()),
+      latestQuantity: resolved.quantity,
+      latestRate: newPrice,
+      latestVariant: variant,
+      added: [
+        ...prev.added,
+        {
+          quantity: Number(formatNumber(resolved.quantity)),
+          item,
+          price: newPrice,
+          variant,
+          discount: 0,
+          taxes: item.taxes,
+          taxIncluded: true,
+          stock: 0,
+        },
+      ],
+      latestIndex: prev.added.length,
+    }));
+
+    scrollToBottom(containerRef.current);
+  };
+
+  const addItem = async (
+    item: Product,
+    quantity: number,
+    price?: number,
+    options?: AddItemOptions
+  ) => {
+    pendingAddOptionsRef.current = options ?? {};
+
+    setDefaultState((prev) => ({
+      ...prev,
       latest: item,
-      quantity: quantity,
-      latestVariant: undefined
+      quantity,
+      latestVariant: undefined,
     }));
 
     if (item.variants.length > 0) {
-      //choose from variants
       setModal(true);
       setModalTitle(`Choose a variant for ${item.name}`);
       setVariants(item.variants);
@@ -348,115 +519,29 @@ export const PosMode = () => {
       setDefaultState((prev) => ({
         ...prev,
         selectedVariant: 0,
-        quantity: quantity,
+        quantity,
       }));
 
       return;
     }
 
-    setDefaultState(prev => {
-      const otherState = {
-        q: "",
-        quantity: 1,
-      };
-
-      const exists = prev.added.find(i => toRecordId(i.item.id).toString() === toRecordId(item.id).toString());
-      let index = prev.added.findIndex((addItem) => toRecordId(addItem.item.id).toString() === toRecordId(item.id).toString());
-      if (exists) {
-        return {
-          ...prev,
-          ...otherState,
-          latestIndex: index,
-          added: prev.added.map(a => {
-            if (toRecordId(a.item.id).toString() === toRecordId(item.id).toString()) {
-              return {...a, quantity: formatNumber(Number(a.quantity) + Number(quantity))};
-            } else {
-              return a;
-            }
-          })
-        };
-      }
-
-      return {
-        ...prev,
-        ...otherState,
-        added: [...prev.added, {
-          quantity: formatNumber(quantity),
-          item: item,
-          price: newPrice,
-          discount: 0,
-          taxes: item.taxes,
-          taxIncluded: true,
-          stock: 0,
-        }],
-        latestIndex: prev.added.length - 1,
-      };
-    });
-
-    scrollToBottom(containerRef.current);
+    await finalizeAddToCart(item, undefined, quantity, price, options);
   };
 
   const addItemVariant = async (
     item: Product,
     variant: ProductVariant,
     quantity: number,
-    price?: number
+    price?: number,
+    options?: AddItemOptions
   ) => {
-    const variantPrice = price ? price : (
-      variant?.price
-        ? variant.price
-        : getRealProductPrice(item)
-    );
-
-    setDefaultState(prev => {
-      const otherState = {
-        selected: items.findIndex((i) => i.id.toString() === item.id.toString()),
-        quantity: 1,
-        selectedVariant: 0,
-        q: "",
-        latestQuantity: quantity,
-        latestRate: variantPrice,
-        latestVariant: variant,
-      };
-
-      const exists = prev.added.find(i => toRecordId(i.item.id).toString() === toRecordId(item.id).toString() && toRecordId(variant.id).toString() === toRecordId(i.variant?.id)?.toString());
-      if (exists) {
-        return {
-          ...prev,
-          ...otherState,
-          added: prev.added.map(i => {
-            if (toRecordId(i.item.id).toString() === toRecordId(item.id).toString() && toRecordId(variant.id).toString() === toRecordId(i.variant?.id)?.toString()) {
-              return {
-                ...i,
-                quantity: formatNumber(Number(i.quantity) + Number(quantity))
-              }
-            }
-
-            return i;
-          })
-        };
-      }
-
-      return {
-        ...prev,
-        ...otherState,
-        added: [...prev.added, {
-          quantity: formatNumber(quantity),
-          item: item,
-          price: variantPrice,
-          variant: variant,
-          discount: 0,
-          taxes: item.taxes,
-          taxIncluded: true,
-          stock: 0,
-        }]
-      };
-    })
+    const opts = options ?? pendingAddOptionsRef.current;
+    pendingAddOptionsRef.current = {};
 
     setModal(false);
     setVariants([]);
 
-    scrollToBottom(containerRef.current);
+    await finalizeAddToCart(item, variant, quantity, price, opts);
   };
 
   const db = useDB();
@@ -490,9 +575,9 @@ export const PosMode = () => {
                   variant: toRecordId(result.variant)
                 });
 
-                await addItemVariant(item, variant, result.quantity, result.price)
+                await addItemVariant(item, variant, result.quantity, result.price, {fromBarcode: true})
               } else {
-                await addItem(item, result.quantity, result.price);
+                await addItem(item, result.quantity, result.price, {fromBarcode: true});
               }
 
               // remove from cart db
@@ -633,7 +718,6 @@ export const PosMode = () => {
 
   const updateCartItem = useCallback(
     (direction: "up" | "down") => {
-      console.log(direction)
       const addedItems = added.length;
       let newCartItem = cartItem;
       if (!newCartItem) {
@@ -770,10 +854,17 @@ export const PosMode = () => {
                     iconButton
                     type="button"
                     size="lg"
-                    onClick={() => setAppState(prev => ({
-                      ...prev,
-                      inlineSearch: !prev.inlineSearch
-                    }))}
+                    onClick={() => {
+                      setAppState(prev => ({
+                        ...prev,
+                        inlineSearch: !prev.inlineSearch
+                      }))
+
+                      setDefaultState(prev => ({
+                        ...prev,
+                        selectedCategory: undefined
+                      }))
+                    }}
                     disabled={disableEdit}
                     active={inlineSearch}
                   >
@@ -821,6 +912,7 @@ export const PosMode = () => {
                         value={field.value}
                         onChange={field.onChange}
                         disabled={disableEdit}
+                        enableKeyboard={false}
                       />
                     )}
                     name="q"
@@ -852,6 +944,7 @@ export const PosMode = () => {
                         value={field.value}
                         onChange={field.onChange}
                         disabled={disableEdit}
+                        enableKeyboard
                       />
                     )}
                     name="quantity"
@@ -888,6 +981,7 @@ export const PosMode = () => {
                     value={customerName}
                     ref={customerInputRef}
                     disabled={disableEdit}
+                    enableKeyboard
                   />
                   <Shortcut
                     shortcut="f7"
@@ -931,9 +1025,6 @@ export const PosMode = () => {
                 ref={containerRef}>
                 <CartContainer/>
               </div>
-              <div className="flex gap-4 mt-3 items-center h-[50px]">
-                <Footer/>
-              </div>
             </div>
             <div className="bg-white p-3">
               <CloseSaleInline
@@ -942,6 +1033,9 @@ export const PosMode = () => {
                 customerInput={customerInputRef}
               />
             </div>
+          </div>
+          <div className="flex gap-4 px-3 items-center h-[50px]">
+            <Footer/>
           </div>
         </div>
       </TrapFocus>
@@ -964,6 +1058,12 @@ export const PosMode = () => {
           addItemVariant={addItemVariant}
         />
       )}
+
+      <CartAddPromptModal
+        state={cartPrompt}
+        onConfirm={handleCartPromptConfirm}
+        onCancel={handleCartPromptCancel}
+      />
     </>
   );
 };

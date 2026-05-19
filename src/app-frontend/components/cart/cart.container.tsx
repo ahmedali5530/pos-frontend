@@ -1,4 +1,4 @@
-import React, {FunctionComponent, useCallback, useEffect, useMemo,} from "react";
+import React, {FunctionComponent, useMemo, useState} from "react";
 import {CartItem as CartItemModel} from "../../../api/model/cart.item";
 import {CartItem} from "./cart.item";
 import {Checkbox} from "../../../app-common/components/input/checkbox";
@@ -8,6 +8,12 @@ import {useAtom} from "jotai";
 import {defaultState} from "../../../store/jotai";
 import {notify} from "../../../app-common/components/confirm/notification";
 import {subTotal} from "../../containers/dashboard/pos";
+import {
+  canEditCartDiscount,
+  canEditCartPrice,
+  validateProductPrice,
+} from "../../../lib/product/product.pricing";
+import {CartPriceEditModal, CartPriceEditState} from "./cart.price.edit.modal";
 
 interface CartContainerProps {
 
@@ -21,6 +27,7 @@ export enum CartItemType {
 
 export const CartContainer: FunctionComponent<CartContainerProps> = ({}) => {
   const [{added}, setAppState] = useAtom(defaultState);
+  const [priceEdit, setPriceEdit] = useState<CartPriceEditState | null>(null);
 
   const onCheckAll = (e: any) => {
     setAppState((prev) => ({
@@ -85,9 +92,9 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({}) => {
     }));
   };
 
-  const onPriceChange = (item: CartItemModel, newPrice: number) => {
+  const applyLinePrice = (item: CartItemModel, newPrice: number) => {
     const oldItems = [...added];
-    let index = oldItems.findIndex(
+    const index = oldItems.findIndex(
       (addItem) =>
         addItem.item.id === item.item.id && item.variant === addItem.variant
     );
@@ -101,7 +108,39 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({}) => {
     }));
   };
 
+  const onPriceChange = (item: CartItemModel, newPrice: number) => {
+    if (!canEditCartPrice(item.item)) {
+      return;
+    }
+
+    const validationError = validateProductPrice(item.item, newPrice);
+    if (validationError) {
+      notify({
+        type: "error",
+        description: validationError,
+      });
+      return;
+    }
+
+    applyLinePrice(item, newPrice);
+  };
+
+  const onOpenPriceEdit = (item: CartItemModel, index: number) => {
+    setPriceEdit({line: item, index});
+  };
+
+  const onPriceEditConfirm = (newPrice: number) => {
+    if (!priceEdit) {
+      return;
+    }
+    applyLinePrice(priceEdit.line, newPrice);
+    setPriceEdit(null);
+  };
+
   const onDiscountChange = (item: CartItemModel, newDiscount: number) => {
+    if (!canEditCartDiscount(item.item)) {
+      return;
+    }
     const oldItems = [...added];
     let index = oldItems.findIndex(
       (addItem) =>
@@ -178,6 +217,7 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({}) => {
             onQuantityChange={onQuantityChange}
             onDiscountChange={onDiscountChange}
             onPriceChange={onPriceChange}
+            onOpenPriceEdit={onOpenPriceEdit}
             deleteItem={deleteItem}
             item={item}
             index={index}
@@ -185,6 +225,12 @@ export const CartContainer: FunctionComponent<CartContainerProps> = ({}) => {
           />
         ))}
       </div>
+
+      <CartPriceEditModal
+        state={priceEdit}
+        onConfirm={onPriceEditConfirm}
+        onCancel={() => setPriceEdit(null)}
+      />
       <div className="table-footer-group">
         <div className="table-row font-bold">
           <div className="table-cell p-2">{added.length}</div>

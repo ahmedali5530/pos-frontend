@@ -112,8 +112,8 @@ function useApi<T>(
     
     try {
       let groupConditions = '';
-      if(Array.isArray(initialFilters) && initialFilters?.length > 0){
-        // groupConditions = initialFilters.join(' ');
+      if(Array.isArray(filters) && filters?.length > 0){
+        groupConditions = filters.join(' and ');
       }
 
       const totalQuery = await db.query(`Select count()from ${table} ${groupConditions.length > 0 ? `WHERE ${groupConditions}` : ''} group all`);

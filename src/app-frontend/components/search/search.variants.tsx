@@ -6,13 +6,9 @@ import {ProductVariant} from "../../../api/model/product.variant";
 import {useAtom} from "jotai";
 import {defaultState} from "../../../store/jotai";
 import Mousetrap from "mousetrap";
-import React, {createRef, useEffect, useMemo, useRef, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {FixedSizeList} from "react-window";
 import {useBlockLayout, useTable} from "react-table";
-import {ItemComponent} from "../settings/items/item";
-import Highlighter from "react-highlight-words";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faBarcode} from "@fortawesome/free-solid-svg-icons";
 import {Input} from "../../../app-common/components/input/input";
 import {TrapFocus} from "../../../app-common/components/container/trap.focus";
 import Fuse from "fuse.js";
@@ -36,14 +32,14 @@ export const SearchVariants = ({
   const handlerRef = useRef(null);
 
   useEffect(() => {
-    handlerRef.current = function(event: any) {
+    handlerRef.current = function (event: any) {
       event.preventDefault();
 
       moveVariantsCursor(event);
     };
   }, [appState.selected, appState.quantity, appState.selectedVariant, appState.latest, variants]);
 
-  const searchScrollContainer = useRef<FixedSizeList|null>(null);
+  const searchScrollContainer = useRef<FixedSizeList | null>(null);
   const moveSearchList = (index: number) => {
     if (searchScrollContainer && searchScrollContainer.current) {
       searchScrollContainer.current.scrollToItem(index);
@@ -183,7 +179,7 @@ export const SearchVariants = ({
       })
 
     } else if (event.key === "Enter") {
-      if(appState.latest) {
+      if (appState.latest) {
         addItemVariant(
           appState.latest,
           variants[appState.selectedVariant],
@@ -203,7 +199,7 @@ export const SearchVariants = ({
     };
   }, []);
 
-  const inputRef = useRef<HTMLInputElement|null>(null)
+  const inputRef = useRef<HTMLInputElement | null>(null)
 
   return (
     <Modal
@@ -215,52 +211,53 @@ export const SearchVariants = ({
     >
       {variants.length > 0 && (
         <TrapFocus inputRef={inputRef.current}>
-        <div className="table w-full">
-          <Input
-            ref={inputRef}
-            className="search-field mb-3 mousetrap w-full"
-            value={search}
-            onChange={(e) => setSearch(e.currentTarget.value)}
-            autoFocus
-          />
+          <div className="table w-full">
+            <Input
+              ref={inputRef}
+              className="search-field mb-3 mousetrap w-full"
+              value={search}
+              onChange={(e) => setSearch(e.currentTarget.value)}
+              autoFocus
+              enableKeyboard
+            />
 
-          <div {...getTableProps()} className="table">
-            <div>
-              {headerGroups.map((headerGroup, k) => (
-                <div {...headerGroup.getHeaderGroupProps()} key={k}>
-                  {headerGroup.headers.map((column, i) => {
-                    //@ts-ignore
-                    const style = column.style;
-                    return (
-                      <div
-                        {...column.getHeaderProps({
-                          style: style,
-                        })}
-                        className={classNames(
-                          "p-2 flex-1 font-bold",
-                          i === 0 ? "grow-0" : ""
-                        )}
-                        key={i}>
-                        {column.render("Header")}
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
+            <div {...getTableProps()} className="table">
+              <div>
+                {headerGroups.map((headerGroup, k) => (
+                  <div {...headerGroup.getHeaderGroupProps()} key={k}>
+                    {headerGroup.headers.map((column, i) => {
+                      //@ts-ignore
+                      const style = column.style;
+                      return (
+                        <div
+                          {...column.getHeaderProps({
+                            style: style,
+                          })}
+                          className={classNames(
+                            "p-2 flex-1 font-bold",
+                            i === 0 ? "grow-0" : ""
+                          )}
+                          key={i}>
+                          {column.render("Header")}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
 
-            <div {...getTableBodyProps()}>
-              <FixedSizeList
-                height={windowHeight}
-                itemCount={rows.length}
-                itemSize={60}
-                width={"100%"}
-                ref={searchScrollContainer}>
-                {RenderRow}
-              </FixedSizeList>
+              <div {...getTableBodyProps()}>
+                <FixedSizeList
+                  height={windowHeight}
+                  itemCount={rows.length}
+                  itemSize={60}
+                  width={"100%"}
+                  ref={searchScrollContainer}>
+                  {RenderRow}
+                </FixedSizeList>
+              </div>
             </div>
           </div>
-        </div>
         </TrapFocus>
       )}
     </Modal>

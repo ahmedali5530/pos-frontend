@@ -35,6 +35,12 @@ export interface Product {
   terminals: Terminal[];
   taxes: Tax[];
   manage_inventory?: boolean
+  allow_price_change?: boolean
+  allow_discount?: boolean
+  variable_price?: boolean
+  price_min?: number
+  price_max?: number
+  cart_input_mode?: 'none' | 'weight' | 'price'
   variant_groups?: {
     groupName: string,
     variants: {label: string, value: string}[]

@@ -1,5 +1,6 @@
 import {Customer, CUSTOMER_FETCHES} from "../model/customer";
 import {useFetch} from "./use.fetch";
+import {safeNumber} from "../../lib/currency/currency";
 
 export const useCustomer = () => {
   const fetch = useFetch();
@@ -11,7 +12,7 @@ export const useCustomer = () => {
   const calculateCustomerPayment = (customer: Customer) => {
     let paid = 0;
     customer?.payments?.forEach(payment => {
-      paid += Number(payment.amount);
+      paid += safeNumber(payment.amount);
     });
 
     return paid;
@@ -22,7 +23,7 @@ export const useCustomer = () => {
     customer?.orders?.forEach(order => {
       order?.payments?.forEach(payment => {
         if (payment.type?.type === 'credit') {
-          sale += Number(payment.received);
+          sale += safeNumber(payment.received);
         }
       })
     })
@@ -31,7 +32,7 @@ export const useCustomer = () => {
   }
 
   const calculateCustomerOutstanding = (customer: Customer) => {
-    return calculateCustomerSale(customer) - calculateCustomerPayment(customer) + Number(customer.opening_balance);
+    return calculateCustomerSale(customer) - calculateCustomerPayment(customer) + safeNumber(customer.opening_balance);
   }
 
   return {

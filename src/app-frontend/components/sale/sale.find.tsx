@@ -94,6 +94,7 @@ export const SaleFind = ({
                   className="search-field flex-1"
                   autoFocus={true}
                   type="number"
+                  enableKeyboard
                 />
               )}
               name="order_id"

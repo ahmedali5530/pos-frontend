@@ -13,9 +13,8 @@ import {ValidationResult} from "../../../lib/validator/validation.result";
 import {Shortcut} from "../../../app-common/components/input/shortcut";
 import {ClearSale} from "./clear.sale";
 import ScrollContainer from "react-indiana-drag-scroll";
-import {PrintOrder} from "./sale.print";
 import {notify} from "../../../app-common/components/confirm/notification";
-import {formatNumber, withCurrency} from "../../../lib/currency/currency";
+import {withCurrency} from "../../../lib/currency/currency";
 import {useAtom} from "jotai";
 import {CartItemType} from "../cart/cart.container";
 import {appState as AppState, defaultData, defaultState, PosModes} from "../../../store/jotai";
@@ -25,9 +24,9 @@ import {useDB} from "../../../api/db/db";
 import {Tables} from "../../../api/db/tables";
 import {useOrder} from "../../../api/hooks/use.order";
 import {toRecordId} from "../../../api/model/common";
-import {Order} from "../../../api/model/order";
 import {dispatchPrint} from "../../../lib/print/print.service";
 import {nanoid} from "nanoid";
+import {Input} from "../../../app-common/components/input/input";
 
 interface Props {
   paymentTypesList: PaymentType[];
@@ -211,7 +210,8 @@ export const CloseSaleInline: FC<Props> = ({
     }
 
     const [rows] = await db.query(
-      `SELECT * FROM ONLY ${toRecordId(customerData.id)} FETCH payments, orders, orders.payments, orders.payments.type`
+      `SELECT *
+       FROM ONLY ${toRecordId(customerData.id)} FETCH payments, orders, orders.payments, orders.payments.type`
     );
     const customerWithHistory = rows;
     if (!customerWithHistory) {
@@ -248,12 +248,16 @@ export const CloseSaleInline: FC<Props> = ({
 
       let printers = [];
 
-      const [settings] = await db.query(`SELECT * FROM ${Tables.setting} where terminal = $terminal and name = $name FETCH values.printers.printers`, {
+      const [settings] = await db.query(`SELECT *
+                                         FROM ${Tables.setting}
+                                         where terminal = $terminal
+                                           and name = $name FETCH
+                                         values.printers.printers`, {
         name: 'final_printers',
         terminal: toRecordId(terminal?.id)
       });
 
-      if(settings.length > 0 && settings[0].values.printers.length > 0){
+      if (settings.length > 0 && settings[0].values.printers.length > 0) {
         printers = settings[0].values.printers;
       }
 
@@ -304,7 +308,7 @@ export const CloseSaleInline: FC<Props> = ({
   }
 
   const onSaleSubmit = async (values: any) => {
-    if(defaultMode === PosModes.quote){
+    if (defaultMode === PosModes.quote) {
       await printQuotation(values);
       return;
     }
@@ -327,7 +331,8 @@ export const CloseSaleInline: FC<Props> = ({
 
       let customerFromDB = null;
       if (customer) {
-        [[customerFromDB]] = await db.query(`SELECT * FROM ${toRecordId(customer.id)}`);
+        [[customerFromDB]] = await db.query(`SELECT *
+                                             FROM ${toRecordId(customer.id)}`);
       }
 
       if (customerName) {
@@ -383,8 +388,11 @@ export const CloseSaleInline: FC<Props> = ({
         items.push(item.id);
 
         // if variant, then only cut variant quantity
-        if(add.variant) {
-          const [variantStore] = await db.query(`SELECT * FROM ${Tables.product_variant_store} where store = $store and variant = $variant`, {
+        if (add.variant) {
+          const [variantStore] = await db.query(`SELECT *
+                                                 FROM ${Tables.product_variant_store}
+                                                 where store = $store
+                                                   and variant = $variant`, {
             store: toRecordId(store?.id),
             variant: toRecordId(add.variant.id)
           });
@@ -394,14 +402,17 @@ export const CloseSaleInline: FC<Props> = ({
               quantity: variantStore[0].quantity - Number(add.quantity)
             });
           }
-        }else{
+        } else {
           // update product stock
-          const [productStore] = await db.query(`SELECT * FROM ${Tables.product_store} where store = $store and product = $product`, {
+          const [productStore] = await db.query(`SELECT *
+                                                 FROM ${Tables.product_store}
+                                                 where store = $store
+                                                   and product = $product`, {
             store: toRecordId(store?.id),
             product: toRecordId(add.item.id)
           });
 
-          if(productStore.length > 0){
+          if (productStore.length > 0) {
             await db.merge(toRecordId(productStore[0].id), {
               quantity: productStore[0].quantity - Number(add.quantity)
             });
@@ -492,13 +503,13 @@ export const CloseSaleInline: FC<Props> = ({
       }
 
       // update customer account
-      if(customerFromDB){
+      if (customerFromDB) {
         await db.merge(toRecordId(customerFromDB.id), {
           orders: [...customerFromDB?.orders || [], toRecordId(order.id)]
         })
       }
 
-      if(refundingFrom){
+      if (refundingFrom) {
         if (Array.isArray(refundingSourceItems) && refundingSourceItems.length > 0) {
           for (const source of refundingSourceItems) {
             if (Number(source.quantity) >= Number(source.originalQuantity)) {
@@ -510,7 +521,8 @@ export const CloseSaleInline: FC<Props> = ({
         }
 
         const [refundingOrderRows] = await db.query(
-          `SELECT * FROM ONLY ${toRecordId(refundingFrom)} FETCH items`
+          `SELECT *
+           FROM ONLY ${toRecordId(refundingFrom)} FETCH items`
         );
         const refundingOrder = refundingOrderRows;
         if (refundingOrder?.items?.length > 0) {
@@ -557,12 +569,16 @@ export const CloseSaleInline: FC<Props> = ({
 
       let printers = [];
 
-      const [settings] = await db.query(`SELECT * FROM ${Tables.setting} where terminal = $terminal and name = $name FETCH values.printers.printers`, {
+      const [settings] = await db.query(`SELECT *
+                                         FROM ${Tables.setting}
+                                         where terminal = $terminal
+                                           and name = $name FETCH
+                                         values.printers.printers`, {
         name: 'final_printers',
         terminal: toRecordId(terminal?.id)
       });
 
-      if(settings.length > 0 && settings[0].values.printers.length > 0){
+      if (settings.length > 0 && settings[0].values.printers.length > 0) {
         printers = settings[0].values.printers;
       }
 
@@ -923,14 +939,14 @@ export const CloseSaleInline: FC<Props> = ({
                       render={(props) => {
                         return (
                           <>
-                            <input
+                            <Input
                               ref={paymentInputRef}
                               onChange={props.field.onChange}
                               value={props.field.value}
                               type="number"
                               id="amount"
                               placeholder="Payment"
-                              className="w-full flex-1 lg input mousetrap form-control"
+                              className="w-full flex-1 lg mousetrap"
                               onClick={selectPaymentInput}
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") {
@@ -946,6 +962,7 @@ export const CloseSaleInline: FC<Props> = ({
                               }}
                               disabled={added.length === 0}
                               tabIndex={0}
+                              enableKeyboard
                             />
                           </>
                         );
@@ -1010,6 +1027,8 @@ export const CloseSaleInline: FC<Props> = ({
                 className="w-full"
                 id="notes"
                 tabIndex={-1}
+                enableKeyboard
+                placeholder="Order notes"
               />
             </div>
 

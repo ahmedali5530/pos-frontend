@@ -278,12 +278,13 @@ export const Customers: FC<Props> = ({children, className}) => {
       </Tooltip>
 
       <Modal
-        shouldCloseOnEsc={true}
+        shouldCloseOnOverlayClick
         open={modal}
         onClose={() => {
           setModal(false);
         }}
-        title="Customers">
+        title="Customers"
+      >
         <form className="mb-5" onSubmit={handleSubmit(createCustomer)}>
           <div className="grid lg:grid-cols-4 gap-4 gap-y-2 mb-3 md:grid-cols-3 sm:grid-cols-1">
             <div>

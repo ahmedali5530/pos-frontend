@@ -5,6 +5,7 @@ import { Modal } from "../../../app-common/components/modal/modal";
 import { Controller, useForm } from "react-hook-form";
 import { Input } from "../../../app-common/components/input/input";
 import { DiscountRate } from "../../../api/model/discount";
+import { canEditCartDiscount } from "../../../lib/product/product.pricing";
 import { ReactSelect } from "../../../app-common/components/input/custom.react.select";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faTrash } from "@fortawesome/free-solid-svg-icons";
@@ -13,6 +14,7 @@ import { defaultState } from "../../../store/jotai";
 import {Order} from "../../../api/model/order";
 import {useDB} from "../../../api/db/db";
 import {toRecordId} from "../../../api/model/common";
+import {notify} from "../../../app-common/components/confirm/notification";
 
 interface CartControlsProps {
   containerRef: HTMLDivElement | null;
@@ -127,9 +129,14 @@ export const CartControls = ({ containerRef }: CartControlsProps) => {
       checkedItems = [added[added.length - 1]];
     }
 
+    let skipped = 0;
     newItems = newItems.map((item) => {
       if( checkedItems.find((checkedItem) => checkedItem === item) ) {
         item.checked = false;
+        if (!canEditCartDiscount(item.item)) {
+          skipped += 1;
+          return item;
+        }
         if( values.discountType.value === DiscountRate["RATE_FIXED"] ) {
           item.discount = values.discount;
         } else {
@@ -141,6 +148,13 @@ export const CartControls = ({ containerRef }: CartControlsProps) => {
 
       return item;
     });
+
+    if (skipped > 0) {
+      notify({
+        type: "warning",
+        description: `Discount not applied to ${skipped} item(s) that do not allow discounts`,
+      });
+    }
 
     // set new items with updated quantity
     setAppState((prev) => ({

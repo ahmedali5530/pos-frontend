@@ -21,7 +21,7 @@ export const PurchaseOrders = () => {
   const [{store}] = useAtom(appState);
 
 
-  const useLoadHook = useApi<SettingsData<PurchaseOrder>>(Tables.purchase_order, [`store = ${store?.id}`, 'and deleted_at = NULL OR deleted_at = NONE'], [], 0, 10, [
+  const useLoadHook = useApi<SettingsData<PurchaseOrder>>(Tables.purchase_order, [`store = ${store?.id} and (deleted_at = NULL OR deleted_at = NONE)`], [], 0, 10, [
     'supplier', 'store', 'items', 'items.item', 'items.variants', 'items.variants.variant'
   ]);
   const [purchaseOrder, setPurchaseOrder] = useState<PurchaseOrder | undefined>();

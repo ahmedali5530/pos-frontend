@@ -11,6 +11,7 @@ import {Ref} from "react";
 import {User} from "../api/model/user";
 import {Store} from "../api/model/store";
 import {Terminal} from "../api/model/terminal";
+import {Category} from "../api/model/category";
 
 export enum PosModes {
   pos = "pos",
@@ -39,38 +40,39 @@ export const appState = atomWithStorage<AppStateInterface>(
 );
 
 export interface DefaultStateInterface {
-  q: string;
-  added: CartItem[];
-  selected: number;
-  selectedVariant: number;
-  latest?: Product;
-  latestVariant?: ProductVariant;
-  latestIndex?: number;
-  latestQuantity?: number;
-  latestRate?: number;
-  quantity: number;
-  rate: number;
-  discount?: Discount;
-  discountAmount?: number;
-  discountRateType?: string;
-  tax?: Tax;
-  coupon?: Coupon;
-  customer?: Customer;
-  adjustment: number;
-  cartItem?: number;
-  cartItemType: string;
-  orderId?: string;
-  customerName?: string;
-  paymentType?: PaymentType;
+  q: string
+  added: CartItem[]
+  selected: number
+  selectedVariant: number
+  selectedCategory?: Category
+  latest?: Product
+  latestVariant?: ProductVariant
+  latestIndex?: number
+  latestQuantity?: number
+  latestRate?: number
+  quantity: number
+  rate: number
+  discount?: Discount
+  discountAmount?: number
+  discountRateType?: string
+  tax?: Tax
+  coupon?: Coupon
+  customer?: Customer
+  adjustment: number
+  cartItem?: number
+  cartItemType: string
+  orderId?: string
+  customerName?: string
+  paymentType?: PaymentType
   disableEdit?: boolean
 
-  refundingFrom?: string;
+  refundingFrom?: string
   refundingSourceItems?: {
-    orderItemId: string;
-    quantity: number;
-    originalQuantity: number;
-  }[];
-  refundPaymentType?: PaymentType;
+    orderItemId: string
+    quantity: number
+    originalQuantity: number
+  }[]
+  refundPaymentType?: PaymentType
 }
 
 export const defaultState = atomWithStorage<DefaultStateInterface>(
@@ -86,20 +88,21 @@ export const defaultState = atomWithStorage<DefaultStateInterface>(
     cartItem: -1,
     cartItemType: "quantity",
     tax: undefined,
+    discountRateType: 'fixed'
   }
-);
+)
 
 export interface DefaultDataInterface {
-  defaultTax?: Tax;
-  defaultDiscount?: Discount;
-  defaultPaymentType?: PaymentType;
-  enableShortcuts?: boolean;
-  displayShortcuts?: boolean;
-  enableTouch?: boolean;
-  defaultMode?: PosModes;
-  searchBox?: boolean;
-  customerBox?: boolean;
-  requireCustomerBox?: boolean;
+  defaultTax?: Tax
+  defaultDiscount?: Discount
+  defaultPaymentType?: PaymentType
+  enableShortcuts?: boolean
+  displayShortcuts?: boolean
+  enableTouch?: boolean
+  defaultMode?: PosModes
+  searchBox?: boolean
+  customerBox?: boolean
+  requireCustomerBox?: boolean
 }
 
 export const defaultData = atomWithStorage<DefaultDataInterface>(

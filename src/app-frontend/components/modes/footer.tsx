@@ -9,12 +9,10 @@ import {Customers} from "../customers/customers";
 import {useAtom} from "jotai";
 import {appState} from "../../../store/jotai";
 import {Settings} from "../settings/settings";
-import {Reports} from "../../containers/reports";
-import {useNavigate} from "react-router";
-import {REPORTS} from "../../routes/frontend.routes";
+import {ACCOUNTS, REPORTS} from "../../routes/frontend.routes";
 import {NavLink} from "react-router-dom";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faBarChart} from "@fortawesome/free-solid-svg-icons";
+import {faBarChart, faBook} from "@fortawesome/free-solid-svg-icons";
 import {Tooltip} from "antd";
 
 export const Footer = () => {
@@ -28,6 +26,18 @@ export const Footer = () => {
           <More />
           <span className="w-[2px] bg-gray-500 h-full"></span>
         </>
+      )}
+
+      {user?.roles === 'ROLE_ADMIN' && (
+        <Tooltip title="Accounts">
+          <NavLink
+            to={ACCOUNTS}
+            className="btn btn-success lg btn-square"
+          >
+            <FontAwesomeIcon icon={faBook} />
+          </NavLink>
+          <span className="w-[2px] bg-gray-500 h-full"></span>
+        </Tooltip>
       )}
 
       {user?.roles === 'ROLE_ADMIN' && (

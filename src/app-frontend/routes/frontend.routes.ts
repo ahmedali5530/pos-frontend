@@ -9,6 +9,8 @@ export const RESET_PASSWORD = staticRoute('/reset-password/*');
 
 export const POS = staticRoute('/pos');
 export const SETTINGS = staticRoute('/settings');
+export const ACCOUNTS = staticRoute('/accounts');
+export const INVENTORY = staticRoute('/inventory');
 export const POS_V2 = staticRoute('/pos/v2');
 export const DASHBOARD = staticRoute('/pos/dashboard');
 

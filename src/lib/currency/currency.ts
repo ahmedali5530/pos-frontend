@@ -37,3 +37,8 @@ export const transformValue = {
     return isNaN(output) ? 0 : output;
   }
 }
+
+export const safeNumber = (value: unknown, fallback = 0) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && !isNaN(parsed) ? parsed : fallback;
+};

@@ -113,7 +113,7 @@ export const CreateVariants = ({
   return (
     <div>
       <div className="mb-5">
-        <h4 className="text-xl">Copy variants from another item</h4>
+        <label>Copy variants from another item</label>
         <ReactSelect
           options={items?.data?.map(item => ({
             label: `${item.name} - ${item.barcode}`,

@@ -4,6 +4,7 @@ import {Tables} from "../db/tables";
 import {OrderItem} from "../model/order.item";
 import {Order, ORDER_FETCHES} from "../model/order";
 import {useFetch} from "./use.fetch";
+import {safeNumber} from "../../lib/currency/currency";
 
 
 export const useOrder = () => {
@@ -25,7 +26,7 @@ export const useOrder = () => {
   }
 
   const calculateOrderItemPrice = (item: OrderItem) => {
-    return (Number(item.quantity) * Number(item.price)) + itemTaxes(item) - Number(item.discount)
+    return (safeNumber(item.quantity) * safeNumber(item.price)) + itemTaxes(item) - safeNumber(item.discount)
   }
 
   const calculateOrderPrice = (order: Order) => {
@@ -33,7 +34,7 @@ export const useOrder = () => {
   }
 
   const calculateOrderItemCost = (item: OrderItem) => {
-    return (Number(item.quantity) * Number(item.cost ?? 0))
+    return (safeNumber(item.quantity) * safeNumber(item.cost ?? 0))
   }
 
   const calculateOrderCost = (order: Order) => {

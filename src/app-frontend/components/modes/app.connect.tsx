@@ -103,6 +103,7 @@ export const AppConnect = () => {
       <Modal
         title="Connect Scanner App"
         shouldCloseOnEsc
+        shouldCloseOnOverlayClick
         size="sm"
         open={modal}
         onClose={() => setModal(false)}>

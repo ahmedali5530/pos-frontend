@@ -299,7 +299,7 @@ export const SearchTable = (props: SearchTableProps) => {
         <form onSubmit={handleSubmit(submitForm)}>
           <div className="flex gap-3">
             <div className="input-group flex-1">
-              <input
+              <Input
                 className="input search-field w-full mousetrap lg"
                 onChange={(event) => {
                   setQ(event.currentTarget.value);
@@ -312,6 +312,8 @@ export const SearchTable = (props: SearchTableProps) => {
                 type="search"
                 value={q}
                 name="q"
+                placeholder="Search by name"
+                enableKeyboard
               />
               <Controller
                 name="quantity"
@@ -328,6 +330,7 @@ export const SearchTable = (props: SearchTableProps) => {
                     value={quantity}
                     placeholder="Quantity"
                     className="mousetrap lg"
+                    enableKeyboard
                   />
                 )}
                 control={control}

@@ -291,6 +291,7 @@ export const RefundOrder: FC<Props> = ({
                   className="search-field flex-1"
                   autoFocus
                   type="number"
+                  enableKeyboard
                 />
               )}
               name="order_id"

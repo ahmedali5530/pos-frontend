@@ -85,7 +85,7 @@ export const CreatePurchase: FC<PurchaseProps> = ({
     data: purchase_orders,
     isFetching: loadingPurchaseOrder
   } = useApi<SettingsData<PurchaseOrder>>(Tables.purchase_order, [
-    `store = ${store?.id}`, 'and (is_used = NULL or is_used = NONE or is_used = false)', 'and (deleted_at = NULL OR deleted_at = NONE)'
+    `store = ${store?.id} and (is_used = NULL or is_used = NONE or is_used = false) and (deleted_at = NULL OR deleted_at = NONE)`
   ], ['id ASC'], 0, undefined, ['supplier', 'store', 'items', 'items.item', 'items.variants', 'items.variants.variant']);
   const [purchaseOrderModal, setPurchaseOrderModal] = useState(false);
 

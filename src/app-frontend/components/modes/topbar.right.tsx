@@ -39,15 +39,16 @@ export const TopbarRight = () => {
       <Modal
         title="Select a mode"
         shouldCloseOnEsc
+        shouldCloseOnOverlayClick
         size="sm"
         open={modal}
         onClose={() => setModal(false)}>
-        <div className="list-group border-2 rounded-lg border-gray-500">
+        <div className="list-group border-2 rounded-lg border-gray-300">
           {options.map((item, index) => (
             <button
               key={item.label}
               className={classNames(
-                "w-full p-3", 'border-0', 'border-gray-500',
+                "w-full p-3", 'border-0', 'border-gray-300',
                 index === 0 ? '!border-b-0' : '!border-t-2',
                 item.value === defaultMode && 'bg-primary-100 text-primary-500'
               )}

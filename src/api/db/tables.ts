@@ -64,5 +64,10 @@ export enum Tables {
   cart = 'cart',
   app_connection = 'app_connection',
 
-  printer = 'printer'
+  printer = 'printer',
+
+  account = 'account',
+  account_group = 'account_group',
+  account_journal_entry = 'account_journal_entry',
+  account_journal_line = 'account_journal_line'
 }

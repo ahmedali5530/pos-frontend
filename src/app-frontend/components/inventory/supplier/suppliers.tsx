@@ -23,7 +23,7 @@ export const Suppliers = () => {
 
   const [{store}] = useAtom(appState);
 
-  const useLoadHook = useApi<SettingsData<Supplier>>(Tables.supplier, [`stores ?= ${store?.id}`, ' and (deleted_at = NULL or deleted_at = NONE)'], [], 0, 10, [
+  const useLoadHook = useApi<SettingsData<Supplier>>(Tables.supplier, [`stores ?= ${store?.id}  and (deleted_at = NULL or deleted_at = NONE)`], [], 0, 10, [
     'stores', 'stores.store', 'payments', 'payments.payment_type', 'purchases'
   ])
   const [supplier, setSupplier] = useState<Supplier>();

@@ -1,6 +1,7 @@
 import Login from './containers/login/login';
 import {BrowserRouter as Router, Route, useLocation} from "react-router-dom";
 import {
+  ACCOUNTS,
   DASHBOARD,
   FORGOT_PASSWORD,
   LOGIN,
@@ -26,6 +27,7 @@ import {PurchaseReport} from "./components/reports/output/purchase.report";
 import {PurchaseReturnReport} from "./components/reports/output/purchase.return.report";
 import {WasteReport} from "./components/reports/output/waste.report";
 import {DetailedInventoryReport} from "./components/reports/output/detailed.inventory.report";
+import {Accounts} from "./containers/accounts";
 
 export const AppComponent = () => {
   const [app,] = useAtom(appState);
@@ -64,6 +66,7 @@ export const AppComponent = () => {
         <Route path={REPORTS_WASTE} element={<WasteReport/>}/>
 
         <Route path={SETTINGS} element={<RequireAuth><Settings/></RequireAuth>}/>
+        <Route path={ACCOUNTS} element={<RequireAuth><Accounts/></RequireAuth>}/>
 
         {/*if nothing matches show 404*/}
         <Route path="*" element={<Error404/>}/>

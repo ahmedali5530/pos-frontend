@@ -13,11 +13,17 @@ import {CartItemType} from "./cart.container";
 import {useDB} from "../../../api/db/db";
 import {Tables} from "../../../api/db/tables";
 import {toRecordId} from "../../../api/model/common";
+import {
+  canEditCartDiscount,
+  canEditCartPrice,
+  usesVariablePriceEditor,
+} from "../../../lib/product/product.pricing";
 
 interface CartItemProps {
   onQuantityChange: (item: CartItemModel, quantity: any) => void;
   onDiscountChange: (item: CartItemModel, discount: number) => void;
   onPriceChange: (item: CartItemModel, price: number) => void;
+  onOpenPriceEdit: (item: CartItemModel, index: number) => void;
   deleteItem: (index: number) => void;
   item: CartItemModel;
   index: number;
@@ -32,6 +38,7 @@ interface ItemInfo {
 export const CartItem: FunctionComponent<CartItemProps> = ({
   onQuantityChange,
   onPriceChange,
+  onOpenPriceEdit,
   onDiscountChange,
   onCheck,
   item,
@@ -188,6 +195,7 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
               }}
               ref={qtyRef}
               disabled={disableEdit}
+              enableKeyboard
             />
             {/*<Button
               tabIndex={-1}
@@ -216,7 +224,8 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
               cartItemType: CartItemType.discount
             }))
           }}
-          disabled={disableEdit}
+          disabled={disableEdit || !canEditCartDiscount(item.item)}
+          enableKeyboard
         />
       </div>
       <div className="table-cell p-2 text-center">
@@ -230,10 +239,35 @@ export const CartItem: FunctionComponent<CartItemProps> = ({
         <Input
           value={item.price}
           type="number"
-          className={"text-center w-full mousetrap"}
-          onChange={(event) => onPriceChange(item, +event.currentTarget.value)}
+          className={classNames(
+            "text-center w-full mousetrap",
+            usesVariablePriceEditor(item.item) && canEditCartPrice(item.item) && "cursor-pointer"
+          )}
+          readOnly={usesVariablePriceEditor(item.item)}
+          onChange={(event) => {
+            if (!usesVariablePriceEditor(item.item)) {
+              onPriceChange(item, +event.currentTarget.value);
+            }
+          }}
+          onFocus={(event) => {
+            setAppState(prev => ({
+              ...prev,
+              cartItem: index,
+              cartItemType: CartItemType.rate
+            }));
+            if (usesVariablePriceEditor(item.item) && canEditCartPrice(item.item) && !disableEdit) {
+              event.currentTarget.blur();
+              onOpenPriceEdit(item, index);
+            }
+          }}
+          onClick={() => {
+            if (usesVariablePriceEditor(item.item) && canEditCartPrice(item.item) && !disableEdit) {
+              onOpenPriceEdit(item, index);
+            }
+          }}
           ref={rateRef}
-          disabled
+          disabled={disableEdit || !canEditCartPrice(item.item)}
+          enableKeyboard={!usesVariablePriceEditor(item.item)}
         />
       </div>
       <div className="table-cell p-2 text-right">{formatNumber(getRowTotal(item))}</div>

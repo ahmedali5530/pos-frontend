@@ -12,7 +12,7 @@ import {useDB} from "../../../../api/db/db";
 
 export const PrintSettings = () => {
   const loadHook = useApi<SettingsData<Setting>>(Tables.setting, [
-    'name = "Temp Print"', 'or name = "Final Print"', 'or name = "Summary Print"', 'or name = "Delivery Print"'
+    '(name = "Temp Print" or name = "Final Print" or name = "Summary Print" or name = "Delivery Print")'
   ], []);
   const db = useDB();
 
