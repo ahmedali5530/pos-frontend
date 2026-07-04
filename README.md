@@ -9,7 +9,7 @@ Designed for **speed at checkout**, **accurate stock tracking**, and **multi-sto
 
 ## 🚀 Live Demo
 
-👉 Try it here: **[Demo](https://ahmedali5530.xyz/pos.html)**  
+👉 Try it here: **[Demo](https://ahmedali5530.xyz/pos)**  
 🔑 Login: `admin / admin` and `user / user`
 
 ---
