@@ -165,7 +165,7 @@ export const PosMode = () => {
       filtered = filtered.filter((item) => {
         if (item?.brands?.length > 0) {
           const brandsFilter = item.brands.filter((b) => {
-            return brandIds.includes(b.id.toString());
+            return brandIds.includes(toRecordId(b.id).toString());
           });
 
           return brandsFilter.length > 0;
@@ -180,7 +180,7 @@ export const PosMode = () => {
       filtered = filtered.filter((item) => {
         if (item?.categories?.length > 0) {
           const categoriesFilter = item.categories.filter((c) => {
-            return categoryIds.includes(c.id.toString());
+            return categoryIds.includes(toRecordId(c.id).toString());
           });
 
           return categoriesFilter.length > 0;
@@ -194,7 +194,7 @@ export const PosMode = () => {
     if (departmentIds.length > 0) {
       filtered = filtered.filter((item) => {
         if (item?.department) {
-          return departmentIds.includes(item.department.id.toString());
+          return departmentIds.includes(toRecordId(item.department.id).toString());
         }
 
         return false;
