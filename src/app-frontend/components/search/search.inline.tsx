@@ -8,6 +8,8 @@ import {Button} from "../../../app-common/components/input/button";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faArrowLeft} from "@fortawesome/free-solid-svg-icons";
 import {toRecordId} from "../../../api/model/common";
+import classNames from "classnames";
+import ScrollContainer from "react-indiana-drag-scroll";
 
 interface SearchInlineProps {
   items: Product[];
@@ -33,7 +35,7 @@ export const SearchInline = (props: SearchInlineProps) => {
 
   const categoryItems = useMemo(() => {
     if(!selectedCategory){
-      return [];
+      return items;
     }
 
     return items.filter((item) => {
@@ -47,65 +49,54 @@ export const SearchInline = (props: SearchInlineProps) => {
 
   return (
     <>
-      {!selectedCategory && (
-        <>
-          <div className="mb-5 text-xl">
-            Choose a category
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {categories.map((item, index) => (
-              <div
-                key={index}
-                className="flex p-5 items-center justify-center border shadow-lg active:shadow-none rounded-lg"
-                role="button"
-                onClick={() => {
+      <ScrollContainer>
+        <div className="flex flex-row gap-3">
+          {categories.map((item, index) => (
+            <Button
+              key={index}
+              className={classNames(
+                "btn",
+                selectedCategory?.id === item.id ? "btn-primary active" : ""
+              )}
+              size="lg"
+              role="button"
+              onClick={() => {
+                if(selectedCategory?.id === item.id) {
+                  setAppState(prev => ({
+                    ...prev,
+                    selectedCategory: undefined
+                  }))
+                } else {
                   setAppState(prev => ({
                     ...prev,
                     selectedCategory: item
                   }))
-                }}
-              >
-                {item.name}
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {selectedCategory && (
-        <>
-          <div className="flex items-center gap-3 mb-5">
-            <Button
-              iconButton
-              onClick={() => {
-                setAppState(prev => ({
-                  ...prev,
-                  selectedCategory: undefined
-                }))
+                }
               }}
-              size="lg"
             >
-              <FontAwesomeIcon icon={faArrowLeft} />
+              {item.name}
             </Button>
-            <span className="xl">{selectedCategory.name}</span>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {categoryItems.map((item, index) => (
-              <div
-                key={index}
-                className="flex p-5 items-center justify-center border shadow-lg active:shadow-none rounded-lg"
-                role="button"
-                onClick={() => {
-                  addItem(item, quantity, getRealProductPrice(item));
+          ))}
+        </div>
+      </ScrollContainer>
 
-                }}
-              >
-                {item.name}
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+      <div className="mt-3">
+        <div className="grid grid-cols-2 gap-3">
+          {categoryItems.map((item, index) => (
+            <div
+              key={index}
+              className="flex p-5 items-center justify-center border shadow-lg active:shadow-none rounded-lg"
+              role="button"
+              onClick={() => {
+                addItem(item, quantity, getRealProductPrice(item));
+
+              }}
+            >
+              {item.name}
+            </div>
+          ))}
+        </div>
+      </div>
     </>
   );
 };
