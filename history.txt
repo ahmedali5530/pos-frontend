@@ -1,0 +1,17 @@
+#V2
+DEFINE FIELD OVERWRITE role ON TABLE printer TYPE option<string | null> DEFAULT 'receipt' PERMISSIONS FOR create FULL FOR select FULL FOR update FULL;
+DEFINE FIELD OVERWRITE vid ON TABLE printer TYPE option<string | null> PERMISSIONS FOR create FULL FOR select FULL FOR update FULL;
+DEFINE FIELD OVERWRITE pid ON TABLE printer TYPE option<string | null> PERMISSIONS FOR create FULL FOR select FULL FOR update FULL;
+DEFINE FIELD OVERWRITE path ON TABLE printer TYPE option<string | null> PERMISSIONS FOR create FULL FOR select FULL FOR update FULL;
+INFO FOR TABLE printer;
+SELECT name FROM setting WHERE name CONTAINS 'Print' OR name = 'Label Print';
+LET $exists = (SELECT * FROM setting WHERE name = 'Label Print' LIMIT 1);
+RETURN $exists;
+INFO FOR DB;
+SELECT * FROM setting LIMIT 3;
+SELECT * FROM settings LIMIT 3;
+CREATE settings SET name = 'Label Print', values = {  codeMode: 'barcode',  barcodeType: 'CODE128',  showCodeHumanReadable: true,  showName: true,  showBarcodeText: false,  showPrice: true,  showSku: false,  showCategory: false,  showCompanyName: false,  companyName: '',  labelWidthMm: 50,  labelHeightMm: 30,  dpi: 203,  marginMm: 2,  fontSize: 'medium'};
+SELECT name, values FROM settings WHERE name = 'Label Print';
+SELECT id, name FROM settings WHERE name = 'Label Print';
+DELETE settings:l2ah5pba9o26bt9x9m7k;
+SELECT id, name FROM settings WHERE name = 'Label Print';

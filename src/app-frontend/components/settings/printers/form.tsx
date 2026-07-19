@@ -34,6 +34,10 @@ const ValidationSchema = yup.object({
     label: yup.string().required(),
     value: yup.string().required()
   }).required('This is required'),
+  role: yup.object({
+    label: yup.string().required(),
+    value: yup.string().required()
+  }).required('This is required'),
 }).required();
 
 export const PrinterForm: FC<PrinterProps> = ({
@@ -65,10 +69,21 @@ export const PrinterForm: FC<PrinterProps> = ({
           label: entity.type,
           value: entity.type
         } : null,
+        role: {
+          label: entity.role === 'label' ? 'Label' : 'Receipt',
+          value: entity.role === 'label' ? 'label' : 'receipt',
+        },
         store: entity.store ? {
           label: entity.store.name,
           value: entity.store.id.toString()
         } : null
+      });
+    } else {
+      reset({
+        role: {label: 'Receipt', value: 'receipt'},
+        type: {label: 'Network', value: 'Network'},
+        prints: 1,
+        port: 9100,
       });
     }
   }, [entity]);
@@ -81,6 +96,7 @@ export const PrinterForm: FC<PrinterProps> = ({
       }
 
       values.type = values.type.value;
+      values.role = values.role?.value || 'receipt';
 
       if (entity?.id) {
         await db.merge(new StringRecordId(entity.id), {
@@ -144,6 +160,23 @@ export const PrinterForm: FC<PrinterProps> = ({
               control={control}
             />
           </div>
+          <div className="flex-1">
+            <label htmlFor="role">Role</label>
+            <Controller
+              render={({field}) => (
+                <ReactSelect
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={[
+                    {label: 'Receipt', value: 'receipt'},
+                    {label: 'Label', value: 'label'},
+                  ]}
+                />
+              )}
+              name="role"
+              control={control}
+            />
+          </div>
           {type?.value === 'Network' && (
             <>
               <div className="flex-1">
@@ -153,7 +186,7 @@ export const PrinterForm: FC<PrinterProps> = ({
                   render={({field}) => (
                     <Input
                       label="Path"
-                      value={transformValue.input(field.value)}
+                      value={field.value}
                       onChange={field.onChange}
                       error={errors?.ip_address?.message}
                       className="w-full"

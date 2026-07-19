@@ -35,6 +35,10 @@ export const Printers = () => {
     columnHelper.accessor("type", {
       header: "Type",
     }),
+    columnHelper.accessor("role", {
+      header: "Role",
+      cell: (info) => info.getValue() === 'label' ? 'Label' : 'Receipt',
+    }),
     columnHelper.accessor("ip_address", {
       header: "Address",
     }),
@@ -86,8 +90,9 @@ export const Printers = () => {
           <Button
             variant="primary"
             onClick={() => {
-              setModal(true);
+              setPrinter(undefined);
               setOperation("create");
+              setModal(true);
             }}>
             <FontAwesomeIcon icon={faPlus} className="mr-2"/> Printer
           </Button>

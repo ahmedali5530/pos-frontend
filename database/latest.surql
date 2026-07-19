@@ -480,8 +480,12 @@ DEFINE FIELD name ON printer TYPE string PERMISSIONS FULL;
 DEFINE FIELD port ON printer TYPE option<int | null> PERMISSIONS FULL;
 DEFINE FIELD prints ON printer TYPE int PERMISSIONS FULL;
 DEFINE FIELD priority ON printer TYPE option<int | null> PERMISSIONS FULL;
+DEFINE FIELD role ON printer TYPE option<string | null> DEFAULT 'receipt' PERMISSIONS FULL;
 DEFINE FIELD store ON printer TYPE record<store> PERMISSIONS FULL;
 DEFINE FIELD type ON printer TYPE option<string | null> PERMISSIONS FULL;
+DEFINE FIELD vid ON printer TYPE option<string | null> PERMISSIONS FULL;
+DEFINE FIELD pid ON printer TYPE option<string | null> PERMISSIONS FULL;
+DEFINE FIELD path ON printer TYPE option<string | null> PERMISSIONS FULL;
 
 
 

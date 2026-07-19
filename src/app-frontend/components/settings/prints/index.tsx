@@ -6,18 +6,43 @@ import useApi, {SettingsData} from "../../../../api/db/use.api";
 import {Setting} from "../../../../api/model/setting";
 import {Tables} from "../../../../api/db/tables";
 import {PrintForm} from "./print.form";
+import {LabelPrintForm} from "./label.print.form";
 import {TableComponent} from "../../../../app-common/components/table/table";
 import {Button} from "../../../../app-common/components/input/button";
 import {useDB} from "../../../../api/db/db";
+import {
+  DEFAULT_LABEL_PRINT_CONFIG,
+  LABEL_PRINT_SETTING_NAME,
+} from "../../../../lib/print/label.print.config";
+
+const PRINT_SETTING_FILTER =
+  '(name = "Temp Print" or name = "Final Print" or name = "Summary Print" or name = "Delivery Print" or name = "Label Print")';
 
 export const PrintSettings = () => {
   const loadHook = useApi<SettingsData<Setting>>(Tables.setting, [
-    '(name = "Temp Print" or name = "Final Print" or name = "Summary Print" or name = "Delivery Print")'
+    PRINT_SETTING_FILTER,
   ], []);
   const db = useDB();
 
   const [data, setData] = useState<Setting>();
   const [formModal, setFormModal] = useState(false);
+
+  useEffect(() => {
+    const ensureLabelPrint = async () => {
+      const [rows] = await db.query(
+        `SELECT * FROM ${Tables.setting} WHERE name = $name LIMIT 1`,
+        {name: LABEL_PRINT_SETTING_NAME}
+      );
+      if (!rows?.length) {
+        await db.create(Tables.setting, {
+          name: LABEL_PRINT_SETTING_NAME,
+          values: DEFAULT_LABEL_PRINT_CONFIG,
+        });
+        loadHook.fetchData();
+      }
+    };
+    ensureLabelPrint();
+  }, []);
 
   const columnHelper = createColumnHelper<Setting>();
 
@@ -47,6 +72,8 @@ export const PrintSettings = () => {
     }),
   ];
 
+  const isLabelPrint = data?.name === LABEL_PRINT_SETTING_NAME;
+
   return (
     <>
       <TableComponent
@@ -56,15 +83,27 @@ export const PrintSettings = () => {
         buttons={[]}
       />
 
-      <PrintForm
-        open={formModal}
-        data={data}
-        onClose={() => {
-          setFormModal(false);
-          setData(undefined);
-          loadHook.fetchData();
-        }}
-      />
+      {isLabelPrint ? (
+        <LabelPrintForm
+          open={formModal}
+          data={data}
+          onClose={() => {
+            setFormModal(false);
+            setData(undefined);
+            loadHook.fetchData();
+          }}
+        />
+      ) : (
+        <PrintForm
+          open={formModal}
+          data={data}
+          onClose={() => {
+            setFormModal(false);
+            setData(undefined);
+            loadHook.fetchData();
+          }}
+        />
+      )}
     </>
   )
 }

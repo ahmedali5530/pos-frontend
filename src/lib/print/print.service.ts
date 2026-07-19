@@ -29,6 +29,7 @@ const PRINT_CONFIG_KEYS: Record<string, string> = {
   refund: 'Final Print',
   delivery: 'Delivery Print',
   summary: 'Summary Print',
+  'barcode-labels': 'Label Print',
 };
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
@@ -151,17 +152,16 @@ export async function dispatchPrint<Payload = any>(
     printers?: {
       prints: number,
       printers: Printer[]
-    }[]
+    }[],
+    config?: Record<string, unknown>,
   }
-): Promise<void> {
+): Promise<boolean> {
   const baseUrl = (import.meta.env.VITE_PRINT_SERVER_URL as string) || DEFAULT_PRINT_URL;
   const url = `${baseUrl.replace(/\/$/, '')}/print`;
 
-  // eslint-disable-next-line prefer-const
-  let [config] = await Promise.all([
-    getPrintConfig(db, template),
-    // getPrintersForType(db, template),
-  ]);
+  const config = options?.config
+    ? {...(await getPrintConfig(db, template)), ...options.config}
+    : await getPrintConfig(db, template);
 
   const printers = options?.printers;
 
@@ -169,20 +169,20 @@ export async function dispatchPrint<Payload = any>(
   printers?.forEach((group) => {
     const prints = group.prints || 1;
     group.printers.forEach((p) => {
-      const config = printerToDriverConfig(p);
+      const driverConfig = printerToDriverConfig(p);
       for (let i = 0; i < prints; i++) {
-        driverPrinters.push(config);
+        driverPrinters.push(driverConfig);
       }
     });
   });
 
   if (driverPrinters.length === 0) {
     console.error('No printers configured for this print type: ' + template);
-    // notify({
-    //   type: "error",
-    //   description: 'No printers configured for this print type',
-    // });
-    return;
+    notify({
+      type: 'error',
+      description: 'No printers configured for this print type',
+    });
+    return false;
   }
 
   const body = {
@@ -209,8 +209,21 @@ export async function dispatchPrint<Payload = any>(
         type: "error",
         description: msg || 'Print failed',
       });
-      return;
+      return false;
     }
+
+    // 207 = multi-status partial failure
+    if (res.status === 207) {
+      const j = await res.json().catch(() => null);
+      const failed = (j?.results || []).filter((r: any) => !r.ok);
+      notify({
+        type: 'error',
+        description: failed[0]?.error || 'Some label prints failed',
+      });
+      return false;
+    }
+
+    return true;
   } catch (e) {
     const msg = e && typeof e === 'object' && 'message' in e ? String((e as Error).message) : 'Print request failed';
     console.error(msg);
@@ -218,5 +231,6 @@ export async function dispatchPrint<Payload = any>(
       type: 'error',
       description: 'Error in printing'
     })
+    return false;
   }
 }

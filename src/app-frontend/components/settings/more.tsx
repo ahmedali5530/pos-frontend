@@ -17,6 +17,7 @@ import {message as AntMessage, Tooltip} from "antd";
 import {Printers} from "./printers";
 import {PrintSettings} from "./prints";
 import {BarcodeConfiguration} from "./barcode-config";
+import {BulkBarcodePrint} from "./bulk-barcode-print";
 
 interface Props {
 }
@@ -83,6 +84,10 @@ export const More: FC<Props> = ({}) => {
       key: 'barcode_config',
       title: 'Barcode configuration',
       component: <BarcodeConfiguration/>
+    }, {
+      key: 'print_barcodes',
+      title: 'Print barcodes',
+      component: <BulkBarcodePrint/>
     }
   ];
 

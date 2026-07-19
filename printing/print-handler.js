@@ -3,6 +3,8 @@
 const escpos = require('escpos');
 const { createDevice } = require('./drivers');
 const { getBuilder } = require('./print-builders');
+const { writeRaw } = require('./drivers/raw-network');
+const { buildZpl } = require('./print-builders/barcode-labels-print');
 
 const DEFAULT_OPTIONS = { encoding: 'UTF-8', width: 42 };
 
@@ -39,6 +41,40 @@ function printOnDevice(device, escposOptions, printType, data, config) {
 }
 
 /**
+ * Send ZPL barcode labels over raw TCP (bypasses escpos).
+ * @param {Object} body
+ * @returns {Promise<{ success: boolean, results: Array<{ index: number, ok: boolean, error?: string }> }>}
+ */
+async function handleBarcodeLabelsPrint(body) {
+  const { printers = [], data = {}, config = {} } = body;
+  const zpl = buildZpl(data.labels || [], config);
+  const buffer = Buffer.from(zpl, 'utf8');
+  const results = [];
+
+  for (let i = 0; i < printers.length; i++) {
+    const p = printers[i];
+    try {
+      const type = String(p.type || 'network').toLowerCase();
+      if (type !== 'network') {
+        throw new Error('Barcode labels require a network printer (ZPL over TCP 9100)');
+      }
+      const ip = p.ip || p.ip_address;
+      const port = p.port || 9100;
+      await writeRaw(ip, port, buffer);
+      results.push({ index: i, ok: true });
+    } catch (err) {
+      results.push({
+        index: i,
+        ok: false,
+        error: err && (err.message || String(err)),
+      });
+    }
+  }
+
+  return { success: results.every((r) => r.ok), results };
+}
+
+/**
  * Handle print request: for each printer, create device from driver, run the selected print builder, then close.
  * @param {Object} body - { printers: Array<{ type, ... }>, data: { printType, ... }, config?: { companyName, logo, margins, show*, vat* } }
  * @returns {Promise<{ success: boolean, results: Array<{ index: number, ok: boolean, error?: string }> }>}
@@ -49,6 +85,10 @@ async function handlePrint(body) {
 
   if (!Array.isArray(printers) || printers.length === 0) {
     throw new Error('Request must include a non-empty "printers" array');
+  }
+
+  if (printType === 'barcode-labels') {
+    return handleBarcodeLabelsPrint(body);
   }
 
   const { normalizeConfig } = require('./lib/receipt-helpers');
@@ -77,4 +117,4 @@ async function handlePrint(body) {
   return { success, results };
 }
 
-module.exports = { handlePrint, printOnDevice, getBuilder, createDevice };
+module.exports = { handlePrint, printOnDevice, handleBarcodeLabelsPrint, getBuilder, createDevice };

@@ -61,3 +61,8 @@ DEFINE FIELD debit ON account_journal_line TYPE float DEFAULT 0 PERMISSIONS FULL
 DEFINE FIELD credit ON account_journal_line TYPE float DEFAULT 0 PERMISSIONS FULL;
 DEFINE FIELD description ON account_journal_line TYPE option<string | null> PERMISSIONS FULL;
 DEFINE FIELD created_at ON account_journal_line TYPE option<datetime | null> VALUE time::now() PERMISSIONS FULL;
+
+DEFINE FIELD OVERWRITE role ON TABLE printer TYPE option<string | null> DEFAULT 'receipt' PERMISSIONS FOR create FULL FOR select FULL FOR update FULL;
+DEFINE FIELD OVERWRITE vid ON TABLE printer TYPE option<string | null> PERMISSIONS FOR create FULL FOR select FULL FOR update FULL;
+DEFINE FIELD OVERWRITE pid ON TABLE printer TYPE option<string | null> PERMISSIONS FOR create FULL FOR select FULL FOR update FULL;
+DEFINE FIELD OVERWRITE path ON TABLE printer TYPE option<string | null> PERMISSIONS FOR create FULL FOR select FULL FOR update FULL;

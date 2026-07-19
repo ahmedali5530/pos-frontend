@@ -25,7 +25,7 @@ Use this to check layout and content before printing.
 ```json
 {
   "printers": [ ... ],
-  "data": { "printType": "temp|summary|kitchen|delivery|final|refund|deletion|table", ... },
+  "data": { "printType": "temp|summary|kitchen|delivery|final|refund|deletion|table|barcode-labels", ... },
   "config": {
     "bottomMargin": "1",
     "companyName": "Your Co",
@@ -68,6 +68,34 @@ Use this to check layout and content before printing.
 **final** (matches `final.bill.tsx` + `_common.bill.tsx`): CommonBillParts + **payments** (each `payment_type.name` / amount) + **Change** (`sum(payments) - total`). `data.duplicate: true` → title "Duplicate Final Bill".
 
 **delivery**: CommonBillParts + **Delivery Charges** (when `order.delivery.delivery_charges` or `order.delivery_charges`) + address/phone/notes + payments + Change.
+
+**barcode-labels** (Zebra ZPL over raw TCP — bypasses escpos):
+
+```json
+{
+  "printers": [{ "type": "network", "ip": "192.168.1.50", "port": 9100 }],
+  "data": {
+    "printType": "barcode-labels",
+    "labels": [
+      { "barcode": "123456789012", "name": "Item", "price": 10.5, "sku": "SKU1", "category": "Cat", "copies": 2 }
+    ]
+  },
+  "config": {
+    "codeMode": "barcode",
+    "barcodeType": "CODE128",
+    "showCodeHumanReadable": true,
+    "showName": true,
+    "showPrice": true,
+    "labelWidthMm": 50,
+    "labelHeightMm": 30,
+    "dpi": 203,
+    "marginMm": 2,
+    "fontSize": "medium"
+  }
+}
+```
+
+`codeMode`: `barcode` | `qrcode` | `both`. `barcodeType`: `CODE128` | `EAN13`. Requires a **network** printer.
 
 ## Drivers (escpos adapters)
 
